@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.Python
+build/
+dist/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+*.swp
+
+# Environment
+.env
+.env.local
+
+# Sprint 0 audit local storage (development only)
+services/audit-service/var/
+services/*/var/
+
+# Node (Web frontend, when scaffolded later)
+node_modules/
+.next/
+out/
+web/coverage/
+
+# TypeScript incremental build cache (generated artifact)
+*.tsbuildinfo
+
+# Local agent tooling / runtime — NOT product code (reversible: remove a line to
+# version-control that tree). Canonical project policy lives in tracked CLAUDE.md.
+.claude/
+.codex/
+.agents/
+
+# Session artifacts / generated reports (agent transcripts, ultrareview output)
+/reports/
+
+# Redundant non-canonical copy of docs/ — canonical design docs live in docs/.
+# Original brief preserved as docs/PROJECT_BRIEF.md. See docs/DOCUMENTATION_MAP.md.
+/AI統制型 Enterprise Operating Platform開発プロジェクト/

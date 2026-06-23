@@ -1,0 +1,32 @@
+# Root pyproject.toml — provides project-level pytest configuration.
+#
+# Component-level configs live in:
+#   server/api/pyproject.toml
+#   agent/cdx_agent/pyproject.toml
+#   sdk/python/pyproject.toml
+#   build/worker/pyproject.toml
+#
+# This root config is consumed when pytest runs against the top-level
+# tests/ directory (security / backend / database / frontend / infrastructure).
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Silence pytest-asyncio's "loop scope unset" deprecation warning that
+# leaked into our integration-test runs even though we don't define any
+# async fixtures at the root level (pytest-asyncio is installed for
+# server/api but is auto-discovered by pytest globally).
+asyncio_default_fixture_loop_scope = "function"
+asyncio_mode = "auto"
+
+# Treat warnings as errors so silent deprecations don't accumulate, but
+# allow third-party noise that we can't fix from this repo.
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning:starlette",
+    # starlette>=1.3 emits StarletteDeprecationWarning (a UserWarning subclass,
+    # NOT DeprecationWarning) when TestClient is used with httpx<httpx2.
+    # Match by message so the filter survives the warning class moving modules.
+    "ignore:Using .httpx. with .starlette.testclient. is deprecated:Warning",
+    "ignore::DeprecationWarning:pydantic",
+    "ignore::pytest.PytestDeprecationWarning",
+]

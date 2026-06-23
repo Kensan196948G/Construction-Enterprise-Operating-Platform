@@ -1,0 +1,74 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-concrete-300;
+  }
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+}
+
+@layer components {
+  .ceos-design-scope,
+  .ceos-design-scope * {
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .ceos-design-scope > div {
+    width: 100%;
+    max-width: 1400px;
+  }
+
+  .ceos-design-scope [style*="border-radius: 8px"][style*="overflow: hidden"]:has(> [style*="grid-template-columns"]) {
+    overflow-x: auto !important;
+    overflow-y: hidden;
+  }
+
+  .ceos-design-scope [style*="grid-template-columns"] {
+    max-width: 100%;
+  }
+
+  .ceos-design-scope .leaflet-container {
+    z-index: 0;
+    font-family: "Noto Sans JP", system-ui, -apple-system, sans-serif;
+  }
+
+  .ceos-design-scope .leaflet-control-container {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 1280px) {
+  .ceos-design-scope [style*="grid-template-columns: repeat(5, 1fr)"],
+  .ceos-design-scope [style*="grid-template-columns: repeat(5,1fr)"],
+  .ceos-design-scope [style*="grid-template-columns: repeat(4, 1fr)"],
+  .ceos-design-scope [style*="grid-template-columns: repeat(4,1fr)"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .ceos-design-scope [style*="grid-template-columns: 1fr 340px"],
+  .ceos-design-scope [style*="grid-template-columns: 1fr 320px"],
+  .ceos-design-scope [style*="grid-template-columns: 1fr 300px"],
+  .ceos-design-scope [style*="grid-template-columns: 320px 1fr"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .ceos-design-scope > div {
+    padding: 16px !important;
+  }
+
+  .ceos-design-scope [style*="grid-template-columns: repeat(5"],
+  .ceos-design-scope [style*="grid-template-columns: repeat(4"],
+  .ceos-design-scope [style*="grid-template-columns: repeat(3"],
+  .ceos-design-scope [style*="grid-template-columns: repeat(2"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}

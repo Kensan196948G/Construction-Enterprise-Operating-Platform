@@ -1,0 +1,31 @@
+Source: cdx-agent
+Section: admin
+Priority: optional
+Maintainer: Construction DX OS Team <dev@cdx.local>
+Build-Depends: debhelper-compat (= 13), dh-python, python3-all, python3-setuptools, python3-httpx
+Standards-Version: 4.7.0
+Rules-Requires-Root: no
+Homepage: https://github.com/construction-dx-os/construction-dx-os
+Vcs-Git: https://github.com/construction-dx-os/construction-dx-os.git
+Vcs-Browser: https://github.com/construction-dx-os/construction-dx-os
+
+Package: cdx-agent
+Architecture: all
+Depends: ${python3:Depends}, ${misc:Depends},
+ python3-httpx,
+ adduser,
+ systemd
+Recommends: apparmor
+Description: Construction DX OS device agent
+ cdx-agent collects hardware inventory, sends periodic heartbeats, and
+ fetches operational policy from the cdx-server central platform.
+ .
+ It runs as a dedicated system user (cdx-agent) under systemd with
+ NoNewPrivileges and ProtectSystem=strict hardening. An optional
+ AppArmor profile provides Mandatory Access Control.
+ .
+ Phase 1 features:
+  - Signed HMAC-SHA256 requests (heartbeat, inventory, policy)
+  - Offline-tolerant spool queue (drain on reconnect)
+  - Full-jitter exponential backoff with Retry-After support
+  - Structured JSON logging and Prometheus-compatible metrics

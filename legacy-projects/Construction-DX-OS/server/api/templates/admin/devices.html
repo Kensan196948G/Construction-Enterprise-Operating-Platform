@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Devices — cdx-server Admin{% endblock %}
+{% block content %}
+<style>
+.fleet-summary { margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+.badge {
+  display: inline-block; font-size: 0.78rem; padding: 0.2rem 0.6rem;
+  border-radius: 1rem; font-weight: 500;
+}
+.badge-online  { background: #d4edda; color: #155724; }
+.badge-offline { background: #f8d7da; color: #721c24; }
+.badge-unknown { background: #e2e3e5; color: #383d41; }
+.search-bar {
+  display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap;
+}
+.search-bar input, .search-bar select {
+  padding: 0.35rem 0.6rem; border: 1px solid #d1d5db; border-radius: 6px;
+  font-size: 0.85rem; outline: none;
+}
+.search-bar input:focus, .search-bar select:focus { border-color: #2563eb; }
+.search-bar label { font-size: 0.8rem; color: #6b7280; font-weight: 500; }
+tr.hidden { display: none; }
+.metrics-link { margin-left: auto; font-size: 0.8rem; }
+</style>
+
+<div class="card">
+  <div style="display:flex; align-items:center; margin-bottom:0.75rem;">
+    <h2>Registered Devices ({{ device_status | length }})</h2>
+    <a href="/metrics" class="metrics-link" target="_blank">📊 Prometheus Metrics</a>
+  </div>
+
+  {% if device_status %}
+  <div class="fleet-summary">
+    <span class="badge badge-online">🟢 オンライン {{ online_count }}</span>
+    <span class="badge badge-offline">🔴 オフライン {{ offline_count }}</span>
+    <span class="badge badge-unknown">⚪ 未確認 {{ unknown_count }}</span>
+  </div>
+
+  <div class="search-bar">
+    <label for="search-input">🔍</label>
+    <input id="search-input" type="search" placeholder="Device ID / Hostname で検索..." style="width:220px">
+    <label for="profile-filter">Profile:</label>
+    <select id="profile-filter">
+      <option value="">すべて</option>
+      <option value="standard">standard</option>
+      <option value="field">field</option>
+      <option value="kiosk">kiosk</option>
+    </select>
+    <label for="status-filter">Status:</label>
+    <select id="status-filter">
+      <option value="">すべて</option>
+      <option value="online">🟢 オンライン</option>
+      <option value="offline">🔴 オフライン</option>
+      <option value="unknown">⚪ 未確認</option>
+    </select>
+    <span id="filter-count" style="font-size:0.8rem;color:#6b7280;"></span>
+  </div>
+
+  <table id="device-table">
+    <thead>
+      <tr>
+        <th>状態</th>
+        <th>Device ID</th>
+        <th>Profile</th>
+        <th>Hostname</th>
+        <th>Registered At</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in device_status %}
+      {% set d = item.device %}
+      <tr
+        data-device-id="{{ d.device_id }}"
+        data-hostname="{{ d.hostname or '' }}"
+        data-profile="{{ d.profile }}"
+        data-status="{{ 'online' if item.online else ('offline' if item.has_hb else 'unknown') }}"
+      >
+        <td>
+          {% if item.online %}
+            <span class="badge badge-online">🟢</span>
+          {% elif item.has_hb %}
+            <span class="badge badge-offline">🔴</span>
+          {% else %}
+            <span class="badge badge-unknown">⚪</span>
+          {% endif %}
+        </td>
+        <td><a href="/admin/devices/{{ d.device_id }}">{{ d.device_id }}</a></td>
+        <td>{{ d.profile }}</td>
+        <td>{{ d.hostname }}</td>
+        <td>{{ d.registered_at.strftime("%Y-%m-%d %H:%M:%S UTC") }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">No devices registered yet. PXE ブートで端末を登録してください。</p>
+  {% endif %}
+</div>
+
+{% if device_status %}
+<script nonce="{{ request.state.csp_nonce if request.state.csp_nonce is defined else '' }}">
+(function () {
+  'use strict';
+  var searchInput = document.getElementById('search-input');
+  var profileFilter = document.getElementById('profile-filter');
+  var statusFilter = document.getElementById('status-filter');
+  var countEl = document.getElementById('filter-count');
+  var tbody = document.querySelector('#device-table tbody');
+
+  function applyFilter() {
+    var q = searchInput.value.trim().toLowerCase();
+    var profile = profileFilter.value;
+    var status = statusFilter.value;
+    var rows = tbody.querySelectorAll('tr');
+    var visible = 0;
+    rows.forEach(function (row) {
+      var id = row.getAttribute('data-device-id').toLowerCase();
+      var host = row.getAttribute('data-hostname').toLowerCase();
+      var p = row.getAttribute('data-profile');
+      var s = row.getAttribute('data-status');
+      var matchQ = !q || id.includes(q) || host.includes(q);
+      var matchP = !profile || p === profile;
+      var matchS = !status || s === status;
+      if (matchQ && matchP && matchS) {
+        row.classList.remove('hidden');
+        visible++;
+      } else {
+        row.classList.add('hidden');
+      }
+    });
+    countEl.textContent = visible + ' 件表示中';
+  }
+
+  searchInput.addEventListener('input', applyFilter);
+  profileFilter.addEventListener('change', applyFilter);
+  statusFilter.addEventListener('change', applyFilter);
+  applyFilter();
+}());
+</script>
+{% endif %}
+{% endblock %}

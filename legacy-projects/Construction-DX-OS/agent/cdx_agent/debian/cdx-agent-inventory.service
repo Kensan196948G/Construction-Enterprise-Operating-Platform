@@ -1,0 +1,23 @@
+[Unit]
+Description=Construction DX OS device agent (collect inventory snapshot)
+After=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/cdx-agent/agent.env
+ExecStart=/usr/bin/cdx-agent enqueue inventory
+ExecStartPost=/usr/bin/cdx-agent drain
+User=cdx-agent
+Group=cdx-agent
+WorkingDirectory=/var/lib/cdx-agent
+StateDirectory=cdx-agent
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/cdx-agent
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target

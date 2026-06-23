@@ -1,0 +1,32 @@
+[Unit]
+Description=Construction DX OS device agent (drain queued telemetry)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/cdx-agent/agent.env
+ExecStart=/usr/bin/cdx-agent drain
+ExecStartPre=/usr/bin/cdx-agent enqueue heartbeat
+User=cdx-agent
+Group=cdx-agent
+WorkingDirectory=/var/lib/cdx-agent
+StateDirectory=cdx-agent
+RuntimeDirectory=cdx-agent
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/cdx-agent
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictNamespaces=true
+RestrictRealtime=true
+LockPersonality=true
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target

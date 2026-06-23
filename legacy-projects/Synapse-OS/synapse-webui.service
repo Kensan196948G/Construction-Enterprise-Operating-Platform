@@ -1,0 +1,26 @@
+[Unit]
+Description=Synapse-OS WebUI Server (AI Governance Platform)
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=kensan
+WorkingDirectory=/home/kensan/Projects/Synapse-OS
+Environment=PATH=/home/kensan/.local/bin:/usr/local/bin:/usr/bin:/bin
+# SECURITY: bind to loopback only. web_ui_server.py is a DEPRECATED no-auth
+# dev/demo UI with unescaped HTML rendering (XSS) and unvalidated tenant_id
+# forwarding (SSRF/injection). It MUST NOT be exposed on the LAN. For canonical,
+# network-facing UI use web/ (Next.js, JWT auth) on :3000. Was HOST=0.0.0.0.
+Environment=HOST=127.0.0.1
+Environment=PORT=3002
+Environment=DEFAULT_TENANT=demo
+ExecStart=/usr/bin/python /home/kensan/Projects/Synapse-OS/web_ui_server.py
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=synapse-webui
+
+[Install]
+WantedBy=multi-user.target

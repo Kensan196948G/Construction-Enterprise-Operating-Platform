@@ -1,0 +1,17 @@
+[Unit]
+Description=Construction Enterprise OS WebUI
+Documentation=file:/opt/construction-enterprise-os/README.md
+Requires=docker.service
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+EnvironmentFile=-/etc/construction-enterprise-os/webui.env
+ExecStart=/usr/bin/env bash -lc 'cd "${CONSTRUCTION_OS_HOME:-/opt/construction-enterprise-os}" && exec scripts/webui/start-webui.sh'
+ExecStop=/usr/bin/env bash -lc 'cd "${CONSTRUCTION_OS_HOME:-/opt/construction-enterprise-os}" && exec scripts/webui/stop-webui.sh'
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target

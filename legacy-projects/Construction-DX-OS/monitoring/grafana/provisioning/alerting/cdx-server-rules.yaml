@@ -1,0 +1,139 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: cdx-server
+    folder: cdx-server
+    interval: 1m
+    rules:
+
+      # Alert when heartbeat rate drops to zero for 5+ minutes
+      - uid: cdx-heartbeat-stopped
+        title: "Heartbeat Stopped"
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: increase(cdx_heartbeat_total[5m]) == 0
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+        noDataState: Alerting
+        execErrState: Alerting
+        for: 5m
+        annotations:
+          summary: "cdx-server: ハートビート受信停止"
+          description: "5分間、ハートビートが受信されていません。エージェントが停止している可能性があります。"
+        labels:
+          severity: warning
+          service: cdx-server
+
+      # Alert when ISO build failure rate exceeds 20%
+      - uid: cdx-iso-build-failure-rate
+        title: "ISO Build High Failure Rate"
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: |
+                rate(cdx_iso_build_total{status="failed"}[5m])
+                /
+                (rate(cdx_iso_build_total[5m]) + 0.001)
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0.2
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: B
+              type: threshold
+        noDataState: OK
+        execErrState: Alerting
+        for: 2m
+        annotations:
+          summary: "cdx-server: ISO ビルド失敗率が高い"
+          description: "ISO ビルドの失敗率が 20% を超えています。ビルド環境を確認してください。"
+        labels:
+          severity: critical
+          service: cdx-server
+
+      # Alert on rate limit spike
+      - uid: cdx-rate-limit-spike
+        title: "Rate Limit Spike"
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: rate(cdx_rate_limit_hits_total[1m]) * 60
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 10
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: B
+              type: threshold
+        noDataState: OK
+        execErrState: Alerting
+        for: 1m
+        annotations:
+          summary: "cdx-server: レートリミット急増"
+          description: "レートリミットヒット数が 10件/分 を超えました。不正アクセスの可能性を確認してください。"
+        labels:
+          severity: warning
+          service: cdx-server

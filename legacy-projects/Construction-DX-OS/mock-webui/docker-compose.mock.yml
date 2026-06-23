@@ -1,0 +1,32 @@
+# Construction DX OS — Mock WebUI standalone stack
+#
+# Serves the admin SPA with 100% dummy data (no backend, no DB).
+# Host port 18888 chosen to avoid conflicts on this multi-project host
+# (8888 was already taken). Internal nginx listens on 8888.
+#
+# Usage:
+#   docker compose -f mock-webui/docker-compose.mock.yml up -d
+#   # then open http://<host-ip>:18888/
+#
+# The host IP is auto-assigned by your network (DHCP). The container binds
+# 0.0.0.0:18888 so it is reachable on whatever IP the host received.
+
+services:
+  cdx-mock-ui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cdx-mock-ui:local
+    container_name: cdx-mock-ui
+    restart: unless-stopped
+    # Bind to all interfaces so the auto-assigned host IP works.
+    # host:18888 -> container:8888
+    ports:
+      - "18888:8888"
+    healthcheck:
+      # 127.0.0.1 (not localhost): nginx is IPv4-only; localhost resolves to ::1 first.
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8888/"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s

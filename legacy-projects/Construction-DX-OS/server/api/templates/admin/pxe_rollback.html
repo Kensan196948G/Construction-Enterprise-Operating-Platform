@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+{% block title %}PXE Rollback — cdx-server Admin{% endblock %}
+{% block content %}
+<style>
+  .rollback-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1rem; }
+  .pattern-card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.1); padding: 1rem 1.25rem; }
+  .pattern-card h3 { font-size: 0.95rem; margin-bottom: 0.5rem; color: #1a1a2e; }
+  .pattern-card p { font-size: 0.8rem; color: #666; margin-bottom: 0.75rem; }
+  .pattern-card label { display: block; font-size: 0.8rem; font-weight: 600; margin: 0.4rem 0 0.2rem; }
+  .pattern-card input, .pattern-card select, .pattern-card textarea {
+    width: 100%; padding: 0.4rem 0.5rem; border: 1px solid #ddd;
+    border-radius: 4px; font-size: 0.8rem;
+  }
+  .pattern-card textarea { height: 3rem; resize: none; }
+  .btn-rollback {
+    margin-top: 0.75rem; width: 100%; padding: 0.5rem;
+    background: #dc2626; color: #fff; border: none; border-radius: 4px;
+    font-weight: 600; font-size: 0.85rem; cursor: pointer;
+  }
+  .btn-rollback:hover { background: #b91c1c; }
+  .btn-abort { background: #7f1d1d; }
+  .result-box { display: none; margin-top: 0.75rem; }
+  .result-box pre { font-size: 0.75rem; }
+  .copy-btn {
+    margin-top: 0.4rem; padding: 0.3rem 0.7rem;
+    background: #2563eb; color: #fff; border: none; border-radius: 4px;
+    font-size: 0.75rem; cursor: pointer;
+  }
+  .warn-banner {
+    background: #fef3c7; border: 1px solid #f59e0b; border-radius: 6px;
+    padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.85rem;
+  }
+  .result-ok { color: #15803d; font-weight: 600; font-size: 0.75rem; margin-bottom: 0.3rem; }
+  .result-hint { font-size: 0.7rem; color: #666; margin-top: 0.4rem; }
+</style>
+
+<div class="card">
+  <h2>🔄 PXE Rollback Console</h2>
+  <div class="warn-banner">
+    ⚠️ このページは PXE プロビジョニングのロールバックを管理します。
+    ボタンを押すと <strong>ロールバック意図が監査ログに記録</strong>され、
+    実行すべきコマンドが表示されます。
+    実際の切替は <strong>PXE サーバで sudo 実行</strong>が必要です。
+  </div>
+  <p style="font-size:0.8rem;color:#666">全操作は request-id で監査ログに記録されます。</p>
+</div>
+
+<div class="rollback-grid">
+
+  <!-- Pattern 1: Full Rollback -->
+  <div class="pattern-card">
+    <h3>🚨 1. Full Rollback</h3>
+    <p>全プロファイルを前バージョンへ + リング進行停止</p>
+    <label>理由 (必須)</label>
+    <textarea id="reason-full" placeholder="重大バグ全社影響: ..."></textarea>
+    <label>対象バージョン (省略可)</label>
+    <input id="version-full" type="text" placeholder="例: 20260501">
+    <button class="btn-rollback" data-pattern="full">Full Rollback 実行</button>
+    <div class="result-box" id="result-full">
+      <div class="result-ok" id="ok-full"></div>
+      <div style="font-size:0.75rem;margin-bottom:0.3rem">PXEサーバで実行:</div>
+      <pre id="cmd-full"></pre>
+      <button class="copy-btn" data-target="cmd-full">📋 コピー</button>
+      <div class="result-hint">--dry-run を末尾に追加してプレビュー確認後に実行してください</div>
+    </div>
+  </div>
+
+  <!-- Pattern 2: Profile Rollback -->
+  <div class="pattern-card">
+    <h3>📂 2. Profile Rollback</h3>
+    <p>特定プロファイルのみ前バージョンへ切替</p>
+    <label>理由 (必須)</label>
+    <textarea id="reason-profile" placeholder="field プロファイルで起動失敗 ..."></textarea>
+    <label>プロファイル</label>
+    <select id="profile-profile">
+      <option value="standard">standard</option>
+      <option value="field">field</option>
+      <option value="kiosk">kiosk</option>
+    </select>
+    <label>対象バージョン (省略可)</label>
+    <input id="version-profile" type="text" placeholder="例: 20260501">
+    <button class="btn-rollback" data-pattern="profile">Profile Rollback 実行</button>
+    <div class="result-box" id="result-profile">
+      <div class="result-ok" id="ok-profile"></div>
+      <div style="font-size:0.75rem;margin-bottom:0.3rem">PXEサーバで実行:</div>
+      <pre id="cmd-profile"></pre>
+      <button class="copy-btn" data-target="cmd-profile">📋 コピー</button>
+      <div class="result-hint">--dry-run を末尾に追加してプレビュー確認後に実行してください</div>
+    </div>
+  </div>
+
+  <!-- Pattern 3: Ring Rollback -->
+  <div class="pattern-card">
+    <h3>💿 3. Ring Rollback</h3>
+    <p>特定リングの DHCP ブートファイルを前バージョンへ</p>
+    <label>理由 (必須)</label>
+    <textarea id="reason-ring" placeholder="ring2 パイロット 3/5 台が起動失敗 ..."></textarea>
+    <label>リング</label>
+    <select id="ring-ring">
+      <option value="ring0">ring0 (5台 pilot)</option>
+      <option value="ring1">ring1 (10%)</option>
+      <option value="ring2">ring2 (50%)</option>
+      <option value="ring3">ring3 (全社)</option>
+    </select>
+    <button class="btn-rollback" data-pattern="ring">Ring Rollback 実行</button>
+    <div class="result-box" id="result-ring">
+      <div class="result-ok" id="ok-ring"></div>
+      <div style="font-size:0.75rem;margin-bottom:0.3rem">PXEサーバで実行:</div>
+      <pre id="cmd-ring"></pre>
+      <button class="copy-btn" data-target="cmd-ring">📋 コピー</button>
+      <div class="result-hint">--dry-run を末尾に追加してプレビュー確認後に実行してください</div>
+    </div>
+  </div>
+
+  <!-- Pattern 4: Site Rollback -->
+  <div class="pattern-card">
+    <h3>🏢 4. Site Rollback</h3>
+    <p>拠点の DHCP relay をバックアップ PXE サーバへ切替</p>
+    <label>理由 (必須)</label>
+    <textarea id="reason-site" placeholder="東京拠点で DHCP 応答なし ..."></textarea>
+    <label>拠点名</label>
+    <input id="site-site" type="text" placeholder="例: tokyo-hq">
+    <label>バックアップ PXE IP</label>
+    <input id="backup-site" type="text" placeholder="例: 192.168.1.10">
+    <button class="btn-rollback" data-pattern="site">Site Rollback 実行</button>
+    <div class="result-box" id="result-site">
+      <div class="result-ok" id="ok-site"></div>
+      <div style="font-size:0.75rem;margin-bottom:0.3rem">PXEサーバで実行:</div>
+      <pre id="cmd-site"></pre>
+      <button class="copy-btn" data-target="cmd-site">📋 コピー</button>
+      <div class="result-hint">--dry-run を末尾に追加してプレビュー確認後に実行してください</div>
+    </div>
+  </div>
+
+  <!-- Pattern 5: Single Device Rollback -->
+  <div class="pattern-card">
+    <h3>💻 5. Single Rollback</h3>
+    <p>特定端末の MAC へ DHCP reservation で旧版提供</p>
+    <label>理由 (必須)</label>
+    <textarea id="reason-single" placeholder="端末 AA:BB:CC:DD:EE:FF が起動ループ ..."></textarea>
+    <label>MAC アドレス</label>
+    <input id="mac-single" type="text" placeholder="例: 00:11:22:33:44:55">
+    <button class="btn-rollback" data-pattern="single">Single Rollback 実行</button>
+    <div class="result-box" id="result-single">
+      <div class="result-ok" id="ok-single"></div>
+      <div style="font-size:0.75rem;margin-bottom:0.3rem">PXEサーバで実行:</div>
+      <pre id="cmd-single"></pre>
+      <button class="copy-btn" data-target="cmd-single">📋 コピー</button>
+      <div class="result-hint">--dry-run を末尾に追加してプレビュー確認後に実行してください</div>
+    </div>
+  </div>
+
+  <!-- Pattern 6: Abort -->
+  <div class="pattern-card">
+    <h3>🛑 6. Abort (緊急停止)</h3>
+    <p>全 PXE 配信を即時停止 (nginx maintenance + DHCP 無効)</p>
+    <label>理由 (必須)</label>
+    <textarea id="reason-abort" placeholder="深刻なバグを検知、全配信停止が必要 ..."></textarea>
+    <button class="btn-rollback btn-abort" data-pattern="abort">⚠️ ABORT — 全停止</button>
+    <div class="result-box" id="result-abort">
+      <div class="result-ok" id="ok-abort"></div>
+      <div style="font-size:0.75rem;margin-bottom:0.3rem">PXEサーバで実行:</div>
+      <pre id="cmd-abort"></pre>
+      <button class="copy-btn" data-target="cmd-abort">📋 コピー</button>
+      <div class="result-hint">復旧: sudo /opt/cdx/pxe/rollback/06-abort.sh --restore</div>
+    </div>
+  </div>
+
+</div>
+
+<script nonce="{{ request.state.csp_nonce if request.state.csp_nonce is defined else '' }}">
+(function () {
+  'use strict';
+
+  function getVal(id) {
+    var el = document.getElementById(id);
+    return el ? el.value.trim() : '';
+  }
+
+  function buildPayload(pattern) {
+    var base = {
+      pattern: pattern,
+      reason: getVal('reason-' + pattern)
+    };
+    if (pattern === 'full') {
+      var v = getVal('version-full');
+      if (v) base.target_version = v;
+    } else if (pattern === 'profile') {
+      base.profile = getVal('profile-profile');
+      var v2 = getVal('version-profile');
+      if (v2) base.target_version = v2;
+    } else if (pattern === 'ring') {
+      base.ring = getVal('ring-ring');
+    } else if (pattern === 'site') {
+      base.site = getVal('site-site');
+      base.backup_pxe_ip = getVal('backup-site');
+    } else if (pattern === 'single') {
+      base.device_mac = getVal('mac-single');
+    }
+    return base;
+  }
+
+  function showError(pattern, msg) {
+    var box = document.getElementById('result-' + pattern);
+    var pre = document.getElementById('cmd-' + pattern);
+    var ok = document.getElementById('ok-' + pattern);
+    ok.textContent = '';
+    pre.textContent = 'Error: ' + msg;
+    pre.style.background = '#7f1d1d';
+    pre.style.color = '#fca5a5';
+    box.style.display = 'block';
+  }
+
+  function showSuccess(pattern, data) {
+    var box = document.getElementById('result-' + pattern);
+    var pre = document.getElementById('cmd-' + pattern);
+    var ok = document.getElementById('ok-' + pattern);
+    ok.textContent = '✅ 記録完了 (audit_id: ' + data.audit_id + ')';
+    pre.textContent = data.command;
+    pre.style.background = '';
+    pre.style.color = '';
+    box.style.display = 'block';
+  }
+
+  async function doRollback(pattern) {
+    var payload = buildPayload(pattern);
+    if (!payload.reason || payload.reason.length < 10) {
+      alert('理由を10文字以上入力してください');
+      return;
+    }
+    if (!confirm('[' + pattern.toUpperCase() + ' ROLLBACK] 監査ログに記録し、実行コマンドを取得します。続行しますか？')) {
+      return;
+    }
+    try {
+      var res = await fetch('/api/v1/pxe/rollback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      var data = await res.json();
+      if (!res.ok) {
+        var detail = (data && data.detail) ? String(data.detail) : 'HTTP ' + res.status;
+        showError(pattern, detail);
+        return;
+      }
+      showSuccess(pattern, data);
+    } catch (e) {
+      showError(pattern, e.message || 'Network error');
+    }
+  }
+
+  // Attach button listeners
+  document.querySelectorAll('.btn-rollback[data-pattern]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      doRollback(btn.getAttribute('data-pattern'));
+    });
+  });
+
+  // Copy-to-clipboard buttons
+  document.querySelectorAll('.copy-btn[data-target]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var target = document.getElementById(btn.getAttribute('data-target'));
+      if (target) {
+        navigator.clipboard.writeText(target.textContent).then(function () {
+          btn.textContent = 'Copied!';
+          setTimeout(function () { btn.textContent = '📋 コピー'; }, 2000);
+        });
+      }
+    });
+  });
+}());
+</script>
+{% endblock %}

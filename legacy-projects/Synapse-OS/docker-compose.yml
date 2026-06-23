@@ -1,0 +1,256 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-synapse}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-synapse_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-synapse}
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-synapse}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  tenant-identity:
+    build:
+      context: .
+      dockerfile: services/tenant-identity-service/Dockerfile
+    restart: unless-stopped
+    environment:
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-change-in-production}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8001/healthz')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  policy:
+    build:
+      context: .
+      dockerfile: services/policy-service/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-synapse}:${POSTGRES_PASSWORD:-synapse_dev}@postgres:5432/${POSTGRES_DB:-synapse}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8002/healthz')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  audit:
+    build:
+      context: .
+      dockerfile: services/audit-service/Dockerfile
+    restart: unless-stopped
+    volumes:
+      - audit-data:/data
+    environment:
+      - SQLITE_DB=/data/audit.db
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8003/healthz')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  object:
+    build:
+      context: .
+      dockerfile: services/object-service/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      policy:
+        condition: service_started
+      audit:
+        condition: service_started
+    environment:
+      - POLICY_BASE_URL=http://policy:8002
+      - AUDIT_BASE_URL=http://audit:8003
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-synapse}:${POSTGRES_PASSWORD:-synapse_dev}@postgres:5432/${POSTGRES_DB:-synapse}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8004/healthz')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  workflow:
+    build:
+      context: .
+      dockerfile: services/workflow-service/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - object
+      - policy
+      - audit
+    environment:
+      - OBJECT_BASE_URL=http://object:8004
+      - POLICY_BASE_URL=http://policy:8002
+      - AUDIT_BASE_URL=http://audit:8003
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8005/healthz')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  ai-gateway:
+    build:
+      context: .
+      dockerfile: services/ai-gateway-service/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - policy
+      - audit
+    environment:
+      - POLICY_BASE_URL=http://policy:8002
+      - AUDIT_BASE_URL=http://audit:8003
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8006/healthz')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  federation:
+    build:
+      context: .
+      dockerfile: services/federation-service/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - audit
+    environment:
+      - AUDIT_BASE_URL=http://audit:8003
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8007/healthz')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  knowledge:
+    build:
+      context: .
+      dockerfile: services/knowledge-service/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - audit
+    environment:
+      - AUDIT_BASE_URL=http://audit:8003
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8008/healthz')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: services/dashboard-service/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - object
+      - workflow
+      - audit
+    environment:
+      - OBJECT_BASE_URL=http://object:8004
+      - WORKFLOW_BASE_URL=http://workflow:8005
+      - AUDIT_BASE_URL=http://audit:8003
+      - AI_GATEWAY_BASE_URL=http://ai-gateway:8006
+      - FEDERATION_BASE_URL=http://federation:8007
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+      args:
+        NEXT_PUBLIC_AUTH_API: http://tenant-identity:8001
+        NEXT_PUBLIC_OBJECT_API: http://object:8004
+        NEXT_PUBLIC_WORKFLOW_API: http://workflow:8005
+        NEXT_PUBLIC_AI_GATEWAY_API: http://ai-gateway:8006
+        NEXT_PUBLIC_FEDERATION_API: http://federation:8007
+        NEXT_PUBLIC_DASHBOARD_API: http://dashboard:8009
+        NEXT_PUBLIC_AUDIT_API: http://audit:8003
+    restart: unless-stopped
+    ports:
+      - "0.0.0.0:3000:3000"
+    depends_on:
+      - tenant-identity
+      - object
+      - audit
+    environment:
+      # Server-side (SSR / Route Handlers): Docker service names — no host port needed
+      - NEXT_PUBLIC_AUTH_API=http://tenant-identity:8001
+      - NEXT_PUBLIC_OBJECT_API=http://object:8004
+      - NEXT_PUBLIC_WORKFLOW_API=http://workflow:8005
+      - NEXT_PUBLIC_AI_GATEWAY_API=http://ai-gateway:8006
+      - NEXT_PUBLIC_FEDERATION_API=http://federation:8007
+      - NEXT_PUBLIC_DASHBOARD_API=http://dashboard:8009
+      - NEXT_PUBLIC_AUDIT_API=http://audit:8003
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-change-in-production}
+
+volumes:
+  object-data:
+  audit-data:
+  postgres-data:

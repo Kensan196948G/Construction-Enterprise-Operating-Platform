@@ -1,0 +1,586 @@
+{
+  "version": "8.0",
+  "project": {
+    "name": "Construction-DX-OS",
+    "mode": "autonomous",
+    "registered_at": "2026-04-10",
+    "release_deadline": "2026-10-10",
+    "period_months": 6,
+    "remaining_days_thresholds": {
+      "improvement_freeze": 30,
+      "feature_freeze": 14,
+      "release_only": 7
+    },
+    "session_max_duration_minutes": 300,
+    "policy_note": "プロジェクト期間6ヶ月・リリース期限・5時間セッションは CTO 判断でも変更不可（CLAUDE.md §0 絶対厳守）"
+  },
+  "goal": {
+    "title": "建設DX OS: PoC基盤と cdx-agent MVP + Phase 2 ISO Builder UI 設計",
+    "description": "Debian 13 ベース業務用クライアント基盤を6ヶ月で成立させる。Phase 2 では『管理 WebUI から live-build を非同期実行する ISO Builder UI』(Issue 0022/0023/0024) を新規スコープに追加。",
+    "release_target_date": "2026-10-10",
+    "current_phase": "Month 4 Quality — Issue 0035/0036/0037 着手予定"
+  },
+  "kpi": {
+    "success_rate_target": 0.9,
+    "test_pass_rate_target": 0.95,
+    "review_blocker_target": 0,
+    "security_blocker_target": 0,
+    "ci_stability_target": 0.95,
+    "ci_success_rate": 0.95,
+    "test_pass_rate": 0.98
+  },
+  "execution": {
+    "start_time": "2026-05-06T13:31:00+09:00",
+    "max_duration_minutes": 300,
+    "elapsed_minutes": 80,
+    "remaining_minutes": 220,
+    "phase": "SessionEnd",
+    "auto_stop_threshold": 5,
+    "graceful_shutdown": true,
+    "mode": "full",
+    "retry_limit_ci": 15,
+    "same_root_cause_limit": 3,
+    "end_time": "2026-05-06T14:51:00+09:00",
+    "session_summary": {
+      "session_id": "2026-05-06T13:31_loop72",
+      "started_at": "2026-05-06T13:31:00+09:00",
+      "ended_at": "2026-05-06T14:51:00+09:00",
+      "duration_minutes": 80,
+      "loops_completed": 1,
+      "loop_range": "72",
+      "prs_merged": 4,
+      "pr_list": [
+        "#23",
+        "#24",
+        "#25",
+        "#26"
+      ],
+      "tests_at_start": 207,
+      "tests_at_end": 247,
+      "coverage_at_end": "98.83%",
+      "issues_closed": [
+        "0035 (iso_builds.py coverage 68%→99%, +37 tests)",
+        "0037 (deployment doc — postgres+monitoring+backup)",
+        "0038 (ISO download endpoint audit row gap, compliance fix)",
+        "0036 (README 6-month progress banner)"
+      ],
+      "open_issues_at_end": [],
+      "milestone_note": "Loop 72 単独で 4 Issues クローズ — 過去最高密度のループ。open_issues=[] 達成 (CLAUDE.md §18 抵触リスク → 次セッションで新規 Issue 起票必須)",
+      "deployment": "systemd cdx-os-server active on 192.168.0.185:8300 (PostgresStorage) — 変更なし"
+    },
+    "last_session_summary": "Loop 86 (2026-05-14): CHANGELOG v0.1.0 + GitHub Release + Production Docker + Admin SPA live data + E2E CI + Redis health badge + /api/v1/dashboard + SDK determinism fix + Admin header Redis/SPA-link. PR#39+#40 merged. 327 server tests. Session ended normally."
+  },
+  "token": {
+    "total_budget": 100,
+    "used": 0,
+    "remaining": 100,
+    "allocation": {
+      "monitor": 10,
+      "development": 35,
+      "verify": 25,
+      "improvement": 15,
+      "debug": 10,
+      "release_report": 5
+    },
+    "dynamic_mode": true,
+    "note": "CLAUDE.md v8 §13 standard allocation"
+  },
+  "automation": {
+    "auto_issue_generation": true,
+    "auto_project_sync": true,
+    "self_evolution": true,
+    "auto_priority_scoring": true,
+    "auto_repair": true,
+    "note": "auto_project_sync enabled: GitHub remote configured 2026-04-22 (Issue 0004 closed)"
+  },
+  "priority": {
+    "weights": {
+      "security": 100,
+      "ci_failure": 90,
+      "data_risk": 85,
+      "test_failure": 75,
+      "review_findings": 70,
+      "kpi_gap": 65,
+      "technical_debt": 40,
+      "minor_ux": 20
+    },
+    "current_top_reason": "bootstrap (greenfield)"
+  },
+  "codex": {
+    "setup_checked": true,
+    "setup_detail": "codex-cli 0.118.0, authenticated, runtime=direct",
+    "review_gate": "off",
+    "last_review_status": "sandboxed_no_diff",
+    "last_review_type": "branch",
+    "last_review_job_id": "019d8e76-14ee-7141-8ded-e446acbe2f89",
+    "last_review_summary": "Codex sandbox could not access local git diff; no findings returned. Retry after GitHub remote established (Issue 0004).",
+    "last_adversarial_status": "none",
+    "last_rescue_status": "none",
+    "blocking_issues": [],
+    "severity": "none",
+    "note": "Local pytest+ruff used as interim review proxy until remote push unlocks Codex PR review."
+  },
+  "coderabbit": {
+    "enabled": true,
+    "last_review_status": "none",
+    "note": "Run after first commit set is prepared"
+  },
+  "debug": {
+    "last_failure_category": "none",
+    "failure_count_by_category": {},
+    "same_error_retry_count": 0,
+    "rescue_retry_count": 0,
+    "last_root_cause": "",
+    "last_fix_scope": "none",
+    "last_fix_strategy": "none",
+    "flaky_suspected": false,
+    "debug_mode": "normal"
+  },
+  "github": {
+    "default_branch": "main",
+    "remote_configured": true,
+    "remote_url": "https://github.com/Kensan196948G/Construction-DX-OS.git",
+    "remote_configured_date": "2026-04-22",
+    "first_ci_run_id": "24753466312",
+    "first_ci_result": "6/6 jobs green",
+    "project_url": "https://github.com/users/Kensan196948G/projects/21",
+    "require_pr": true,
+    "require_codex_review": true,
+    "require_actions_success": true,
+    "project_sync_enabled": true,
+    "note": "remote wired 2026-04-22; CI first run green; Project #21 created"
+  },
+  "cto_decisions": {
+    "mode": "full",
+    "reason": "Greenfield bootstrap inherited from v6.4 state; Phase 0 deadline 2026-04-24 requires minimum viable repo + cdx-agent MVP + CI within this session.",
+    "inherited_from": "v6.4 (2026-04-14 session)",
+    "scope_priority": [
+      "repo skeleton (.gitignore, state v8, directory bootstrapping)",
+      "cdx-agent MVP (config + inventory + heartbeat + CLI entrypoint)",
+      "pytest scaffold + smoke tests",
+      "github actions CI (ruff + pytest)",
+      "local Issue Factory (claudeos/issues/*.md) until remote wired",
+      "README update reflecting real repo state"
+    ],
+    "out_of_scope_this_session": [
+      "live-build actual ISO generation (requires Debian env)",
+      "server/api full implementation (Phase 2)",
+      "WebUI frontend (Phase 2)",
+      "ansible/k8s deployment (Phase 3)",
+      "AppArmor/sudo policy files (Phase 2+)",
+      "GitHub remote bootstrap (requires user credentials)"
+    ]
+  },
+  "learning": {
+    "failure_patterns": [],
+    "success_patterns": [],
+    "blocked_patterns": [],
+    "preferred_fix_order": [
+      "security",
+      "ci",
+      "test",
+      "review",
+      "refactor"
+    ]
+  },
+  "status": {
+    "stable": true,
+    "stable_scope": "local",
+    "stable_gates": {
+      "test": "pass (305 server + 132 agent + 58 pyramid = 495 total)",
+      "lint": "pass (both packages)",
+      "build_structure": "pass",
+      "ci": "pass (8 jobs green — run #25412847805 PR #12 merged)",
+      "review": "pass (Loop 10 policy-pull: new endpoint, 9 tests all green)",
+      "security": "pass (nonce middleware, HIGH=0, MEDIUM=0, pip-audit clean)",
+      "observability": "pass (server request-id/JSON logs/metrics + agent JSON logs + E2E trace + rate-limit counter)",
+      "rate_limit": "pass (token-bucket per (device_id,endpoint), 429+Retry-After, E2E proven)",
+      "error_count": 0
+    },
+    "stable_remote_pending": "none — CI green on GitHub (run #24753466312). Codex/CodeRabbit review enabled via PR workflow.",
+    "blocked": false,
+    "current_phase": "MVP-RC",
+    "current_loop": 85,
+    "loop_plan": "Loop 65 完了 (PR #12 merged): Issue 0027 Grafana dashboard (6panel, auto-provision, docker-compose) + README Loop 63-64反映 + Issue 0022/0023クローズ + Issue 0027/0028生成。CI 8/8 green。次: Issue 0028 device detail WebUI or 新機能。",
+    "session_end": "2026-05-06T10:00:00+09:00",
+    "session_end_reason": "active session — Loop 58 (Issue 0023 build-worker Phase D mock + Monitor + Verify) shipped",
+    "last_updated": "2026-05-06T13:30:00+09:00"
+  },
+  "session_summary": {
+    "session_id": "2026-04-15T08:48_bootstrap+phase1",
+    "commits_landed": 87,
+    "commit_hashes": [
+      "4a4a1c0 chore: bootstrap",
+      "883415e feat(agent): cdx-agent MVP v0.1.0",
+      "5cc07ec ci: minimal github actions",
+      "c4d0c8b docs(readme): phase 0 status",
+      "4124a7b chore(state): record session outcome",
+      "31ceebc feat(agent): HMAC sign + spool + sync v0.2.0",
+      "eaee907 feat(server): cdx-server FastAPI MVP",
+      "50fa660 ci: cdx-server matrix job",
+      "55d7e83 fix(security): registration gate + canonical hardening",
+      "f9e3d6e docs: reflect Phase 1 vertical slice + review outcome",
+      "e2feddd feat(infra): live-build skeleton + cdx-agent systemd units",
+      "f891eb7 feat(launcher): Construction Hub HTML/JS PoC + dev scripts",
+      "7e94ef5 docs: surface Phase 1 infra in README",
+      "624344c chore(state): record Loop 3 outcome",
+      "7ec956f feat(agent): full-jitter exponential backoff",
+      "95e9dd5 refactor(server): extract Storage Protocol",
+      "70e0d37 fix: address Loop 3 reviewer findings (2C/2H/2M)",
+      "78856a4 docs(improve): finalize Loop 4 + record review-cadence learning",
+      "cc2f8b6 chore(state): sync commits_landed (Loop 4 drift fix)",
+      "4493a3c chore(improve): pytest deprecation + design docs sync",
+      "4407b11 feat(server): observability layer (request-id + JSON logs + /metrics)",
+      "b972352 docs(improve): record Loop 6 observability",
+      "9b4c968 docs(readme): reflect Loop 4/5/6 status table",
+      "4fdf4d3 chore(state): resync + Loop 7 transition",
+      "4407b11 feat(server): observability layer (repeat — already above)",
+      "<loop7> feat(agent): observability — JSON logs + request-id + X-Request-Id",
+      "78d44a7 test(contract): E2E X-Request-Id propagation",
+      "<loop7-fix> fix: Loop 7 reviewer findings (0C/1H/3M — handler preservation, \"-\" semantics, secret redaction, log-level warn)",
+      "5c87991 docs(improve): record Loop 7 + reviewer round 3 completion",
+      "8be966e feat(server): per-device token-bucket rate limiting (429 + Retry-After) — Loop 8",
+      "8ae1e57 docs(improve): record Loop 8 rate-limit completion",
+      "3ba35ce docs(improve): refresh README roadmap with Loop 6/7/8 truth"
+    ],
+    "tests_passing": 297,
+    "lines_added_approx": 9100,
+    "issues_opened": 19,
+    "issues_closed": 17,
+    "loops_completed": 37,
+    "phase_progress": {
+      "phase_0_scope_completed": 7,
+      "phase_0_scope_total": 7,
+      "phase_1_vertical_slice_done": true,
+      "phase_1_infra_done": true,
+      "phase_1_completed": [
+        "cdx-agent MVP (config/inventory/heartbeat/sign/spool/api_client/sync/cli)",
+        "cdx-server FastAPI MVP (4 endpoints, auth, in-memory storage, contract test)",
+        "security hardening (Bearer registration, canonical regex, observability logging)",
+        "live-build skeleton (5 package-lists + 4 hooks + auto/{config,build})",
+        "systemd units (cdx-agent.service/.timer + inventory.service/.timer + hardening)",
+        "Construction Hub PoC launcher (HTML/CSS/vanilla JS, 3 profile tabs)",
+        "dev scripts (dev-up.sh, dev-register.sh)",
+        "observability layer (Loop 6+7): request-id, JSON logs, /metrics, agent E2E trace",
+        "rate limiting (Loop 8): per-device token bucket, 429+Retry-After, endpoint-labeled metric",
+        "policy-pull endpoint (GET /api/v1/policy, HMAC auth, per-profile defaults) — Loop 10",
+        "agent policy client (PolicyClient, poll-policy CLI, interval config) — Loop 11",
+        "AppArmor profile (usr.bin.cdx-agent MAC, least-privilege) — Loop 12",
+        "docker-compose (cdx-server + Prometheus, Phase 2 Postgres placeholder) — Loop 12",
+        "debhelper scaffold (control/rules/changelog/postinst/prerm) — Loop 12",
+        "Construction Hub UI connection feedback (connecting/error/ok + timeout) — Loop 12",
+        "PostgresStorage + Alembic scaffold (models, storage_pg, alembic.ini, migrations/0001) — Loop 13",
+        "DATABASE_URL auto-select PostgresStorage + CI Postgres 16 service — Loop 14",
+        "/health liveness probe (ping() Protocol) + docker-compose Postgres enabled — Loop 15",
+        "_build_request → _PreparedRequest NamedTuple (api_client) — Loop 17",
+        "管理 WebUI /admin + /admin/devices/{id} — Jinja2 SSR, device list/HB/inventory — Loop 18 (Issue 0009)",
+        "Issue 0008 全項目クローズ (_get_storage idiom: 全6ルーター統一確認) — Loop 19",
+        "Phase 4a: /admin HTTP Basic Auth (CDX_ADMIN_TOKEN + dev bypass + constant-time compare) — Loop 21",
+        "Phase 4b: RedisRateLimiter (Lua sliding-window, REDIS_URL auto-select, fakeredis tests) — Loop 22",
+        "Phase 4c: scripts/generate_openapi.py + CI --check step (7 endpoints) — Loop 23",
+        "Phase 5a: SDK auto-gen (make sdk) → sdk/typescript/ + sdk/python/ (openapi-generator-cli) — Loop 24",
+        "Phase 5b: OIDC JWT Bearer auth (OIDCVerifier + MockOIDCServer, AUTH_BACKEND=oidc, 6 tests) — Loop 24"
+      ],
+      "phase_4_next": [
+        "Phase 4 全完了 (Loop 23 時点)"
+      ],
+      "phase_5_next": [
+        "Phase 5a: OpenAPI クライアント SDK 自動生成 (TypeScript + Python) — Issue 0011 ✅ Loop 24完了",
+        "Phase 5b: OIDC JWT Bearer auth (AUTH_BACKEND=oidc, MockOIDCServer, 6テスト) — Issue 0011 ✅ Loop 24完了",
+        "Phase 5c: SDK E2E smoke tests (test_sdk_smoke.py 3テスト) + make dev-install — Issue 0012 ✅ Loop 25完了",
+        "Phase 5c: E2E 統合テスト + fakeredis venv 整備 — Issue 0012 ✅ Loop 25完了",
+        "Phase 6a: CONTRIBUTING.md 新規作成 (venv/test/lint/PR戦略/構成解説) — Issue 0013 ✅ Loop 26完了",
+        "Phase 6b: Makefile バグ修正 (agent/cdx_agent パス修正: dev-install/lint/test) — Issue 0013 ✅ Loop 26完了",
+        "GitHub remote 接続 → CI初回実行 → Codex/CodeRabbit有効化 — Issue 0004 ✅ Loop 27完了 (CI 6/6 green, Project #21)",
+        "Node.js 24 CI opt-in + pytest warnings ゼロ化 — Issue 0014/0015 ✅ Loop 28完了",
+        "DI sentinels 一元化 (dependencies.py, 8→3 overrides) — Loop 29リファクタ完了",
+        "Issue 0016/0017 生成: CI security scan + PyJWT 移行計画 — Loop 29"
+      ],
+      "phase_1_remaining": [
+        "real ISO build verification (requires Debian build host)"
+      ],
+      "phase_2_design": [
+        "Issue 0022: Phase 2 ISO Builder UI (WebUI から live-build 非同期実行) — design 完了",
+        "Issue 0023: Phase 2 build-worker (RQ + live-build runner) — design 完了",
+        "Issue 0024: Phase 2 iso_build_jobs / iso_build_audit テーブル + Alembic — design 完了",
+        "docs/07_中央管理基盤/05_ISO-Builder-UI設計.md 新規作成",
+        "全関連ドキュメント (詳細要件定義書 / フル設計 / WebUI / API / アーキ4本 / Client-OS 2本 / Service-Blueprint / Document-Map / live-build README / README.md) を ISO Builder UI 採用前提に更新"
+      ],
+      "blocker": "none — Issue 0004 closed. Phase 2 ISO Builder UI 設計フェーズ完了。次は Issue 0024 (Alembic schema) 実装着手予定。"
+    },
+    "review_findings_addressed": {
+      "loop2": {
+        "critical": 1,
+        "high": 3,
+        "medium": 2
+      },
+      "loop4_against_loop3": {
+        "critical": 2,
+        "high": 2,
+        "medium": 2
+      },
+      "loop7_against_loop7": {
+        "critical": 0,
+        "high": 1,
+        "medium": 3
+      },
+      "loop8_against_loop8": {
+        "critical": 0,
+        "high": 1,
+        "medium": 2
+      },
+      "total_findings": 18,
+      "all_resolved": true
+    }
+  },
+  "tasks": [],
+  "current_loop": 85,
+  "deployment": {
+    "systemd_service": "cdx-os-server",
+    "service_file": "/etc/systemd/system/cdx-os-server.service",
+    "host": "0.0.0.0",
+    "bind_port": 8300,
+    "lan_ip": "192.168.0.185",
+    "webui_url": "http://192.168.0.185:8300/admin",
+    "api_url": "http://192.168.0.185:8300",
+    "health_url": "http://192.168.0.185:8300/health",
+    "registered_at": "2026-05-06",
+    "status": "active (running)",
+    "env_file": "/home/kensan/Projects/Construction-DX-OS/.env",
+    "storage_mode": "PostgresStorage (DATABASE_URL=postgresql+asyncpg://cdxos@localhost/cdxos)"
+  },
+  "loop_history": [
+    {
+      "loop": 66,
+      "date": "2026-05-06",
+      "phase": "Build",
+      "summary": "systemd cdx-os-server service 作成・有効化・起動 (port 8300, 192.168.0.185)"
+    },
+    {
+      "loop": "66-final",
+      "date": "2026-05-06",
+      "phase": "Improvement",
+      "summary": "PR #13 merged: systemd hardening (EnvironmentFile optional, NoNewPrivileges, ProtectSystem, PrivateTmp), README updated, CI 3x success"
+    },
+    {
+      "loop": 67,
+      "date": "2026-05-06",
+      "phase": "Build+Verify",
+      "summary": "PR #14: ruff format 9 files (STABLE restore). PR #15: Issue 0028 device detail — online badge, policy section, collapsible inventory, relative time (+4 tests, 198 total). CI success x2."
+    },
+    {
+      "loop": 68,
+      "date": "2026-05-06",
+      "phase": "Monitor",
+      "summary": "Monitor: 全 Issue 0020/0026/0027/0028 を done に同期。PR #16 (root redirect) merged, 199 tests。新規 Issue 0029(PG永続化)/0030(Grafanaアラート)/0031(カバレッジ) 生成。"
+    },
+    {
+      "loop": "68-improvement",
+      "date": "2026-05-06",
+      "phase": "Improvement",
+      "summary": "Issue 0031 完了: CI coverage gate 85% 追加 (現在 90.0%)、GitHub Step Summary カバレッジテーブル自動出力。PR #17 merged。次: Issue 0029 (PostgreSQL永続化) or Issue 0030 (Grafana アラート)。"
+    },
+    {
+      "loop": 69,
+      "date": "2026-05-06",
+      "phase": "Build",
+      "summary": "Issue 0029 完了: PostgreSQL cdxos DB 作成、Alembic migration 2件適用、systemd再起動→storage_backend=PostgresStorage 確認。Monitor: 残157日・縮退なし・CI全 success。"
+    },
+    {
+      "loop": "69-improvement",
+      "date": "2026-05-06",
+      "phase": "Improvement",
+      "summary": "Issue 0030: Grafana アラートルール3件 (HeartbeatStopped/ISOBuildFailureRate/RateLimitSpike) provisioning YAML追加。全Issue完了。"
+    },
+    {
+      "loop": 70,
+      "date": "2026-05-06",
+      "phase": "Monitor",
+      "summary": "Monitor: 全 Issue 完了確認 (0029/0030/0031 done)。CI in-progress→success 予定。PostgresStorage 稼働中。新規 Issue 0032(Alembic asyncpg ENV)/0033(デバイス一覧バッジ)/0034(asyncio警告) 生成。"
+    },
+    {
+      "loop": "70-improvement",
+      "date": "2026-05-06",
+      "phase": "Improvement",
+      "summary": "README.md+systemd README+pyproject+.env.example を Loop 66-70 成果で更新。実装ログに 12a-12g 追加 (systemd/PG永続化/coverage/Grafana alerts/Alembic)。実装ステータステーブルに 8 行追加。203 tests 維持。"
+    },
+    {
+      "loop": 71,
+      "date": "2026-05-06",
+      "phase": "Improvement",
+      "summary": "admin.py refactor: _online_status → _heartbeat_freshness 統一 (DRY)。+4 ヘルパーユニットテスト (203→207 passed, 90.04% coverage)。新規 Issue 0035 (iso_builds coverage)/0036 (README月次進捗)/0037 (deployment doc)。"
+    },
+    {
+      "loop": 72,
+      "date": "2026-05-06",
+      "phase": "Build+Verify",
+      "summary": "Issue 0035 完了: routers/iso_builds.py カバレッジ 68%→99% (残1行は OIDC subject 経路のみ)。test_iso_download.py 1→13 tests / test_iso_builds_sse.py 5→8 tests。全体 207→245 passed, coverage 90.04%→98.83%。Issue 0035 AC (iso_builds≥90% / 全体≥92%) を大幅クリア。Issue 0038 (download endpoint audit log gap, P2 compliance) を新規起票。"
+    },
+    {
+      "loop": "72-docs",
+      "date": "2026-05-06",
+      "phase": "Improvement",
+      "summary": "Issue 0037 完了 (PR #24): deployment ドキュメント整備。新規 4 ファイル合計 742 行 — deployment/README.md (overview+ASCII図+4段階構築フロー)、postgres/README.md (PG17 host/Docker/Alembic/tuning)、monitoring/README.md (Prometheus 3.3 + Grafana 11、Issue 0027/0030 アセット参照、cardinality 警告)、backup/README.md (pg_dump custom + cron/systemd timer + age 暗号化 + restore drill 年1回)。systemd 既存と合わせて 842 行・5 ガイドが本番運用カバー完了。残 open: 0036/0038。"
+    },
+    {
+      "loop": "72-audit",
+      "date": "2026-05-06",
+      "phase": "Build+Verify",
+      "summary": "Issue 0038 完了 (PR #25): ISO download endpoint の audit row 欠落 (compliance gap, P2) を解消。download_iso_redirect 内で iso_storage.append_iso_build_audit(action=\"download\", actor=_resolve_actor, request_id) を 307 直前に追加し、enqueue/cancel と同じパターンに統一。test_iso_download.py に 2 ケース追加 (13→15): 成功時 audit row が action=download / actor=admin@basic で永続化されること、503 失敗時に phantom row が混入しないこと。全体 245→247 passed, coverage 98.83% 維持, ruff clean, CI 9/9 green。残 open: 0036 (P3 README 月次進捗)。"
+    },
+    {
+      "loop": "72-readme",
+      "date": "2026-05-06",
+      "phase": "Improvement",
+      "summary": "Issue 0036 完了: README 冒頭 (タイトル直下) に 6ヶ月計画 進捗バナーを静的挿入。現在地 2026-05-06 / 残 157 日 / Loop 72 / Month 4 Quality。Month 1-2 (Build) 100% ✅ / Month 3-4 (Quality) 70% 🔄 / Month 5 (Stabilize) 0% / Month 6 (Release) 0%。Markdown 罫線文字 (█/░) で進捗バー可視化。数値は state.json/loop_history からの CTO 推定。残 open: なし (全 Issue クローズ)。"
+    },
+    {
+      "loop": 73,
+      "date": "2026-05-06",
+      "phase": "Monitor+Build+Verify",
+      "summary": "Issue 0040 完了: 新 Design Canvas バンドル D7fRYOT0_vawatKMQzm4dg を取得し前回バンドル (NxV0inm-...) との差分検証。proto-* 9 ファイル + index.html は完全一致 (バイト単位)、新規 jsx は Canvas 編集環境専用 (本番不要)、admin templates はローカル版が新しい。配備対象 SPA に変更なし。Issue 0041 完了 (PR #30): OS 配布 5 方式 要件定義 + 詳細設計仕様。新規 doc 04a (10 セクション、PXE 関連 11+ ステップ詳細)、04 から相互参照、README に 5 方式サマリ + Mermaid + セキュリティ要件 (token 直埋禁止 / ephemeral / mTLS / SHA256 / 5台先行検証 / 帯域制御 / 監査ログ) 追加、tests/test_distribution_doc.py で 6 テスト (合計 313 → ドキュメント整合性検証)。残 open: 0042 (Issue 0041 で deferred、PXE 配布実装の本工程: dnsmasq.conf / nginx.conf / preseed.cfg / agent-bootstrap.sh 本実装 / registration token API / token rotation API / Prometheus exporter / 6 パターン rollback 自動化)。"
+    },
+    {
+      "loop": "73-csp-fix",
+      "date": "2026-05-06",
+      "phase": "Verify+Build",
+      "summary": "PR #32 merged (commit d45ffb0): http://192.168.0.185:8300/ の白画面を解消。原因は CSP が /admin-spa/ の CDN 依存 (unpkg.com の React/ReactDOM/Babel) と <script type=text/babel> の 'unsafe-eval' を遮断していたこと。security_headers.py の CSP に script-src で 'unsafe-eval' + https://unpkg.com、style-src で https://fonts.googleapis.com、font-src で https://fonts.gstatic.com を追加。test_csp_allows_admin_spa_cdn_dependencies で 4 つの新規許可元を assert。systemctl restart cdx-os-server 後、ユーザー IP 192.168.0.143 が proto-page-security/others/settings/app.jsx を全て 200 取得 (journalctl 15:53:54) — Babel runtime 動作と CDN 取得を本番実証。CSP 緩和は暫定処置で follow-up Issue 0043 (P3) で SPA 事前ビルド化により 'unsafe-eval' / unpkg.com / Google Fonts を全削除予定。Issue 0042 (PXE 実装本工程) も Issue ファイル化を完了。"
+    },
+    {
+      "loop": 74,
+      "date": "2026-05-13",
+      "phase": "Build+Verify",
+      "summary": "Issue 0042 Phase 4.4 (PXE Prometheus metrics + Grafana alerts) + Phase 4.5 (6-pattern rollback scripts + POST /api/v1/pxe/rollback + WebUI console) 完了。PR #35 open, CI queued。285→299 passed。Phase 4.6 (5台先行リハーサル) は実機環境が必要なため Phase 4.6 Issue として記録。"
+    },
+    {
+      "loop": "75-83",
+      "date": "2026-05-13",
+      "phase": "Build+Verify+Improve",
+      "summary": "10ループ自律開発 (Loop 75-83): テストピラミッド構築 (5カテゴリ58tests) + セキュリティ脆弱性修正 (HIGH x5 MEDIUM x3) + CSP nonce middleware (Issue 0044 RESOLVED) + Admin WebUI device search/filter + CI test pyramid統合 + API benchmark tests + 3 P1バグ修正。tests/ 58 + server/api/ 305 + agent/ 132 = 495 tests total。PR #36 CI in_progress。"
+    },
+    {
+      "loop": 84,
+      "date": "2026-05-13",
+      "phase": "MVP-RC",
+      "summary": "MVP Release Candidate 完成。全10条件クリア: Docker build OK / 全主要画面200 / API疎通 / 認証認可 / DB CRUD / CI success / 脆弱性ゼロ / E2E 27 passed / README MVP RC section / .env.example+docker-compose.yml。docker-compose.yml healthcheck URL バグ修正。PR #37 merged (CI success)。"
+    },
+    {
+      "loop": 85,
+      "date": "2026-05-13",
+      "phase": "Build+Verify",
+      "summary": "Issue 0043 完了: Admin SPA 事前ビルド化 (esbuild JSX→JS transform, 9ファイル → dist/bundle.js)。React/ReactDOM 18.3.1 UMD を vendor/ に self-host。Google Fonts → system-ui fallback。CSP から 'unsafe-eval' / https://unpkg.com / fonts.googleapis.com / fonts.gstatic.com を全除去。test_csp_no_external_origins テスト追加。CI spa-build ジョブ追加。317 server tests + 26 pyramid tests 全通過。PR #38 open。"
+    },
+    {
+      "loop": 86,
+      "date": "2026-05-14",
+      "phase": "Build+Verify+Improve",
+      "summary": "Month 5 Stabilize フェーズ: CHANGELOG.md v0.1.0 (Keep a Changelog) + GitHub Release v0.1.0 + docker-compose.prod.yml (nginx TLS + Alembic init container) + .env.prod.example + deployment/GO_LIVE_CHECKLIST.md 8セクション + GET /api/v1/dashboard (9 tests) + Admin SPA live data fetch (useEffect + AbortController) + Redis health badge + Admin header SPA nav link + SDK determinism fix (.openapi-generator exclusion) + E2E CI Playwright ジョブ + prod Makefile targets。PR #39+#40 merged。最終 327 server tests / 517 total。CI 11 jobs green。Issues 0045-0050 全クローズ。"
+    }
+  ],
+  "issues": {
+    "0028": "closed — Loop 67 (PR #15 merged)",
+    "0031": "closed — Loop 68 (PR #17 merged, coverage 90%)",
+    "0030": "closed — Loop 69 (Grafana alert rules provisioning)",
+    "0032": "closed Loop70",
+    "0033": "closed Loop70",
+    "0034": "closed Loop70",
+    "0035": "closed — Loop 72 (iso_builds.py 68%→99%, +37 tests, overall 90→98.83%)",
+    "0037": "closed — Loop 72 (PR #24: deployment/{README,postgres,monitoring,backup}/README.md, 742 new lines, 4 self-contained sub-guides)",
+    "0038": "closed — Loop 72 (PR #25: ISO download endpoint audit row + 2 negative-path tests, compliance gap closed, 245→247 passed)",
+    "0036": "closed — Loop 72 (README 6-month progress banner: Month 1-2 100% / 3-4 70% / 5 0% / 6 0%, residual 157 days)",
+    "0039": "closed — Loop 73 (PR #28: Anthropic Design Canvas bundle imported as static SPA at /admin-spa/, root / → 302 redirect, 4 new tests, deployed to 192.168.0.185:8300 via systemd restart)",
+    "0040": "closed — Loop 73 (Bundle D7fRYOT0 verification: superset of NxV0inm-, proto-* + index.html identical, no admin-spa changes needed, design-canvas/admin-designs/hub-designs/webui-designs.jsx are dev-only)",
+    "0041": "closed — Loop 73 (PR #30: 5-distribution-methods design doc 04a, 04 cross-reference, README summary + Mermaid + security requirements, 6 doc-hygiene tests; PXE 関連は dnsmasq + iPXE chainload + UEFI Secure Boot + DHCP Relay + 帯域制御 + 6パターン rollback + 5台先行リハ + ephemeral token + mTLS を仕様化)",
+    "0042": "Phase 4.1-4.3 merged (PR #34). Phase 4.4+4.5 in PR #35. Phase 4.6 (5-device rehearsal, needs real hardware) deferred.",
+    "0043": "RESOLVED (Loop 85): esbuild JSX→JS prebuild + self-host React 18.3.1 UMD + system-ui font fallback → CSP drops 'unsafe-eval' / unpkg.com / Google Fonts. PR #38 open.",
+    "0044": "RESOLVED (Loop 77): CSP nonce middleware + unsafe-inline removed from script-src",
+    "0045": "RESOLVED (Loop 86): CHANGELOG.md v0.1.0 Keep a Changelog format + GitHub Release v0.1.0",
+    "0046": "RESOLVED (Loop 86): docker-compose.prod.yml + nginx.prod.conf + .env.prod.example + CI prod-validate job",
+    "0047": "RESOLVED (Loop 86): E2E Playwright CI job (uvicorn background + chromium) added to GitHub Actions",
+    "0048": "RESOLVED (Loop 86): GET /api/v1/dashboard aggregate endpoint + 9 tests",
+    "0049": "RESOLVED (Loop 86): Admin SPA dashboard live data fetch from /api/v1/dashboard (useEffect + AbortController)",
+    "0050": "RESOLVED (Loop 86): deployment/GO_LIVE_CHECKLIST.md 8-section production readiness checklist"
+  },
+  "open_issues": [],
+  "metrics_loop72": {
+    "tests_total": 247,
+    "tests_passed": 247,
+    "tests_skipped": 3,
+    "coverage_overall": "98.83%",
+    "coverage_iso_builds": "99%",
+    "added_tests_iso_download": 14,
+    "added_tests_iso_sse": 4,
+    "added_tests_iso_audit_negative": 2,
+    "iso_builds_uncovered_lines": [
+      119
+    ]
+  },
+  "metrics_loop74": {
+    "tests_total": 299,
+    "tests_passed": 299,
+    "new_tests_phase44": 14,
+    "new_tests_phase45": 14,
+    "coverage": "> 98% (maintained)",
+    "pxe_endpoints_added": [
+      "POST /api/v1/pxe/events (Phase 4.4)",
+      "POST /api/v1/pxe/rollback (Phase 4.5)",
+      "GET /admin/pxe-rollback (WebUI)"
+    ]
+  },
+  "metrics_loop75_83": {
+    "tests_server": 305,
+    "tests_agent": 132,
+    "tests_new_categories": 58,
+    "tests_total": 495,
+    "coverage": "98.40%",
+    "security_vulns_fixed": 8,
+    "new_features": [
+      "CSP nonce middleware (Issue 0044)",
+      "Admin device search/filter",
+      "Playwright E2E test suite",
+      "Security scan tests (pip-audit+bandit)",
+      "API performance benchmarks",
+      "5-category test pyramid"
+    ]
+  },
+  "mvp_rc": {
+    "status": "COMPLETE",
+    "date": "2026-05-13",
+    "conditions_met": 10,
+    "conditions_total": 10,
+    "pr": "#37",
+    "tests_total": 495,
+    "docker_verified": true,
+    "e2e_passed": 27,
+    "security_critical": 0,
+    "ci_status": "success"
+  },
+  "loop": 86,
+  "phase": "SessionEnd",
+  "metrics_loop86": {
+    "tests_server": 327,
+    "tests_agent": 132,
+    "tests_pyramid": 58,
+    "tests_total": 517,
+    "coverage": "98.76%",
+    "ci_jobs": 11,
+    "pr_merged": ["#39", "#40"],
+    "commits_this_session": 3,
+    "new_features": [
+      "CHANGELOG.md v0.1.0 (Keep a Changelog format)",
+      "GitHub Release v0.1.0 + git tag",
+      "docker-compose.prod.yml (nginx TLS + Alembic init container)",
+      "deployment/nginx/nginx.prod.conf (HTTPS + SSE proxy)",
+      ".env.prod.example",
+      "deployment/GO_LIVE_CHECKLIST.md (8 sections)",
+      "GET /api/v1/dashboard (DashboardResponse aggregate endpoint)",
+      "Admin SPA live data fetch (useEffect + /api/v1/dashboard, AbortController cleanup)",
+      "Redis health check in /health + admin header badge",
+      "Admin SPA /admin-spa/ nav link in base.html header",
+      "SDK determinism fix (.openapi-generator exclusion + clean regen)",
+      "E2E CI job (Playwright chromium + uvicorn background)",
+      "prod-validate / prod-up / prod-down Makefile targets"
+    ],
+    "issues_resolved": ["0045", "0046", "0047", "0048", "0049", "0050"]
+  }
+}

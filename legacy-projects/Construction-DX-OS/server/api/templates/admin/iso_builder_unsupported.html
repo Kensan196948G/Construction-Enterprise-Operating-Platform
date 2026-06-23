@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}ISO Builder — Storage Unsupported{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>⚠️ ISO Builder UI が利用できません</h2>
+  <p style="margin: 0.75rem 0; color: #444;">
+    現在の <code>cdx-server</code> 起動構成では、ISO ビルドジョブを永続化する PostgreSQL バックエンドが有効化されていません。
+  </p>
+  <p style="margin: 0.75rem 0; color: #444;">
+    解決策: 環境変数 <code>DATABASE_URL</code> を設定して再起動してください。
+  </p>
+  <pre>DATABASE_URL=postgresql+psycopg2://cdx:cdx@localhost/cdx</pre>
+  <p style="margin-top: 1rem;"><a href="/admin">← 管理 TOP に戻る</a></p>
+</div>
+{% endblock %}

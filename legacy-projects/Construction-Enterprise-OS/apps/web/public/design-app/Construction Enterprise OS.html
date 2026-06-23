@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Construction Enterprise OS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body,
+      #root {
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+      }
+      :root {
+        --bg: #f8fafc;
+        --bg-page: #f8fafc;
+        --bg-card: #ffffff;
+        --bg-card-hover: #f8fafc;
+        --bg-subtle: #f8fafc;
+        --bg-input: #f8fafc;
+        --border: #e2e8f0;
+        --border-light: #f1f5f9;
+        --text: #0f172a;
+        --text-secondary: #374151;
+        --text-muted: #64748b;
+        --text-heading: #0f172a;
+        --accent: #1a56db;
+        --accent-light: #eff6ff;
+        --shadow: rgba(0, 0, 0, 0.08);
+        --sidebar-bg: #0f172a;
+        --sidebar-border: rgba(148, 163, 184, 0.12);
+        --header-bg: #ffffff;
+      }
+      body {
+        font-family:
+          "Noto Sans JP",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+        background: var(--bg-page);
+        color: var(--text);
+      }
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+      ::selection {
+        background: #bfdbfe;
+        color: #1e3a8a;
+      }
+      button:focus-visible {
+        outline: 2px solid #1a56db;
+        outline-offset: 2px;
+      }
+      input:focus-visible {
+        outline: 2px solid #1a56db;
+        outline-offset: -1px;
+      }
+      @media (max-width: 900px) {
+        .mobile-menu-btn {
+          display: flex !important;
+        }
+        .hide-mobile {
+          display: none !important;
+        }
+        .sidebar-mobile-open {
+          position: fixed;
+          left: 0;
+          top: 0;
+          bottom: 0;
+          z-index: 50;
+        }
+        .mobile-overlay {
+          display: block !important;
+        }
+      }
+      @media (min-width: 901px) {
+        .mobile-overlay {
+          display: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script
+      src="https://unpkg.com/react@18.3.1/umd/react.development.js"
+      integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"
+      integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"
+      integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y"
+      crossorigin="anonymous"
+    ></script>
+
+    <script type="text/babel" src="tweaks-panel.jsx"></script>
+    <script type="text/babel" src="slide-tabs.jsx"></script>
+    <script type="text/babel" src="theme.jsx"></script>
+    <script type="text/babel" src="icons.jsx"></script>
+    <script type="text/babel" src="sidebar-data.jsx"></script>
+    <script type="text/babel" src="sidebar.jsx"></script>
+    <script type="text/babel" src="page-dashboard.jsx"></script>
+    <script type="text/babel" src="page-field-sub.jsx"></script>
+    <script type="text/babel" src="page-field-dx.jsx"></script>
+    <script type="text/babel" src="page-documents-pdf.jsx"></script>
+    <script type="text/babel" src="page-documents.jsx"></script>
+    <script type="text/babel" src="page-iot-sensors.jsx"></script>
+    <script type="text/babel" src="page-iot.jsx"></script>
+    <script type="text/babel" src="page-erp-cost.jsx"></script>
+    <script type="text/babel" src="page-erp.jsx"></script>
+    <script type="text/babel" src="page-common.jsx"></script>
+    <script type="text/babel" src="page-partner.jsx"></script>
+    <script type="text/babel" src="page-gis.jsx"></script>
+    <script type="text/babel" src="page-ai.jsx"></script>
+    <script type="text/babel" src="page-security.jsx"></script>
+    <script type="text/babel" src="page-workflow.jsx"></script>
+    <script type="text/babel" src="page-robotics.jsx"></script>
+    <script type="text/babel" src="page-system.jsx"></script>
+    <script type="text/babel" src="app.jsx"></script>
+
+    <script type="text/babel">
+      const TWEAK_DEFAULTS = {
+        role: "",
+        density: "comfortable",
+        sidebarTheme: "dark",
+        dark: false,
+      };
+
+      function Root() {
+        const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+        window.__TWEAKS = tweaks;
+        window.__SET_TWEAK = setTweak;
+        React.useEffect(() => {
+          const vars = tweaks.dark
+            ? {
+                "--bg": "#0f172a",
+                "--bg-page": "#0f172a",
+                "--bg-card": "#1e293b",
+                "--bg-card-hover": "#334155",
+                "--bg-subtle": "#1e293b",
+                "--bg-input": "#334155",
+                "--border": "#334155",
+                "--border-light": "#1e293b",
+                "--text": "#e2e8f0",
+                "--text-secondary": "#94a3b8",
+                "--text-muted": "#64748b",
+                "--text-heading": "#f1f5f9",
+                "--accent": "#3b82f6",
+                "--accent-light": "#1e3a8a",
+                "--shadow": "rgba(0,0,0,0.3)",
+                "--sidebar-bg": "#020617",
+                "--sidebar-border": "rgba(148,163,184,0.08)",
+                "--header-bg": "#1e293b",
+              }
+            : {
+                "--bg": "#f8fafc",
+                "--bg-page": "#f8fafc",
+                "--bg-card": "#ffffff",
+                "--bg-card-hover": "#f8fafc",
+                "--bg-subtle": "#f8fafc",
+                "--bg-input": "#f8fafc",
+                "--border": "#e2e8f0",
+                "--border-light": "#f1f5f9",
+                "--text": "#0f172a",
+                "--text-secondary": "#374151",
+                "--text-muted": "#64748b",
+                "--text-heading": "#0f172a",
+                "--accent": "#1a56db",
+                "--accent-light": "#eff6ff",
+                "--shadow": "rgba(0,0,0,0.08)",
+                "--sidebar-bg": "#0f172a",
+                "--sidebar-border": "rgba(148,163,184,0.12)",
+                "--header-bg": "#ffffff",
+              };
+          Object.entries(vars).forEach(([k, v]) =>
+            document.documentElement.style.setProperty(k, v),
+          );
+        }, [tweaks.dark]);
+        return (
+          <React.Fragment>
+            <App key={tweaks.role + tweaks.density + tweaks.dark} />
+            <TweaksPanel title="Tweaks">
+              <TweakSection label="テーマ">
+                <TweakToggle
+                  label="ダークモード"
+                  value={tweaks.dark}
+                  onChange={(v) => setTweak("dark", v)}
+                />
+              </TweakSection>
+              <TweakSection label="役割ビュー">
+                <TweakSelect
+                  label="ロール切替"
+                  value={tweaks.role}
+                  options={[
+                    { value: "", label: "全表示（管理者）" },
+                    { value: "field", label: "現場監督" },
+                    { value: "exec", label: "経営層" },
+                    { value: "admin", label: "IT管理者" },
+                    { value: "partner", label: "協力会社" },
+                    { value: "safety", label: "安全管理者" },
+                    { value: "maintain", label: "維持管理" },
+                  ]}
+                  onChange={(v) => setTweak("role", v)}
+                />
+              </TweakSection>
+              <TweakSection label="表示設定">
+                <TweakRadio
+                  label="密度"
+                  value={tweaks.density}
+                  options={[
+                    { value: "comfortable", label: "通常" },
+                    { value: "compact", label: "コンパクト" },
+                  ]}
+                  onChange={(v) => setTweak("density", v)}
+                />
+              </TweakSection>
+            </TweaksPanel>
+          </React.Fragment>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById("root")).render(<Root />);
+    </script>
+  </body>
+</html>

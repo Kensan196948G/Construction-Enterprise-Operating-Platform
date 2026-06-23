@@ -1,0 +1,30 @@
+# Construction DX OS — Mock WebUI systemd unit
+#
+# Starts the mock WebUI automatically at boot via Docker Compose.
+#
+# Install:
+#   sudo cp mock-webui/systemd/cdx-mock-ui.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now cdx-mock-ui.service
+#
+# Adjust WorkingDirectory to the absolute path of this repository on the host.
+
+[Unit]
+Description=Construction DX OS Mock WebUI (dummy-data demo)
+Documentation=https://github.com/Kensan196948G/Construction-DX-OS
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/Construction-DX-OS
+# Build (idempotent) then start in detached mode.
+ExecStartPre=/usr/bin/docker compose -f mock-webui/docker-compose.mock.yml build
+ExecStart=/usr/bin/docker compose -f mock-webui/docker-compose.mock.yml up -d
+ExecStop=/usr/bin/docker compose -f mock-webui/docker-compose.mock.yml down
+TimeoutStartSec=300
+
+[Install]
+WantedBy=multi-user.target

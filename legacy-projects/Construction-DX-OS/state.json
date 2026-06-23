@@ -1,0 +1,123 @@
+{
+  "project": {
+    "name": "Construction-DX-OS",
+    "registration_date": "2026-04-10",
+    "start_date": "2026-04-10",
+    "release_deadline": "2026-10-10",
+    "duration_months": 6,
+    "phase_mode": "development"
+  },
+  "goal": "Construction-DX-OS 本番リリース (v1.0)",
+  "phase": "Improve",
+  "loop": 101,
+  "kpi": {
+    "success_rate_target": 0.9,
+    "ci_success_rate": 1,
+    "test_pass_rate": 1,
+    "test_count": 387,
+    "security_critical": 0,
+    "blocker_count": 0,
+    "coverage": 0.9551
+  },
+  "execution": {
+    "max_duration_minutes": 300,
+    "repair_count": 0,
+    "max_repair": 3,
+    "same_error_limit": 2,
+    "phase": "Improve",
+    "last_session_summary": "Loop 101: Issue 0068 (v1.0 本番リリース最終確認・デプロイ手順書整備) RESOLVED — PR #63 CI 12/12 green, all 7 acceptance criteria met. Issue 0069 (OpenAPI スキーマ改善) RESOLVED — PR #64 CI 12/12 green, FastAPI title/description/openapi_tags(11 tags)/contact/license_info 整備 + test_openapi_schema.py 7 tests. 10 PRs 人間 merge 待ち (#51/#55/#56/#57/#58/#59/#60/#61/#62/#63/#64).",
+    "current_session_start_at": "2026-06-17T00:00:00.000Z",
+    "last_trigger": "cron",
+    "last_claude_session_id": "33e3ab6c-0f55-47fb-b626-2c96b3eb781d"
+  },
+  "automation": {
+    "auto_issue_generation": true,
+    "self_evolution": true
+  },
+  "stable": {
+    "consecutive_success": 5,
+    "target_n": 3,
+    "stable_achieved": true
+  },
+  "completed_issues": [
+    "0031 (test coverage — 98.76% achieved)",
+    "0035 (iso_builds router coverage — 99% achieved)",
+    "0039 (admin SPA — resolved via 0043/PR#38)",
+    "0043 (admin SPA prebuild — PR#38 merged)",
+    "0045 (CHANGELOG v0.1.0 — PR#39)",
+    "0046 (production hardening — PR#39)",
+    "0047 (E2E in CI — ledger drift fixed Loop 89, ジョブは PR#40 以前から CI green)",
+    "0048 (dashboard API — ledger drift fixed Loop 89, 実装は PR#40 完了済み)",
+    "0050 (Production Go-Live Checklist — PR #44 verified)",
+    "0052 (serial-scan DB queue永続化 — PR #43)",
+    "0053 (health liveness/readiness 分離 — PR #47)",
+    "GMSV0002 serial-scan pipeline (PR #41)",
+    "CI pipeline exitcode fix + PYSEC-2025-183 ignore (PR #41)",
+    "serial-scan Prometheus metrics CDX_SERIAL_SCAN_TOTAL (PR #44)",
+    "pytest-asyncio deprecation warning抑止 (PR #45)",
+    "0056 (mock WebUI + 非エンジニア向け README 再構成 — Loop 92, PR #53 merged)",
+    "0057 (starlette httpx2 filterwarnings 修正 — Loop 93, PR #54)",
+    "0058 (fakeredis>=2.36 ZRANGE WITHSCORES Lua 修正 — Loop 93, PR #54)",
+    "0059 (ruff F401/RUF005 修正 — Loop 95, PR #56)",
+    "0060 (ReDoc リンク追加 — Loop 95, PR #56)",
+    "0061 (smoke-test.sh — Loop 96, PR #58)",
+    "0062 (cdx-pg-backup.sh — Loop 97, PR #59)",
+    "0063 (Locust performance baseline — Loop 98, PR #60)",
+    "0064 (smoke-test.sh — see 0061 alias)",
+    "0065 (Locust baseline — see 0063 alias)",
+    "0066 (security_summary.py — Loop 99, PR #61)",
+    "0067 (CHANGELOG v1.0-rc1 昇格 — Loop 99-100, PR #62)",
+    "0068 (v1.0 本番リリース最終確認・デプロイ手順書整備 — Loop 101, PR #63 CI 12/12 green)",
+    "0069 (OpenAPI スキーマ改善 — Loop 101, PR #64 CI 12/12 green)"
+  ],
+  "blocked_issues": [
+    "0042 (PXE Phase 4.1-4.5 — hardware required)",
+    "0044 (PXE Phase 4.6 rehearsal — hardware required)",
+    "0051 (GMSV0002 実機SMB+easyocr — hardware required)"
+  ],
+  "open_issues": [],
+  "next_loop_candidates": [
+    "依存関係更新 / pip-audit 最新化 (aiohttp 3.13.4+ 等) — P3",
+    "v1.0 本番リリース — 11 PRs 人間 merge 後に GitHub Release v1.0.0 作成",
+    "0027 (Grafana dashboard JSON seed — monitoring)",
+    "Runbook / 障害対応手順 (本番リリース必須)"
+  ],
+  "learning": {
+    "failure_patterns": [
+      "conftest.py と test file の CDX_SERVER_URL デフォルトが異なるとテストが別サーバーを参照する",
+      "| tail -N がパイプ exit code を隠蔽し CI 失敗を見逃す原因になる",
+      "state.json などの housekeeping コミットも CLAUDE.md §10 で branch + PR が必須 (main 直接push禁止)",
+      "ledger drift: Issue が実装完了済みなのに claudeos/issues/*.md の status が open のまま残るパターン",
+      "GitHub statusCheckRollup は CheckRun (status/conclusion) と StatusContext (state) を混在する — __typename で判別必須",
+      "pytest-benchmark は exit code 144 を返すが実テストは全 PASS — .venv/bin/python で実行するのが正確"
+    ],
+    "success_patterns": [
+      "Issue closure: verify acceptance criteria against actual code state before marking done",
+      "Production Docker: use expose not ports for internal services",
+      "disputed CVE は --ignore-vuln + コメント文書化で次 fix リリースを待つ",
+      "Storage Protocol gate: isinstance(storage, X) で DB と in-memory のデュアルパスを単一ルーターで管理",
+      "Health probe 分離: /health/live は依存サービスを見ない (pod restart loop 防止)、/health/ready は deep check (LB 切替)",
+      "FastAPI openapi_tags: ルーターレベルで tags 設定し、エンドポイント重複 tags 除去でメンテナンス性向上"
+    ]
+  },
+  "quality_gates": {
+    "lint": {
+      "warning_threshold": 10,
+      "error_threshold": 0
+    },
+    "coverage": {
+      "line_min": 70,
+      "changed_files_min": 80
+    }
+  },
+  "dreaming": {
+    "patterns": [],
+    "curated_memories": [],
+    "recurring_mistakes": [],
+    "last_dreaming_run": null,
+    "dreaming_enabled": false
+  },
+  "compact": {
+    "last_pre_compact_at": "2026-06-17T00:00:00.000Z"
+  }
+}
