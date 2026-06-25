@@ -6,13 +6,19 @@
     "registered_at": "2026-06-25",
     "phase_mode": "development"
   },
-  "goal": "CTO 主導の自律開発で Release Ready / Production Ready へ到達。M1-M3 実装完了（domain + governance + dashboard + adapters）。",
-  "phase": "Verify",
+  "goal": "CTO 主導の自律開発で Release Ready / Production Ready へ到達。v0.1.0 基盤 = Release Ready 判定。",
+  "phase": "Release",
+  "release": {
+    "v0_1_0_foundation": "release_ready",
+    "production_deploy": "pending_human_decision",
+    "judged_by": "CTO",
+    "judged_at": "2026-06-25"
+  },
   "kpi": {
     "success_rate_target": 0.9,
     "ci_success_rate": 0.0,
     "test_pass_rate": 1.0,
-    "test_count": 30,
+    "test_count": 31,
     "security_critical": 0,
     "blocker_count": 0
   },
@@ -38,7 +44,8 @@
     "M1: Governance Core (policy engine deny-overrides + tamper-evident audit log)",
     "M2: role-based dashboard read-model (access-filtered aggregation, hidden-count transparency)",
     "M3: adapter ports (CMDB/ITSM/IMS/LegalOps/BCP/Document) + in-memory Document reference adapter",
-    "30 unit tests, typecheck/lint/build all green"
+    "E2E integration test (domain->governance->audit->dashboard->document) + runnable demo + CHANGELOG v0.1.0",
+    "31 tests (30 unit + 1 integration), typecheck/lint/build all green, demo runs clean"
   ],
   "blocked_issues": [],
   "learning": {
