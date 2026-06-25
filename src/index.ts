@@ -10,3 +10,5 @@ export const PLATFORM_VERSION = "0.1.0";
 
 export * as domain from "./domain/index.ts";
 export * as governance from "./governance/index.ts";
+export * as dashboard from "./dashboard/index.ts";
+export * as adapters from "./adapters/index.ts";

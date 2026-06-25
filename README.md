@@ -28,7 +28,11 @@ src/
 ├── governance/    … Governance Core（統制ゲート）
 │   ├── policy-engine … アクセス決定（deny-overrides）
 │   └── audit-log     … 追記専用・改ざん検知付き監査ログ
-└── index.ts       … 公開 API（domain / governance)
+├── dashboard/     … ロールベースのリードモデル（アクセス制御付き集計）
+│   └── buildDashboard … governance / app health / device / pending approvals
+├── adapters/      … 連携ポート（CMDB/ITSM/IMS/LegalOps/BCP/Document）
+│   └── in-memory-document-adapter … Document Control 参照実装
+└── index.ts       … 公開 API（domain / governance / dashboard / adapters)
 ```
 
 ### 🗂️ プラットフォーム 8 ドメイン
@@ -54,6 +58,27 @@ src/
 `★ 設計意図`: 「許可リストに無ければ拒否」「証跡は不可変」という建設業統制の監査要件を、
 型と暗号学的連鎖でコードに固定しています。
 
+### 📊 ロールベースダッシュボード（read model）
+
+`buildDashboard()` は viewer の権限を Governance Core で評価し、**閲覧可能なリソースだけ**に絞った
+集計ビュー（governance status / app health / device status / pending approvals）を返す純粋関数です。
+
+| 特性         | 内容                                                                     |
+| ------------ | ------------------------------------------------------------------------ |
+| アクセス制御 | `read` 権限の無いリソースは除外。`hidden` に除外件数を明示（黙殺しない） |
+| 決定論       | `generatedAt` を引数化した純粋関数（副作用なし・テスト容易）             |
+| 再利用性     | UI / API / CLI のどの表層からも同一ロジックを使用可                      |
+
+### 🔌 連携ポート（adapters）
+
+業務システムは **port interface** 経由で連携し、中核へ吸収しません（ヘキサゴナル）。
+
+| ポート                                              | 対象                           | 状態         |
+| --------------------------------------------------- | ------------------------------ | ------------ |
+| `DocumentPort`                                      | 規程・手順・監査証跡の文書生成 | 参照実装あり |
+| `CmdbPort`                                          | 構成アイテム台帳               | 契約定義済   |
+| `ItsmPort` / `ImsPort` / `LegalOpsPort` / `BcpPort` | ITSM / 統合管理 / 法務 / BCP   | 契約定義済   |
+
 ---
 
 ## 🚀 開発・検証
@@ -69,13 +94,13 @@ pnpm run verify     # typecheck + lint + test 一括
 
 ### 📊 現在の品質状態
 
-| ゲート    | 状態      | 備考                                    |
-| --------- | --------- | --------------------------------------- |
-| typecheck | ✅ pass   | strict・0 error                         |
-| lint      | ✅ pass   | 0 warning                               |
-| test      | ✅ 22/22  | `node:test`・domain + governance        |
-| build     | ✅ pass   | `dist/` に型定義付き出力                |
-| CI        | ⏳ 準備済 | `.github/workflows/ci.yml`（要 remote） |
+| ゲート    | 状態      | 備考                                       |
+| --------- | --------- | ------------------------------------------ |
+| typecheck | ✅ pass   | strict・0 error                            |
+| lint      | ✅ pass   | 0 warning                                  |
+| test      | ✅ 30/30  | domain + governance + dashboard + adapters |
+| build     | ✅ pass   | `dist/` に型定義付き出力                   |
+| CI        | ⏳ 準備済 | `.github/workflows/ci.yml`（要 remote）    |
 
 ---
 
@@ -93,12 +118,12 @@ pnpm run verify     # typecheck + lint + test 一括
 
 ## 🗺️ ロードマップ
 
-| フェーズ | 対象                                                               |
-| -------- | ------------------------------------------------------------------ |
-| ✅ M1    | 8 ドメイン定義 + Governance Core（本コミット）                     |
-| ⬜ M2    | ロールベースダッシュボード（governance/app health/device/approval) |
-| ⬜ M3    | アダプタ定義（CMDB・ITSM・IMS・LegalOps・BCP・Document Control）   |
-| ⬜ M4    | 永続化層・API ゲートウェイ・統合テスト                             |
+| フェーズ | 対象                                                                |
+| -------- | ------------------------------------------------------------------- |
+| ✅ M1    | 8 ドメイン定義 + Governance Core                                    |
+| ✅ M2    | ロールベースダッシュボード（governance/app health/device/approval)  |
+| 🔄 M3    | アダプタ契約定義済（CMDB/ITSM/IMS/LegalOps/BCP）+ Document 参照実装 |
+| ⬜ M4    | 各ポートの本実装・永続化層・API ゲートウェイ・統合テスト            |
 
 ---
 

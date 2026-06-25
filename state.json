@@ -6,12 +6,13 @@
     "registered_at": "2026-06-25",
     "phase_mode": "development"
   },
-  "goal": "CTO 主導の自律開発で Release Ready / Production Ready へ到達。M1: 8 ドメイン + Governance Core 完了。",
+  "goal": "CTO 主導の自律開発で Release Ready / Production Ready へ到達。M1-M3 実装完了（domain + governance + dashboard + adapters）。",
   "phase": "Verify",
   "kpi": {
     "success_rate_target": 0.9,
     "ci_success_rate": 0.0,
     "test_pass_rate": 1.0,
+    "test_count": 30,
     "security_critical": 0,
     "blocker_count": 0
   },
@@ -27,15 +28,17 @@
   },
   "milestones": {
     "M1_domain_governance_core": "completed",
-    "M2_role_based_dashboard": "planned",
-    "M3_adapters": "planned",
+    "M2_role_based_dashboard": "completed",
+    "M3_adapters": "in_progress",
     "M4_persistence_gateway": "planned"
   },
   "completed_issues": [
     "M1: TypeScript foundation scaffold (pnpm + strict tsc + node:test + eslint + CI)",
     "M1: 8 platform domains (organization/user/role/device/application/workflow/policy/audit-event)",
     "M1: Governance Core (policy engine deny-overrides + tamper-evident audit log)",
-    "M1: 22 unit tests, typecheck/lint/build all green"
+    "M2: role-based dashboard read-model (access-filtered aggregation, hidden-count transparency)",
+    "M3: adapter ports (CMDB/ITSM/IMS/LegalOps/BCP/Document) + in-memory Document reference adapter",
+    "30 unit tests, typecheck/lint/build all green"
   ],
   "blocked_issues": [],
   "learning": {
@@ -50,8 +53,8 @@
     "branch": "feat/platform-foundation",
     "next_actions": [
       "リモートリポジトリ作成 + PR 作成（人間承認後）",
-      "M2: ロールベースダッシュボード設計・実装",
-      "認証/認可コアの Codex 対抗レビュー"
+      "M4: 各ポート本実装・永続化層・API ゲートウェイ・統合テスト",
+      "認証/認可コア (policy-engine) の Codex 対抗レビュー"
     ]
   }
 }
