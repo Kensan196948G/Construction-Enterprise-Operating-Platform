@@ -1,0 +1,7 @@
+legacy-projects/
+dist/
+node_modules/
+coverage/
+pnpm-lock.yaml
+CLAUDE.md
+.claude/

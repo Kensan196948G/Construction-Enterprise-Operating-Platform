@@ -1,0 +1,57 @@
+{
+  "project": {
+    "name": "Construction-Enterprise-Operating-Platform",
+    "start_date": "2026-06-25",
+    "release_deadline": "2026-12-25",
+    "registered_at": "2026-06-25",
+    "phase_mode": "development"
+  },
+  "goal": "CTO 主導の自律開発で Release Ready / Production Ready へ到達。M1: 8 ドメイン + Governance Core 完了。",
+  "phase": "Verify",
+  "kpi": {
+    "success_rate_target": 0.9,
+    "ci_success_rate": 0.0,
+    "test_pass_rate": 1.0,
+    "security_critical": 0,
+    "blocker_count": 0
+  },
+  "execution": {
+    "max_duration_minutes": 180,
+    "repair_count": 0,
+    "max_repair": 3,
+    "same_error_limit": 2
+  },
+  "automation": {
+    "auto_issue_generation": true,
+    "self_evolution": true
+  },
+  "milestones": {
+    "M1_domain_governance_core": "completed",
+    "M2_role_based_dashboard": "planned",
+    "M3_adapters": "planned",
+    "M4_persistence_gateway": "planned"
+  },
+  "completed_issues": [
+    "M1: TypeScript foundation scaffold (pnpm + strict tsc + node:test + eslint + CI)",
+    "M1: 8 platform domains (organization/user/role/device/application/workflow/policy/audit-event)",
+    "M1: Governance Core (policy engine deny-overrides + tamper-evident audit log)",
+    "M1: 22 unit tests, typecheck/lint/build all green"
+  ],
+  "blocked_issues": [],
+  "learning": {
+    "failure_patterns": [],
+    "success_patterns": [
+      "Node v25 native TS execution + node:test enables zero-runtime-dependency, verifiable foundation",
+      "TS 5.7 rewriteRelativeImportExtensions bridges native .ts imports and emitted .js build"
+    ]
+  },
+  "notes": {
+    "remote": "未設定（ローカルのみ）。GitHub リポジトリ作成・push は外部サービス変更のため人間承認待ち。",
+    "branch": "feat/platform-foundation",
+    "next_actions": [
+      "リモートリポジトリ作成 + PR 作成（人間承認後）",
+      "M2: ロールベースダッシュボード設計・実装",
+      "認証/認可コアの Codex 対抗レビュー"
+    ]
+  }
+}
