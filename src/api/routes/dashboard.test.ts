@@ -7,7 +7,7 @@
  * `after` hook to guarantee port cleanup even on assertion failure.
  */
 
-import { test, before, after } from "node:test";
+import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import type { AddressInfo } from "node:net";
 
@@ -15,7 +15,15 @@ import { createServer } from "../server.ts";
 import { createApiKey } from "../middleware/auth.ts";
 import { createInMemoryRepositories } from "../../persistence/in-memory/index.ts";
 import { AuditLog } from "../../governance/audit-log.ts";
+import { resolvePermissions } from "../../governance/policy-engine.ts";
+import { createRole } from "../../domain/index.ts";
 import type { ApiKeyStore } from "../types.ts";
+import type { Result } from "../../domain/common.ts";
+
+function unwrap<T>(r: Result<T>): T {
+  if (!r.ok) throw new Error(JSON.stringify(r.error));
+  return r.value;
+}
 
 // ---------------------------------------------------------------------------
 // Shared test harness
@@ -32,15 +40,24 @@ interface Harness {
 async function buildHarness(): Promise<Harness> {
   const apiKeyStore: ApiKeyStore = new Map();
 
+  const adminRole = unwrap(
+    createRole({ id: "r-admin", name: "Admin", description: "", scope: "global", permissions: ["*:*"] }),
+  );
+  const viewerRole = unwrap(
+    createRole({
+      id: "r-viewer",
+      name: "Viewer",
+      description: "",
+      scope: "global",
+      permissions: ["application:read", "device:read", "audit:read"],
+    }),
+  );
+
   // Admin: full wildcard permission
-  const adminKV = createApiKey("admin-subject", ["*:*"], apiKeyStore);
+  const adminKV = createApiKey("admin-subject", resolvePermissions([adminRole]), apiKeyStore);
 
   // Viewer: read-only on applications and devices only (not organizations or users)
-  const viewerKV = createApiKey(
-    "viewer-subject",
-    ["application:read", "device:read", "audit:read"],
-    apiKeyStore,
-  );
+  const viewerKV = createApiKey("viewer-subject", resolvePermissions([viewerRole]), apiKeyStore);
 
   const container = {
     repositories: createInMemoryRepositories(),
