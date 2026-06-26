@@ -16,6 +16,7 @@ import { createPolicy } from "./domain/policy.ts";
 import { AuditLog } from "./governance/audit-log.ts";
 import { createInMemoryRepositories } from "./persistence/in-memory/index.ts";
 import { createFileRepositories } from "./persistence/file/index.ts";
+import { createSqliteRepositories } from "./persistence/sqlite/index.ts";
 import { createApiKey } from "./api/middleware/auth.ts";
 import { createJwtIssuer, generateJwtSecret } from "./api/middleware/jwt.ts";
 import { createServer } from "./api/server.ts";
@@ -51,11 +52,16 @@ function mustOk<T>(label: string, result: { ok: boolean; value?: T; error?: unkn
  * Every call returns an independent container with its own in-memory stores.
  */
 export async function createApp(): Promise<AppContainer> {
-  // Use file-backed repositories when CEOP_DATA_DIR is set; otherwise in-memory.
+  // Persistence tier (priority: SQLite > file > in-memory).
+  // CEOP_SQLITE_FILE: path to SQLite DB file (e.g. /data/ceop.db)
+  // CEOP_DATA_DIR: directory for JSON file repositories
+  const sqliteFile = process.env["CEOP_SQLITE_FILE"];
   const dataDir = process.env["CEOP_DATA_DIR"];
-  const repositories = dataDir
-    ? await createFileRepositories(dataDir)
-    : createInMemoryRepositories();
+  const repositories = sqliteFile
+    ? createSqliteRepositories(sqliteFile)
+    : dataDir
+      ? await createFileRepositories(dataDir)
+      : createInMemoryRepositories();
 
   const auditLog = new AuditLog();
   const apiKeyStore: AppContainer["apiKeyStore"] = new Map();
