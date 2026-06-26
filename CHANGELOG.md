@@ -4,6 +4,26 @@ All notable changes to the Construction Enterprise Operating Platform are docume
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Security
+
+- **Timing attack (Critical)** — HMAC hash comparison in `auth.ts` now uses
+  `crypto.timingSafeEqual` instead of `!==` to prevent timing side-channel attacks.
+- **DoS — body size (High)** — `router.ts` enforces a 1 MiB request-body limit; oversized
+  bodies are rejected before buffering to prevent heap exhaustion.
+- **Missing authorization on audit log (High)** — `GET /api/v1/governance/audit` now requires
+  `audit:read` (or `*:*` / `*:read`) permission; unauthenticated callers receive 403.
+- **Missing authorization on policy listing (High)** — `GET /api/v1/governance/policies` now
+  requires `policy:read` permission.
+- **Silent audit failure (High)** — governance evaluate no longer silently discards audit event
+  creation errors; failures are logged for investigation.
+- **Content-Security-Policy (High)** — SSR pages now include `Content-Security-Policy: default-src 'self'`.
+- **Demo key logging (High)** — API key credential printing in `app.ts` is gated behind
+  `NODE_ENV !== "production"` to prevent secret leakage in production logs.
+
+---
+
 ## [0.2.0] - 2026-06-27
 
 Second milestone release: HTTP API Gateway, Server-Side Rendered frontend, persistence layer,

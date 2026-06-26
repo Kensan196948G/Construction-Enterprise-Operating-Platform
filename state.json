@@ -21,6 +21,7 @@
     "test_pass_rate": 1.0,
     "test_count": 45,
     "security_critical": 0,
+    "security_high_resolved": 5,
     "blocker_count": 0
   },
   "execution": {
@@ -57,7 +58,8 @@
     "M4: Docker multi-stage build (non-root user, HEALTHCHECK, zero runtime deps in image)",
     "M4: docker-compose.yml for local development",
     "M4: scripts/start.ts production entry point",
-    "45 tests pass (14 new API+server tests added), typecheck/lint/build all green"
+    "45 tests pass (14 new API+server tests added), typecheck/lint/build all green",
+    "Security hardening: timingSafeEqual HMAC, 1MiB body limit, audit:read/policy:read auth checks, CSP header, production key logging guard"
   ],
   "blocked_issues": [],
   "learning": {
