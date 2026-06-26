@@ -22,7 +22,7 @@
     "success_rate_target": 0.9,
     "ci_success_rate": 0.0,
     "test_pass_rate": 1.0,
-    "test_count": 112,
+    "test_count": 146,
     "security_critical": 0,
     "security_high_resolved": 17,
     "blocker_count": 0
@@ -46,7 +46,8 @@
     "M6_file_persistence": "completed",
     "M7_sqlite_persistence": "completed",
     "M7_5_security_hardening": "completed",
-    "M8_production_deploy": "completed"
+    "M8_production_deploy": "completed",
+    "M9_crud_api_roles_ci": "completed"
   },
   "completed_issues": [
     "M1: TypeScript foundation scaffold (pnpm + strict tsc + node:test + eslint + CI)",
@@ -87,7 +88,12 @@
     "M8: scripts/migrate.ts — 冪等 SQLite マイグレーションランナー (2 migrations, schema_migrations tracking)",
     "M8: scripts/provision-api-key.ts — CLI API キープロビジョニング (raw secret 1度だけ出力, hash のみ DB 保存)",
     "M8: .env.example 更新 (CEOP_JWT_SECRET, CEOP_SQLITE_FILE, CEOP_SEED_DEMO, CEOP_LOG_DEMO_CREDS)",
-    "M8: CHANGELOG v0.5.0 + README M8 本番デプロイセクション追加"
+    "M8: CHANGELOG v0.5.0 + README M8 本番デプロイセクション追加",
+    "M9: CRUD API (organizations/users/roles/devices/applications) — 5×4 endpoints",
+    "M9: GET /api/v1/roles list endpoint (was missing from dashboard.ts)",
+    "M9: Users soft-delete (status → deactivated preserves audit trail)",
+    "M9: /api/v1/info version 0.2.0 → 0.5.0",
+    "M9: 34 integration tests added — 146/146 pass, typecheck/lint clean"
   ],
   "blocked_issues": [],
   "learning": {
@@ -106,6 +112,7 @@
     "remote": "未設定（ローカルのみ）。GitHub リポジトリ作成・push は外部サービス変更のため人間承認待ち。",
     "branch": "feat/platform-foundation",
     "next_actions": [
+      "OpenAPI/Swagger 仕様書生成（任意）",
       "v0.5.0 git タグ付け（人間承認後）",
       "リモートリポジトリ作成 + PR 作成（人間承認後）",
       "本番デプロイ（人間が実施） — deploy ガイドは README M8 セクション参照"
@@ -116,6 +123,13 @@
       "all_tests": "112/112 pass",
       "typecheck": "clean",
       "lint": "clean",
+      "completed_at": "2026-06-27"
+    },
+    "m9_verify": {
+      "all_tests": "146/146 pass",
+      "typecheck": "clean",
+      "lint": "clean",
+      "new_endpoints": 21,
       "completed_at": "2026-06-27"
     }
   }

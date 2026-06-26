@@ -93,6 +93,18 @@ export class Router {
     return this.#add("POST", path, handler, requiresAuth);
   }
 
+  put(path: string, handler: RouteHandler, requiresAuth = true): this {
+    return this.#add("PUT", path, handler, requiresAuth);
+  }
+
+  patch(path: string, handler: RouteHandler, requiresAuth = true): this {
+    return this.#add("PATCH", path, handler, requiresAuth);
+  }
+
+  delete(path: string, handler: RouteHandler, requiresAuth = true): this {
+    return this.#add("DELETE", path, handler, requiresAuth);
+  }
+
   /** Find the first route matching `method` + `path`, extracting path params. */
   #match(method: string, path: string): { route: Route; params: Record<string, string> } | null {
     for (const route of this.#routes) {
@@ -193,7 +205,7 @@ export class Router {
     }
 
     let body: unknown;
-    if (method === "POST") {
+    if (method === "POST" || method === "PUT" || method === "PATCH") {
       try {
         body = await readJsonBody(req);
       } catch (e) {

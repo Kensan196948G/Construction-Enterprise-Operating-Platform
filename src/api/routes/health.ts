@@ -27,7 +27,7 @@ export function registerHealthRoutes(router: Router): void {
     async (_req, _ctx, res) => {
       writeJson(res, 200, {
         name: "construction-eop",
-        version: "0.2.0",
+        version: "0.5.0",
         environment: process.env["NODE_ENV"] ?? "development",
       });
     },
