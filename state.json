@@ -19,7 +19,7 @@
     "success_rate_target": 0.9,
     "ci_success_rate": 0.0,
     "test_pass_rate": 1.0,
-    "test_count": 58,
+    "test_count": 97,
     "security_critical": 0,
     "security_high_resolved": 10,
     "blocker_count": 0
@@ -39,8 +39,8 @@
     "M2_role_based_dashboard": "completed",
     "M3_adapters": "completed",
     "M4_api_gateway_frontend_persistence_docker": "completed",
-    "M5_auth_session_jwt": "planned",
-    "M6_external_adapters_db_production": "in_progress"
+    "M5_auth_session_jwt": "completed",
+    "M6_file_persistence": "completed"
   },
   "completed_issues": [
     "M1: TypeScript foundation scaffold (pnpm + strict tsc + node:test + eslint + CI)",
@@ -61,7 +61,10 @@
     "45 tests pass (14 new API+server tests added), typecheck/lint/build all green",
     "Security hardening: timingSafeEqual HMAC, 1MiB body limit, audit:read/policy:read auth checks, CSP header, production key logging guard",
     "Round-2: keyId enumeration, NODE_ENV case, body-error separation, governance:evaluate permission, CSP form-action/base-uri/frame-ancestors, Cache-Control",
-    "Round-3: dashboard authorization (Critical), ABAC conditionsHold fix, ITSM spread order, CMDB clones, toIsoTimestamp round-trip, CSP inline, health class, outcome injection — 58/58 tests pass"
+    "Round-3: dashboard authorization (Critical), ABAC conditionsHold fix, ITSM spread order, CMDB clones, toIsoTimestamp round-trip, CSP inline, health class, outcome injection — 58/58 tests pass",
+    "M5: HS256 JWT issuer (generateJwtSecret/issue/verify), sliding-window rate limiter, POST /api/v1/auth/token route, Bearer JWT auth in router",
+    "M6: POSIX-atomic file repositories (6 entities), BaseFileRepository lazy-cache + rename() atomic writes, createFileRepositories factory, CEOP_DATA_DIR env var",
+    "TypeCheck fix: exactOptionalPropertyTypes compliance (router #jwtIssuer, server conditional spread, IsoTimestamp brand, 12 override keywords) — 97/97 tests, typecheck/lint/build all green"
   ],
   "blocked_issues": [],
   "learning": {

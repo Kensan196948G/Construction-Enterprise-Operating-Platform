@@ -10,6 +10,7 @@
 
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { validateApiKey } from "./middleware/auth.ts";
+import type { JwtIssuer } from "./middleware/jwt.ts";
 import { logRequest } from "./middleware/request-logger.ts";
 import type { ApiKeyContext, ApiKeyStore, ApiRequest } from "./types.ts";
 
@@ -38,12 +39,25 @@ const BEARER_PREFIX = "Bearer ";
 // Router
 // ---------------------------------------------------------------------------
 
+export interface RouterOptions {
+  readonly apiKeyStore: ApiKeyStore;
+  /** When present, Bearer JWT tokens are verified in addition to API key credentials. */
+  readonly jwtIssuer?: JwtIssuer;
+}
+
 export class Router {
   readonly #routes: Route[] = [];
   readonly #apiKeyStore: ApiKeyStore;
+  readonly #jwtIssuer: JwtIssuer | undefined;
 
-  constructor(apiKeyStore: ApiKeyStore) {
-    this.#apiKeyStore = apiKeyStore;
+  constructor(options: RouterOptions | ApiKeyStore) {
+    if (options instanceof Map) {
+      // Backward-compatible: accept a raw Map when jwtIssuer is not needed (e.g. tests).
+      this.#apiKeyStore = options;
+    } else {
+      this.#apiKeyStore = options.apiKeyStore;
+      this.#jwtIssuer = options.jwtIssuer;
+    }
   }
 
   /**
@@ -137,16 +151,45 @@ export class Router {
         typeof header === "string" && header.startsWith(BEARER_PREFIX)
           ? header.slice(BEARER_PREFIX.length).trim()
           : "";
-      const result = validateApiKey(credential, this.#apiKeyStore);
-      if (!result.ok) {
+
+      if (!credential) {
         writeJson(res, 401, {
           error: "Unauthorized",
-          message: "a valid Bearer API key (keyId:secret) is required",
+          message: "a valid Bearer credential is required",
         });
         finish(401);
         return;
       }
-      ctx = result.value;
+
+      if (credential.includes(":")) {
+        // API key format: keyId:secret — ":" is never present in base64url.
+        const result = validateApiKey(credential, this.#apiKeyStore);
+        if (!result.ok) {
+          writeJson(res, 401, { error: "Unauthorized", message: "invalid credentials" });
+          finish(401);
+          return;
+        }
+        ctx = result.value;
+      } else if (this.#jwtIssuer !== undefined) {
+        // JWT Bearer token — base64url characters contain only [A-Za-z0-9_-] and ".".
+        const result = this.#jwtIssuer.verify(credential);
+        if (!result.ok) {
+          const message = result.reason === "expired" ? "token expired" : "invalid credentials";
+          writeJson(res, 401, { error: "Unauthorized", message });
+          finish(401);
+          return;
+        }
+        // JwtPayload.permissions are emitted as Permission-branded strings; cast is safe.
+        ctx = {
+          keyId: result.payload.jti,
+          subject: result.payload.sub,
+          permissions: result.payload.permissions as unknown as ApiKeyContext["permissions"],
+        };
+      } else {
+        writeJson(res, 401, { error: "Unauthorized", message: "invalid credentials" });
+        finish(401);
+        return;
+      }
     }
 
     let body: unknown;

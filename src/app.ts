@@ -15,7 +15,9 @@ import { createApplication } from "./domain/application.ts";
 import { createPolicy } from "./domain/policy.ts";
 import { AuditLog } from "./governance/audit-log.ts";
 import { createInMemoryRepositories } from "./persistence/in-memory/index.ts";
+import { createFileRepositories } from "./persistence/file/index.ts";
 import { createApiKey } from "./api/middleware/auth.ts";
+import { createJwtIssuer, generateJwtSecret } from "./api/middleware/jwt.ts";
 import { createServer } from "./api/server.ts";
 import type { AppContainer } from "./api/types.ts";
 
@@ -49,9 +51,19 @@ function mustOk<T>(label: string, result: { ok: boolean; value?: T; error?: unkn
  * Every call returns an independent container with its own in-memory stores.
  */
 export async function createApp(): Promise<AppContainer> {
-  const repositories = createInMemoryRepositories();
+  // Use file-backed repositories when CEOP_DATA_DIR is set; otherwise in-memory.
+  const dataDir = process.env["CEOP_DATA_DIR"];
+  const repositories = dataDir
+    ? await createFileRepositories(dataDir)
+    : createInMemoryRepositories();
+
   const auditLog = new AuditLog();
   const apiKeyStore: AppContainer["apiKeyStore"] = new Map();
+
+  // JWT issuer: generate a fresh ephemeral secret per process (suitable for single-node).
+  // For multi-node deployments, set CEOP_JWT_SECRET in the environment.
+  const jwtSecret = process.env["CEOP_JWT_SECRET"] ?? generateJwtSecret();
+  const jwtIssuer = createJwtIssuer({ secret: jwtSecret, ttlSeconds: 3600 });
 
   const createdAt = nowTs();
 
@@ -223,7 +235,7 @@ export async function createApp(): Promise<AppContainer> {
     );
   }
 
-  return { repositories, auditLog, apiKeyStore };
+  return { repositories, auditLog, apiKeyStore, jwtIssuer };
 }
 
 /**

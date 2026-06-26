@@ -10,6 +10,7 @@
 import { createServer as httpCreateServer } from "node:http";
 import type { IncomingMessage, Server, ServerResponse } from "node:http";
 import { Router } from "./router.ts";
+import { registerAuthRoutes } from "./routes/auth.ts";
 import { registerHealthRoutes } from "./routes/health.ts";
 import { registerGovernanceRoutes } from "./routes/governance.ts";
 import { registerDashboardRoutes } from "./routes/dashboard.ts";
@@ -24,8 +25,14 @@ export interface ServerConfig {
 
 export function createServer(config: ServerConfig, container: AppContainer): Server {
   const corsOrigin = config.corsOrigin ?? "*";
-  const router = new Router(container.apiKeyStore);
+  const router = new Router({
+    apiKeyStore: container.apiKeyStore,
+    ...(container.jwtIssuer !== undefined ? { jwtIssuer: container.jwtIssuer } : {}),
+  });
   registerHealthRoutes(router);
+  if (container.jwtIssuer !== undefined) {
+    registerAuthRoutes(router, container.apiKeyStore, container.jwtIssuer);
+  }
   registerGovernanceRoutes(router, container);
   registerDashboardRoutes(router, container);
   registerWebRoutes(router, container);

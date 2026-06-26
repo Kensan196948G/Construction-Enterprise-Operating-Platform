@@ -9,6 +9,7 @@
 import type { Permission } from "../domain/role.ts";
 import type { Repositories } from "../persistence/ports.ts";
 import type { AuditLog } from "../governance/audit-log.ts";
+import type { JwtIssuer } from "./middleware/jwt.ts";
 
 // ---------------------------------------------------------------------------
 // Request / response shapes
@@ -67,9 +68,14 @@ export interface ApiKeyContext {
 // Dependency-injection container
 // ---------------------------------------------------------------------------
 
+/** Re-export so callers only need to import from this module. */
+export type { JwtIssuer };
+
 /** Application-level service container wired up at bootstrap. */
 export interface AppContainer {
   readonly repositories: Repositories;
   readonly auditLog: AuditLog;
   readonly apiKeyStore: ApiKeyStore;
+  /** Optional JWT issuer/verifier — when present, Bearer JWT tokens are accepted. */
+  readonly jwtIssuer?: JwtIssuer;
 }
