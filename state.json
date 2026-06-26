@@ -6,11 +6,12 @@
     "registered_at": "2026-06-25",
     "phase_mode": "development"
   },
-  "goal": "CTO 主導の自律開発で Release Ready / Production Ready へ到達。v0.2.0 API Gateway = Release Ready 判定。",
-  "phase": "Verify",
+  "goal": "v0.3.0 Release Ready — JWT 認証・ファイル永続化・セキュリティ強化・ドキュメント完成。次目標: M7 DB 永続化。",
+  "phase": "Improve",
   "release": {
     "v0_1_0_foundation": "release_ready",
     "v0_2_0_api_gateway": "release_ready",
+    "v0_3_0_jwt_persistence": "release_ready",
     "production_deploy": "pending_human_decision",
     "judged_by": "CTO",
     "judged_at": "2026-06-27"
@@ -81,10 +82,11 @@
     "branch": "feat/platform-foundation",
     "next_actions": [
       "リモートリポジトリ作成 + PR 作成（人間承認後）",
-      "M5: JWT 認証・セッション管理・ロールベースアクセス制御の強化",
-      "M6: PostgreSQL/SQLite 永続化層・外部アダプタ本実装・本番デプロイ",
-      "認証/認可コア (policy-engine) の Codex 対抗レビュー",
-      "本番APIキープロビジョニング方式の設計・ドキュメント化（既知の制限として記録済み）"
+      "M7: SQLite/PostgreSQL 永続化層（node:sqlite or pg driver）",
+      "M7: 外部アダプタ本実装（CMDB/ITSM 接続）",
+      "M8: 本番デプロイ・最終統合テスト・パフォーマンスチューニング",
+      "認証/認可コア (policy-engine + jwt.ts) の Codex 対抗レビュー",
+      "本番 API キープロビジョニング方式の設計・ドキュメント化"
     ]
   }
 }
