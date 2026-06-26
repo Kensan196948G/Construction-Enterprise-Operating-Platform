@@ -437,6 +437,15 @@
           指定したサブジェクトがリソースに対してアクションを実行できるかをリアルタイムで評価します。
         </p>
 
+        <div class="form-group" style="margin-bottom:16px">
+          <label class="form-label" for="inputApiKey">🔑 API キー（Bearer トークン）</label>
+          <input class="form-input" id="inputApiKey" type="password"
+                 placeholder="例: admin-key:secret-value" style="font-family:monospace" />
+          <div style="font-size:.75rem;color:var(--text-dim);margin-top:4px">
+            API 認証が必要です。起動時のコンソールに表示されるデモキー（keyId:secret）を入力してください。
+          </div>
+        </div>
+
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label" for="inputSubject">サブジェクト（ユーザーID）</label>
@@ -581,9 +590,14 @@
     const subject  = document.getElementById('inputSubject').value.trim();
     const resource = document.getElementById('inputResource').value.trim();
     const action   = document.getElementById('inputAction').value.trim();
+    const apiKey   = document.getElementById('inputApiKey').value.trim();
 
     if (!subject || !resource || !action) {
       alert('サブジェクト・リソース・アクションをすべて入力してください。');
+      return;
+    }
+    if (!apiKey) {
+      alert('API キーを入力してください。起動時のコンソールログに表示されるデモキーを使用してください。');
       return;
     }
 
@@ -594,9 +608,16 @@
     try {
       const res = await fetch('/api/v1/governance/evaluate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + apiKey
+        },
         body: JSON.stringify({ subject, resource, action, roleIds: [] })
       });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error('HTTP ' + res.status + (errData.message ? ': ' + errData.message : ''));
+      }
       const data = await res.json();
 
       const decEl    = document.getElementById('resultDecision');

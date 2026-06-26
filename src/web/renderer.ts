@@ -136,7 +136,7 @@ function renderAppCards(applications: readonly AppHealthItem[]): string {
       const catLabel = APP_CATEGORY_LABELS[app.category] ?? app.category;
       return [
         '<div class="app-card">',
-        `  <div class="app-health-dot ${esc(app.health)}"></div>`,
+        `  <div class="app-health-dot health-${esc(app.health)}"></div>`,
         '  <div class="app-info">',
         `    <div class="app-name">${esc(app.name)}</div>`,
         `    <div class="app-meta">${esc(catLabel)} · ${esc(app.key)}</div>`,

@@ -33,10 +33,12 @@ export const isOk = <T, E>(r: Result<T, E>): r is { ok: true; value: T } => r.ok
 /**
  * Validate that an ISO timestamp string is well-formed.
  * Accepts only strings that round-trip through `Date` without losing fidelity.
+ * A round-trip check catches normalised invalid dates like "2026-02-30" which
+ * Date.parse() accepts but silently advances to March 2.
  */
 export function toIsoTimestamp(value: string): Result<IsoTimestamp> {
-  const parsed = Date.parse(value);
-  if (Number.isNaN(parsed)) {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime()) || parsed.toISOString() !== value) {
     return err([{ path: "timestamp", message: `invalid ISO timestamp: ${value}` }]);
   }
   return ok(value as IsoTimestamp);

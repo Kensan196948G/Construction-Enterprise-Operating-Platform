@@ -24,7 +24,7 @@
     "format": "prettier --write \"src/**/*.ts\" \"examples/**/*.ts\" \"*.json\" \"*.md\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"examples/**/*.ts\" \"*.json\" \"*.md\"",
     "verify": "pnpm run typecheck && pnpm run lint && pnpm run test",
-    "demo": "node examples/quickstart.ts"
+    "demo": "node --experimental-strip-types examples/quickstart.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",

@@ -9,14 +9,16 @@ export class InMemoryItsmAdapter implements ItsmPort {
   readonly #incidents: Map<string, Incident>;
 
   constructor(incidents?: readonly Incident[]) {
-    this.#incidents = new Map((incidents ?? SEED_INCIDENTS).map((inc) => [inc.id, inc]));
+    // Clone each seed incident so mutations via createIncident do not affect the SEED array.
+    this.#incidents = new Map((incidents ?? SEED_INCIDENTS).map((inc) => [inc.id, { ...inc }]));
   }
 
   createIncident(input: Omit<Incident, "id" | "status">): Promise<Incident> {
+    // Generated id/status must come AFTER input spread so they cannot be overridden by the caller.
     const incident: Incident = {
+      ...input,
       id: randomUUID(),
       status: "open",
-      ...input,
     };
     this.#incidents.set(incident.id, incident);
     return Promise.resolve(incident);

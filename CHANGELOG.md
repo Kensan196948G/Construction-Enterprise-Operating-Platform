@@ -6,6 +6,56 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 ## [Unreleased]
 
+### Security / Quality — Round 3 (CodeRabbit + Codex findings — 2026-06-27)
+
+- **Dashboard list endpoints missing authorization (Critical)** — `GET /api/v1/organizations`,
+  `GET /api/v1/users`, `GET /api/v1/applications`, and `GET /api/v1/devices` now enforce
+  per-permission guards via a shared `hasPermission()` helper. Organization and user listings
+  require `organization:read` / `user:read` (admin only); application and device listings
+  require `application:read` / `device:read` (admin + viewer). Unauthenticated callers receive
+  401; authenticated callers without the required permission receive 403.
+- **ABAC conditions broken for top-level request fields (High)** — `conditionsHold` in
+  `policy-engine.ts` merged `request.subject`, `resource`, and `action` into the attribute
+  lookup map so policies using `conditions: [{ attribute: "subject", equals: "guest" }]` now
+  correctly gate access. Previously only `request.attributes` was checked.
+- **ITSM spread order bug — caller id/status could override generated values (High)** —
+  `InMemoryItsmAdapter.createIncident()` now spreads input first, then overwrites `id` and
+  `status` with generated values, ensuring callers cannot inject a pre-set id or bypass
+  `"open"` status.
+- **CMDB adapter returns live references (High)** — `getItem()` and `listItems()` now return
+  shallow clones (`{ ...item, attributes: { ...item.attributes } }`) so callers cannot mutate
+  the internal store state.
+- **Invalid ISO timestamp acceptance (High)** — `toIsoTimestamp()` in `domain/common.ts` now
+  performs a round-trip check: `new Date(value).toISOString() !== value` rejects dates like
+  `"2026-02-30T00:00:00.000Z"` that JavaScript silently normalizes to a different date.
+- **CSP blocks inline styles/scripts in SSR templates (Medium)** — `sendHtml()` in `web.ts`
+  added `style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'` because
+  `default-src 'self'` does not cover inline `<style>` and `<script>` blocks.
+- **Health class prefix mismatch (Medium)** — `renderer.ts` and `index.html` corrected
+  `app-health-dot` class from `${health}` to `health-${health}` (e.g. `health-healthy`) to
+  match the CSS selectors `.health-healthy`, `.health-degraded`, `.health-down`.
+- **Audit outcome class injection (Medium)** — `index.html` now allowlists outcome values
+  (`success | denied | error`) before inserting them as CSS class names, preventing arbitrary
+  class injection from audit log data.
+- **hasPermission helper not shared (Medium)** — `hasPermission()` exported from
+  `governance.ts` and imported in `dashboard.ts`; single source of truth for wildcard
+  permission matching across all route modules.
+- **document adapter `missingVariables` inconsistency (Low)** — uses
+  `Object.prototype.hasOwnProperty.call` consistently with `render()`, preventing
+  prototype-chain pollution from keys like `constructor` or `toString`.
+- **Governance page missing API key input (Low)** — `governance.html` now includes an API key
+  field; `runEvaluate()` reads it and sends `Authorization: Bearer <key>` so the policy
+  evaluation form is usable without browser dev tools.
+- **Healthcheck accepts only 200 (Low)** — `scripts/healthcheck.ts` now accepts any 2xx
+  response (`statusCode >= 200 && statusCode < 300`) for forward-compatibility with 204/206.
+- **Router throws 500 on malformed URL encoding (Low)** — `router.ts` wraps `#match()` in a
+  try-catch to convert `URIError` from malformed `%xx` sequences into HTTP 400 Bad Request.
+- **`demo` script missing `--experimental-strip-types` (Low)** — `package.json` updated so
+  `pnpm run demo` can execute the `.ts` entry point directly.
+- **New HTTP integration tests for dashboard authorization** — `src/api/routes/dashboard.test.ts`
+  added 13 tests covering admin-only (organizations, users) and viewer-accessible (applications,
+  devices) endpoints, plus unauthenticated 401 responses and response-shape assertions.
+
 ### Security — Round 2 (code-review findings — 2026-06-27)
 
 - **keyId enumeration via error message (Low→fixed)** — `auth.ts` now returns a unified

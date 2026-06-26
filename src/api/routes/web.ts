@@ -32,9 +32,11 @@ function sendHtml(res: ServerResponse, status: number, html: string): void {
   res.writeHead(status, {
     "Content-Type": "text/html; charset=utf-8",
     "Content-Length": buf.byteLength,
-    // default-src does NOT cover form-action, base-uri, or frame-ancestors — list them explicitly.
+    // default-src 'self' acts as fallback for style-src/script-src, blocking all inline.
+    // HTML templates use inline <style> and <script> blocks, so permit 'unsafe-inline' explicitly.
+    // form-action, base-uri, frame-ancestors are not covered by default-src — list them explicitly.
     "Content-Security-Policy":
-      "default-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'self'",
+      "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'self'",
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "SAMEORIGIN",
     "Referrer-Policy": "same-origin",

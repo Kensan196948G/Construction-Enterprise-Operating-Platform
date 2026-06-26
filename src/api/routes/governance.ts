@@ -23,7 +23,7 @@ const AUDIT_LIMIT_MAX = 200;
  * Check whether a context's permissions include a specific resource:action grant.
  * Wildcards supported: `*:*`, `*:<action>`, `<resource>:*`.
  */
-function hasPermission(
+export function hasPermission(
   ctx: { readonly permissions: readonly Permission[] } | null,
   resource: string,
   action: string,

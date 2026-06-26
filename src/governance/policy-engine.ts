@@ -53,9 +53,17 @@ function permissionGrants(permission: Permission, request: AccessRequest): boole
 }
 
 function conditionsHold(policy: Policy, request: AccessRequest): boolean {
-  const attributes = request.attributes ?? {};
+  // Merge top-level request fields with request.attributes so that conditions can
+  // reference "subject", "resource", or "action" without the caller having to
+  // duplicate those values in the attributes map.
+  const lookup: Record<string, string> = {
+    subject: request.subject,
+    resource: request.resource,
+    action: request.action,
+    ...request.attributes,
+  };
   return policy.conditions.every(
-    (condition) => attributes[condition.attribute] === condition.equals,
+    (condition) => lookup[condition.attribute] === condition.equals,
   );
 }
 

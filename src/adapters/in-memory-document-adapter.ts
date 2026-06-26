@@ -38,7 +38,7 @@ export function missingVariables(spec: DocumentSpec): string[] {
       referenced.add(name);
     }
   }
-  return [...referenced].filter((name) => !(name in spec.variables));
+  return [...referenced].filter((name) => !Object.prototype.hasOwnProperty.call(spec.variables, name));
 }
 
 function render(template: string, variables: Readonly<Record<string, string>>): string {

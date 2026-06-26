@@ -937,7 +937,7 @@
       const catLabel = APP_CATEGORY_LABELS[app.category] || app.category;
       return `
         <div class="app-card">
-          <div class="app-health-dot ${healthClass}"></div>
+          <div class="app-health-dot health-${healthClass}"></div>
           <div class="app-info">
             <div class="app-name">${escapeHtml(app.name)}</div>
             <div class="app-meta">${escapeHtml(catLabel)} · ${escapeHtml(app.key)}</div>
@@ -986,7 +986,7 @@
     }
     return entries.slice(-10).reverse().map(e => {
       const ev = e.event || e;
-      const outcome = ev.outcome || 'unknown';
+      const outcome = ['success', 'denied', 'error'].includes(ev.outcome) ? ev.outcome : 'error';
       const resultLabel = outcome === 'success' ? '許可' : outcome === 'denied' ? '拒否' : outcome;
       return `
         <div class="audit-item">

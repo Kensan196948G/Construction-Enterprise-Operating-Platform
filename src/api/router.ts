@@ -116,7 +116,14 @@ export class Router {
       logRequest(method, rawUrl, status, Date.now() - startMs);
     };
 
-    const matched = this.#match(method, path);
+    let matched: { route: Route; params: Record<string, string> } | null;
+    try {
+      matched = this.#match(method, path);
+    } catch {
+      writeJson(res, 400, { error: "Bad Request", message: "malformed URL path encoding" });
+      finish(400);
+      return;
+    }
     if (matched === null) {
       writeJson(res, 404, { error: "Not Found", message: `No route for ${method} ${path}` });
       finish(404);
