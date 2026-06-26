@@ -24,7 +24,7 @@
     "test_pass_rate": 1.0,
     "test_count": 112,
     "security_critical": 0,
-    "security_high_resolved": 11,
+    "security_high_resolved": 17,
     "blocker_count": 0
   },
   "execution": {
@@ -108,8 +108,15 @@
     "next_actions": [
       "v0.5.0 git タグ付け（人間承認後）",
       "リモートリポジトリ作成 + PR 作成（人間承認後）",
-      "Codex adversarial review（認証変更のため必須 — CLAUDE.md 規約）",
       "本番デプロイ（人間が実施） — deploy ガイドは README M8 セクション参照"
-    ]
+    ],
+    "verify_completed": {
+      "codex_adversarial_review": "P1×2 + P2×1 全解消 (commit b5e3c28)",
+      "coderabbit_major": "major×6 全解消 (commit b5e3c28)",
+      "all_tests": "112/112 pass",
+      "typecheck": "clean",
+      "lint": "clean",
+      "completed_at": "2026-06-27"
+    }
   }
 }
