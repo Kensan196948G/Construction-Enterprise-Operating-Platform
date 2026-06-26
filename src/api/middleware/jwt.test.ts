@@ -44,7 +44,7 @@ test("jwt: payload contains iat, exp, jti claims", () => {
   assert.ok(result.ok);
   const { iat, exp, jti } = result.payload;
   assert.ok(iat >= before && iat <= after, "iat should be current time");
-  assert.ok(exp >= iat + 300, "exp should be iat + ttlSeconds");
+  assert.equal(exp, iat + 300, "exp should be iat + ttlSeconds");
   assert.equal(typeof jti, "string");
   assert.ok(jti.length > 0);
 });

@@ -17,12 +17,9 @@ import type { Router } from "../router.ts";
 import { writeJson } from "../router.ts";
 import type { ApiKeyStore, ApiRequest } from "../types.ts";
 
-// 10 requests per minute per client IP — enough for interactive use, tight
-// enough to blunt credential-stuffing at scale.
-const rateLimiter = createRateLimiter({ maxRequests: 10, windowMs: 60_000 });
-
 /**
- * Return the TCP-layer remote address as the rate-limit key.
+ * Return the TCP-layer remote address as the rate-limit key, or null when the
+ * socket address is unavailable.
  *
  * X-Forwarded-For and X-Real-IP are intentionally ignored: they are
  * request headers that any client can forge, which would let attackers
@@ -33,8 +30,8 @@ const rateLimiter = createRateLimiter({ maxRequests: 10, windowMs: 60_000 });
  * configured to SNAT / rewrite the source IP so that Node.js sees the
  * real client IP on the socket (the default for most Docker/K8s setups).
  */
-function clientKey(req: ApiRequest): string {
-  return req.remoteAddress ?? "unknown";
+function clientKey(req: ApiRequest): string | null {
+  return req.remoteAddress ?? null;
 }
 
 export function registerAuthRoutes(
@@ -42,6 +39,10 @@ export function registerAuthRoutes(
   apiKeyStore: ApiKeyStore,
   jwtIssuer: JwtIssuer,
 ): void {
+  // 10 requests per minute per client IP — enough for interactive use, tight
+  // enough to blunt credential-stuffing at scale.
+  const rateLimiter = createRateLimiter({ maxRequests: 10, windowMs: 60_000 });
+
   /**
    * POST /api/v1/auth/token
    *
@@ -53,6 +54,13 @@ export function registerAuthRoutes(
     async (req: ApiRequest, _ctx, res: ServerResponse): Promise<void> => {
       // Rate limiting check.
       const key = clientKey(req);
+      if (key === null) {
+        writeJson(res, 400, {
+          error: "Bad Request",
+          message: "client address unavailable",
+        });
+        return;
+      }
       const rl = rateLimiter.check(key);
       res.setHeader("X-RateLimit-Limit", "10");
       res.setHeader("X-RateLimit-Remaining", String(rl.remaining));
@@ -87,7 +95,7 @@ export function registerAuthRoutes(
 
       const { subject, permissions } = result.value;
       const token = jwtIssuer.issue(subject, permissions);
-      const expiresIn = 3600;
+      const expiresIn = jwtIssuer.ttlSeconds;
 
       writeJson(res, 200, { token, expiresIn, subject });
     },

@@ -66,14 +66,24 @@ export interface JwtConfig {
 }
 
 export interface JwtIssuer {
+  readonly ttlSeconds: number;
   issue(subject: string, permissions: readonly Permission[]): string;
   verify(token: string): JwtVerifyResult;
+  revoke(jti: string): void;
 }
 
 const HEADER_B64 = b64urlEncodeStr(JSON.stringify({ alg: "HS256", typ: "JWT" }));
 
 export function createJwtIssuer(config: JwtConfig): JwtIssuer {
   const { secret, ttlSeconds = 3600 } = config;
+
+  if (Buffer.byteLength(secret, "utf8") < 32) {
+    throw new Error("JWT signing secret must be at least 32 bytes");
+  }
+
+  // jti → Unix second at which the revocation entry can be pruned.
+  // We store jti values for tokens that should be blocked before their natural expiry.
+  const revokedJtis = new Map<string, number>();
 
   function issue(subject: string, permissions: readonly Permission[]): string {
     const now = Math.floor(Date.now() / 1000);
@@ -88,6 +98,11 @@ export function createJwtIssuer(config: JwtConfig): JwtIssuer {
     );
     const sigBuf = hmacRaw(HEADER_B64, payload, secret);
     return `${HEADER_B64}.${payload}.${b64urlEncode(sigBuf)}`;
+  }
+
+  function revoke(jti: string): void {
+    // Store until the token would have expired at most (now + ttlSeconds).
+    revokedJtis.set(jti, Math.floor(Date.now() / 1000) + ttlSeconds);
   }
 
   function verify(token: string): JwtVerifyResult {
@@ -113,24 +128,40 @@ export function createJwtIssuer(config: JwtConfig): JwtIssuer {
       return { ok: false, reason: "malformed" };
     }
 
+    if (typeof parsed !== "object" || parsed === null) {
+      return { ok: false, reason: "malformed" };
+    }
+    const record = parsed as Record<string, unknown>;
     if (
-      typeof parsed !== "object" ||
-      parsed === null ||
-      typeof (parsed as Record<string, unknown>)["exp"] !== "number" ||
-      typeof (parsed as Record<string, unknown>)["sub"] !== "string"
+      typeof record["sub"] !== "string" ||
+      !Array.isArray(record["permissions"]) ||
+      !(record["permissions"] as unknown[]).every((p) => typeof p === "string") ||
+      !Number.isSafeInteger(record["iat"]) ||
+      !Number.isSafeInteger(record["exp"]) ||
+      typeof record["jti"] !== "string"
     ) {
       return { ok: false, reason: "malformed" };
     }
 
     const now = Math.floor(Date.now() / 1000);
-    if ((parsed as { exp: number }).exp <= now) {
+
+    // Prune expired revocation entries to bound memory use.
+    for (const [id, prunableAt] of revokedJtis) {
+      if (prunableAt <= now) revokedJtis.delete(id);
+    }
+
+    if ((record["exp"] as number) <= now) {
       return { ok: false, reason: "expired" };
+    }
+
+    if (revokedJtis.has(record["jti"] as string)) {
+      return { ok: false, reason: "invalid" };
     }
 
     return { ok: true, payload: parsed as JwtPayload };
   }
 
-  return { issue, verify };
+  return { ttlSeconds, issue, revoke, verify };
 }
 
 /** Generate a cryptographically random secret suitable for JWT signing. */

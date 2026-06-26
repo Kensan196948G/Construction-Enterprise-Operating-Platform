@@ -19,6 +19,7 @@ export class BaseFileRepository<T extends { id: string }> implements Repository<
   readonly #filePath: string;
   readonly #tmpPath: string;
   #cache: Map<string, T> | null = null;
+  #writeQueue: Promise<void> = Promise.resolve();
 
   constructor(dataDir: string, filename: string) {
     this.#filePath = join(dataDir, filename);
@@ -32,9 +33,16 @@ export class BaseFileRepository<T extends { id: string }> implements Repository<
     try {
       const raw = await readFile(this.#filePath, "utf8");
       const parsed: unknown = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
-        entries = parsed as T[];
+      if (!Array.isArray(parsed)) {
+        throw new Error(`Invalid repository file format: expected JSON array at ${this.#filePath}`);
       }
+      if (!parsed.every((entry): entry is T =>
+        typeof entry === "object" && entry !== null &&
+        typeof (entry as { id?: unknown }).id === "string"
+      )) {
+        throw new Error(`Invalid repository file format: every entry must have a string id at ${this.#filePath}`);
+      }
+      entries = parsed;
     } catch (e) {
       // ENOENT → first run; start with empty store. Other errors propagate.
       if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw e;
@@ -42,6 +50,12 @@ export class BaseFileRepository<T extends { id: string }> implements Repository<
 
     this.#cache = new Map(entries.map((e) => [e.id, e]));
     return this.#cache;
+  }
+
+  #enqueuedFlush(store: Map<string, T>): Promise<void> {
+    const next = this.#writeQueue.then(() => this.#flush(store));
+    this.#writeQueue = next.catch(() => {});
+    return next;
   }
 
   async #flush(store: Map<string, T>): Promise<void> {
@@ -63,13 +77,13 @@ export class BaseFileRepository<T extends { id: string }> implements Repository<
   async save(entity: T): Promise<void> {
     const store = await this.#load();
     store.set(entity.id, entity);
-    await this.#flush(store);
+    await this.#enqueuedFlush(store);
   }
 
   async delete(id: string): Promise<void> {
     const store = await this.#load();
     store.delete(id);
-    await this.#flush(store);
+    await this.#enqueuedFlush(store);
   }
 }
 

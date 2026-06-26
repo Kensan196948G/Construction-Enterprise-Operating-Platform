@@ -127,7 +127,7 @@ export class Router {
     const query = parseQueryString(search);
 
     const finish = (status: number): void => {
-      logRequest(method, rawUrl, status, Date.now() - startMs);
+      logRequest(method, path, status, Date.now() - startMs);
     };
 
     let matched: { route: Route; params: Record<string, string> } | null;
@@ -222,9 +222,9 @@ export class Router {
     try {
       await matched.route.handler(apiRequest, ctx, res);
     } catch (e) {
-      const message = e instanceof Error ? e.message : "unexpected error";
+      console.error("[router] unhandled handler error:", e);
       if (!res.headersSent) {
-        writeJson(res, 500, { error: "Internal Server Error", message });
+        writeJson(res, 500, { error: "Internal Server Error", message: "unexpected error" });
       }
     }
     finish(res.statusCode);
@@ -242,10 +242,27 @@ function readJsonBody(req: IncomingMessage): Promise<unknown> {
   return new Promise<unknown>((resolve, reject) => {
     const chunks: Buffer[] = [];
     let totalBytes = 0;
+    let settled = false;
+
+    const succeed = (value: unknown): void => {
+      if (!settled) {
+        settled = true;
+        resolve(value);
+      }
+    };
+    const fail = (error: Error): void => {
+      if (!settled) {
+        settled = true;
+        reject(error);
+      }
+    };
+
     req.on("data", (chunk: Buffer) => {
       totalBytes += chunk.byteLength;
       if (totalBytes > MAX_BODY_BYTES) {
-        req.destroy(new Error("request body too large"));
+        const error = new Error("request body too large");
+        fail(error);
+        req.destroy(error);
         return;
       }
       chunks.push(chunk);
@@ -253,17 +270,20 @@ function readJsonBody(req: IncomingMessage): Promise<unknown> {
     req.on("end", () => {
       const raw = Buffer.concat(chunks).toString("utf-8").trim();
       if (raw.length === 0) {
-        resolve(undefined);
+        succeed(undefined);
         return;
       }
       try {
-        resolve(JSON.parse(raw));
+        succeed(JSON.parse(raw));
       } catch (e) {
-        reject(e instanceof Error ? e : new Error(String(e)));
+        fail(e instanceof Error ? e : new Error(String(e)));
       }
     });
     req.on("error", (e: Error) => {
-      reject(e);
+      fail(e);
+    });
+    req.on("close", () => {
+      fail(new Error("request body aborted"));
     });
   });
 }

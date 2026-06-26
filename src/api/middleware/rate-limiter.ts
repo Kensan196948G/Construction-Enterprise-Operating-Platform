@@ -28,13 +28,35 @@ export interface RateLimiter {
   reset(): void;
 }
 
+const MAX_BUCKETS = 10_000;
+
 export function createRateLimiter(config: RateLimiterConfig): RateLimiter {
   const { maxRequests, windowMs } = config;
+  if (!Number.isSafeInteger(maxRequests) || maxRequests <= 0) {
+    throw new Error("maxRequests must be a positive safe integer");
+  }
+  if (!Number.isSafeInteger(windowMs) || windowMs <= 0) {
+    throw new Error("windowMs must be a positive safe integer");
+  }
 
   // Each key maps to an array of request timestamps (ascending).
   const buckets = new Map<string, number[]>();
 
+  // Evict fully-expired buckets when the map exceeds MAX_BUCKETS to bound memory use.
+  function pruneStale(nowMs: number): void {
+    if (buckets.size <= MAX_BUCKETS) return;
+    const windowStart = nowMs - windowMs;
+    for (const [key, timestamps] of buckets) {
+      const lastSeen = timestamps[timestamps.length - 1];
+      if (lastSeen === undefined || lastSeen < windowStart) {
+        buckets.delete(key);
+      }
+      if (buckets.size <= MAX_BUCKETS) break;
+    }
+  }
+
   function check(key: string, nowMs: number = Date.now()): RateLimitResult {
+    pruneStale(nowMs);
     const windowStart = nowMs - windowMs;
     let timestamps = buckets.get(key) ?? [];
 

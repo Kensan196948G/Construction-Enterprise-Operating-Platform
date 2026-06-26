@@ -68,9 +68,15 @@ export async function createApp(): Promise<AppContainer> {
 
   // JWT issuer: generate a fresh ephemeral secret per process (suitable for single-node).
   // For multi-node deployments, set CEOP_JWT_SECRET in the environment.
-  const jwtSecret = process.env["CEOP_JWT_SECRET"] ?? generateJwtSecret();
+  const configuredJwtSecret = process.env["CEOP_JWT_SECRET"];
+  if (process.env["NODE_ENV"]?.toLowerCase() === "production" && !configuredJwtSecret) {
+    throw new Error("CEOP_JWT_SECRET must be set in production");
+  }
+  const jwtSecret = configuredJwtSecret ?? generateJwtSecret();
   const jwtIssuer = createJwtIssuer({ secret: jwtSecret, ttlSeconds: 3600 });
 
+  const inMemory = !sqliteFile && !dataDir;
+  if (inMemory || process.env["CEOP_SEED_DEMO"] === "true") {
   const createdAt = nowTs();
 
   // ── 1. Organisation ───────────────────────────────────────────────────────
@@ -231,15 +237,15 @@ export async function createApp(): Promise<AppContainer> {
   const adminCred = createApiKey("user-admin", [...adminRole.permissions], apiKeyStore);
   const viewerCred = createApiKey("user-viewer", [...viewerRole.permissions], apiKeyStore);
 
-  // Only print demo credentials in non-production environments.
-  // In production, provision keys via an out-of-band admin command; never log secret material.
-  if (process.env["NODE_ENV"]?.toLowerCase() !== "production") {
+  // Explicit opt-in only — never log secret material by default.
+  if (process.env["CEOP_LOG_DEMO_CREDS"] === "true") {
     console.error(
       "[app] demo API keys (use as: Authorization: Bearer <key>:<secret>)\n" +
         `  admin  key=${adminCred.key}  secret=${adminCred.secret}\n` +
         `  viewer key=${viewerCred.key}  secret=${viewerCred.secret}`,
     );
   }
+  } // end demo seeding
 
   return { repositories, auditLog, apiKeyStore, jwtIssuer };
 }

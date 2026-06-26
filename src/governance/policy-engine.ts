@@ -57,10 +57,10 @@ function conditionsHold(policy: Policy, request: AccessRequest): boolean {
   // reference "subject", "resource", or "action" without the caller having to
   // duplicate those values in the attributes map.
   const lookup: Record<string, string> = {
+    ...request.attributes,
     subject: request.subject,
     resource: request.resource,
     action: request.action,
-    ...request.attributes,
   };
   return policy.conditions.every(
     (condition) => lookup[condition.attribute] === condition.equals,
