@@ -100,6 +100,11 @@ export function createJwtIssuer(config: JwtConfig): JwtIssuer {
     return `${HEADER_B64}.${payload}.${b64urlEncode(sigBuf)}`;
   }
 
+  // NOTE: Revocation state is in-memory only — revoked tokens become valid
+  // again after a process restart or across multiple nodes. For multi-node
+  // or persistence-required deployments, persist revoked JTIs to a shared
+  // store (e.g. the SQLite api_keys-adjacent table) or rely on short TTLs
+  // (≤ 15 min) combined with token rotation instead of explicit revocation.
   function revoke(jti: string): void {
     // Store until the token would have expired at most (now + ttlSeconds).
     revokedJtis.set(jti, Math.floor(Date.now() / 1000) + ttlSeconds);

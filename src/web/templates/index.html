@@ -932,8 +932,9 @@
       return '<div class="empty-state"><div class="empty-state-icon">🔧</div>アプリケーションが見つかりません</div>';
     }
     return applications.map(app => {
-      const healthClass = app.health || 'unknown';
-      const healthLabel = HEALTH_LABELS[app.health] || app.health;
+      const VALID_HEALTH = ['healthy', 'degraded', 'down', 'unknown'];
+      const healthClass = VALID_HEALTH.includes(app.health) ? app.health : 'unknown';
+      const healthLabel = HEALTH_LABELS[healthClass] || healthClass;
       const catLabel = APP_CATEGORY_LABELS[app.category] || app.category;
       return `
         <div class="app-card">

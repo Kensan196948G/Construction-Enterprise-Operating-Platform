@@ -82,13 +82,20 @@ export class BaseSqliteRepository<T extends { id: string }>
 
   #upsertStmt(): StatementSync {
     if (this.#extraColNames.length === 0) {
-      return this.db.prepare(`INSERT OR REPLACE INTO ${this.#table} (id, data) VALUES (?, ?)`);
+      return this.db.prepare(
+        `INSERT INTO ${this.#table} (id, data) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET data = excluded.data`,
+      );
     }
     const cols = ["id", "data", ...this.#extraColNames].join(", ");
     const placeholders = Array.from({ length: 2 + this.#extraColNames.length }, () => "?").join(
       ", ",
     );
-    return this.db.prepare(`INSERT OR REPLACE INTO ${this.#table} (${cols}) VALUES (${placeholders})`);
+    // Target only the primary key (id) to avoid silently deleting rows when a
+    // secondary UNIQUE index (email, role name, app_key, …) conflicts.
+    const updates = ["data", ...this.#extraColNames].map((c) => `${c} = excluded.${c}`).join(", ");
+    return this.db.prepare(
+      `INSERT INTO ${this.#table} (${cols}) VALUES (${placeholders}) ON CONFLICT(id) DO UPDATE SET ${updates}`,
+    );
   }
 
   async findById(id: string): Promise<T | null> {

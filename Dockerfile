@@ -47,6 +47,12 @@ COPY --from=build /build/package.json ./
 
 # Non-root user for least-privilege security.
 RUN addgroup -g 1001 -S ceop && adduser -S -u 1001 -G ceop ceop
+
+# Pre-create the SQLite data directory and hand it to the non-root user
+# BEFORE switching away from root. A fresh named volume is mounted root-owned
+# by Docker; without this the ceop user cannot write the database file.
+RUN mkdir -p /data && chown ceop:ceop /data
+
 USER ceop
 
 ENV NODE_ENV=production

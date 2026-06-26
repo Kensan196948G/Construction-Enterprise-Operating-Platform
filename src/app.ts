@@ -16,7 +16,7 @@ import { createPolicy } from "./domain/policy.ts";
 import { AuditLog } from "./governance/audit-log.ts";
 import { createInMemoryRepositories } from "./persistence/in-memory/index.ts";
 import { createFileRepositories } from "./persistence/file/index.ts";
-import { createSqliteRepositories } from "./persistence/sqlite/index.ts";
+import { createSqliteRepositories, loadApiKeysFromSqlite } from "./persistence/sqlite/index.ts";
 import { createApiKey } from "./api/middleware/auth.ts";
 import { createJwtIssuer, generateJwtSecret } from "./api/middleware/jwt.ts";
 import { createServer } from "./api/server.ts";
@@ -65,6 +65,12 @@ export async function createApp(): Promise<AppContainer> {
 
   const auditLog = new AuditLog();
   const apiKeyStore: AppContainer["apiKeyStore"] = new Map();
+
+  // In SQLite mode, load provisioned API keys from the api_keys table.
+  // Keys are created via scripts/provision-api-key.ts after running migrations.
+  if (sqliteFile) {
+    loadApiKeysFromSqlite(sqliteFile, apiKeyStore);
+  }
 
   // JWT issuer: generate a fresh ephemeral secret per process (suitable for single-node).
   // For multi-node deployments, set CEOP_JWT_SECRET in the environment.

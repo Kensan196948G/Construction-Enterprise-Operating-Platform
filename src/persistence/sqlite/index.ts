@@ -13,6 +13,7 @@
  *   ...   indexed helper cols  — redundant values for O(log n) queries
  */
 
+import type { Permission } from "../../domain/role.ts";
 import type { Application, ApplicationId } from "../../domain/application.ts";
 import type { Device, DeviceId } from "../../domain/device.ts";
 import type { Organization, OrganizationId } from "../../domain/organization.ts";
@@ -28,6 +29,7 @@ import type {
   RoleRepository,
   UserRepository,
 } from "../ports.ts";
+import type { ApiKeyStore } from "../../api/types.ts";
 import { BaseSqliteRepository, openDatabase } from "./base-sqlite-repository.ts";
 
 // ---------------------------------------------------------------------------
@@ -302,4 +304,48 @@ export function createSqliteRepositories(dbPath: string): Repositories {
     applications: new SqliteApplicationRepository(db),
     policies: new SqlitePolicyRepository(db),
   };
+}
+
+/**
+ * Load provisioned API keys from the SQLite `api_keys` table into the given store.
+ *
+ * The `api_keys` table is created by migration 002 and populated via
+ * `scripts/provision-api-key.ts`. A second connection is opened so this
+ * function can be called independently of `createSqliteRepositories()`.
+ * WAL mode supports multiple concurrent readers safely.
+ *
+ * If the table does not exist (migrations not run), a warning is logged and
+ * the store is left empty — callers should treat this as a configuration error.
+ */
+export function loadApiKeysFromSqlite(dbPath: string, store: ApiKeyStore): void {
+  const db = openDatabase(dbPath);
+  try {
+    type TableRow = { name: string };
+    const tableExists = db.prepare(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='api_keys'",
+    ).get() as TableRow | undefined;
+    if (!tableExists) {
+      console.error(
+        "[app] Warning: api_keys table not found — run migrations first: node --experimental-strip-types scripts/migrate.ts",
+      );
+      return;
+    }
+    type ApiKeyRow = { key_id: string; subject: string; permissions: string; secret_hash: string };
+    const rows = db.prepare(
+      "SELECT key_id, subject, permissions, secret_hash FROM api_keys",
+    ).all() as ApiKeyRow[];
+    for (const row of rows) {
+      store.set(row.key_id, {
+        keyId: row.key_id,
+        subject: row.subject,
+        permissions: JSON.parse(row.permissions) as readonly Permission[],
+        secretHash: row.secret_hash,
+      });
+    }
+    if (rows.length > 0) {
+      console.error(`[app] Loaded ${rows.length} provisioned API key(s) from SQLite`);
+    }
+  } finally {
+    db.close();
+  }
 }

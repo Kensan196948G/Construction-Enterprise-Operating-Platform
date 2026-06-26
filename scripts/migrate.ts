@@ -172,8 +172,15 @@ try {
   process.exit(1);
 }
 
-ensureMigrationsTable(db);
-const applied = appliedVersions(db);
+let applied: Set<string>;
+try {
+  ensureMigrationsTable(db);
+  applied = appliedVersions(db);
+} catch (e) {
+  console.error("[migrate] Failed during migration bootstrap:", e);
+  db.close();
+  process.exit(2);
+}
 
 let ran = 0;
 for (const m of MIGRATIONS) {

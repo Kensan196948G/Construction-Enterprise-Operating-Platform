@@ -54,9 +54,15 @@ function parseArgs(argv: string[]): {
     process.exit(1);
   }
 
-  const permissions = permissionsRaw
-    ? permissionsRaw.split(",").map((p) => p.trim()).filter(Boolean)
-    : ["*:*"];
+  if (!permissionsRaw) {
+    console.error(
+      "[provision] Error: --permissions is required (e.g. --permissions application:read,device:read)",
+    );
+    console.error("[provision] Omitting --permissions would silently grant full access (*:*).");
+    process.exit(1);
+  }
+
+  const permissions = permissionsRaw.split(",").map((p) => p.trim()).filter(Boolean);
 
   return { subject, permissions, dbPath };
 }
@@ -86,16 +92,22 @@ function generateApiKey(subject: string, permissions: readonly string[]): {
 // Persistence
 // ---------------------------------------------------------------------------
 
-function ensureApiKeyTable(db: DatabaseSync): void {
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS api_keys (
-      key_id      TEXT PRIMARY KEY,
-      subject     TEXT NOT NULL,
-      permissions TEXT NOT NULL,
-      secret_hash TEXT NOT NULL,
-      created_at  TEXT NOT NULL
-    )
-  `);
+/**
+ * Verify the api_keys table exists (migration 002 applied).
+ * The schema is owned exclusively by scripts/migrate.ts — this script
+ * must not recreate it to avoid schema drift.
+ */
+function assertApiKeyTableExists(db: DatabaseSync): void {
+  const row = db.prepare(
+    "SELECT name FROM sqlite_master WHERE type='table' AND name='api_keys'",
+  ).get() as { name: string } | undefined;
+  if (!row) {
+    console.error("[provision] Error: api_keys table not found.");
+    console.error("[provision] Run migrations first:");
+    console.error("  node --experimental-strip-types scripts/migrate.ts");
+    db.close();
+    process.exit(2);
+  }
 }
 
 function insertApiKey(
@@ -137,7 +149,7 @@ try {
 }
 
 try {
-  ensureApiKeyTable(db);
+  assertApiKeyTableExists(db);
   const cred = generateApiKey(subject, permissions);
   insertApiKey(db, cred);
 
