@@ -4,6 +4,78 @@ All notable changes to the Construction Enterprise Operating Platform are docume
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [0.2.0] - 2026-06-27
+
+Second milestone release: HTTP API Gateway, Server-Side Rendered frontend, persistence layer,
+and Docker production packaging.
+
+### Added
+
+- **HTTP API Gateway** (`src/api/`)
+  - `Router` — lightweight path-parameter router on `node:http` primitives (no framework).
+  - `createServer()` — CORS-aware HTTP server factory wiring all route groups.
+  - `GET /health` — public liveness probe for load balancers and Kubernetes probes.
+  - `GET /api/v1/info` — build info (name, version, environment).
+  - `GET /api/v1/dashboard` — role-filtered dashboard JSON via Governance Core.
+  - `GET /api/v1/organizations` — organisation listing.
+  - `GET /api/v1/users` — user listing.
+  - `GET /api/v1/applications` — application listing.
+  - `GET /api/v1/devices` — device listing.
+  - `GET /api/v1/governance/policies` — policy listing.
+  - `GET /api/v1/governance/audit` — tamper-evident audit log (`?limit` up to 200).
+  - `POST /api/v1/governance/evaluate` — RBAC+ABAC access decision endpoint; every
+    evaluation is automatically recorded to the audit log.
+
+- **API key authentication middleware** (`src/api/middleware/auth.ts`)
+  - `Bearer keyId:secret` credential format; secrets stored as HMAC-SHA256 only (never plaintext).
+  - Constant-time comparison to resist timing attacks.
+
+- **Server-Side Rendered frontend** (`src/web/`)
+  - `GET /` — 302 redirect to `/dashboard`.
+  - `GET /dashboard` — HTML dashboard page (role-based, SSR, guest-scoped view).
+  - `GET /governance` — HTML governance management page (policy list, SSR).
+  - Security response headers: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`.
+
+- **In-Memory Persistence Layer** (`src/persistence/in-memory/`)
+  - Generic `InMemoryRepository<T>` implementing `findAll` / `findById` / `save` / `delete`.
+  - Concrete repositories: `OrganizationRepository`, `UserRepository`, `RoleRepository`,
+    `DeviceRepository`, `ApplicationRepository`, `PolicyRepository`.
+
+- **Application bootstrap** (`src/app.ts`)
+  - `createApp()` — wires repositories, audit log, API key store, and deterministic demo seed
+    data into an `AppContainer`. Each call returns an independent in-memory container.
+  - `start(port?)` — binds the HTTP server with graceful SIGTERM / SIGINT shutdown.
+
+- **Production start script** (`scripts/start.ts`)
+  - Launched via `node --experimental-strip-types scripts/start.ts` (no build step needed).
+  - Reads `PORT`, `NODE_ENV`, `LOG_LEVEL`, `PLATFORM_NAME` from environment.
+
+- **Docker packaging** (`Dockerfile`, `docker-compose.yml`)
+  - Multi-stage build: `build` stage (tsc compile) + `runtime` stage (zero npm deps in image).
+  - Non-root user (`ceop:ceop`, uid 1001) for least-privilege security.
+  - `HEALTHCHECK` using curl against `/health`.
+  - `docker-compose.yml` for local development with source volume mounts.
+
+### Changed
+
+- `src/index.ts` — public re-exports extended with `adapters` namespace (`v0.1.0` had
+  `domain`, `governance`, `dashboard`; `v0.2.0` adds explicit `adapters` export).
+- Package `version` bumped to `0.2.0`.
+
+### Quality
+
+- Test count increased from 31 to **45** (14 new API + server integration tests).
+- typecheck, lint, build, and all 45 tests remain green.
+- Docker image verified: multi-stage build compiles cleanly; runtime image has zero npm deps.
+
+### Notes
+
+- Persistence is still in-memory; a persistent store (PostgreSQL / SQLite) is planned for M6.
+- API key lifecycle (rotation, expiry) is not yet implemented; demo keys are ephemeral per process.
+- Concrete external adapters (CMDB, ITSM, etc.) are planned for M6.
+
+---
+
 ## [0.1.0] - 2026-06-25
 
 First foundation release: a verifiable coordination layer for the platform.
