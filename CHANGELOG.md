@@ -6,6 +6,130 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 ## [Unreleased]
 
+### Security (2026-06-27)
+
+- **Rate-limit bypass via spoofable X-Forwarded-For header** — `clientKey()` in
+  `src/api/routes/auth.ts` previously trusted the `X-Forwarded-For` / `X-Real-IP`
+  request headers, which any client can set to rotate through fake IPs and bypass
+  the per-IP rate limiter. The function now uses the TCP-layer `socket.remoteAddress`
+  (populated from `req.socket.remoteAddress` in the router, exposed as
+  `ApiRequest.remoteAddress`) which cannot be forged by the client. When running
+  behind a reverse proxy, configure the proxy to SNAT so Node.js sees the real client
+  IP on the socket.
+
+---
+
+## [0.3.0] - 2026-06-27
+
+Third milestone release: JWT session auth, POSIX-atomic file persistence, and
+comprehensive security hardening (Critical + High + Medium + Low findings from
+CodeRabbit, Codex, and internal review).
+
+### Added
+
+- **JWT authentication** (`src/api/middleware/jwt.ts`)
+  - `generateJwtSecret()` — 48-byte cryptographically random hex string.
+  - `createJwtIssuer(config)` — HS256 JWT issuer/verifier; `timingSafeEqual` on
+    HMAC comparison; 1-hour expiry; `jti` (random 8-byte hex) for replay detection.
+  - `JwtVerifyResult` discriminated union: `ok` / `expired` / `invalid` / `malformed`.
+
+- **Rate limiter** (`src/api/middleware/rate-limiter.ts`)
+  - Sliding-window rate limiter using `Map<string, number[]>`.
+  - Lazy cleanup: expired timestamps are pruned on each `check()` call.
+  - `RateLimiter.reset()` clears all buckets (used in tests).
+
+- **Token exchange endpoint** (`src/api/routes/auth.ts`)
+  - `POST /api/v1/auth/token` — accepts `{ credential: "keyId:secret" }` and
+    returns `{ token, expiresIn: 3600, subject }`.
+  - Public route (no Bearer header required); rate-limited at 10 req/min per IP.
+  - `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset` response headers.
+
+- **Bearer JWT support in Router** (`src/api/router.ts`)
+  - Tokens containing `:` → API key path (existing behaviour).
+  - Tokens without `:` → JWT verify path; `JwtPayload` mapped to `ApiKeyContext`.
+  - `RouterOptions.jwtIssuer` optional field; Router backward-compatible with
+    `Map<string, ApiKeyRecord>` (tests still pass a plain Map).
+
+- **POSIX-atomic file repositories** (`src/persistence/file/`)
+  - `BaseFileRepository<T>` — lazy-load JSON cache; atomic write via
+    `writeFile(tmpPath) → rename(tmpPath, filePath)` (crash-safe; no partial writes).
+  - Six concrete repositories: `FileUserRepository`, `FileOrganizationRepository`,
+    `FileRoleRepository`, `FileDeviceRepository`, `FileApplicationRepository`,
+    `FilePolicyRepository` — each delegates id-typed methods to the base class.
+  - `createFileRepositories(dataDir)` factory — creates the directory tree with
+    `ensureDataDir()` and wires all six repositories.
+  - `CEOP_DATA_DIR` env var in `src/app.ts` — when set, activates file-backed
+    persistence instead of the default in-memory repositories.
+  - `CEOP_JWT_SECRET` env var — when set, overrides the auto-generated JWT secret
+    so secrets persist across process restarts.
+
+- **ApiRequest.remoteAddress** (`src/api/types.ts`)
+  - TCP-layer remote address populated by the router from `req.socket.remoteAddress`.
+  - Used by the auth route for rate-limiting; prevents X-Forwarded-For spoofing.
+
+### Security — Round 3 (CodeRabbit + Codex findings — 2026-06-27)
+
+- **Dashboard list endpoints missing authorization (Critical)** — `GET /api/v1/organizations`,
+  `GET /api/v1/users`, `GET /api/v1/applications`, and `GET /api/v1/devices` now enforce
+  per-permission guards via a shared `hasPermission()` helper. Organization and user listings
+  require `organization:read` / `user:read` (admin only); application and device listings
+  require `application:read` / `device:read` (admin + viewer). Unauthenticated callers receive
+  401; authenticated callers without the required permission receive 403.
+- **ABAC conditions broken for top-level request fields (High)** — `conditionsHold` in
+  `policy-engine.ts` merged `request.subject`, `resource`, and `action` into the attribute
+  lookup map so policies using `conditions: [{ attribute: "subject", equals: "guest" }]` now
+  correctly gate access.
+- **ITSM spread order bug — caller id/status could override generated values (High)**.
+- **CMDB adapter returns live references (High)** — `getItem()` / `listItems()` return
+  shallow clones.
+- **Invalid ISO timestamp acceptance (High)** — `toIsoTimestamp()` performs round-trip check.
+- **CSP blocks inline styles/scripts (Medium)**, **health class prefix mismatch (Medium)**,
+  **audit outcome class injection (Medium)**, **hasPermission not shared (Medium)**,
+  **document adapter `missingVariables` inconsistency (Low)**, and additional low-severity
+  fixes.
+
+### Security — Round 2 (code-review findings — 2026-06-27)
+
+- **keyId enumeration via error message (Low→fixed)**, **NODE_ENV case sensitivity (High)**,
+  **body/JSON error separation (Medium)**, **missing governance:evaluate permission (Medium)**,
+  **wildcard permission coverage gap (Medium)**, **CSP form-action/base-uri/frame-ancestors
+  (Medium/Low)**, **Cache-Control no-store (Low)**.
+
+### Security — Round 1 (2026-06-27)
+
+- **Timing attack (Critical)** — HMAC comparison uses `timingSafeEqual`.
+- **DoS — body size (High)** — 1 MiB request-body limit.
+- **Missing authorization on audit log and policy listing (High ×2)**.
+- **Silent audit failure (High)**, **CSP header (High)**, **demo key logging (High)**,
+  **audit actor spoofing (High)**.
+
+### Fixed
+
+- **TypeScript exactOptionalPropertyTypes compliance** — four categories resolved:
+  - `src/api/router.ts`: private field `#jwtIssuer?: JwtIssuer` → `: JwtIssuer | undefined`.
+  - `src/api/server.ts`: conditional spread to avoid passing `{ jwtIssuer: undefined }`.
+  - `src/persistence/file/file-repository.test.ts`: `IsoTimestamp` import + `nowTs()` return
+    type; removed incorrect `_brand` (single underscore) casts.
+  - `src/persistence/file/index.ts`: `override` keyword on all 12 `findById`/`delete` methods.
+
+### Quality
+
+- Test count increased from 45 to **97** (39 new: JWT middleware ×15, rate limiter ×7,
+  auth route ×5, file repository ×12).
+- typecheck, lint, build, and all 97 tests remain green.
+
+### Notes
+
+- File repositories are suitable for single-node deployments; for multi-node or high-load
+  use cases, replace with PostgreSQL / SQLite WAL adapters (ports are defined in
+  `src/persistence/ports.ts`).
+- JWT secret defaults to a per-process random value; set `CEOP_JWT_SECRET` for persistence.
+- Concrete external adapters (CMDB, ITSM, etc.) are planned for M7.
+
+---
+
+## [0.2.0] - 2026-06-27
+
 ### Security / Quality — Round 3 (CodeRabbit + Codex findings — 2026-06-27)
 
 - **Dashboard list endpoints missing authorization (Critical)** — `GET /api/v1/organizations`,

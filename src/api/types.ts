@@ -23,6 +23,12 @@ export interface ApiRequest {
   readonly params: Readonly<Record<string, string>>;
   readonly query: Readonly<Record<string, string>>;
   readonly body?: unknown;
+  /**
+   * TCP-layer remote address (`socket.remoteAddress`).
+   * Populated by the router; use this for rate-limiting — it cannot be
+   * spoofed by clients, unlike X-Forwarded-For.
+   */
+  readonly remoteAddress?: string;
 }
 
 /** Successful API response envelope. */

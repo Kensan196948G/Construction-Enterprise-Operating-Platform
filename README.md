@@ -4,7 +4,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-22.6+-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Zero Runtime Deps](https://img.shields.io/badge/runtime%20deps-zero-brightgreen)](package.json)
 [![CI](https://img.shields.io/github/actions/workflow/status/kensan/construction-eop/ci.yml?label=CI&logo=github)](/.github/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-45%20pass-brightgreen)](src/)
+[![Tests](https://img.shields.io/badge/tests-97%20pass-brightgreen)](src/)
 [![Security](https://img.shields.io/badge/security-hardened-blue)](src/api/middleware/auth.ts)
 [![License](https://img.shields.io/badge/license-private-lightgrey)](package.json)
 
@@ -18,15 +18,15 @@
 | 項目           | 内容                                                                                |
 | -------------- | ----------------------------------------------------------------------------------- |
 | 役割           | 統制・ガバナンス・共通ワークフローの調整基盤                                        |
-| バージョン     | v0.2.0 + Security Hardening                                                         |
+| バージョン     | v0.3.0（JWT 認証・ファイル永続化・セキュリティ強化完了）                             |
 | 言語           | TypeScript 5.7（strict / `noUncheckedIndexedAccess` / 例外を投げない設計）          |
 | ランタイム     | Node.js v22.6+（ネイティブ TS 実行・ビルトインテストランナー）                      |
 | HTTP サーバ    | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                            |
 | 依存方針       | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）    |
 | パッケージ     | pnpm 10.26.2                                                                        |
-| テスト         | 45 tests pass（node:test ビルトインランナー）                                       |
+| テスト         | 97 tests pass（node:test ビルトインランナー）                                       |
 | コンテナ       | Docker multi-stage build（non-root・HEALTHCHECK 付き）                              |
-| セキュリティ   | HMAC-SHA256 + timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB ボディ制限       |
+| セキュリティ   | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限  |
 
 ---
 
@@ -36,13 +36,19 @@
 flowchart TD
     Browser["🌐 Web Browser"] -->|GET /dashboard\nGET /governance| WebSSR
     RestClient["🔌 REST Client\n(Bearer keyId:secret)"] -->|/api/v1/*| APIGateway
+    JwtClient["🔑 JWT Client\n(Bearer <jwt>)"] -->|/api/v1/*| APIGateway
+    AuthClient["🔓 Auth Client"] -->|POST /api/v1/auth/token| APIGateway
 
     subgraph Platform["🏗️ Construction Enterprise Operating Platform"]
         subgraph HTTP["HTTP Layer · src/api/"]
-            APIGateway["🔀 Router\nrouter.ts\n1MiB body limit"]
-            AuthMW["🔐 Auth Middleware\nHMAC-SHA256\ntimingSafeEqual"]
+            APIGateway["🔀 Router\nrouter.ts\n1MiB body limit\nremoteAddress"]
+            AuthMW["🔐 Auth Middleware\nAPI Key: HMAC-SHA256\nJWT: HS256 timingSafeEqual"]
+            JwtMW["🎫 JWT Issuer\njwt.ts\n1h expiry・jti replay guard"]
+            RateLimiter["⏱ Rate Limiter\nsliding-window\n10 req/min per socket IP"]
             WebSSR["🖥️ SSR Renderer\nweb/renderer.ts\nCSP Headers"]
             APIGateway --> AuthMW
+            APIGateway --> RateLimiter
+            RateLimiter --> JwtMW
         end
 
         subgraph Governance["Governance Core · src/governance/"]
@@ -62,7 +68,8 @@ flowchart TD
         end
 
         subgraph Persistence["Persistence Layer · src/persistence/"]
-            Repos["🗄️ In-Memory Repositories\n×6 domains\n(port interface → DB swap-in)"]
+            InMem["💾 In-Memory\n×6 repos\n(テスト・開発)"]
+            FilePersist["📂 File-backed\n×6 repos\nPOSIX-atomic writes\nCEOP_DATA_DIR"]
         end
 
         subgraph Adapters["Adapter Ports · src/adapters/"]
@@ -75,15 +82,18 @@ flowchart TD
         end
 
         AuthMW --> PolicyEngine
+        JwtMW --> AuthMW
         PolicyEngine --> AuditLog
         PolicyEngine --> Domain
         AuditLog --> Domain
         WebSSR --> PolicyEngine
-        Domain --> Repos
-        Repos --> Adapters
+        Domain --> InMem
+        Domain --> FilePersist
+        InMem --> Adapters
+        FilePersist --> Adapters
     end
 
-    subgraph External["🌍 External Systems (M6 計画)"]
+    subgraph External["🌍 External Systems (M7 計画)"]
         EXT1["CMDB"]
         EXT2["ITSM"]
         EXT3["IMS / LegalOps / BCP"]
@@ -111,13 +121,18 @@ src/
 ├── adapters/      … 連携ポート（CMDB/ITSM/IMS/LegalOps/BCP/Document）
 │   └── in-memory-document-adapter … Document Control 参照実装
 ├── persistence/   … リポジトリ実装
-│   └── in-memory/ … 全ドメインの In-Memory リポジトリ（テスト・開発用）
+│   ├── in-memory/ … 全ドメインの In-Memory リポジトリ（テスト・開発用）
+│   └── file/      … POSIX-atomic ファイル永続化（×6 ドメイン・CEOP_DATA_DIR）
 ├── api/           … HTTP API Gateway
 │   ├── server.ts  … createServer() — node:http ファクトリ
-│   ├── router.ts  … 軽量ルーター（PathParam・Bearer 認証・CORS・1 MiB 制限）
-│   ├── middleware/ … auth（HMAC-SHA256 + timingSafeEqual）・request-logger
-│   ├── routes/    … health / governance / dashboard / web
-│   └── types.ts   … AppContainer・ApiKeyContext 型
+│   ├── router.ts  … 軽量ルーター（API key + JWT dual auth・1 MiB 制限・remoteAddress）
+│   ├── middleware/
+│   │   ├── auth.ts         … API key 検証（HMAC-SHA256 + timingSafeEqual）
+│   │   ├── jwt.ts          … HS256 JWT 発行・検証（createJwtIssuer・1h 有効期限）
+│   │   ├── rate-limiter.ts … スライディングウィンドウ（10 req/min per socket IP）
+│   │   └── request-logger.ts
+│   ├── routes/    … health / auth / governance / dashboard / web
+│   └── types.ts   … AppContainer・ApiKeyContext・ApiRequest（remoteAddress）型
 ├── web/           … SSR レンダラー
 │   ├── renderer.ts … buildDashboard → HTML 変換（XSS エスケープ）
 │   └── templates/ … index.html・governance.html
@@ -136,13 +151,16 @@ examples/
 
 ### 🔓 公開エンドポイント（認証不要）
 
-| メソッド | パス           | 説明                                               |
-| -------- | -------------- | -------------------------------------------------- |
-| `GET`    | `/health`      | ライブネスプローブ。`{ status, timestamp, uptime }` |
-| `GET`    | `/api/v1/info` | ビルド情報。`{ name, version, environment }`       |
-| `GET`    | `/`            | `/dashboard` へ 302 リダイレクト                   |
-| `GET`    | `/dashboard`   | ダッシュボード HTML（SSR・ゲストビュー）           |
-| `GET`    | `/governance`  | ガバナンス管理 HTML（SSR・ポリシー一覧）           |
+| メソッド | パス                    | 説明                                                                          |
+| -------- | ----------------------- | ----------------------------------------------------------------------------- |
+| `GET`    | `/health`               | ライブネスプローブ。`{ status, timestamp, uptime }`                           |
+| `GET`    | `/api/v1/info`          | ビルド情報。`{ name, version, environment }`                                  |
+| `GET`    | `/`                     | `/dashboard` へ 302 リダイレクト                                              |
+| `GET`    | `/dashboard`            | ダッシュボード HTML（SSR・ゲストビュー）                                      |
+| `GET`    | `/governance`           | ガバナンス管理 HTML（SSR・ポリシー一覧）                                      |
+| `POST`   | `/api/v1/auth/token`    | API キーを JWT に交換。`{ credential: "keyId:secret" }` → `{ token, expiresIn: 3600, subject }` |
+
+> ⏱ `/api/v1/auth/token` はレート制限あり（**10 req/min per socket IP**）。超過時は `429 Too Many Requests` + `X-RateLimit-*` ヘッダ。
 
 ### 🔐 認証必須エンドポイント（`Bearer keyId:secret`）
 
@@ -291,12 +309,31 @@ curl -H "Authorization: Bearer <key>:<secret>" http://localhost:3000/api/v1/dash
 
 > ⚠️ **本番環境では** `NODE_ENV=production` を設定してください。デモキーは出力されません。
 
+### 🔑 JWT トークン交換（M5 完了）
+
+API キーを短命 JWT（有効期限 1 時間）に交換できます。JWT はファイアウォール内部での
+サービス間通信やブラウザクライアントに適しています。
+
+```bash
+# 1. API キーを JWT に交換（10 req/min レート制限あり）
+curl -s -X POST http://localhost:3000/api/v1/auth/token \
+  -H "Content-Type: application/json" \
+  -d '{"credential": "abc123:xyz789"}' | jq .
+# → { "token": "<jwt>", "expiresIn": 3600, "subject": "admin" }
+
+# 2. JWT で保護エンドポイントにアクセス
+curl -H "Authorization: Bearer <jwt>" http://localhost:3000/api/v1/dashboard
+```
+
+> 📌 JWT を発行する際は `CEOP_JWT_SECRET` 環境変数で固定の署名鍵を設定することを推奨します。
+> 未設定の場合はプロセス起動ごとに新鍵が生成され、再起動後に既存 JWT が無効になります。
+
 ---
 
 ## 🧪 テスト実行
 
 ```bash
-# 全テスト実行（45 tests）
+# 全テスト実行（97 tests）
 pnpm run test
 
 # typecheck + lint + test 一括
@@ -321,7 +358,7 @@ pnpm run build
 | ----------- | ----------------- | ------------------------------------------------------- |
 | typecheck   | ✅ pass           | strict・`noUncheckedIndexedAccess`・0 error             |
 | lint        | ✅ pass           | ESLint flat config + typescript-eslint・0 warning       |
-| test        | ✅ 45/45          | domain + governance + dashboard + adapters + API        |
+| test        | ✅ 97/97          | domain + governance + dashboard + adapters + API + JWT + file-repo |
 | build       | ✅ pass           | `dist/` に型定義付き出力                                |
 | CI          | ✅ 設定済み       | `.github/workflows/ci.yml`（push / PR トリガー）        |
 | Docker      | ✅ multi-stage    | non-root ユーザー・HEALTHCHECK 付き                     |
@@ -331,12 +368,14 @@ pnpm run build
 
 ## ⚙️ 環境変数
 
-| 変数名          | 既定値                                            | 説明                                              |
-| --------------- | ------------------------------------------------- | ------------------------------------------------- |
-| `PORT`          | `3000`                                            | HTTP サーバがリッスンする TCP ポート              |
-| `NODE_ENV`      | —                                                 | `production` に設定するとデモキーを出力しない     |
-| `LOG_LEVEL`     | `info`                                            | `debug` / `info` / `warn` / `error`               |
-| `PLATFORM_NAME` | `Construction Enterprise Operating Platform`      | 起動ログ・UI に表示するプラットフォーム名         |
+| 変数名            | 既定値                                            | 説明                                                                          |
+| ----------------- | ------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `PORT`            | `3000`                                            | HTTP サーバがリッスンする TCP ポート                                          |
+| `NODE_ENV`        | —                                                 | `production` に設定するとデモキーを出力しない                                 |
+| `LOG_LEVEL`       | `info`                                            | `debug` / `info` / `warn` / `error`                                           |
+| `PLATFORM_NAME`   | `Construction Enterprise Operating Platform`      | 起動ログ・UI に表示するプラットフォーム名                                     |
+| `CEOP_JWT_SECRET` | —（プロセス起動ごと自動生成）                     | HS256 JWT 署名用 32 バイト秘密鍵（hex 形式）。未設定時は起動ごとに新鍵を生成 |
+| `CEOP_DATA_DIR`   | —（未設定 = In-Memory モード）                    | ファイル永続化の保存先ディレクトリ。設定時は POSIX-atomic ファイル repo が有効 |
 
 ---
 
@@ -367,18 +406,50 @@ sequenceDiagram
     end
 ```
 
+### 🎫 JWT 認証フロー（M5 追加）
+
+```mermaid
+sequenceDiagram
+    participant C as クライアント
+    participant R as Router
+    participant RL as Rate Limiter
+    participant A as Auth Middleware
+    participant J as JWT Issuer (HS256)
+
+    C->>R: POST /api/v1/auth/token { credential }
+    R->>RL: check(socket.remoteAddress)
+    alt レート制限超過
+        RL-->>C: 429 Too Many Requests + X-RateLimit-*
+    else 制限内
+        RL-->>R: allowed
+        R->>A: validateApiKey(credential)
+        A->>A: HMAC-SHA256 + timingSafeEqual
+        alt 認証成功
+            A-->>R: ApiKeyContext { subject, permissions }
+            R->>J: issue(subject, permissions)
+            J->>J: HS256 sign（jti=uuid, exp=+1h）
+            J-->>C: 200 { token, expiresIn: 3600, subject }
+        else 認証失敗
+            A-->>R: invalid
+            R-->>C: 401 Unauthorized
+        end
+    end
+```
+
 ### 🛡️ セキュリティ強化一覧
 
-| カテゴリ                   | 実装内容                                                             | ファイル              |
-| -------------------------- | -------------------------------------------------------------------- | --------------------- |
-| タイミング攻撃対策         | HMAC ハッシュ比較を `timingSafeEqual` で実施                         | `auth.ts`             |
-| DoS 防止                   | リクエストボディを **1 MiB** で打ち切り（`req.destroy` 即断）        | `router.ts`           |
-| 監査ログ権限               | `GET /api/v1/governance/audit` に `audit:read` 権限チェック          | `routes/governance.ts` |
-| ポリシー一覧権限           | `GET /api/v1/governance/policies` に `policy:read` 権限チェック      | `routes/governance.ts` |
-| 監査失敗の可視化           | 監査イベント生成失敗を `console.error` でログ（サイレント廃棄を廃止） | `routes/governance.ts` |
-| CSP ヘッダ                 | SSR ページに `Content-Security-Policy: default-src 'self'` を付与   | `routes/web.ts`       |
-| 秘密情報のログ漏洩防止     | デモキーログを `NODE_ENV !== production` 条件で制限                  | `app.ts`              |
-| 監査アクター詐称防止       | 評価 API の `actor` を認証済み `ctx.subject` から取得（リクエストボディ不使用） | `routes/governance.ts` |
+| カテゴリ                      | 実装内容                                                                        | ファイル                      |
+| ----------------------------- | ------------------------------------------------------------------------------- | ----------------------------- |
+| タイミング攻撃対策            | HMAC ハッシュ比較を `timingSafeEqual` で実施                                    | `middleware/auth.ts`          |
+| JWT 署名・検証                | HS256（`node:crypto` HMAC-SHA256）・jti replay guard・1h 有効期限               | `middleware/jwt.ts`           |
+| レート制限（Credential-Stuffing 対策） | sliding-window 10 req/min を **socket.remoteAddress** でキー（X-Forwarded-For 非信頼） | `middleware/rate-limiter.ts` |
+| DoS 防止                      | リクエストボディを **1 MiB** で打ち切り（`req.destroy` 即断）                   | `router.ts`                   |
+| 監査ログ権限                  | `GET /api/v1/governance/audit` に `audit:read` 権限チェック                     | `routes/governance.ts`        |
+| ポリシー一覧権限              | `GET /api/v1/governance/policies` に `policy:read` 権限チェック                 | `routes/governance.ts`        |
+| 監査失敗の可視化              | 監査イベント生成失敗を `console.error` でログ（サイレント廃棄を廃止）            | `routes/governance.ts`        |
+| CSP ヘッダ                    | SSR ページに `Content-Security-Policy: default-src 'self'` を付与              | `routes/web.ts`               |
+| 秘密情報のログ漏洩防止        | デモキーログを `NODE_ENV !== production` 条件で制限                              | `app.ts`                      |
+| 監査アクター詐称防止          | 評価 API の `actor` を認証済み `ctx.subject` から取得（リクエストボディ不使用）  | `routes/governance.ts`        |
 
 ### ⚖️ ポリシーエンジン（Governance Core）
 
@@ -425,8 +496,11 @@ gantt
         M4 HTTP Gateway + SSR + Docker   :done,    m4, 2026-06-27, 1d
         Security Hardening               :done,    sh, 2026-06-27, 1d
     section 認証 + 永続化
-        M5 JWT 認証 + セッション管理     :active,  m5, 2026-07-01, 14d
-        M6 外部アダプタ + DB + 本番      :         m6, 2026-07-15, 21d
+        M5 JWT 認証 + レート制限         :done,    m5, 2026-06-27, 1d
+        M6 ファイル永続化（POSIX-atomic）:done,    m6, 2026-06-27, 1d
+    section 次フェーズ
+        M7 DB 永続化 + 外部アダプタ本実装:         m7, 2026-07-01, 21d
+        M8 本番デプロイ・最終統合テスト  :         m8, 2026-07-22, 14d
     section リリース
         Production Release               :milestone, 2026-12-25, 0d
 ```
@@ -438,8 +512,10 @@ gantt
 | ✅ M3         | アダプタポート定義（CMDB/ITSM/IMS/LegalOps/BCP）+ Document 参照実装  | **completed**  |
 | ✅ M4         | HTTP API Gateway + SSR フロントエンド + In-Memory 永続化層 + Docker   | **completed**  |
 | ✅ Security   | タイミング攻撃・DoS・権限漏洩・CSP・監査アクター詐称を修正            | **completed**  |
-| 🔄 M5        | JWT 認証・セッション管理・ロールベースアクセス制御の強化               | **planned**    |
-| ⬜ M6        | 外部アダプタ本実装（CMDB/ITSM 接続）・DB 永続化・本番デプロイ         | **planned**    |
+| ✅ M5         | JWT 認証（HS256）・レート制限（sliding-window）・`POST /api/v1/auth/token` | **completed**  |
+| ✅ M6         | POSIX-atomic ファイル永続化（×6 ドメイン）・`CEOP_DATA_DIR` 環境変数  | **completed**  |
+| ⬜ M7         | DB 永続化（SQLite/PostgreSQL）・外部アダプタ本実装（CMDB/ITSM）       | **planned**    |
+| ⬜ M8         | 本番デプロイ・最終統合テスト・パフォーマンスチューニング               | **planned**    |
 
 ---
 

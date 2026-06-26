@@ -214,6 +214,9 @@ export class Router {
       params: matched.params,
       query,
       ...(body !== undefined ? { body } : {}),
+      ...(req.socket?.remoteAddress !== undefined
+        ? { remoteAddress: req.socket.remoteAddress }
+        : {}),
     };
 
     try {

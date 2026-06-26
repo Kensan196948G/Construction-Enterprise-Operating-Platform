@@ -21,18 +21,20 @@ import type { ApiKeyStore, ApiRequest } from "../types.ts";
 // enough to blunt credential-stuffing at scale.
 const rateLimiter = createRateLimiter({ maxRequests: 10, windowMs: 60_000 });
 
-/** Extract the best available client identifier for rate-limiting purposes. */
+/**
+ * Return the TCP-layer remote address as the rate-limit key.
+ *
+ * X-Forwarded-For and X-Real-IP are intentionally ignored: they are
+ * request headers that any client can forge, which would let attackers
+ * bypass the rate limiter by cycling through fake IPs.  The socket's
+ * remoteAddress is set by the OS and cannot be spoofed by the client.
+ *
+ * When the server runs behind a trusted reverse proxy, the proxy MUST be
+ * configured to SNAT / rewrite the source IP so that Node.js sees the
+ * real client IP on the socket (the default for most Docker/K8s setups).
+ */
 function clientKey(req: ApiRequest): string {
-  const forwarded = req.headers["x-forwarded-for"];
-  if (typeof forwarded === "string") {
-    return forwarded.split(",")[0]?.trim() ?? "unknown";
-  }
-  if (Array.isArray(forwarded) && forwarded.length > 0) {
-    return forwarded[0]?.split(",")[0]?.trim() ?? "unknown";
-  }
-  const realIp = req.headers["x-real-ip"];
-  if (typeof realIp === "string") return realIp;
-  return "unknown";
+  return req.remoteAddress ?? "unknown";
 }
 
 export function registerAuthRoutes(
