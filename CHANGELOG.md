@@ -6,6 +6,45 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 ## [Unreleased]
 
+---
+
+## [0.4.0] - 2026-06-27
+
+Fourth milestone release: SQLite-backed persistence layer using `node:sqlite` experimental API.
+
+### Added
+
+- **SQLite persistence base** (`src/persistence/sqlite/base-sqlite-repository.ts`)
+  - `BaseSqliteRepository<T>` — generic JSON-in-column SQLite repository.
+  - 2-column strategy: `data TEXT NOT NULL` (full JSON) + indexed helper columns for O(log n) queries.
+  - WAL journal mode + foreign key enforcement enabled on every `openDatabase()` call.
+  - `createRequire(import.meta.url)` bridge for loading untyped `node:sqlite` in ESM context.
+  - All public methods are `async` to satisfy the `Repository<T, Id>` port contract.
+
+- **Six domain SQLite repositories** (`src/persistence/sqlite/index.ts`)
+  - `SqliteUserRepository` — extra columns: `email` (unique index), `org_id`
+  - `SqliteOrganizationRepository` — extra columns: `type`, `parent_id` (nullable)
+  - `SqliteRoleRepository` — extra column: `name` (unique index)
+  - `SqliteDeviceRepository` — extra column: `org_id`
+  - `SqliteApplicationRepository` — extra columns: `app_key` (unique index), `owner_org_id`
+  - `SqlitePolicyRepository` — extra column: `effect`
+  - `createSqliteRepositories(dbPath)` factory — shared `DatabaseSync` instance across all six repos.
+
+- **Persistence tier selection in `app.ts`**
+  - Priority: `CEOP_SQLITE_FILE` → `CEOP_DATA_DIR` → In-Memory.
+  - `CEOP_SQLITE_FILE=/data/ceop.db` enables SQLite mode (production-recommended).
+
+- **15 SQLite integration tests** (`src/persistence/sqlite/sqlite-repository.test.ts`)
+  - Isolated per-group `:memory:` databases for unit-level CRUD tests.
+  - File-based database test verifying WAL persistence across `openDatabase()` calls.
+  - Total test count: 112 (up from 97).
+
+### Changed
+
+- `app.ts` — persistence tier selection updated to check `CEOP_SQLITE_FILE` first.
+
+---
+
 ### Security (2026-06-27)
 
 - **Rate-limit bypass via spoofable X-Forwarded-For header** — `clientKey()` in
