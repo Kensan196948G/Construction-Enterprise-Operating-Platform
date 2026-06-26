@@ -78,7 +78,8 @@ export function validateApiKey(
 
   const record = store.get(keyId);
   if (record === undefined) {
-    return err([{ path: "credential", message: "API key not found" }]);
+    // Unified message prevents keyId enumeration via distinct error responses.
+    return err([{ path: "credential", message: "invalid credentials" }]);
   }
 
   const expectedHash = computeSecretHash(keyId, secret);
@@ -88,7 +89,7 @@ export function validateApiKey(
   const hashesMatch =
     expectedBuf.length === storedBuf.length && timingSafeEqual(expectedBuf, storedBuf);
   if (!hashesMatch) {
-    return err([{ path: "credential", message: "invalid API key secret" }]);
+    return err([{ path: "credential", message: "invalid credentials" }]);
   }
 
   return ok({

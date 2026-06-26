@@ -6,21 +6,47 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 ## [Unreleased]
 
-### Security
+### Security — Round 2 (code-review findings — 2026-06-27)
+
+- **keyId enumeration via error message (Low→fixed)** — `auth.ts` now returns a unified
+  `"invalid credentials"` message for both missing keyId and wrong secret, preventing callers
+  from distinguishing the two cases and enumerating valid key IDs.
+- **NODE_ENV case sensitivity (High)** — `app.ts` now uses `.toLowerCase()` so
+  `"Production"` and `"PRODUCTION"` are treated identically to `"production"`.
+- **Body size vs JSON parse error conflation (Medium)** — `router.ts` now returns
+  `"request body exceeds 1 MiB limit"` (413-style message) vs
+  `"request body must be valid JSON"` for distinct failure modes.
+- **Missing governance:evaluate permission (Medium)** — `POST /api/v1/governance/evaluate`
+  now requires `governance:evaluate` (or wildcard) permission; viewer-only keys receive 403.
+- **Wildcard permission coverage gap (Medium)** — `audit:*` and `policy:*` resource-level
+  wildcards now correctly grant `audit:read` and `policy:read` respectively, via a shared
+  `hasPermission(ctx, resource, action)` helper that handles `r:a`, `r:*`, `*:a`, and `*:*`.
+- **CSP `form-action` missing (Medium)** — `form-action 'self'` added; `default-src` does not
+  cover form submission targets per CSP Level 3 specification.
+- **CSP `base-uri` missing (Low→fixed)** — `base-uri 'none'` prevents `<base>` tag injection
+  from redirecting all relative URLs to an external origin.
+- **CSP `frame-ancestors` missing (Low→fixed)** — `frame-ancestors 'self'` added alongside
+  `X-Frame-Options: SAMEORIGIN` for defense-in-depth against browsers that ignore the legacy header.
+- **Missing `Cache-Control` (Low→fixed)** — SSR pages now include `Cache-Control: no-store`
+  to prevent sensitive dashboard content from being stored in browser or proxy caches.
+
+### Security — Round 1 (2026-06-27)
 
 - **Timing attack (Critical)** — HMAC hash comparison in `auth.ts` now uses
   `crypto.timingSafeEqual` instead of `!==` to prevent timing side-channel attacks.
 - **DoS — body size (High)** — `router.ts` enforces a 1 MiB request-body limit; oversized
   bodies are rejected before buffering to prevent heap exhaustion.
 - **Missing authorization on audit log (High)** — `GET /api/v1/governance/audit` now requires
-  `audit:read` (or `*:*` / `*:read`) permission; unauthenticated callers receive 403.
+  `audit:read` (or wildcard) permission; unauthenticated callers receive 403.
 - **Missing authorization on policy listing (High)** — `GET /api/v1/governance/policies` now
   requires `policy:read` permission.
 - **Silent audit failure (High)** — governance evaluate no longer silently discards audit event
   creation errors; failures are logged for investigation.
-- **Content-Security-Policy (High)** — SSR pages now include `Content-Security-Policy: default-src 'self'`.
+- **Content-Security-Policy (High)** — SSR pages now include `Content-Security-Policy` header.
 - **Demo key logging (High)** — API key credential printing in `app.ts` is gated behind
   `NODE_ENV !== "production"` to prevent secret leakage in production logs.
+- **Audit actor spoofing (High)** — `POST /api/v1/governance/evaluate` uses `ctx.subject`
+  (authenticated API key) as the audit actor rather than the request body's `subject` field.
 
 ---
 

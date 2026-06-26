@@ -19,6 +19,26 @@ import type { AppContainer } from "../types.ts";
 const AUDIT_LIMIT_DEFAULT = 50;
 const AUDIT_LIMIT_MAX = 200;
 
+/**
+ * Check whether a context's permissions include a specific resource:action grant.
+ * Wildcards supported: `*:*`, `*:<action>`, `<resource>:*`.
+ */
+function hasPermission(
+  ctx: { readonly permissions: readonly Permission[] } | null,
+  resource: string,
+  action: string,
+): boolean {
+  return (
+    ctx?.permissions.some(
+      (p) =>
+        p === `${resource}:${action}` ||
+        p === `${resource}:*` ||
+        p === `*:${action}` ||
+        p === "*:*",
+    ) ?? false
+  );
+}
+
 interface EvaluateBody {
   readonly subject?: unknown;
   readonly resource?: unknown;
@@ -43,8 +63,12 @@ function asStringRecord(value: unknown): Record<string, string> | null {
 }
 
 export function registerGovernanceRoutes(router: Router, container: AppContainer): void {
-  // POST /api/v1/governance/evaluate
+  // POST /api/v1/governance/evaluate  (requires governance:evaluate or wildcard permission)
   router.post("/api/v1/governance/evaluate", async (req, ctx, res) => {
+    if (!hasPermission(ctx, "governance", "evaluate")) {
+      writeJson(res, 403, { error: "Forbidden", message: "requires 'governance:evaluate' permission" });
+      return;
+    }
     const body = (req.body ?? {}) as EvaluateBody;
     const { subject, resource, action, roleIds, attributes } = body;
 
@@ -133,9 +157,7 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
 
   // GET /api/v1/governance/audit  (requires audit:read or wildcard permission)
   router.get("/api/v1/governance/audit", async (req, ctx, res) => {
-    const hasAuditRead =
-      ctx?.permissions.some((p) => p === "audit:read" || p === "*:*" || p === "*:read") ?? false;
-    if (!hasAuditRead) {
+    if (!hasPermission(ctx, "audit", "read")) {
       writeJson(res, 403, { error: "Forbidden", message: "requires 'audit:read' permission" });
       return;
     }
@@ -152,9 +174,7 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
 
   // GET /api/v1/governance/policies  (requires policy:read or wildcard permission)
   router.get("/api/v1/governance/policies", async (_req, ctx, res) => {
-    const hasPolicyRead =
-      ctx?.permissions.some((p) => p === "policy:read" || p === "*:*" || p === "*:read") ?? false;
-    if (!hasPolicyRead) {
+    if (!hasPermission(ctx, "policy", "read")) {
       writeJson(res, 403, { error: "Forbidden", message: "requires 'policy:read' permission" });
       return;
     }

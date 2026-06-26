@@ -146,8 +146,12 @@ export class Router {
     if (method === "POST") {
       try {
         body = await readJsonBody(req);
-      } catch {
-        writeJson(res, 400, { error: "Bad Request", message: "request body must be valid JSON" });
+      } catch (e) {
+        const message =
+          e instanceof Error && e.message === "request body too large"
+            ? "request body exceeds 1 MiB limit"
+            : "request body must be valid JSON";
+        writeJson(res, 400, { error: "Bad Request", message });
         finish(400);
         return;
       }

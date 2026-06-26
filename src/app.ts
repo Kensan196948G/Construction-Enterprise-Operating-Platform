@@ -215,7 +215,7 @@ export async function createApp(): Promise<AppContainer> {
 
   // Only print demo credentials in non-production environments.
   // In production, provision keys via an out-of-band admin command; never log secret material.
-  if (process.env["NODE_ENV"] !== "production") {
+  if (process.env["NODE_ENV"]?.toLowerCase() !== "production") {
     console.error(
       "[app] demo API keys (use as: Authorization: Bearer <key>:<secret>)\n" +
         `  admin  key=${adminCred.key}  secret=${adminCred.secret}\n` +

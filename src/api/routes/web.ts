@@ -26,16 +26,20 @@ import {
   type GovernancePolicyRow,
 } from "../../web/renderer.ts";
 
-/** Write a complete HTML response with light browser security headers. */
+/** Write a complete HTML response with browser security headers. */
 function sendHtml(res: ServerResponse, status: number, html: string): void {
   const buf = Buffer.from(html, "utf-8");
   res.writeHead(status, {
     "Content-Type": "text/html; charset=utf-8",
     "Content-Length": buf.byteLength,
-    "Content-Security-Policy": "default-src 'self'",
+    // default-src does NOT cover form-action, base-uri, or frame-ancestors — list them explicitly.
+    "Content-Security-Policy":
+      "default-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'self'",
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "SAMEORIGIN",
     "Referrer-Policy": "same-origin",
+    // Prevent authenticated dashboard pages from being cached by browsers or proxies.
+    "Cache-Control": "no-store",
   });
   res.end(buf);
 }
