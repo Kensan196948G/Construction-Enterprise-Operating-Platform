@@ -6,13 +6,14 @@
     "registered_at": "2026-06-25",
     "phase_mode": "development"
   },
-  "goal": "M8 本番デプロイ準備完了 — Docker Compose prod + SQLite migration strategy + API key provisioning + 112テスト全通過・全 Critical/High セキュリティ指摘解消",
-  "phase": "Build",
+  "goal": "v0.5.0 リリース準備完了 — M7.5 セキュリティ強化（全 C/H/Major 解消）+ M8 本番デプロイツール + CHANGELOG + README 更新完了",
+  "phase": "Verify",
   "release": {
     "v0_1_0_foundation": "release_ready",
     "v0_2_0_api_gateway": "release_ready",
     "v0_3_0_jwt_persistence": "release_ready",
     "v0_4_0_security_hardening": "release_ready",
+    "v0_5_0_m8_production_deploy": "release_ready",
     "production_deploy": "pending_human_decision",
     "judged_by": "CTO",
     "judged_at": "2026-06-27"
@@ -45,7 +46,7 @@
     "M6_file_persistence": "completed",
     "M7_sqlite_persistence": "completed",
     "M7_5_security_hardening": "completed",
-    "M8_production_deploy": "in_progress"
+    "M8_production_deploy": "completed"
   },
   "completed_issues": [
     "M1: TypeScript foundation scaffold (pnpm + strict tsc + node:test + eslint + CI)",
@@ -81,7 +82,12 @@
     "M7.5 Security: router settled guard + close handler + 500 msg suppression + path-only logging",
     "M7.5 Security: auth.ts rateLimiter scope fix + null remoteAddress → 400 + expiresIn from issuer",
     "M7.5 Security: app.ts production fail-fast + inMemory seeding gate + CEOP_LOG_DEMO_CREDS opt-in",
-    "M7.5 Security: BaseFileRepository write-queue mutex + non-array JSON validation"
+    "M7.5 Security: BaseFileRepository write-queue mutex + non-array JSON validation",
+    "M8: docker-compose.prod.yml — 本番 Compose (SQLite named volume, JWT secret required, log rotation, resource limits)",
+    "M8: scripts/migrate.ts — 冪等 SQLite マイグレーションランナー (2 migrations, schema_migrations tracking)",
+    "M8: scripts/provision-api-key.ts — CLI API キープロビジョニング (raw secret 1度だけ出力, hash のみ DB 保存)",
+    "M8: .env.example 更新 (CEOP_JWT_SECRET, CEOP_SQLITE_FILE, CEOP_SEED_DEMO, CEOP_LOG_DEMO_CREDS)",
+    "M8: CHANGELOG v0.5.0 + README M8 本番デプロイセクション追加"
   ],
   "blocked_issues": [],
   "learning": {
@@ -100,12 +106,10 @@
     "remote": "未設定（ローカルのみ）。GitHub リポジトリ作成・push は外部サービス変更のため人間承認待ち。",
     "branch": "feat/platform-foundation",
     "next_actions": [
-      "M8: Docker Compose 本番設定 (docker-compose.prod.yml) — SQLite volume mount, secrets env, health check",
-      "M8: SQLite マイグレーション戦略 (scripts/migrate.ts)",
-      "M8: API キープロビジョニング設計 (scripts/provision-api-key.ts)",
-      "M8: 本番環境変数ドキュメント (.env.example)",
-      "M8: CHANGELOG v0.5.0 + README 最終更新",
-      "リモートリポジトリ作成 + PR 作成（人間承認後）"
+      "v0.5.0 git タグ付け（人間承認後）",
+      "リモートリポジトリ作成 + PR 作成（人間承認後）",
+      "Codex adversarial review（認証変更のため必須 — CLAUDE.md 規約）",
+      "本番デプロイ（人間が実施） — deploy ガイドは README M8 セクション参照"
     ]
   }
 }

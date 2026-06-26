@@ -8,6 +8,111 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 ---
 
+## [0.5.0] - 2026-06-27
+
+Fifth milestone release: CodeRabbit critical/high security hardening (M7.5) and
+production deployment tooling (M8) — Docker Compose prod config, SQLite schema
+migration runner, and CLI API key provisioning.
+
+### Added
+
+#### M8 — Production Deployment Tooling
+
+- **`docker-compose.prod.yml`** — production-grade Docker Compose configuration
+  - Named volume `ceop-data:/data` backs the SQLite database across container restarts.
+  - `CEOP_JWT_SECRET` required at startup; missing value causes container exit.
+  - `CEOP_LOG_DEMO_CREDS` hardcoded `"false"` — credentials are never logged in prod.
+  - Resource limits: 1 CPU / 256 MiB memory, 64 MiB reservation.
+  - `json-file` log driver with 10 MiB / 3-file rotation.
+
+- **`scripts/migrate.ts`** — idempotent SQLite schema migration runner
+  - `schema_migrations` tracking table (version, description, applied\_at).
+  - Defined migrations: `001` (domain entity tables from M7), `002` (`api_keys` table for CLI-provisioned credentials).
+  - Each migration wrapped in `BEGIN` / `COMMIT` / `ROLLBACK` — failures roll back cleanly.
+  - Re-runs are safe: already-applied versions are skipped with a `✓ already applied` message.
+  - Exit codes: 0 = success, 1 = argument/config error, 2 = migration failure.
+  - Usage: `node --experimental-strip-types scripts/migrate.ts [--db /data/ceop.db]`
+
+- **`scripts/provision-api-key.ts`** — CLI API key provisioning tool
+  - Generates 128-bit random `keyId` and 256-bit random `secret` via `node:crypto`.
+  - Computes `HMAC-SHA256(keyId, secret)` and stores only the hash in `api_keys` table.
+  - Raw secret printed once to stdout as `KEY_ID=…`, `KEY_SECRET=…`, `CREDENTIAL=…:…`.
+  - Credential cannot be recovered after exit; deliver via a secrets manager.
+  - Exit codes: 0 = success, 1 = validation error, 2 = database error.
+  - Usage: `node --experimental-strip-types scripts/provision-api-key.ts --subject <s> --permissions "p:read,q:write" [--db <path>]`
+
+- **`.env.example`** — updated with all production environment variables
+  - Documents `CEOP_JWT_SECRET`, `CEOP_SQLITE_FILE`, `CEOP_SEED_DEMO`, `CEOP_LOG_DEMO_CREDS`.
+  - Includes generation command for JWT secret (`openssl rand -hex 32`).
+  - Stale placeholders (`API_KEY`, `DATABASE_URL`) removed.
+
+- **`.gitignore`** exception rule — `!scripts/provision-api-key.ts` added so the
+  provisioning script is tracked despite the `*key*` wildcard pattern.
+
+#### M7.5 — Security Hardening (CodeRabbit C-1 / H-1 / Major findings)
+
+- **C-1 Critical — ABAC deny-bypass via attribute spread** (`src/governance/policy-engine.ts`)
+  - `buildLookup()` previously spread `request.attributes` AFTER the authoritative
+    `subject`, `resource`, `action` fields, allowing a caller to pass
+    `attributes: { subject: "admin" }` and overwrite the authenticated subject in the
+    ABAC lookup map, silently bypassing all subject-scoped deny policies.
+  - Fix: spread order reversed — authoritative fields are now written LAST:
+    `{ ...request.attributes, subject, resource, action }`.
+
+- **H-1 High — JWT revocation not implemented** (`src/api/middleware/jwt.ts`)
+  - `JwtIssuer` interface now exposes `revoke(jti: string): void` and `ttlSeconds`.
+  - `createJwtIssuer` maintains a `Map<string, number>` of revoked JTIs keyed to their
+    pruning timestamp (expiry Unix second).
+  - `verify()` prunes expired revocation entries before checking, then rejects any token
+    whose `jti` is in the revocation map with a new `"revoked"` result kind.
+  - JWT secret minimum length check: `Buffer.byteLength(secret, "utf8") < 32` throws on
+    construction, preventing weak secrets at configuration time.
+  - Full payload validation: `sub` (non-empty string), `permissions` (string array),
+    `iat` / `exp` (`Number.isSafeInteger`), `jti` (non-empty string).
+
+- **Major #1 — Module-level `rateLimiter` singleton** (`src/api/routes/auth.ts`)
+  - Instance creation moved inside `createAuthRoutes()` factory to allow per-request
+    isolation in tests and prevent shared state across server instances.
+
+- **Major #2/3/4 — Seeding and credential leakage in `app.ts`**
+  - Production fail-fast: `NODE_ENV=production` without `CEOP_JWT_SECRET` throws on startup.
+  - Demo seeding now gated on `inMemory || CEOP_SEED_DEMO=true`; persistent stores are never
+    polluted by demo data on restart.
+  - Demo credential logging requires explicit opt-in via `CEOP_LOG_DEMO_CREDS=true`.
+
+- **Major #5 — Write race condition in `BaseFileRepository`** (`src/persistence/file/base-file-repository.ts`)
+  - `#writeQueue: Promise<void>` Promise-chain mutex serializes all `save()` calls;
+    concurrent writes no longer race on the shared `.tmp` file.
+
+- **Major #6 — Non-array JSON silently empties the store**
+  - `#load()` now throws if the parsed JSON is not an array, and validates that every
+    entry has a string `id` field; corrupted files surface immediately.
+
+- **Major #7/8 — Rate limiter unbounded bucket map + no input validation** (`src/api/middleware/rate-limiter.ts`)
+  - `MAX_BUCKETS = 10_000` cap prevents memory exhaustion from IP enumeration attacks.
+  - `pruneStale()` periodically evicts expired buckets when the cap is reached.
+  - `Number.isSafeInteger()` guards on `windowMs` and `maxRequests` constructor arguments.
+
+- **Major #9/10 — JWT secret length and incomplete payload validation** (see H-1 entry above)
+
+- **Major #11/12/13 — Router information leakage + `readJsonBody` settle race** (`src/api/router.ts`)
+  - 500 responses suppress `e.message`; only `"unexpected error"` is returned to clients.
+  - Access log records `path` only (query string no longer logged — prevents credential leak
+    in URLs like `/api?token=…`).
+  - `readJsonBody` uses a `settled` guard and explicit `close` event handler to prevent
+    double-resolve across all Node.js event edge cases.
+
+- **M-2 — `JwtIssuer` interface incompleteness** — `ttlSeconds` and `revoke` added (see H-1).
+- **M-4 — `"unknown"` fallback for missing `remoteAddress`** (`src/api/routes/auth.ts`)
+  — null `remoteAddress` now returns `400 Bad Request` instead of silently rate-limiting
+  under a shared `"unknown"` key.
+
+### Tests
+
+- 112/112 tests pass (unchanged from v0.4.0 — no net regression from security hardening).
+
+---
+
 ## [0.4.0] - 2026-06-27
 
 Fourth milestone release: SQLite-backed persistence layer using `node:sqlite` experimental API.

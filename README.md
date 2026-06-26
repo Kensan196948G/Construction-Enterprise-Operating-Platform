@@ -18,7 +18,7 @@
 | 項目           | 内容                                                                                |
 | -------------- | ----------------------------------------------------------------------------------- |
 | 役割           | 統制・ガバナンス・共通ワークフローの調整基盤                                        |
-| バージョン     | v0.4.0（SQLite 永続化・JWT 認証・ファイル永続化・セキュリティ強化完了）              |
+| バージョン     | v0.5.0（SQLite 永続化・JWT 認証・セキュリティ強化・M8 本番デプロイ準備完了）         |
 | 言語           | TypeScript 5.7（strict / `noUncheckedIndexedAccess` / 例外を投げない設計）          |
 | ランタイム     | Node.js v22.6+（ネイティブ TS 実行・ビルトインテストランナー）                      |
 | HTTP サーバ    | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                            |
@@ -334,6 +334,93 @@ curl -H "Authorization: Bearer <jwt>" http://localhost:3000/api/v1/dashboard
 
 ---
 
+## 🚀 本番デプロイ（M8）
+
+### 前提フロー
+
+```
+① シークレット生成  →  ② DB マイグレーション  →  ③ API キー発行  →  ④ Compose 起動
+```
+
+### ① JWT シークレット生成
+
+```bash
+# 32 バイト（64 hex 文字）のランダムシークレットを生成
+export CEOP_JWT_SECRET=$(openssl rand -hex 32)
+echo "CEOP_JWT_SECRET=$CEOP_JWT_SECRET"  # .env に記録して保管
+```
+
+### ② SQLite スキーママイグレーション
+
+```bash
+# DB ファイルを /data/ceop.db に初期化（初回のみ。再実行は安全）
+node --experimental-strip-types scripts/migrate.ts --db /data/ceop.db
+# → ✓ 001 OK — initial schema (domain entity tables)
+# → ✓ 002 OK — api_keys table
+# → Done. 2 migration(s) applied.
+
+# 再実行（冪等）
+node --experimental-strip-types scripts/migrate.ts --db /data/ceop.db
+# → ✓ 001 already applied
+# → ✓ 002 already applied
+# → Done. 0 migration(s) applied.
+```
+
+### ③ 本番 API キー発行
+
+```bash
+# 管理者キーを発行（raw secret は stdout に1度だけ出力される）
+node --experimental-strip-types scripts/provision-api-key.ts \
+  --subject admin \
+  --permissions "*:*" \
+  --db /data/ceop.db
+# KEY_ID=<hex>
+# KEY_SECRET=<hex>
+# CREDENTIAL=<keyId>:<secret>   ← これを安全なシークレットマネージャに保存
+
+# 閲覧者キーを発行
+node --experimental-strip-types scripts/provision-api-key.ts \
+  --subject viewer \
+  --permissions "application:read,device:read,audit:read" \
+  --db /data/ceop.db
+```
+
+> ⚠️ **`CREDENTIAL` は1度しか表示されません。** ターミナルを閉じる前にシークレットマネージャへ保存してください。
+
+### ④ Docker Compose で起動
+
+```bash
+# .env ファイルを作成（.env.example をコピーして編集）
+cp .env.example .env
+# CEOP_JWT_SECRET を上記で生成した値に設定
+
+# 本番 Compose で起動
+docker compose -f docker-compose.prod.yml up -d
+
+# ログ確認
+docker compose -f docker-compose.prod.yml logs -f
+
+# ヘルスチェック確認
+curl http://localhost:3000/health
+# → { "status": "healthy", ... }
+
+# 発行した API キーで認証
+curl -H "Authorization: Bearer <keyId>:<secret>" http://localhost:3000/api/v1/dashboard
+```
+
+### 🗄️ マイグレーション設計
+
+| バージョン | 説明                                       | 状態    |
+| ---------- | ------------------------------------------ | ------- |
+| `001`      | ドメインエンティティテーブル（M7）         | ✅ 適用済 |
+| `002`      | `api_keys` テーブル（CLI プロビジョニング） | ✅ 適用済 |
+
+- マイグレーションは `schema_migrations` テーブルでバージョン管理されます
+- 新しいマイグレーションは `scripts/migrate.ts` の `MIGRATIONS` 配列に追記します
+- **本番に適用済みのマイグレーションは絶対に編集・削除しないでください**
+
+---
+
 ## 🧪 テスト実行
 
 ```bash
@@ -378,9 +465,11 @@ pnpm run build
 | `NODE_ENV`        | —                                                 | `production` に設定するとデモキーを出力しない                                 |
 | `LOG_LEVEL`       | `info`                                            | `debug` / `info` / `warn` / `error`                                           |
 | `PLATFORM_NAME`   | `Construction Enterprise Operating Platform`      | 起動ログ・UI に表示するプラットフォーム名                                     |
-| `CEOP_JWT_SECRET` | —（プロセス起動ごと自動生成）                     | HS256 JWT 署名用 32 バイト秘密鍵（hex 形式）。未設定時は起動ごとに新鍵を生成 |
+| `CEOP_JWT_SECRET` | —（プロセス起動ごと自動生成）                     | HS256 JWT 署名用 32 バイト秘密鍵（hex 形式）。`production` では**必須**（未設定で起動失敗） |
 | `CEOP_SQLITE_FILE`| —（未設定 = 上位モード選択）                      | SQLite DB ファイルパス（例: `/data/ceop.db`）。設定時は SQLite 永続化（最優先） |
 | `CEOP_DATA_DIR`   | —（未設定 = In-Memory モード）                    | ファイル永続化の保存先ディレクトリ。設定時は POSIX-atomic ファイル repo が有効 |
+| `CEOP_SEED_DEMO`  | `false`                                           | `true` のとき起動時にデモデータを投入（In-Memory モードでは常に投入） |
+| `CEOP_LOG_DEMO_CREDS` | `false`                                       | `true` のときデモ API キーの認証情報を stderr に出力（**本番では絶対に `false`**） |
 
 ### 🗄️ 永続化ティア選択
 
@@ -525,7 +614,8 @@ gantt
         M6 ファイル永続化（POSIX-atomic）:done,    m6, 2026-06-27, 1d
     section SQLite + 本番
         M7 SQLite 永続化（node:sqlite）  :done,    m7, 2026-06-27, 1d
-        M8 本番デプロイ・最終統合テスト  :         m8, 2026-07-01, 21d
+        M7.5 セキュリティ強化（C-1/H-1）:done,    m75, 2026-06-27, 1d
+        M8 本番デプロイ準備              :done,    m8, 2026-06-27, 1d
     section リリース
         Production Release               :milestone, 2026-12-25, 0d
 ```
@@ -540,7 +630,8 @@ gantt
 | ✅ M5         | JWT 認証（HS256）・レート制限（sliding-window）・`POST /api/v1/auth/token` | **completed**  |
 | ✅ M6         | POSIX-atomic ファイル永続化（×6 ドメイン）・`CEOP_DATA_DIR` 環境変数  | **completed**  |
 | ✅ M7         | SQLite 永続化（`node:sqlite`・WAL・×6 repos）・`CEOP_SQLITE_FILE` 環境変数・15 統合テスト | **completed**  |
-| ⬜ M8         | 本番デプロイ・最終統合テスト・パフォーマンスチューニング               | **planned**    |
+| ✅ M7.5       | セキュリティ強化（C-1 ABAC deny-bypass・H-1 JWT 無効化・13 Major 指摘解消）          | **completed**  |
+| ✅ M8         | 本番デプロイ準備（docker-compose.prod.yml・scripts/migrate.ts・provision-api-key.ts）  | **completed**  |
 
 ---
 
