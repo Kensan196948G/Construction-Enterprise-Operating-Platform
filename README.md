@@ -4,7 +4,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-22.6+-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Zero Runtime Deps](https://img.shields.io/badge/runtime%20deps-zero-brightgreen)](package.json)
 [![CI](https://img.shields.io/github/actions/workflow/status/kensan/construction-eop/ci.yml?label=CI&logo=github)](/.github/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-97%20pass-brightgreen)](src/)
+[![Tests](https://img.shields.io/badge/tests-112%20pass-brightgreen)](src/)
 [![Security](https://img.shields.io/badge/security-hardened-blue)](src/api/middleware/auth.ts)
 [![License](https://img.shields.io/badge/license-private-lightgrey)](package.json)
 
@@ -18,13 +18,13 @@
 | 項目           | 内容                                                                                |
 | -------------- | ----------------------------------------------------------------------------------- |
 | 役割           | 統制・ガバナンス・共通ワークフローの調整基盤                                        |
-| バージョン     | v0.3.0（JWT 認証・ファイル永続化・セキュリティ強化完了）                             |
+| バージョン     | v0.4.0（SQLite 永続化・JWT 認証・ファイル永続化・セキュリティ強化完了）              |
 | 言語           | TypeScript 5.7（strict / `noUncheckedIndexedAccess` / 例外を投げない設計）          |
 | ランタイム     | Node.js v22.6+（ネイティブ TS 実行・ビルトインテストランナー）                      |
 | HTTP サーバ    | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                            |
 | 依存方針       | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）    |
 | パッケージ     | pnpm 10.26.2                                                                        |
-| テスト         | 97 tests pass（node:test ビルトインランナー）                                       |
+| テスト         | 112 tests pass（node:test ビルトインランナー）                                      |
 | コンテナ       | Docker multi-stage build（non-root・HEALTHCHECK 付き）                              |
 | セキュリティ   | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限  |
 
@@ -70,6 +70,7 @@ flowchart TD
         subgraph Persistence["Persistence Layer · src/persistence/"]
             InMem["💾 In-Memory\n×6 repos\n(テスト・開発)"]
             FilePersist["📂 File-backed\n×6 repos\nPOSIX-atomic writes\nCEOP_DATA_DIR"]
+            SQLite["🗄️ SQLite\n×6 repos\nWAL・node:sqlite\nCEOP_SQLITE_FILE"]
         end
 
         subgraph Adapters["Adapter Ports · src/adapters/"]
@@ -89,11 +90,13 @@ flowchart TD
         WebSSR --> PolicyEngine
         Domain --> InMem
         Domain --> FilePersist
+        Domain --> SQLite
         InMem --> Adapters
         FilePersist --> Adapters
+        SQLite --> Adapters
     end
 
-    subgraph External["🌍 External Systems (M7 計画)"]
+    subgraph External["🌍 External Systems (M8 計画)"]
         EXT1["CMDB"]
         EXT2["ITSM"]
         EXT3["IMS / LegalOps / BCP"]
@@ -122,7 +125,8 @@ src/
 │   └── in-memory-document-adapter … Document Control 参照実装
 ├── persistence/   … リポジトリ実装
 │   ├── in-memory/ … 全ドメインの In-Memory リポジトリ（テスト・開発用）
-│   └── file/      … POSIX-atomic ファイル永続化（×6 ドメイン・CEOP_DATA_DIR）
+│   ├── file/      … POSIX-atomic ファイル永続化（×6 ドメイン・CEOP_DATA_DIR）
+│   └── sqlite/    … SQLite 永続化（×6 ドメイン・WAL・node:sqlite・CEOP_SQLITE_FILE）
 ├── api/           … HTTP API Gateway
 │   ├── server.ts  … createServer() — node:http ファクトリ
 │   ├── router.ts  … 軽量ルーター（API key + JWT dual auth・1 MiB 制限・remoteAddress）
@@ -333,7 +337,7 @@ curl -H "Authorization: Bearer <jwt>" http://localhost:3000/api/v1/dashboard
 ## 🧪 テスト実行
 
 ```bash
-# 全テスト実行（97 tests）
+# 全テスト実行（112 tests）
 pnpm run test
 
 # typecheck + lint + test 一括
@@ -358,7 +362,7 @@ pnpm run build
 | ----------- | ----------------- | ------------------------------------------------------- |
 | typecheck   | ✅ pass           | strict・`noUncheckedIndexedAccess`・0 error             |
 | lint        | ✅ pass           | ESLint flat config + typescript-eslint・0 warning       |
-| test        | ✅ 97/97          | domain + governance + dashboard + adapters + API + JWT + file-repo |
+| test        | ✅ 112/112        | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo |
 | build       | ✅ pass           | `dist/` に型定義付き出力                                |
 | CI          | ✅ 設定済み       | `.github/workflows/ci.yml`（push / PR トリガー）        |
 | Docker      | ✅ multi-stage    | non-root ユーザー・HEALTHCHECK 付き                     |
@@ -375,7 +379,28 @@ pnpm run build
 | `LOG_LEVEL`       | `info`                                            | `debug` / `info` / `warn` / `error`                                           |
 | `PLATFORM_NAME`   | `Construction Enterprise Operating Platform`      | 起動ログ・UI に表示するプラットフォーム名                                     |
 | `CEOP_JWT_SECRET` | —（プロセス起動ごと自動生成）                     | HS256 JWT 署名用 32 バイト秘密鍵（hex 形式）。未設定時は起動ごとに新鍵を生成 |
+| `CEOP_SQLITE_FILE`| —（未設定 = 上位モード選択）                      | SQLite DB ファイルパス（例: `/data/ceop.db`）。設定時は SQLite 永続化（最優先） |
 | `CEOP_DATA_DIR`   | —（未設定 = In-Memory モード）                    | ファイル永続化の保存先ディレクトリ。設定時は POSIX-atomic ファイル repo が有効 |
+
+### 🗄️ 永続化ティア選択
+
+優先度順に評価されます: **SQLite > File > In-Memory**
+
+```bash
+# In-Memory（テスト・デモ）
+pnpm start
+
+# ファイル永続化（POSIX-atomic JSON）
+CEOP_DATA_DIR=/var/ceop/data pnpm start
+
+# SQLite 永続化（WAL・推奨プロダクション）
+CEOP_SQLITE_FILE=/var/ceop/ceop.db pnpm start
+
+# Docker + SQLite ボリュームマウント
+docker run -v ceop-data:/data -e CEOP_SQLITE_FILE=/data/ceop.db ceop:latest
+```
+
+> `node:sqlite` は Node.js v22.5+ で利用可能な実験的 API です。`--experimental-sqlite` フラグは不要（v22.10+ でデフォルト有効）。
 
 ---
 
@@ -498,9 +523,9 @@ gantt
     section 認証 + 永続化
         M5 JWT 認証 + レート制限         :done,    m5, 2026-06-27, 1d
         M6 ファイル永続化（POSIX-atomic）:done,    m6, 2026-06-27, 1d
-    section 次フェーズ
-        M7 DB 永続化 + 外部アダプタ本実装:         m7, 2026-07-01, 21d
-        M8 本番デプロイ・最終統合テスト  :         m8, 2026-07-22, 14d
+    section SQLite + 本番
+        M7 SQLite 永続化（node:sqlite）  :done,    m7, 2026-06-27, 1d
+        M8 本番デプロイ・最終統合テスト  :         m8, 2026-07-01, 21d
     section リリース
         Production Release               :milestone, 2026-12-25, 0d
 ```
@@ -514,7 +539,7 @@ gantt
 | ✅ Security   | タイミング攻撃・DoS・権限漏洩・CSP・監査アクター詐称を修正            | **completed**  |
 | ✅ M5         | JWT 認証（HS256）・レート制限（sliding-window）・`POST /api/v1/auth/token` | **completed**  |
 | ✅ M6         | POSIX-atomic ファイル永続化（×6 ドメイン）・`CEOP_DATA_DIR` 環境変数  | **completed**  |
-| ⬜ M7         | DB 永続化（SQLite/PostgreSQL）・外部アダプタ本実装（CMDB/ITSM）       | **planned**    |
+| ✅ M7         | SQLite 永続化（`node:sqlite`・WAL・×6 repos）・`CEOP_SQLITE_FILE` 環境変数・15 統合テスト | **completed**  |
 | ⬜ M8         | 本番デプロイ・最終統合テスト・パフォーマンスチューニング               | **planned**    |
 
 ---
