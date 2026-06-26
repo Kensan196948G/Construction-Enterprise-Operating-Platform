@@ -7,6 +7,8 @@
 *Token*
 *key*
 *Key*
+# Exception: provisioning scripts are source code, not secrets
+!scripts/provision-api-key.ts
 node_modules/
 .venv/
 venv/

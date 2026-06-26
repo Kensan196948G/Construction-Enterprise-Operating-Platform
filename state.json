@@ -6,12 +6,13 @@
     "registered_at": "2026-06-25",
     "phase_mode": "development"
   },
-  "goal": "v0.4.0 M7 完了 — SQLite 永続化層統合・112 テスト全通過・typecheck/lint クリーン。次目標: M8 本番デプロイ準備・CodeRabbit レビュー・Codex 対抗レビュー。",
-  "phase": "Verify",
+  "goal": "M8 本番デプロイ準備完了 — Docker Compose prod + SQLite migration strategy + API key provisioning + 112テスト全通過・全 Critical/High セキュリティ指摘解消",
+  "phase": "Build",
   "release": {
     "v0_1_0_foundation": "release_ready",
     "v0_2_0_api_gateway": "release_ready",
     "v0_3_0_jwt_persistence": "release_ready",
+    "v0_4_0_security_hardening": "release_ready",
     "production_deploy": "pending_human_decision",
     "judged_by": "CTO",
     "judged_at": "2026-06-27"
@@ -22,7 +23,7 @@
     "test_pass_rate": 1.0,
     "test_count": 112,
     "security_critical": 0,
-    "security_high_resolved": 10,
+    "security_high_resolved": 11,
     "blocker_count": 0
   },
   "execution": {
@@ -43,7 +44,8 @@
     "M5_auth_session_jwt": "completed",
     "M6_file_persistence": "completed",
     "M7_sqlite_persistence": "completed",
-    "M8_production_deploy": "planned"
+    "M7_5_security_hardening": "completed",
+    "M8_production_deploy": "in_progress"
   },
   "completed_issues": [
     "M1: TypeScript foundation scaffold (pnpm + strict tsc + node:test + eslint + CI)",
@@ -71,7 +73,15 @@
     "M7: node:sqlite BaseSqliteRepository (JSON-in-column + indexed helper columns, WAL, createRequire ESM bridge)",
     "M7: 6 SQLite domain repositories (users/organizations/roles/devices/applications/policies) + createSqliteRepositories factory",
     "M7: CEOP_SQLITE_FILE env var — persistence tier: SQLite > file > in-memory",
-    "M7: 15 SQLite integration tests — 112/112 total pass, typecheck/lint all green"
+    "M7: 15 SQLite integration tests — 112/112 total pass, typecheck/lint all green",
+    "M7.5 Security: C-1 ABAC deny-bypass fix (policy-engine spread order)",
+    "M7.5 Security: H-1 JWT revocation (revoke(jti) + revokedJtis Map + prune)",
+    "M7.5 Security: JWT secret ≥32B check, full claims validation (sub/permissions/iat/exp/jti)",
+    "M7.5 Security: rate-limiter MAX_BUCKETS=10000 + input validation + pruneStale",
+    "M7.5 Security: router settled guard + close handler + 500 msg suppression + path-only logging",
+    "M7.5 Security: auth.ts rateLimiter scope fix + null remoteAddress → 400 + expiresIn from issuer",
+    "M7.5 Security: app.ts production fail-fast + inMemory seeding gate + CEOP_LOG_DEMO_CREDS opt-in",
+    "M7.5 Security: BaseFileRepository write-queue mutex + non-array JSON validation"
   ],
   "blocked_issues": [],
   "learning": {
@@ -80,19 +90,22 @@
       "Node v22+ native TS execution + node:test enables zero-runtime-dependency, verifiable foundation",
       "TS 5.7 rewriteRelativeImportExtensions bridges native .ts imports and emitted .js build",
       "node:http primitive router keeps HTTP layer free of framework lock-in while staying type-safe",
-      "HMAC-SHA256 API key design: only hash stored, constant-time compare, per-process ephemeral keys"
+      "HMAC-SHA256 API key design: only hash stored, constant-time compare, per-process ephemeral keys",
+      "Promise-chain mutex (#writeQueue) serializes async writes without a lock file",
+      "settled flag + close handler prevent double-resolve in readJsonBody across Node.js event edge cases",
+      "ABAC spread order: attributes spread BEFORE authoritative fields (subject/resource/action) to prevent override"
     ]
   },
   "notes": {
     "remote": "未設定（ローカルのみ）。GitHub リポジトリ作成・push は外部サービス変更のため人間承認待ち。",
     "branch": "feat/platform-foundation",
     "next_actions": [
-      "リモートリポジトリ作成 + PR 作成（人間承認後）",
-      "CodeRabbit review (committed --base main) — Critical/High 指摘修正",
-      "Codex 対抗レビュー — 認証/認可コア (policy-engine + jwt.ts) 必須",
-      "M8: 本番デプロイ準備 — Docker Compose 本番設定・SQLite マイグレーション戦略・API キープロビジョニング",
-      "M8: 最終統合テスト・パフォーマンスチューニング",
-      "CHANGELOG v0.4.0 更新・リリースタグ付け"
+      "M8: Docker Compose 本番設定 (docker-compose.prod.yml) — SQLite volume mount, secrets env, health check",
+      "M8: SQLite マイグレーション戦略 (scripts/migrate.ts)",
+      "M8: API キープロビジョニング設計 (scripts/provision-api-key.ts)",
+      "M8: 本番環境変数ドキュメント (.env.example)",
+      "M8: CHANGELOG v0.5.0 + README 最終更新",
+      "リモートリポジトリ作成 + PR 作成（人間承認後）"
     ]
   }
 }
