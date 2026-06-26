@@ -32,6 +32,7 @@ function sendHtml(res: ServerResponse, status: number, html: string): void {
   res.writeHead(status, {
     "Content-Type": "text/html; charset=utf-8",
     "Content-Length": buf.byteLength,
+    "Content-Security-Policy": "default-src 'self'",
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "SAMEORIGIN",
     "Referrer-Policy": "same-origin",

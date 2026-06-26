@@ -213,12 +213,15 @@ export async function createApp(): Promise<AppContainer> {
   const adminCred = createApiKey("user-admin", [...adminRole.permissions], apiKeyStore);
   const viewerCred = createApiKey("user-viewer", [...viewerRole.permissions], apiKeyStore);
 
-  // Print demo credentials to stderr (not production practice).
-  console.error(
-    "[app] demo API keys (use as: Authorization: Bearer <key>:<secret>)\n" +
-      `  admin  key=${adminCred.key}  secret=${adminCred.secret}\n` +
-      `  viewer key=${viewerCred.key}  secret=${viewerCred.secret}`,
-  );
+  // Only print demo credentials in non-production environments.
+  // In production, provision keys via an out-of-band admin command; never log secret material.
+  if (process.env["NODE_ENV"] !== "production") {
+    console.error(
+      "[app] demo API keys (use as: Authorization: Bearer <key>:<secret>)\n" +
+        `  admin  key=${adminCred.key}  secret=${adminCred.secret}\n` +
+        `  viewer key=${viewerCred.key}  secret=${viewerCred.secret}`,
+    );
+  }
 
   return { repositories, auditLog, apiKeyStore };
 }

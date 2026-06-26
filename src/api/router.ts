@@ -178,11 +178,19 @@ export class Router {
 // Helpers
 // ---------------------------------------------------------------------------
 
+const MAX_BODY_BYTES = 1 * 1024 * 1024; // 1 MiB — guard against heap-exhaustion DoS
+
 /** Buffer the request body and JSON-parse it; empty bodies resolve to `undefined`. */
 function readJsonBody(req: IncomingMessage): Promise<unknown> {
   return new Promise<unknown>((resolve, reject) => {
     const chunks: Buffer[] = [];
+    let totalBytes = 0;
     req.on("data", (chunk: Buffer) => {
+      totalBytes += chunk.byteLength;
+      if (totalBytes > MAX_BODY_BYTES) {
+        req.destroy(new Error("request body too large"));
+        return;
+      }
       chunks.push(chunk);
     });
     req.on("end", () => {

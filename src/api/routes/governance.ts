@@ -44,7 +44,7 @@ function asStringRecord(value: unknown): Record<string, string> | null {
 
 export function registerGovernanceRoutes(router: Router, container: AppContainer): void {
   // POST /api/v1/governance/evaluate
-  router.post("/api/v1/governance/evaluate", async (req, _ctx, res) => {
+  router.post("/api/v1/governance/evaluate", async (req, ctx, res) => {
     const body = (req.body ?? {}) as EvaluateBody;
     const { subject, resource, action, roleIds, attributes } = body;
 
@@ -97,14 +97,18 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
       policies,
     });
 
+    // Use the authenticated API key's subject as actor to prevent audit log spoofing.
+    // The evaluated subject is recorded in metadata for traceability.
+    const callerSubject = ctx?.subject ?? "anonymous";
     const auditEvent = createAuditEvent({
       id: randomUUID(),
       at: new Date().toISOString() as IsoTimestamp,
-      actor: subject,
+      actor: callerSubject,
       action: "governance:evaluate",
       resource,
       outcome: decision.decision === "allow" ? "success" : "denied",
       metadata: {
+        evaluatedSubject: subject,
         requestedAction: action,
         decision: decision.decision,
         reason: decision.reason,
@@ -112,6 +116,9 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
     });
     if (auditEvent.ok) {
       container.auditLog.append(auditEvent.value);
+    } else {
+      // Audit failure must not be silent — log for investigation without exposing request details.
+      console.error("[governance] failed to create audit event:", auditEvent.error);
     }
 
     writeJson(res, 200, {
@@ -124,8 +131,14 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
     });
   });
 
-  // GET /api/v1/governance/audit
-  router.get("/api/v1/governance/audit", async (req, _ctx, res) => {
+  // GET /api/v1/governance/audit  (requires audit:read or wildcard permission)
+  router.get("/api/v1/governance/audit", async (req, ctx, res) => {
+    const hasAuditRead =
+      ctx?.permissions.some((p) => p === "audit:read" || p === "*:*" || p === "*:read") ?? false;
+    if (!hasAuditRead) {
+      writeJson(res, 403, { error: "Forbidden", message: "requires 'audit:read' permission" });
+      return;
+    }
     const rawLimit = req.query["limit"];
     const parsed = rawLimit !== undefined ? Number.parseInt(rawLimit, 10) : AUDIT_LIMIT_DEFAULT;
     const limit =
@@ -137,8 +150,14 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
     writeJson(res, 200, { entries, count: entries.length });
   });
 
-  // GET /api/v1/governance/policies
-  router.get("/api/v1/governance/policies", async (_req, _ctx, res) => {
+  // GET /api/v1/governance/policies  (requires policy:read or wildcard permission)
+  router.get("/api/v1/governance/policies", async (_req, ctx, res) => {
+    const hasPolicyRead =
+      ctx?.permissions.some((p) => p === "policy:read" || p === "*:*" || p === "*:read") ?? false;
+    if (!hasPolicyRead) {
+      writeJson(res, 403, { error: "Forbidden", message: "requires 'policy:read' permission" });
+      return;
+    }
     const policies = await container.repositories.policies.findAll();
     writeJson(res, 200, { policies, count: policies.length });
   });

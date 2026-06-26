@@ -7,7 +7,7 @@
  * compromised key store does not reveal the original secrets.
  */
 
-import { createHmac, randomBytes } from "node:crypto";
+import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { err, ok } from "../../domain/common.ts";
 import type { Result } from "../../domain/common.ts";
 import type { Permission } from "../../domain/role.ts";
@@ -82,7 +82,12 @@ export function validateApiKey(
   }
 
   const expectedHash = computeSecretHash(keyId, secret);
-  if (expectedHash !== record.secretHash) {
+  // Constant-time comparison prevents timing side-channel attacks on the stored hash.
+  const expectedBuf = Buffer.from(expectedHash, "hex");
+  const storedBuf = Buffer.from(record.secretHash, "hex");
+  const hashesMatch =
+    expectedBuf.length === storedBuf.length && timingSafeEqual(expectedBuf, storedBuf);
+  if (!hashesMatch) {
     return err([{ path: "credential", message: "invalid API key secret" }]);
   }
 
