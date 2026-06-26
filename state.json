@@ -19,9 +19,9 @@
     "success_rate_target": 0.9,
     "ci_success_rate": 0.0,
     "test_pass_rate": 1.0,
-    "test_count": 45,
+    "test_count": 58,
     "security_critical": 0,
-    "security_high_resolved": 5,
+    "security_high_resolved": 10,
     "blocker_count": 0
   },
   "execution": {
@@ -59,7 +59,9 @@
     "M4: docker-compose.yml for local development",
     "M4: scripts/start.ts production entry point",
     "45 tests pass (14 new API+server tests added), typecheck/lint/build all green",
-    "Security hardening: timingSafeEqual HMAC, 1MiB body limit, audit:read/policy:read auth checks, CSP header, production key logging guard"
+    "Security hardening: timingSafeEqual HMAC, 1MiB body limit, audit:read/policy:read auth checks, CSP header, production key logging guard",
+    "Round-2: keyId enumeration, NODE_ENV case, body-error separation, governance:evaluate permission, CSP form-action/base-uri/frame-ancestors, Cache-Control",
+    "Round-3: dashboard authorization (Critical), ABAC conditionsHold fix, ITSM spread order, CMDB clones, toIsoTimestamp round-trip, CSP inline, health class, outcome injection — 58/58 tests pass"
   ],
   "blocked_issues": [],
   "learning": {
@@ -78,7 +80,8 @@
       "リモートリポジトリ作成 + PR 作成（人間承認後）",
       "M5: JWT 認証・セッション管理・ロールベースアクセス制御の強化",
       "M6: PostgreSQL/SQLite 永続化層・外部アダプタ本実装・本番デプロイ",
-      "認証/認可コア (policy-engine) の Codex 対抗レビュー"
+      "認証/認可コア (policy-engine) の Codex 対抗レビュー",
+      "本番APIキープロビジョニング方式の設計・ドキュメント化（既知の制限として記録済み）"
     ]
   }
 }
