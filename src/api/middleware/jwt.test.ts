@@ -2,6 +2,7 @@
  * Unit tests for the HS256 JWT issuer/verifier.
  */
 
+import { createHmac } from "node:crypto";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createJwtIssuer, generateJwtSecret } from "./jwt.ts";
@@ -72,17 +73,17 @@ test("jwt: verify rejects token signed with wrong secret", () => {
   assert.equal(result.reason, "invalid");
 });
 
-test("jwt: verify rejects expired token (ttlSeconds=0)", () => {
-  // Build a token with past exp by using ttlSeconds=0 then sleeping 1 second via fake time.
-  // Instead: manually craft an expired payload.
+test("jwt: verify rejects expired token", () => {
+  // Manually craft a well-signed JWT with a past exp — avoids ttlSeconds=0 which is now rejected.
   const secret = generateJwtSecret();
-  const issuer = createJwtIssuer({ secret, ttlSeconds: 0 });
-  const token = issuer.issue("u", PERMS);
-  // Wait a tick to ensure the clock advanced past exp=now.
-  // exp = floor(now/1000) + 0 = floor(now/1000); verify checks exp <= now (in seconds).
-  // Since exp = iat (ttlSeconds=0) and verify does exp <= now, which means iat <= now (always true),
-  // this should already be expired.
-  const result = issuer.verify(token);
+  const issuer = createJwtIssuer({ secret, ttlSeconds: 3600 });
+  const nowSec = Math.floor(Date.now() / 1000);
+  const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url");
+  const payload = Buffer.from(
+    JSON.stringify({ sub: "u", permissions: [], iat: nowSec - 7200, exp: nowSec - 3600, jti: "test-expired" }),
+  ).toString("base64url");
+  const sig = createHmac("sha256", secret).update(`${header}.${payload}`).digest("base64url");
+  const result = issuer.verify(`${header}.${payload}.${sig}`);
   assert.ok(!result.ok);
   assert.equal(result.reason, "expired");
 });

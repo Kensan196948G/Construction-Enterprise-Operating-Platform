@@ -87,6 +87,10 @@ function strArr(body: unknown, key: string): string[] | undefined {
   return v as string[];
 }
 
+function bodyHasKey(body: unknown, key: string): boolean {
+  return typeof body === "object" && body !== null && key in (body as Record<string, unknown>);
+}
+
 function conditionsArr(body: unknown, key: string): PolicyCondition[] | undefined {
   if (typeof body !== "object" || body === null) return undefined;
   const v = (body as Record<string, unknown>)[key];
@@ -268,13 +272,18 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
   // POST /api/v1/governance/policies  (requires policy:write or wildcard)
   router.post("/api/v1/governance/policies", async (req, ctx, res) => {
     if (!hasPermission(ctx, "policy", "write")) { forbidden(res, "policy:write"); return; }
+    const parsedConditions = conditionsArr(req.body, "conditions");
+    if (parsedConditions === undefined && bodyHasKey(req.body, "conditions")) {
+      badRequest(res, [{ field: "conditions", message: "each condition must have string 'attribute' and 'equals' fields" }]);
+      return;
+    }
     const result = createPolicy({
       id: str(req.body, "id") ?? randomUUID(),
       name: str(req.body, "name") ?? "",
       effect: (str(req.body, "effect") ?? "") as PolicyEffect,
       actions: strArr(req.body, "actions") ?? [],
       resources: strArr(req.body, "resources") ?? [],
-      conditions: conditionsArr(req.body, "conditions") ?? [],
+      conditions: parsedConditions ?? [],
     });
     if (!result.ok) { badRequest(res, result.error); return; }
     await container.repositories.policies.save(result.value);
@@ -286,13 +295,18 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
     if (!hasPermission(ctx, "policy", "write")) { forbidden(res, "policy:write"); return; }
     const existing = await container.repositories.policies.findById(policyId(req.params["id"] ?? ""));
     if (existing === null) { notFound(res, "policy"); return; }
+    const parsedConditions = conditionsArr(req.body, "conditions");
+    if (parsedConditions === undefined && bodyHasKey(req.body, "conditions")) {
+      badRequest(res, [{ field: "conditions", message: "each condition must have string 'attribute' and 'equals' fields" }]);
+      return;
+    }
     const result = createPolicy({
       id: existing.id,
       name: str(req.body, "name") ?? existing.name,
       effect: existing.effect,
       actions: strArr(req.body, "actions") ?? ([...existing.actions] as string[]),
       resources: strArr(req.body, "resources") ?? ([...existing.resources] as string[]),
-      conditions: conditionsArr(req.body, "conditions") ?? ([...existing.conditions] as PolicyCondition[]),
+      conditions: parsedConditions ?? ([...existing.conditions] as PolicyCondition[]),
     });
     if (!result.ok) { badRequest(res, result.error); return; }
     await container.repositories.policies.save(result.value);

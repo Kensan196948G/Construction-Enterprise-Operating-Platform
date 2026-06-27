@@ -80,6 +80,9 @@ export function createJwtIssuer(config: JwtConfig): JwtIssuer {
   if (Buffer.byteLength(secret, "utf8") < 32) {
     throw new Error("JWT signing secret must be at least 32 bytes");
   }
+  if (!Number.isSafeInteger(ttlSeconds) || ttlSeconds <= 0) {
+    throw new Error("ttlSeconds must be a positive safe integer");
+  }
 
   // jti → Unix second at which the revocation entry can be pruned.
   // We store jti values for tokens that should be blocked before their natural expiry.
@@ -116,6 +119,22 @@ export function createJwtIssuer(config: JwtConfig): JwtIssuer {
       return { ok: false, reason: "malformed" };
     }
     const [header, payload, sigB64] = parts as [string, string, string];
+
+    // Validate header claims before processing (defense-in-depth against alg confusion).
+    let parsedHeader: unknown;
+    try {
+      parsedHeader = JSON.parse(b64urlDecode(header).toString("utf8"));
+    } catch {
+      return { ok: false, reason: "malformed" };
+    }
+    if (
+      typeof parsedHeader !== "object" ||
+      parsedHeader === null ||
+      (parsedHeader as Record<string, unknown>)["alg"] !== "HS256" ||
+      (parsedHeader as Record<string, unknown>)["typ"] !== "JWT"
+    ) {
+      return { ok: false, reason: "invalid" };
+    }
 
     // Constant-time HMAC comparison on raw 32-byte buffers.
     const expected = hmacRaw(header, payload, secret);

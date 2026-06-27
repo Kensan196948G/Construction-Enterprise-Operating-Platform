@@ -14,6 +14,7 @@ import { createDevice } from "./domain/device.ts";
 import { createApplication } from "./domain/application.ts";
 import { createPolicy } from "./domain/policy.ts";
 import { AuditLog } from "./governance/audit-log.ts";
+import { SqliteAuditLog } from "./governance/sqlite-audit-log.ts";
 import { createInMemoryRepositories } from "./persistence/in-memory/index.ts";
 import { createFileRepositories } from "./persistence/file/index.ts";
 import { createSqliteRepositories, loadApiKeysFromSqlite } from "./persistence/sqlite/index.ts";
@@ -63,7 +64,7 @@ export async function createApp(): Promise<AppContainer> {
       ? await createFileRepositories(dataDir)
       : createInMemoryRepositories();
 
-  const auditLog = new AuditLog();
+  const auditLog = sqliteFile ? new SqliteAuditLog(sqliteFile) : new AuditLog();
   const apiKeyStore: AppContainer["apiKeyStore"] = new Map();
 
   // In SQLite mode, load provisioned API keys from the api_keys table.
@@ -81,8 +82,13 @@ export async function createApp(): Promise<AppContainer> {
   const jwtSecret = configuredJwtSecret ?? generateJwtSecret();
   const jwtIssuer = createJwtIssuer({ secret: jwtSecret, ttlSeconds: 3600 });
 
+  const isProduction = process.env["NODE_ENV"]?.toLowerCase() === "production";
+  const seedDemo = process.env["CEOP_SEED_DEMO"] === "true";
+  if (isProduction && seedDemo) {
+    throw new Error("CEOP_SEED_DEMO must not be set in production (NODE_ENV=production)");
+  }
   const inMemory = !sqliteFile && !dataDir;
-  if (inMemory || process.env["CEOP_SEED_DEMO"] === "true") {
+  if (inMemory || seedDemo) {
   const createdAt = nowTs();
 
   // ── 1. Organisation ───────────────────────────────────────────────────────

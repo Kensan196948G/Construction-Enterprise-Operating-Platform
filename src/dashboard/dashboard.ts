@@ -7,7 +7,7 @@ import { type Policy } from "../domain/policy.ts";
 import { type WorkflowId } from "../domain/workflow.ts";
 import { isUnhealthy } from "../domain/application.ts";
 import { isActiveUser } from "../domain/user.ts";
-import { type AuditLog } from "../governance/audit-log.ts";
+import { type IAuditLog } from "../governance/audit-log.ts";
 import { type AccessRequest, evaluateAccess } from "../governance/policy-engine.ts";
 
 /**
@@ -77,7 +77,7 @@ export interface DashboardInput {
   readonly applications: readonly Application[];
   readonly devices: readonly Device[];
   readonly pendingApprovals: readonly ApprovalRequest[];
-  readonly auditLog: AuditLog;
+  readonly auditLog: IAuditLog;
 }
 
 /**

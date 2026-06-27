@@ -15,13 +15,22 @@ export interface IntegrityReport {
   readonly brokenAt?: number;
 }
 
-const GENESIS_HASH = "0".repeat(64);
+/** Port contract shared by in-memory and SQLite audit log implementations. */
+export interface IAuditLog {
+  append(event: AuditEvent): AuditLogEntry;
+  readonly entries: readonly AuditLogEntry[];
+  readonly size: number;
+  query(predicate: (entry: AuditLogEntry) => boolean): AuditLogEntry[];
+  verify(): IntegrityReport;
+}
+
+export const GENESIS_HASH = "0".repeat(64);
 
 /**
  * Produce a deterministic string representation of an audit event so that the
  * hash chain is stable regardless of object key insertion order.
  */
-function canonicalize(event: AuditEvent): string {
+export function canonicalize(event: AuditEvent): string {
   const metadata = Object.keys(event.metadata)
     .sort()
     .map((key) => `${key}=${event.metadata[key]}`)
@@ -37,7 +46,7 @@ function canonicalize(event: AuditEvent): string {
   ].join("|");
 }
 
-function hashEntry(previousHash: string, event: AuditEvent): string {
+export function hashAuditEntry(previousHash: string, event: AuditEvent): string {
   return createHash("sha256")
     .update(`${previousHash}\n${canonicalize(event)}`)
     .digest("hex");
@@ -50,7 +59,7 @@ function hashEntry(previousHash: string, event: AuditEvent): string {
  * commits to the previous one. {@link verify} recomputes the chain to detect any
  * out-of-band mutation of recorded evidence.
  */
-export class AuditLog {
+export class AuditLog implements IAuditLog {
   readonly #entries: AuditLogEntry[] = [];
 
   /** Seal an event into the log and return its chained entry. */
@@ -61,7 +70,7 @@ export class AuditLog {
       event,
       sequence: this.#entries.length,
       previousHash,
-      hash: hashEntry(previousHash, event),
+      hash: hashAuditEntry(previousHash, event),
     };
     this.#entries.push(entry);
     return entry;
@@ -85,7 +94,7 @@ export class AuditLog {
   verify(): IntegrityReport {
     let previousHash = GENESIS_HASH;
     for (const entry of this.#entries) {
-      const expected = hashEntry(previousHash, entry.event);
+      const expected = hashAuditEntry(previousHash, entry.event);
       if (entry.previousHash !== previousHash || entry.hash !== expected) {
         return { valid: false, brokenAt: entry.sequence };
       }

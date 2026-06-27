@@ -22,7 +22,7 @@
     "success_rate_target": 0.9,
     "ci_success_rate": 0.0,
     "test_pass_rate": 1.0,
-    "test_count": 178,
+    "test_count": 187,
     "security_critical": 0,
     "security_high_resolved": 17,
     "blocker_count": 0
@@ -48,7 +48,8 @@
     "M7_5_security_hardening": "completed",
     "M8_production_deploy": "completed",
     "M9_crud_api_roles_ci": "completed",
-    "M10_pagination_policy_crud": "completed"
+    "M10_pagination_policy_crud": "completed",
+    "M11_sqlite_audit_log_coderabbit_fixes": "completed"
   },
   "completed_issues": [
     "M1: TypeScript foundation scaffold (pnpm + strict tsc + node:test + eslint + CI)",
@@ -98,7 +99,10 @@
     "M10: pagination utility (parsePagination/paginate) — shared layer-7 slicing",
     "M10: Policy CRUD (GET list/GET by id/POST/PUT/DELETE) with permission guards",
     "M10: paginated list endpoints for org/user/app/device/role with count+total+limit+offset envelope",
-    "M10: 26 governance integration tests + noPermCred pattern — 178/178 pass"
+    "M10: 26 governance integration tests + noPermCred pattern — 178/178 pass",
+    "M11: SqliteAuditLog (node:sqlite, WAL, hash-chain, tamper-detect) — 9/9 tests pass",
+    "M11: CodeRabbit 9 Major fixes (governance auth, CEOP_SEED_DEMO prod guard, cross-org device, conditions 400, writableEnded, rate-limiter cap, URL query strip, JWT alg/typ check + ttlSeconds validation, router 413)",
+    "M11: JWT test updated to hand-craft expired token (HMAC manual sign) — 187/187 pass"
   ],
   "blocked_issues": [],
   "learning": {
@@ -143,6 +147,18 @@
       "lint": "clean",
       "new_features": ["pagination utility (parsePagination/paginate)", "Policy CRUD (5 endpoints)", "paginated list for org/user/app/device/role"],
       "new_tests": 32,
+      "completed_at": "2026-06-27"
+    },
+    "m11_verify": {
+      "all_tests": "187/187 pass",
+      "typecheck": "clean",
+      "lint": "clean",
+      "new_features": [
+        "SqliteAuditLog (node:sqlite WAL + hash-chain integrity + tamper detection)",
+        "9 CodeRabbit Major fixes (governance auth, prod seed guard, cross-org device, conditions 400, writableEnded, rate-limiter hard cap, URL query strip, JWT alg/ttl validation, router 413)",
+        "JWT test hardened: HMAC-signed hand-crafted expired token"
+      ],
+      "new_tests": 9,
       "completed_at": "2026-06-27"
     }
   }

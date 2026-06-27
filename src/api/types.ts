@@ -8,7 +8,7 @@
 
 import type { Permission } from "../domain/role.ts";
 import type { Repositories } from "../persistence/ports.ts";
-import type { AuditLog } from "../governance/audit-log.ts";
+import type { IAuditLog } from "../governance/audit-log.ts";
 import type { JwtIssuer } from "./middleware/jwt.ts";
 
 // ---------------------------------------------------------------------------
@@ -80,7 +80,7 @@ export type { JwtIssuer };
 /** Application-level service container wired up at bootstrap. */
 export interface AppContainer {
   readonly repositories: Repositories;
-  readonly auditLog: AuditLog;
+  readonly auditLog: IAuditLog;
   readonly apiKeyStore: ApiKeyStore;
   /** Optional JWT issuer/verifier — when present, Bearer JWT tokens are accepted. */
   readonly jwtIssuer?: JwtIssuer;

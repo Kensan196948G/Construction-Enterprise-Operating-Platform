@@ -20,5 +20,7 @@ export function logRequest(
   durationMs: number,
 ): void {
   const timestamp = new Date().toISOString();
-  console.error(`[${timestamp}] ${method} ${url} ${statusCode} ${durationMs}ms`);
+  // Strip query string to avoid logging tokens or sensitive parameters.
+  const safePath = url.split("?")[0] ?? url;
+  console.error(`[${timestamp}] ${method} ${safePath} ${statusCode} ${durationMs}ms`);
 }

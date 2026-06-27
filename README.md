@@ -1,7 +1,7 @@
 # 🏗️ Construction Enterprise Operating Platform
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-22.6+-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-22.13+-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Zero Runtime Deps](https://img.shields.io/badge/runtime%20deps-zero-brightgreen)](package.json)
 [![CI](https://img.shields.io/github/actions/workflow/status/kensan/construction-eop/ci.yml?label=CI&logo=github)](/.github/workflows/ci.yml)
 [![Tests](https://img.shields.io/badge/tests-178%20pass-brightgreen)](src/)
@@ -20,7 +20,7 @@
 | 役割           | 統制・ガバナンス・共通ワークフローの調整基盤                                        |
 | バージョン     | v0.5.0（SQLite 永続化・JWT 認証・セキュリティ強化・M8 本番デプロイ・M9 CRUD API・M10 Pagination + Policy CRUD 完了）|
 | 言語           | TypeScript 5.7（strict / `noUncheckedIndexedAccess` / 例外を投げない設計）          |
-| ランタイム     | Node.js v22.6+（ネイティブ TS 実行・ビルトインテストランナー）                      |
+| ランタイム     | Node.js v22.13+（ネイティブ TS 実行・ビルトインテストランナー）                      |
 | HTTP サーバ    | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                            |
 | 依存方針       | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）    |
 | パッケージ     | pnpm 10.26.2                                                                        |
@@ -373,7 +373,7 @@ flowchart LR
 
 ### 前提条件
 
-- Node.js v22.6 以上
+- Node.js v22.13 以上
 - pnpm v9 以上（または `corepack enable`）
 
 ### ローカル開発

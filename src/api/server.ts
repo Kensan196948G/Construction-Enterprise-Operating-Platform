@@ -54,7 +54,7 @@ export function createServer(config: ServerConfig, container: AppContainer): Ser
     router.handle(req, res).catch((e: unknown) => {
       const message = e instanceof Error ? e.message : String(e);
       console.error("[server] fatal dispatch error:", message);
-      if (!res.headersSent) {
+      if (!res.headersSent && !res.writableEnded) {
         res.writeHead(500, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ error: "Internal Server Error" }));
       }

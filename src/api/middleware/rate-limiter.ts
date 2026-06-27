@@ -42,7 +42,9 @@ export function createRateLimiter(config: RateLimiterConfig): RateLimiter {
   // Each key maps to an array of request timestamps (ascending).
   const buckets = new Map<string, number[]>();
 
-  // Evict fully-expired buckets when the map exceeds MAX_BUCKETS to bound memory use.
+  // Evict buckets when the map exceeds MAX_BUCKETS to bound memory use.
+  // First pass: remove fully-expired buckets (no active timestamps in current window).
+  // Second pass: if still over cap, evict oldest active buckets (FIFO) to enforce hard limit.
   function pruneStale(nowMs: number): void {
     if (buckets.size <= MAX_BUCKETS) return;
     const windowStart = nowMs - windowMs;
@@ -51,6 +53,11 @@ export function createRateLimiter(config: RateLimiterConfig): RateLimiter {
       if (lastSeen === undefined || lastSeen < windowStart) {
         buckets.delete(key);
       }
+      if (buckets.size <= MAX_BUCKETS) return;
+    }
+    // Still over cap after expiry pass: force-evict oldest live buckets.
+    for (const key of buckets.keys()) {
+      buckets.delete(key);
       if (buckets.size <= MAX_BUCKETS) break;
     }
   }

@@ -367,6 +367,11 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
       badRequest(res, [{ field: "assignedUserId", message: "user not found" }]);
       return;
     }
+    if (assignedUserIdStr !== undefined && userRecord !== null && rawOrgId &&
+        String(userRecord.organizationId) !== rawOrgId) {
+      badRequest(res, [{ field: "assignedUserId", message: "user must belong to the same organization as the device" }]);
+      return;
+    }
     const lastSeenAt = str(req.body, "lastSeenAt");
     const result = createDevice({
       id: str(req.body, "id") ?? randomUUID(),
@@ -391,6 +396,10 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
       const userRecord = await repositories.users.findById(userId(newAssignedUserIdStr));
       if (userRecord === null) {
         badRequest(res, [{ field: "assignedUserId", message: "user not found" }]);
+        return;
+      }
+      if (String(userRecord.organizationId) !== String(existing.organizationId)) {
+        badRequest(res, [{ field: "assignedUserId", message: "user must belong to the same organization as the device" }]);
         return;
       }
     }

@@ -104,9 +104,11 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
 
   router.get(
     "/governance",
-    async (_req, _ctx, res) => {
-      const policies = await container.repositories.policies.findAll();
-      const policyRows: readonly GovernancePolicyRow[] = policies.map(policyToRow);
+    async (_req, ctx, res) => {
+      // Governance policies are internal security rules — only authenticated users may view them.
+      const policyRows: readonly GovernancePolicyRow[] = ctx
+        ? (await container.repositories.policies.findAll()).map(policyToRow)
+        : [];
       sendHtml(res, 200, await renderGovernance(policyRows));
     },
     false,

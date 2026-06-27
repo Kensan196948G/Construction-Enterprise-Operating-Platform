@@ -106,6 +106,28 @@ const MIGRATIONS: readonly Migration[] = [
       CREATE INDEX IF NOT EXISTS idx_api_keys_subject ON api_keys(subject);
     `,
   },
+  {
+    version: "003",
+    description: "audit_log table for tamper-evident hash-chain persistence (M11)",
+    up: `
+      CREATE TABLE IF NOT EXISTS audit_log (
+        sequence  INTEGER PRIMARY KEY,
+        event_id  TEXT    NOT NULL UNIQUE,
+        at        TEXT    NOT NULL,
+        actor     TEXT    NOT NULL,
+        action    TEXT    NOT NULL,
+        resource  TEXT    NOT NULL,
+        outcome   TEXT    NOT NULL,
+        prev_hash TEXT    NOT NULL,
+        hash      TEXT    NOT NULL,
+        data      TEXT    NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_audit_actor    ON audit_log (actor);
+      CREATE INDEX IF NOT EXISTS idx_audit_action   ON audit_log (action);
+      CREATE INDEX IF NOT EXISTS idx_audit_at       ON audit_log (at);
+      CREATE INDEX IF NOT EXISTS idx_audit_resource ON audit_log (resource);
+    `,
+  },
 ];
 
 // ---------------------------------------------------------------------------
