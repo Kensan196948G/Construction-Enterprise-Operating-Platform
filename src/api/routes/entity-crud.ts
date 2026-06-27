@@ -16,6 +16,7 @@
 import { randomUUID } from "node:crypto";
 import type { ServerResponse } from "node:http";
 import type { IsoTimestamp } from "../../domain/common.ts";
+import { parsePagination, paginate } from "../pagination.ts";
 import { createOrganization, organizationId } from "../../domain/organization.ts";
 import type { OrganizationType, OrganizationStatus } from "../../domain/organization.ts";
 import { createUser, userId } from "../../domain/user.ts";
@@ -258,10 +259,11 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
 
   // ── Roles (list + CRUD) ───────────────────────────────────────────────────
 
-  router.get("/api/v1/roles", async (_req, ctx, res) => {
+  router.get("/api/v1/roles", async (req, ctx, res) => {
     if (!hasPermission(ctx, "role", "read")) { forbidden(res, "role:read"); return; }
-    const roles = await repositories.roles.findAll();
-    writeJson(res, 200, { roles, count: roles.length });
+    const all = await repositories.roles.findAll();
+    const pg = paginate(all, parsePagination(req.query));
+    writeJson(res, 200, { roles: pg.items, count: pg.count, total: pg.total, limit: pg.limit, offset: pg.offset });
   });
 
   router.get("/api/v1/roles/:id", async (req, ctx, res) => {

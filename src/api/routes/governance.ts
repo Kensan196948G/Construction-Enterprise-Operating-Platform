@@ -5,15 +5,22 @@
  * Exposes the Governance Core (policy evaluation + tamper-evident audit log)
  * over HTTP so external systems can perform access checks and retrieve audit
  * evidence without embedding the evaluation engine themselves.
+ *
+ * Also provides full Policy CRUD so the policy set can be managed at runtime
+ * without restarting the server.
  */
 
 import { randomUUID } from "node:crypto";
+import type { ServerResponse } from "node:http";
 import type { IsoTimestamp } from "../../domain/common.ts";
 import { createAuditEvent } from "../../domain/audit-event.ts";
+import { createPolicy, policyId } from "../../domain/policy.ts";
+import type { PolicyEffect, PolicyCondition } from "../../domain/policy.ts";
 import type { Permission } from "../../domain/role.ts";
 import { evaluateAccess, resolvePermissions } from "../../governance/policy-engine.ts";
 import type { Router } from "../router.ts";
 import { writeJson } from "../router.ts";
+import { parsePagination, paginate } from "../pagination.ts";
 import type { AppContainer } from "../types.ts";
 
 const AUDIT_LIMIT_DEFAULT = 50;
@@ -62,7 +69,70 @@ function asStringRecord(value: unknown): Record<string, string> | null {
   return out;
 }
 
+// ---------------------------------------------------------------------------
+// Policy body helpers
+// ---------------------------------------------------------------------------
+
+function str(body: unknown, key: string): string | undefined {
+  if (typeof body !== "object" || body === null) return undefined;
+  const v = (body as Record<string, unknown>)[key];
+  return typeof v === "string" ? v : undefined;
+}
+
+function strArr(body: unknown, key: string): string[] | undefined {
+  if (typeof body !== "object" || body === null) return undefined;
+  const v = (body as Record<string, unknown>)[key];
+  if (!Array.isArray(v)) return undefined;
+  if (!(v as unknown[]).every((x) => typeof x === "string")) return undefined;
+  return v as string[];
+}
+
+function conditionsArr(body: unknown, key: string): PolicyCondition[] | undefined {
+  if (typeof body !== "object" || body === null) return undefined;
+  const v = (body as Record<string, unknown>)[key];
+  if (!Array.isArray(v)) return undefined;
+  const result: PolicyCondition[] = [];
+  for (const item of v as unknown[]) {
+    if (
+      typeof item !== "object" ||
+      item === null ||
+      typeof (item as Record<string, unknown>)["attribute"] !== "string" ||
+      typeof (item as Record<string, unknown>)["equals"] !== "string"
+    ) {
+      return undefined;
+    }
+    result.push({
+      attribute: (item as Record<string, unknown>)["attribute"] as string,
+      equals: (item as Record<string, unknown>)["equals"] as string,
+    });
+  }
+  return result;
+}
+
+function notFound(res: ServerResponse, resource: string): void {
+  writeJson(res, 404, { error: "Not Found", message: `${resource} not found` });
+}
+
+function badRequest(res: ServerResponse, details: unknown): void {
+  writeJson(res, 400, { error: "Bad Request", message: "validation failed", details });
+}
+
+function forbidden(res: ServerResponse, perm: string): void {
+  writeJson(res, 403, { error: "Forbidden", message: `requires '${perm}' permission` });
+}
+
+function noContent(res: ServerResponse): void {
+  res.writeHead(204);
+  res.end();
+}
+
+// ---------------------------------------------------------------------------
+// Route registration
+// ---------------------------------------------------------------------------
+
 export function registerGovernanceRoutes(router: Router, container: AppContainer): void {
+  // ── Governance evaluation ─────────────────────────────────────────────────
+
   // POST /api/v1/governance/evaluate  (requires governance:evaluate or wildcard permission)
   router.post("/api/v1/governance/evaluate", async (req, ctx, res) => {
     if (!hasPermission(ctx, "governance", "evaluate")) {
@@ -155,6 +225,8 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
     });
   });
 
+  // ── Audit log ─────────────────────────────────────────────────────────────
+
   // GET /api/v1/governance/audit  (requires audit:read or wildcard permission)
   router.get("/api/v1/governance/audit", async (req, ctx, res) => {
     if (!hasPermission(ctx, "audit", "read")) {
@@ -172,13 +244,67 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
     writeJson(res, 200, { entries, count: entries.length });
   });
 
-  // GET /api/v1/governance/policies  (requires policy:read or wildcard permission)
-  router.get("/api/v1/governance/policies", async (_req, ctx, res) => {
+  // ── Policy CRUD ───────────────────────────────────────────────────────────
+
+  // GET /api/v1/governance/policies?limit=&offset=  (requires policy:read or wildcard)
+  router.get("/api/v1/governance/policies", async (req, ctx, res) => {
     if (!hasPermission(ctx, "policy", "read")) {
-      writeJson(res, 403, { error: "Forbidden", message: "requires 'policy:read' permission" });
+      forbidden(res, "policy:read");
       return;
     }
-    const policies = await container.repositories.policies.findAll();
-    writeJson(res, 200, { policies, count: policies.length });
+    const all = await container.repositories.policies.findAll();
+    const pg = paginate(all, parsePagination(req.query));
+    writeJson(res, 200, { policies: pg.items, count: pg.count, total: pg.total, limit: pg.limit, offset: pg.offset });
+  });
+
+  // GET /api/v1/governance/policies/:id  (requires policy:read or wildcard)
+  router.get("/api/v1/governance/policies/:id", async (req, ctx, res) => {
+    if (!hasPermission(ctx, "policy", "read")) { forbidden(res, "policy:read"); return; }
+    const policy = await container.repositories.policies.findById(policyId(req.params["id"] ?? ""));
+    if (policy === null) { notFound(res, "policy"); return; }
+    writeJson(res, 200, policy);
+  });
+
+  // POST /api/v1/governance/policies  (requires policy:write or wildcard)
+  router.post("/api/v1/governance/policies", async (req, ctx, res) => {
+    if (!hasPermission(ctx, "policy", "write")) { forbidden(res, "policy:write"); return; }
+    const result = createPolicy({
+      id: str(req.body, "id") ?? randomUUID(),
+      name: str(req.body, "name") ?? "",
+      effect: (str(req.body, "effect") ?? "") as PolicyEffect,
+      actions: strArr(req.body, "actions") ?? [],
+      resources: strArr(req.body, "resources") ?? [],
+      conditions: conditionsArr(req.body, "conditions") ?? [],
+    });
+    if (!result.ok) { badRequest(res, result.error); return; }
+    await container.repositories.policies.save(result.value);
+    writeJson(res, 201, result.value);
+  });
+
+  // PUT /api/v1/governance/policies/:id  (requires policy:write or wildcard)
+  router.put("/api/v1/governance/policies/:id", async (req, ctx, res) => {
+    if (!hasPermission(ctx, "policy", "write")) { forbidden(res, "policy:write"); return; }
+    const existing = await container.repositories.policies.findById(policyId(req.params["id"] ?? ""));
+    if (existing === null) { notFound(res, "policy"); return; }
+    const result = createPolicy({
+      id: existing.id,
+      name: str(req.body, "name") ?? existing.name,
+      effect: existing.effect,
+      actions: strArr(req.body, "actions") ?? ([...existing.actions] as string[]),
+      resources: strArr(req.body, "resources") ?? ([...existing.resources] as string[]),
+      conditions: conditionsArr(req.body, "conditions") ?? ([...existing.conditions] as PolicyCondition[]),
+    });
+    if (!result.ok) { badRequest(res, result.error); return; }
+    await container.repositories.policies.save(result.value);
+    writeJson(res, 200, result.value);
+  });
+
+  // DELETE /api/v1/governance/policies/:id  (requires policy:write or wildcard)
+  router.delete("/api/v1/governance/policies/:id", async (req, ctx, res) => {
+    if (!hasPermission(ctx, "policy", "write")) { forbidden(res, "policy:write"); return; }
+    const existing = await container.repositories.policies.findById(policyId(req.params["id"] ?? ""));
+    if (existing === null) { notFound(res, "policy"); return; }
+    await container.repositories.policies.delete(existing.id);
+    noContent(res);
   });
 }
