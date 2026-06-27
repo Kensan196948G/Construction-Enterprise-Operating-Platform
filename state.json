@@ -22,7 +22,7 @@
     "success_rate_target": 0.9,
     "ci_success_rate": 0.0,
     "test_pass_rate": 1.0,
-    "test_count": 146,
+    "test_count": 178,
     "security_critical": 0,
     "security_high_resolved": 17,
     "blocker_count": 0
@@ -47,7 +47,8 @@
     "M7_sqlite_persistence": "completed",
     "M7_5_security_hardening": "completed",
     "M8_production_deploy": "completed",
-    "M9_crud_api_roles_ci": "completed"
+    "M9_crud_api_roles_ci": "completed",
+    "M10_pagination_policy_crud": "completed"
   },
   "completed_issues": [
     "M1: TypeScript foundation scaffold (pnpm + strict tsc + node:test + eslint + CI)",
@@ -93,7 +94,11 @@
     "M9: GET /api/v1/roles list endpoint (was missing from dashboard.ts)",
     "M9: Users soft-delete (status → deactivated preserves audit trail)",
     "M9: /api/v1/info version 0.2.0 → 0.5.0",
-    "M9: 34 integration tests added — 146/146 pass, typecheck/lint clean"
+    "M9: 34 integration tests added — 146/146 pass, typecheck/lint clean",
+    "M10: pagination utility (parsePagination/paginate) — shared layer-7 slicing",
+    "M10: Policy CRUD (GET list/GET by id/POST/PUT/DELETE) with permission guards",
+    "M10: paginated list endpoints for org/user/app/device/role with count+total+limit+offset envelope",
+    "M10: 26 governance integration tests + noPermCred pattern — 178/178 pass"
   ],
   "blocked_issues": [],
   "learning": {
@@ -130,6 +135,14 @@
       "typecheck": "clean",
       "lint": "clean",
       "new_endpoints": 21,
+      "completed_at": "2026-06-27"
+    },
+    "m10_verify": {
+      "all_tests": "178/178 pass",
+      "typecheck": "clean",
+      "lint": "clean",
+      "new_features": ["pagination utility (parsePagination/paginate)", "Policy CRUD (5 endpoints)", "paginated list for org/user/app/device/role"],
+      "new_tests": 32,
       "completed_at": "2026-06-27"
     }
   }

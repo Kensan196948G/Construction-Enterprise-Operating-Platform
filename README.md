@@ -4,7 +4,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-22.6+-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Zero Runtime Deps](https://img.shields.io/badge/runtime%20deps-zero-brightgreen)](package.json)
 [![CI](https://img.shields.io/github/actions/workflow/status/kensan/construction-eop/ci.yml?label=CI&logo=github)](/.github/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-146%20pass-brightgreen)](src/)
+[![Tests](https://img.shields.io/badge/tests-178%20pass-brightgreen)](src/)
 [![Security](https://img.shields.io/badge/security-hardened-blue)](src/api/middleware/auth.ts)
 [![License](https://img.shields.io/badge/license-private-lightgrey)](package.json)
 
@@ -18,13 +18,13 @@
 | 項目           | 内容                                                                                |
 | -------------- | ----------------------------------------------------------------------------------- |
 | 役割           | 統制・ガバナンス・共通ワークフローの調整基盤                                        |
-| バージョン     | v0.5.0（SQLite 永続化・JWT 認証・セキュリティ強化・M8 本番デプロイ・M9 CRUD API 完了）|
+| バージョン     | v0.5.0（SQLite 永続化・JWT 認証・セキュリティ強化・M8 本番デプロイ・M9 CRUD API・M10 Pagination + Policy CRUD 完了）|
 | 言語           | TypeScript 5.7（strict / `noUncheckedIndexedAccess` / 例外を投げない設計）          |
 | ランタイム     | Node.js v22.6+（ネイティブ TS 実行・ビルトインテストランナー）                      |
 | HTTP サーバ    | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                            |
 | 依存方針       | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）    |
 | パッケージ     | pnpm 10.26.2                                                                        |
-| テスト         | 146 tests pass（node:test ビルトインランナー）                                      |
+| テスト         | 178 tests pass（node:test ビルトインランナー）                                      |
 | コンテナ       | Docker multi-stage build（non-root・HEALTHCHECK 付き）                              |
 | セキュリティ   | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限  |
 
@@ -171,11 +171,11 @@ examples/
 | メソッド | パス                              | 必要権限           | 説明                                                      |
 | -------- | --------------------------------- | ------------------ | --------------------------------------------------------- |
 | `GET`    | `/api/v1/dashboard`               | 認証のみ           | ロールフィルタ済みダッシュボード JSON                     |
-| `GET`    | `/api/v1/organizations`           | 認証のみ           | 組織一覧 `{ organizations[], count }`                     |
-| `GET`    | `/api/v1/users`                   | 認証のみ           | ユーザー一覧 `{ users[], count }`                         |
-| `GET`    | `/api/v1/applications`            | 認証のみ           | アプリ一覧 `{ applications[], count }`                    |
-| `GET`    | `/api/v1/devices`                 | 認証のみ           | デバイス一覧 `{ devices[], count }`                       |
-| `GET`    | `/api/v1/governance/policies`     | `policy:read`      | ポリシー一覧（管理者専用）`{ policies[], count }`         |
+| `GET`    | `/api/v1/organizations`           | `organization:read`| 組織一覧（ページネーション）`{ organizations[], count, total, limit, offset }` |
+| `GET`    | `/api/v1/users`                   | `user:read`        | ユーザー一覧（ページネーション）`{ users[], count, total, limit, offset }` |
+| `GET`    | `/api/v1/applications`            | `application:read` | アプリ一覧（ページネーション）`{ applications[], count, total, limit, offset }` |
+| `GET`    | `/api/v1/devices`                 | `device:read`      | デバイス一覧（ページネーション）`{ devices[], count, total, limit, offset }` |
+| `GET`    | `/api/v1/governance/policies`     | `policy:read`      | ポリシー一覧（ページネーション）`{ policies[], count, total, limit, offset }` |
 | `GET`    | `/api/v1/governance/audit`        | `audit:read`       | 監査ログ取得（`?limit=50`、最大 200）                     |
 | `POST`   | `/api/v1/governance/evaluate`     | 認証のみ           | アクセス評価。評価結果は監査ログへ自動記録                |
 
@@ -232,6 +232,48 @@ examples/
 | `POST`   | `/api/v1/applications`          | `application:write` | アプリを新規作成。重複 key は `409`、不正形式 key は `400`  | `201`          |
 | `PUT`    | `/api/v1/applications/:id`      | `application:write` | アプリを全項目更新                                          | `200`          |
 | `DELETE` | `/api/v1/applications/:id`      | `application:write` | アプリを削除                                                | `204`          |
+
+#### 📜 Policies（ガバナンスポリシー M10）
+
+> Policy CRUD は Governance Core のポリシーセットをランタイムで管理します。評価エンジンは即時反映します。
+
+| メソッド | パス                                    | 必要権限       | 説明                                                               | 成功ステータス |
+| -------- | --------------------------------------- | -------------- | ------------------------------------------------------------------ | -------------- |
+| `GET`    | `/api/v1/governance/policies`           | `policy:read`  | ポリシー一覧（`?limit=&offset=` ページネーション対応）             | `200`          |
+| `GET`    | `/api/v1/governance/policies/:id`       | `policy:read`  | ポリシーを 1 件取得。未存在時は `404`                              | `200`          |
+| `POST`   | `/api/v1/governance/policies`           | `policy:write` | ポリシーを新規作成。`effect` は `allow`/`deny` のみ                | `201`          |
+| `PUT`    | `/api/v1/governance/policies/:id`       | `policy:write` | ポリシーを更新（`name`/`actions`/`resources`/`conditions` 部分上書き可） | `200`          |
+| `DELETE` | `/api/v1/governance/policies/:id`       | `policy:write` | ポリシーを削除。評価エンジンから即時除外                           | `204`          |
+
+> ⚠️ **deny ポリシーは allow より優先**されます（deny-overrides）。誤った deny ポリシーを作成するとアクセスが即時遮断されます。
+
+#### 📄 ページネーション共通仕様（M10）
+
+全ての一覧エンドポイント（`/organizations`・`/users`・`/applications`・`/devices`・`/roles`・`/governance/policies`）は以下の共通クエリパラメータをサポートします。
+
+| パラメータ | 型       | 既定値 | 最大値 | 説明                             |
+| ---------- | -------- | ------ | ------ | -------------------------------- |
+| `limit`    | `number` | `20`   | `200`  | 1 ページあたりの件数             |
+| `offset`   | `number` | `0`    | —      | 取得開始位置（0 始まり）         |
+
+レスポンスエンベロープ：
+
+```json
+{
+  "items_key": [...],
+  "count":  3,
+  "total":  10,
+  "limit":  5,
+  "offset": 0
+}
+```
+
+| フィールド | 説明                               |
+| ---------- | ---------------------------------- |
+| `count`    | 今回ページに含まれる実件数         |
+| `total`    | フィルタ後の全件数                 |
+| `limit`    | リクエストで有効な limit           |
+| `offset`   | リクエストで有効な offset          |
 
 #### 🔒 共通エラー応答
 
@@ -486,7 +528,7 @@ curl -H "Authorization: Bearer <keyId>:<secret>" http://localhost:3000/api/v1/da
 ## 🧪 テスト実行
 
 ```bash
-# 全テスト実行（146 tests）
+# 全テスト実行（178 tests）
 pnpm run test
 
 # typecheck + lint + test 一括
@@ -511,7 +553,7 @@ pnpm run build
 | ----------- | ----------------- | ------------------------------------------------------- |
 | typecheck   | ✅ pass           | strict・`noUncheckedIndexedAccess`・0 error             |
 | lint        | ✅ pass           | ESLint flat config + typescript-eslint・0 warning       |
-| test        | ✅ 146/146        | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud (34) |
+| test        | ✅ 178/178        | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud (34) + governance-crud (26) |
 | build       | ✅ pass           | `dist/` に型定義付き出力                                |
 | CI          | ✅ 設定済み       | `.github/workflows/ci.yml`（push / PR トリガー）        |
 | Docker      | ✅ multi-stage    | non-root ユーザー・HEALTHCHECK 付き                     |
@@ -679,6 +721,7 @@ gantt
         M7.5 セキュリティ強化（C-1/H-1）:done,    m75, 2026-06-27, 1d
         M8 本番デプロイ準備              :done,    m8, 2026-06-27, 1d
         M9 全エンティティ CRUD API       :done,    m9, 2026-06-27, 1d
+        M10 Pagination + Policy CRUD     :done,    m10, 2026-06-27, 1d
     section リリース
         Production Release               :milestone, 2026-12-25, 0d
 ```
@@ -696,6 +739,7 @@ gantt
 | ✅ M7.5       | セキュリティ強化（C-1 ABAC deny-bypass・H-1 JWT 無効化・13 Major 指摘解消）          | **completed**  |
 | ✅ M8         | 本番デプロイ準備（docker-compose.prod.yml・scripts/migrate.ts・provision-api-key.ts）  | **completed**  |
 | ✅ M9         | 全エンティティ CRUD API（21 エンドポイント・ソフトデリート・409 Conflict 検出・34 テスト）| **completed**  |
+| ✅ M10        | 共通ペジネーション（`parsePagination`/`paginate`）+ Policy CRUD（5 エンドポイント）+ 26 ガバナンステスト | **completed**  |
 
 ---
 
