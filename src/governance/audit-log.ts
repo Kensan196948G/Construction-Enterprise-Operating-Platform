@@ -17,6 +17,10 @@ export interface IntegrityReport {
 
 /** Port contract shared by in-memory and SQLite audit log implementations. */
 export interface IAuditLog {
+  /**
+   * Seal an event into the log and return its chained entry.
+   * @throws if an entry with the same event.id has already been appended.
+   */
   append(event: AuditEvent): AuditLogEntry;
   readonly entries: readonly AuditLogEntry[];
   readonly size: number;
@@ -65,9 +69,13 @@ export function hashAuditEntry(previousHash: string, event: AuditEvent): string 
  */
 export class AuditLog implements IAuditLog {
   readonly #entries: AuditLogEntry[] = [];
+  readonly #seenIds = new Set<string>();
 
   /** Seal an event into the log and return its chained entry. */
   append(event: AuditEvent): AuditLogEntry {
+    if (this.#seenIds.has(event.id)) {
+      throw new Error(`Duplicate audit event id: ${event.id}`);
+    }
     const last = this.#entries.at(-1);
     const previousHash = last?.hash ?? GENESIS_HASH;
     const entry: AuditLogEntry = {
@@ -77,6 +85,7 @@ export class AuditLog implements IAuditLog {
       hash: hashAuditEntry(previousHash, event),
     };
     this.#entries.push(entry);
+    this.#seenIds.add(event.id);
     return entry;
   }
 

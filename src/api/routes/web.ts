@@ -24,6 +24,7 @@ import {
   renderGovernance,
   type GovernancePolicyRow,
 } from "../../web/renderer.ts";
+import { hasPermission } from "./governance.ts";
 
 /** Write a complete HTML response with browser security headers. */
 function sendHtml(res: ServerResponse, status: number, html: string): void {
@@ -103,7 +104,11 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
 
   router.get(
     "/governance",
-    async (_req, _ctx, res) => {
+    async (_req, ctx, res) => {
+      if (!hasPermission(ctx, "policy", "read")) {
+        sendHtml(res, 403, "<html><body><h1>403 Forbidden</h1><p>requires policy:read permission</p></body></html>");
+        return;
+      }
       const policyRows = (await container.repositories.policies.findAll()).map(policyToRow);
       sendHtml(res, 200, await renderGovernance(policyRows));
     },

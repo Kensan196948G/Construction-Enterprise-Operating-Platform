@@ -272,9 +272,10 @@ function readJsonBody(req: IncomingMessage): Promise<unknown> {
     req.on("data", (chunk: Buffer) => {
       totalBytes += chunk.byteLength;
       if (totalBytes > MAX_BODY_BYTES) {
-        const error = new Error("request body too large");
-        fail(error);
-        req.destroy(error);
+        fail(new Error("request body too large"));
+        // Drain remaining bytes without destroying the socket so the
+        // caller can still write the 413 response on the same connection.
+        req.resume();
         return;
       }
       chunks.push(chunk);

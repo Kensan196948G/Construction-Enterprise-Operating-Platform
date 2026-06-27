@@ -78,8 +78,11 @@ export class BaseFileRepository<T extends { id: string }> implements Repository<
     const store = await this.#load();
     const previous = store.get(entity.id);
     store.set(entity.id, entity);
+    // Pass a snapshot so queued flushes are isolated from subsequent mutations
+    // or rollbacks that mutate the shared cache Map.
+    const snapshot = new Map(store);
     try {
-      await this.#enqueuedFlush(store);
+      await this.#enqueuedFlush(snapshot);
     } catch (e) {
       // Roll back cache so in-memory state stays consistent with disk.
       if (previous === undefined) { store.delete(entity.id); } else { store.set(entity.id, previous); }
@@ -92,8 +95,9 @@ export class BaseFileRepository<T extends { id: string }> implements Repository<
     const previous = store.get(id);
     if (previous === undefined) return;
     store.delete(id);
+    const snapshot = new Map(store);
     try {
-      await this.#enqueuedFlush(store);
+      await this.#enqueuedFlush(snapshot);
     } catch (e) {
       store.set(id, previous);
       throw e;

@@ -41,19 +41,12 @@ const _sqlite = _require("node:sqlite") as {
 
 export class SqliteAuditLog implements IAuditLog {
   readonly #db: DatabaseSync;
-  #size: number;
 
   constructor(dbPath: string) {
     this.#db = new _sqlite.DatabaseSync(dbPath);
     this.#db.exec("PRAGMA journal_mode = WAL");
     this.#db.exec("PRAGMA foreign_keys = ON");
     this.#initSchema();
-
-    // Bootstrap in-memory size from the persisted row count.
-    const countRow = this.#db
-      .prepare("SELECT COUNT(*) AS n FROM audit_log")
-      .get() as { n: number };
-    this.#size = countRow.n;
   }
 
   #initSchema(): void {
@@ -122,7 +115,6 @@ export class SqliteAuditLog implements IAuditLog {
       hash,
       JSON.stringify(entry),
     );
-    this.#size = sequence + 1;
     return entry;
   }
 
@@ -136,7 +128,8 @@ export class SqliteAuditLog implements IAuditLog {
   }
 
   get size(): number {
-    return this.#size;
+    const row = this.#db.prepare("SELECT COUNT(*) AS n FROM audit_log").get() as { n: number };
+    return row.n;
   }
 
   query(predicate: (entry: AuditLogEntry) => boolean): AuditLogEntry[] {
@@ -146,20 +139,42 @@ export class SqliteAuditLog implements IAuditLog {
   /** Recompute the hash chain from the persisted entries and verify integrity. */
   verify(): IntegrityReport {
     const stmt: StatementSync = this.#db.prepare(
-      "SELECT sequence, prev_hash, hash, data FROM audit_log ORDER BY sequence ASC",
+      "SELECT sequence, event_id, at, actor, action, resource, outcome, prev_hash, hash, data FROM audit_log ORDER BY sequence ASC",
     );
-    const rows = stmt.all() as { sequence: number; prev_hash: string; hash: string; data: string }[];
+    const rows = stmt.all() as {
+      sequence: number;
+      event_id: string;
+      at: string;
+      actor: string;
+      action: string;
+      resource: string;
+      outcome: string;
+      prev_hash: string;
+      hash: string;
+      data: string;
+    }[];
     let previousHash = GENESIS_HASH;
     for (const row of rows) {
-      const entry = JSON.parse(row.data) as AuditLogEntry;
+      let entry: AuditLogEntry;
+      try {
+        entry = JSON.parse(row.data) as AuditLogEntry;
+      } catch {
+        return { valid: false, brokenAt: row.sequence };
+      }
       const expected = hashAuditEntry(previousHash, entry.event);
-      // Cross-check both the JSON blob fields and the indexed columns so that
-      // column-level tampering (e.g. direct UPDATE on prev_hash/hash) is caught.
+      // Cross-check hash chain AND all indexed columns against the JSON blob
+      // so that direct column-level tampering (UPDATE on actor, at, etc.) is caught.
       if (
         entry.previousHash !== previousHash ||
         entry.hash !== expected ||
         row.prev_hash !== previousHash ||
-        row.hash !== expected
+        row.hash !== expected ||
+        row.event_id !== entry.event.id ||
+        row.at !== (entry.event.at as string) ||
+        row.actor !== entry.event.actor ||
+        row.action !== entry.event.action ||
+        row.resource !== entry.event.resource ||
+        row.outcome !== entry.event.outcome
       ) {
         return { valid: false, brokenAt: row.sequence };
       }

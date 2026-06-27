@@ -88,6 +88,11 @@ export async function createApp(): Promise<AppContainer> {
     throw new Error("CEOP_SEED_DEMO must not be set in production (NODE_ENV=production)");
   }
   const inMemory = !sqliteFile && !dataDir;
+  if (isProduction && inMemory) {
+    throw new Error(
+      "Persistent storage must be configured in production: set CEOP_SQLITE_FILE or CEOP_DATA_DIR",
+    );
+  }
   if (inMemory || seedDemo) {
   const createdAt = nowTs();
 

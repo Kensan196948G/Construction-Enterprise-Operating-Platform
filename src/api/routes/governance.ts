@@ -295,6 +295,18 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
     if (!hasPermission(ctx, "policy", "write")) { forbidden(res, "policy:write"); return; }
     const existing = await container.repositories.policies.findById(policyId(req.params["id"] ?? ""));
     if (existing === null) { notFound(res, "policy"); return; }
+    if (bodyHasKey(req.body, "name") && str(req.body, "name") === undefined) {
+      badRequest(res, [{ field: "name", message: "name must be a string" }]);
+      return;
+    }
+    if (bodyHasKey(req.body, "actions") && strArr(req.body, "actions") === undefined) {
+      badRequest(res, [{ field: "actions", message: "actions must be an array of strings" }]);
+      return;
+    }
+    if (bodyHasKey(req.body, "resources") && strArr(req.body, "resources") === undefined) {
+      badRequest(res, [{ field: "resources", message: "resources must be an array of strings" }]);
+      return;
+    }
     const parsedConditions = conditionsArr(req.body, "conditions");
     if (parsedConditions === undefined && bodyHasKey(req.body, "conditions")) {
       badRequest(res, [{ field: "conditions", message: "each condition must have string 'attribute' and 'equals' fields" }]);
