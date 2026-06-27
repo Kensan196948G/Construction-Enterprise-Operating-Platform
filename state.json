@@ -6,7 +6,7 @@
     "registered_at": "2026-06-25",
     "phase_mode": "development"
   },
-  "goal": "v0.5.0 リリース準備完了 — M7.5 セキュリティ強化（全 C/H/Major 解消）+ M8 本番デプロイツール + CHANGELOG + README 更新完了",
+  "goal": "v0.6.0 CI 安定化 + セキュリティ強化R2 完了 — CI 全 job グリーン・213テスト pass・PR マージ準備",
   "phase": "Verify",
   "release": {
     "v0_1_0_foundation": "release_ready",
@@ -51,7 +51,9 @@
     "M10_pagination_policy_crud": "completed",
     "M11_sqlite_audit_log_coderabbit_fixes": "completed",
     "M12_workflow_api_coderabbit_allfix": "completed",
-    "M13_coderabbit_minor_fixes": "completed"
+    "M13_coderabbit_minor_fixes": "completed",
+    "M14_security_hardening_r2": "completed",
+    "M15_ci_pnpm_fix": "completed"
   },
   "completed_issues": [
     "M1: TypeScript foundation scaffold (pnpm + strict tsc + node:test + eslint + CI)",
