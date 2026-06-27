@@ -22,7 +22,7 @@
     "success_rate_target": 0.9,
     "ci_success_rate": 0.0,
     "test_pass_rate": 1.0,
-    "test_count": 187,
+    "test_count": 53,
     "security_critical": 0,
     "security_high_resolved": 17,
     "blocker_count": 0
@@ -49,7 +49,8 @@
     "M8_production_deploy": "completed",
     "M9_crud_api_roles_ci": "completed",
     "M10_pagination_policy_crud": "completed",
-    "M11_sqlite_audit_log_coderabbit_fixes": "completed"
+    "M11_sqlite_audit_log_coderabbit_fixes": "completed",
+    "M12_workflow_api_coderabbit_allfix": "completed"
   },
   "completed_issues": [
     "M1: TypeScript foundation scaffold (pnpm + strict tsc + node:test + eslint + CI)",
@@ -102,7 +103,13 @@
     "M10: 26 governance integration tests + noPermCred pattern — 178/178 pass",
     "M11: SqliteAuditLog (node:sqlite, WAL, hash-chain, tamper-detect) — 9/9 tests pass",
     "M11: CodeRabbit 9 Major fixes (governance auth, CEOP_SEED_DEMO prod guard, cross-org device, conditions 400, writableEnded, rate-limiter cap, URL query strip, JWT alg/typ check + ttlSeconds validation, router 413)",
-    "M11: JWT test updated to hand-craft expired token (HMAC manual sign) — 187/187 pass"
+    "M11: JWT test updated to hand-craft expired token (HMAC manual sign) — 187/187 pass",
+    "M12: Workflow CRUD API (26 integration tests) — 213/213 pass",
+    "M12: CodeRabbit Critical=1 + Major=13 + Minor=3 全16件解消",
+    "M12: Object.freeze() for AuditEvent.metadata (runtime immutability)",
+    "M12: SqliteAuditLog #lastHash dead field removed (stale-cache fix副作用)",
+    "M12: /governance route auth gated (false→true), audit:read permission gate on dashboard",
+    "M12: 53/53 tests pass, typecheck/lint clean"
   ],
   "blocked_issues": [],
   "learning": {

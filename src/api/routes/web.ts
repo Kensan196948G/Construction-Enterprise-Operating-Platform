@@ -4,8 +4,7 @@
  *
  * These routes serve human-readable HTML for the browser. They reuse the same
  * AppContainer as the JSON API routes, so no extra repositories or services are
- * needed. They are registered as public (unauthenticated) routes, so the SSR
- * dashboard renders a guest-scoped view.
+ * needed. All routes require authentication — no guest-scoped views are served.
  *
  * Routes:
  *   GET /           → 302 redirect to /dashboard
@@ -76,8 +75,8 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
   router.get(
     "/dashboard",
     async (_req, ctx, res) => {
-      const subject: string = ctx?.subject ?? "guest";
-      const permissions: readonly Permission[] = ctx?.permissions ?? [];
+      const subject: string = ctx!.subject;
+      const permissions: readonly Permission[] = ctx!.permissions;
 
       const [users, applications, devices, policies] = await Promise.all([
         container.repositories.users.findAll(),
@@ -99,7 +98,7 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
 
       sendHtml(res, 200, await renderDashboard(view));
     },
-    false,
+    true,
   );
 
   router.get(
