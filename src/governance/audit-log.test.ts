@@ -56,10 +56,11 @@ test("verify detects tampering with a recorded event", () => {
   log.append(event("e1"));
   log.append(event("e2"));
 
-  // Simulate out-of-band mutation of evidence by writing through the shared
-  // event reference exposed in the snapshot (readonly only at the type level).
+  // Simulate out-of-band mutation of evidence by overwriting the stored hash
+  // directly. metadata is now frozen (Object.freeze), so hash mutation is the
+  // canonical tampering path for the in-memory log.
   const tampered = log.entries[1]!;
-  (tampered.event.metadata as Record<string, string>).injected = "tampered";
+  (tampered as { hash: string }).hash = "00000000tampered";
 
   const report = log.verify();
   assert.equal(report.valid, false);

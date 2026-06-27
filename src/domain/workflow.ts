@@ -50,6 +50,14 @@ export function createWorkflow(input: CreateWorkflowInput): Result<Workflow> {
       issues.push({ path: `steps[${index}].key`, message: `duplicate step key: ${step.key}` });
     }
     seenKeys.add(step.key);
+    if (step.requiredPermission.trim().length === 0) {
+      issues.push({ path: `steps[${index}].requiredPermission`, message: "requiredPermission must be non-empty" });
+    } else {
+      const parts = step.requiredPermission.split(":");
+      if (parts.length !== 2 || parts[0]!.trim().length === 0 || parts[1]!.trim().length === 0) {
+        issues.push({ path: `steps[${index}].requiredPermission`, message: "requiredPermission must be in 'resource:action' format" });
+      }
+    }
   });
 
   if (issues.length > 0) {

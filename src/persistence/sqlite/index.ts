@@ -20,6 +20,7 @@ import type { Organization, OrganizationId } from "../../domain/organization.ts"
 import type { Policy, PolicyId } from "../../domain/policy.ts";
 import type { Role, RoleId } from "../../domain/role.ts";
 import type { User, UserId } from "../../domain/user.ts";
+import type { Workflow, WorkflowId, WorkflowStatus, WorkflowType } from "../../domain/workflow.ts";
 import type {
   ApplicationRepository,
   DeviceRepository,
@@ -28,6 +29,7 @@ import type {
   Repositories,
   RoleRepository,
   UserRepository,
+  WorkflowRepository,
 } from "../ports.ts";
 import type { ApiKeyStore } from "../../api/types.ts";
 import { BaseSqliteRepository, openDatabase } from "./base-sqlite-repository.ts";
@@ -279,9 +281,55 @@ class SqlitePolicyRepository
   async findByEffect(effect: "allow" | "deny"): Promise<readonly Policy[]> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const stmt = (this.db as any).prepare("SELECT data FROM policies WHERE effect = ?");
-     
+
     const rows = stmt.all(effect) as { data: string }[];
     return rows.map((r) => JSON.parse(r.data) as Policy);
+  }
+}
+
+class SqliteWorkflowRepository
+  extends BaseSqliteRepository<Workflow>
+  implements WorkflowRepository
+{
+  constructor(db: unknown) {
+    super(
+      db,
+      "workflows",
+      ["workflow_type TEXT NOT NULL", "status TEXT NOT NULL"],
+      [
+        { name: "idx_workflows_type", columns: ["workflow_type"] },
+        { name: "idx_workflows_status", columns: ["status"] },
+      ],
+      ["workflow_type", "status"],
+    );
+  }
+
+  protected override extraValues(w: Workflow): readonly unknown[] {
+    return [w.type, w.status];
+  }
+
+  override async findById(id: WorkflowId): Promise<Workflow | null> {
+    return super.findById(id as string);
+  }
+
+  override async delete(id: WorkflowId): Promise<void> {
+    return super.delete(id as string);
+  }
+
+  async findByType(type: WorkflowType): Promise<readonly Workflow[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM workflows WHERE workflow_type = ?");
+
+    const rows = stmt.all(type) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as Workflow);
+  }
+
+  async findByStatus(status: WorkflowStatus): Promise<readonly Workflow[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM workflows WHERE status = ?");
+
+    const rows = stmt.all(status) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as Workflow);
   }
 }
 
@@ -291,7 +339,7 @@ class SqlitePolicyRepository
 
 /**
  * Open (or create) a SQLite database at `dbPath` and return a fully-wired
- * `Repositories` aggregate. The database is shared across all six repositories
+ * `Repositories` aggregate. The database is shared across all seven repositories
  * so they participate in the same WAL journal.
  */
 export function createSqliteRepositories(dbPath: string): Repositories {
@@ -303,6 +351,7 @@ export function createSqliteRepositories(dbPath: string): Repositories {
     devices: new SqliteDeviceRepository(db),
     applications: new SqliteApplicationRepository(db),
     policies: new SqlitePolicyRepository(db),
+    workflows: new SqliteWorkflowRepository(db),
   };
 }
 

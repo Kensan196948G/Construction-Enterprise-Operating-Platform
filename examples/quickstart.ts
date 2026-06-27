@@ -134,13 +134,18 @@ console.log("dashboard =>", {
 
 // 4. Document generation (Document Control adapter).
 const documents = new InMemoryDocumentAdapter(() => now);
-const artifact = await documents.generate({
-  template: "Site {{site}}: {{apps}} app(s) visible, {{denied}} denied event(s).",
-  title: "Governance Evidence",
-  variables: {
-    site: supervisor.organizationId,
-    apps: String(view.applications.length),
-    denied: String(view.governance.deniedAccessEvents),
-  },
-});
-console.log("document =>", artifact.content);
+try {
+  const artifact = await documents.generate({
+    template: "Site {{site}}: {{apps}} app(s) visible, {{denied}} denied event(s).",
+    title: "Governance Evidence",
+    variables: {
+      site: supervisor.organizationId,
+      apps: String(view.applications.length),
+      denied: String(view.governance.deniedAccessEvents),
+    },
+  });
+  console.log("document =>", artifact.content);
+} catch (error) {
+  console.error("[quickstart] document generation failed:", error);
+  process.exit(1);
+}

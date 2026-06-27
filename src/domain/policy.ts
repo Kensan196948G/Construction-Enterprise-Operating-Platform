@@ -54,9 +54,9 @@ export function createPolicy(input: CreatePolicyInput): Result<Policy> {
     id: policyId(input.id),
     name: input.name,
     effect: input.effect,
-    actions: input.actions,
-    resources: input.resources,
-    conditions: input.conditions ?? [],
+    actions: [...input.actions],
+    resources: [...input.resources],
+    conditions: [...(input.conditions ?? [])],
   });
 }
 

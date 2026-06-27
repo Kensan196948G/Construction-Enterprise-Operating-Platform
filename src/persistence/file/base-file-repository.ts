@@ -82,7 +82,7 @@ export class BaseFileRepository<T extends { id: string }> implements Repository<
       await this.#enqueuedFlush(store);
     } catch (e) {
       // Roll back cache so in-memory state stays consistent with disk.
-      previous === undefined ? store.delete(entity.id) : store.set(entity.id, previous);
+      if (previous === undefined) { store.delete(entity.id); } else { store.set(entity.id, previous); }
       throw e;
     }
   }

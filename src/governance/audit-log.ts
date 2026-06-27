@@ -29,21 +29,25 @@ export const GENESIS_HASH = "0".repeat(64);
 /**
  * Produce a deterministic string representation of an audit event so that the
  * hash chain is stable regardless of object key insertion order.
+ *
+ * Uses JSON.stringify with a fixed field order instead of delimiter-joined
+ * strings: delimiters (|, &, =) can appear in field values and produce
+ * collisions. JSON encoding is unambiguous by construction.
  */
 export function canonicalize(event: AuditEvent): string {
-  const metadata = Object.keys(event.metadata)
-    .sort()
-    .map((key) => `${key}=${event.metadata[key]}`)
-    .join("&");
-  return [
-    event.id,
-    event.at,
-    event.actor,
-    event.action,
-    event.resource,
-    event.outcome,
-    metadata,
-  ].join("|");
+  return JSON.stringify({
+    id: event.id,
+    at: event.at,
+    actor: event.actor,
+    action: event.action,
+    resource: event.resource,
+    outcome: event.outcome,
+    metadata: Object.fromEntries(
+      Object.keys(event.metadata)
+        .sort()
+        .map((k) => [k, event.metadata[k]]),
+    ),
+  });
 }
 
 export function hashAuditEntry(previousHash: string, event: AuditEvent): string {

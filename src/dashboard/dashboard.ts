@@ -121,9 +121,10 @@ export function buildDashboard(input: DashboardInput): DashboardView {
 
   const pendingApprovals = canReadApprovals ? [...input.pendingApprovals] : [];
 
-  const deniedAccessEvents = input.auditLog.query(
-    (entry) => entry.event.outcome === "denied",
-  ).length;
+  const canReadAudit = allow("audit");
+  const deniedAccessEvents = canReadAudit
+    ? input.auditLog.query((entry) => entry.event.outcome === "denied").length
+    : 0;
 
   const governance: GovernanceSummary = {
     totalUsers: input.users.length,
@@ -132,7 +133,7 @@ export function buildDashboard(input: DashboardInput): DashboardView {
     unhealthyApplications: canReadApplications ? input.applications.filter(isUnhealthy).length : 0,
     visibleDevices: devices.length,
     openApprovals: pendingApprovals.length,
-    auditEvents: input.auditLog.size,
+    auditEvents: canReadAudit ? input.auditLog.size : 0,
     deniedAccessEvents,
   };
 

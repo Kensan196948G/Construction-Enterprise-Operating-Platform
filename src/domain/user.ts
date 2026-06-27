@@ -45,6 +45,12 @@ export function createUser(input: CreateUserInput): Result<User> {
     .require(isEmailLike(input.email), "email", "email must be a valid address")
     .build();
 
+  input.roleIds.forEach((rid, index) => {
+    if (rid.trim().length === 0) {
+      issues.push({ path: `roleIds[${index}]`, message: "roleId must be non-empty" });
+    }
+  });
+
   if (issues.length > 0) {
     return err(issues);
   }

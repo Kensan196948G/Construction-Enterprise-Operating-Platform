@@ -17,6 +17,7 @@ import type { Organization, OrganizationId } from "../../domain/organization.ts"
 import type { Policy, PolicyId } from "../../domain/policy.ts";
 import type { Role, RoleId } from "../../domain/role.ts";
 import type { User, UserId } from "../../domain/user.ts";
+import type { Workflow, WorkflowId, WorkflowStatus, WorkflowType } from "../../domain/workflow.ts";
 import type {
   ApplicationRepository,
   DeviceRepository,
@@ -25,6 +26,7 @@ import type {
   Repositories,
   RoleRepository,
   UserRepository,
+  WorkflowRepository,
 } from "../ports.ts";
 import { BaseFileRepository, ensureDataDir } from "./base-file-repository.ts";
 
@@ -132,6 +134,23 @@ class FilePolicyRepository extends BaseFileRepository<Policy> implements PolicyR
   }
 }
 
+class FileWorkflowRepository extends BaseFileRepository<Workflow> implements WorkflowRepository {
+  override async findById(id: WorkflowId): Promise<Workflow | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: WorkflowId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByType(type: WorkflowType): Promise<readonly Workflow[]> {
+    const all = await this.findAll();
+    return all.filter((w) => w.type === type);
+  }
+  async findByStatus(status: WorkflowStatus): Promise<readonly Workflow[]> {
+    const all = await this.findAll();
+    return all.filter((w) => w.status === status);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Factory
 // ---------------------------------------------------------------------------
@@ -149,5 +168,6 @@ export async function createFileRepositories(dataDir: string): Promise<Repositor
     devices: new FileDeviceRepository(dataDir, "devices.json"),
     applications: new FileApplicationRepository(dataDir, "applications.json"),
     policies: new FilePolicyRepository(dataDir, "policies.json"),
+    workflows: new FileWorkflowRepository(dataDir, "workflows.json"),
   };
 }

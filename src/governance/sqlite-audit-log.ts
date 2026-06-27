@@ -42,7 +42,6 @@ const _sqlite = _require("node:sqlite") as {
 export class SqliteAuditLog implements IAuditLog {
   readonly #db: DatabaseSync;
   #size: number;
-  #lastHash: string;
 
   constructor(dbPath: string) {
     this.#db = new _sqlite.DatabaseSync(dbPath);
@@ -50,16 +49,11 @@ export class SqliteAuditLog implements IAuditLog {
     this.#db.exec("PRAGMA foreign_keys = ON");
     this.#initSchema();
 
-    // Bootstrap in-memory tail state from the persisted chain.
+    // Bootstrap in-memory size from the persisted row count.
     const countRow = this.#db
       .prepare("SELECT COUNT(*) AS n FROM audit_log")
       .get() as { n: number };
     this.#size = countRow.n;
-
-    const lastRow = this.#db
-      .prepare("SELECT hash FROM audit_log ORDER BY sequence DESC LIMIT 1")
-      .get() as { hash: string } | undefined;
-    this.#lastHash = lastRow?.hash ?? GENESIS_HASH;
   }
 
   #initSchema(): void {
@@ -93,11 +87,21 @@ export class SqliteAuditLog implements IAuditLog {
 
   /** Seal an event into the log and persist it atomically. */
   append(event: AuditEvent): AuditLogEntry {
-    const previousHash = this.#lastHash;
+    // Re-read tail state from DB on every append to avoid stale cache when
+    // multiple SqliteAuditLog instances share the same WAL file.
+    const countRow = this.#db
+      .prepare("SELECT COUNT(*) AS n FROM audit_log")
+      .get() as { n: number };
+    const lastRow = this.#db
+      .prepare("SELECT hash FROM audit_log ORDER BY sequence DESC LIMIT 1")
+      .get() as { hash: string } | undefined;
+    const previousHash = lastRow?.hash ?? GENESIS_HASH;
+    const sequence = countRow.n;
+
     const hash = hashAuditEntry(previousHash, event);
     const entry: AuditLogEntry = {
       event,
-      sequence: this.#size,
+      sequence,
       previousHash,
       hash,
     };
@@ -118,8 +122,7 @@ export class SqliteAuditLog implements IAuditLog {
       hash,
       JSON.stringify(entry),
     );
-    this.#size++;
-    this.#lastHash = hash;
+    this.#size = sequence + 1;
     return entry;
   }
 
@@ -143,17 +146,24 @@ export class SqliteAuditLog implements IAuditLog {
   /** Recompute the hash chain from the persisted entries and verify integrity. */
   verify(): IntegrityReport {
     const stmt: StatementSync = this.#db.prepare(
-      "SELECT data FROM audit_log ORDER BY sequence ASC",
+      "SELECT sequence, prev_hash, hash, data FROM audit_log ORDER BY sequence ASC",
     );
-    const rows = stmt.all() as { data: string }[];
+    const rows = stmt.all() as { sequence: number; prev_hash: string; hash: string; data: string }[];
     let previousHash = GENESIS_HASH;
     for (const row of rows) {
       const entry = JSON.parse(row.data) as AuditLogEntry;
       const expected = hashAuditEntry(previousHash, entry.event);
-      if (entry.previousHash !== previousHash || entry.hash !== expected) {
-        return { valid: false, brokenAt: entry.sequence };
+      // Cross-check both the JSON blob fields and the indexed columns so that
+      // column-level tampering (e.g. direct UPDATE on prev_hash/hash) is caught.
+      if (
+        entry.previousHash !== previousHash ||
+        entry.hash !== expected ||
+        row.prev_hash !== previousHash ||
+        row.hash !== expected
+      ) {
+        return { valid: false, brokenAt: row.sequence };
       }
-      previousHash = entry.hash;
+      previousHash = expected;
     }
     return { valid: true };
   }

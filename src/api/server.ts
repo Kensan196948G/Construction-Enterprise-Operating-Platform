@@ -16,6 +16,7 @@ import { registerGovernanceRoutes } from "./routes/governance.ts";
 import { registerDashboardRoutes } from "./routes/dashboard.ts";
 import { registerWebRoutes } from "./routes/web.ts";
 import { registerEntityCrudRoutes } from "./routes/entity-crud.ts";
+import { registerWorkflowRoutes } from "./routes/workflows.ts";
 import type { AppContainer } from "./types.ts";
 
 export interface ServerConfig {
@@ -37,6 +38,7 @@ export function createServer(config: ServerConfig, container: AppContainer): Ser
   registerGovernanceRoutes(router, container);
   registerDashboardRoutes(router, container);
   registerEntityCrudRoutes(router, container);
+  registerWorkflowRoutes(router, container);
   registerWebRoutes(router, container);
 
   return httpCreateServer((req: IncomingMessage, res: ServerResponse): void => {

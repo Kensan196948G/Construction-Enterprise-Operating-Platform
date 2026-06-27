@@ -103,7 +103,8 @@ describe("SqliteAuditLog", () => {
   it("schema creation is idempotent (double-init same DB file)", async () => {
     const { mkdtempSync, rmdirSync, unlinkSync, existsSync } = await import("node:fs");
     const { join } = await import("node:path");
-    const tmpDir = mkdtempSync("/tmp/ceop-test-");
+    const { tmpdir } = await import("node:os");
+    const tmpDir = mkdtempSync(join(tmpdir(), "ceop-test-"));
     const dbPath = join(tmpDir, "test.db");
     try {
       const log1 = new SqliteAuditLog(dbPath);
@@ -126,7 +127,8 @@ describe("SqliteAuditLog", () => {
   it("persists across reconnect — hash chain resumes correctly", async () => {
     const { mkdtempSync, rmdirSync, unlinkSync, existsSync } = await import("node:fs");
     const { join } = await import("node:path");
-    const tmpDir = mkdtempSync("/tmp/ceop-test-");
+    const { tmpdir } = await import("node:os");
+    const tmpDir = mkdtempSync(join(tmpdir(), "ceop-test-"));
     const dbPath = join(tmpDir, "test.db");
     let lastHash: string;
     try {
@@ -155,7 +157,8 @@ describe("SqliteAuditLog", () => {
     const { DatabaseSync } = await import("node:sqlite");
     const { mkdtempSync, rmdirSync, unlinkSync, existsSync } = await import("node:fs");
     const { join } = await import("node:path");
-    const tmpDir = mkdtempSync("/tmp/ceop-test-");
+    const { tmpdir } = await import("node:os");
+    const tmpDir = mkdtempSync(join(tmpdir(), "ceop-test-"));
     const dbPath = join(tmpDir, "test.db");
     try {
       const log = new SqliteAuditLog(dbPath);

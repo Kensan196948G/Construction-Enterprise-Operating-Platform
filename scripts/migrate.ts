@@ -137,7 +137,10 @@ const MIGRATIONS: readonly Migration[] = [
 function resolveDbPath(): string {
   const argv = process.argv.slice(2);
   for (let i = 0; i < argv.length; i++) {
-    if (argv[i] === "--db" && argv[i + 1]) return argv[i + 1] as string;
+    if (argv[i] === "--db") {
+      if (!argv[i + 1]) throw new Error("--db requires a non-empty path argument");
+      return argv[i + 1] as string;
+    }
   }
   return process.env["CEOP_SQLITE_FILE"] ?? "/data/ceop.db";
 }

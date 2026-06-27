@@ -61,6 +61,6 @@ export function createAuditEvent(input: CreateAuditEventInput): Result<AuditEven
     action: input.action,
     resource: input.resource,
     outcome: input.outcome,
-    metadata: input.metadata ?? {},
+    metadata: Object.freeze({ ...(input.metadata ?? {}) }),
   });
 }
