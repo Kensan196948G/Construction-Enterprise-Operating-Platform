@@ -651,3 +651,121 @@ test("PUT /api/v1/organizations/unknown — 401 without credential", async () =>
   const { status } = await put(h.baseUrl, "/api/v1/organizations/unknown", null, { name: "X" });
   assert.equal(status, 401);
 });
+
+// ---------------------------------------------------------------------------
+// Fix #1: dependency checks before DELETE
+// ---------------------------------------------------------------------------
+
+test("DELETE /api/v1/organizations/:id — 409 when organization has dependent user", async () => {
+  const h = await buildHarness();
+  after(() => h.close());
+  const { body: org } = await post(h.baseUrl, "/api/v1/organizations", h.adminCred, {
+    name: "Org With User",
+    type: "headquarters",
+  });
+  const orgId = (org as { id: string }).id;
+  await post(h.baseUrl, "/api/v1/users", h.adminCred, {
+    displayName: "Alice",
+    email: "alice@example.com",
+    organizationId: orgId,
+    roleIds: [],
+  });
+  const { status } = await del(h.baseUrl, `/api/v1/organizations/${orgId}`, h.adminCred);
+  assert.equal(status, 409);
+});
+
+test("DELETE /api/v1/roles/:id — 409 when role is assigned to a user", async () => {
+  const h = await buildHarness();
+  after(() => h.close());
+  const { body: org } = await post(h.baseUrl, "/api/v1/organizations", h.adminCred, {
+    name: "Org",
+    type: "headquarters",
+  });
+  const orgId = (org as { id: string }).id;
+  const { body: role } = await post(h.baseUrl, "/api/v1/roles", h.adminCred, {
+    name: "Assigned Role",
+    description: "",
+    scope: "organization",
+    permissions: ["device:read"],
+  });
+  const rid = (role as { id: string }).id;
+  await post(h.baseUrl, "/api/v1/users", h.adminCred, {
+    displayName: "Bob",
+    email: "bob@example.com",
+    organizationId: orgId,
+    roleIds: [rid],
+  });
+  const { status } = await del(h.baseUrl, `/api/v1/roles/${rid}`, h.adminCred);
+  assert.equal(status, 409);
+});
+
+// ---------------------------------------------------------------------------
+// Fix #3: reference ID validation
+// ---------------------------------------------------------------------------
+
+test("POST /api/v1/users — 400 when organizationId does not exist", async () => {
+  const h = await buildHarness();
+  after(() => h.close());
+  const { status } = await post(h.baseUrl, "/api/v1/users", h.adminCred, {
+    displayName: "Charlie",
+    email: "charlie@example.com",
+    organizationId: "non-existent-org",
+    roleIds: [],
+  });
+  assert.equal(status, 400);
+});
+
+test("POST /api/v1/users — 400 when roleId does not exist", async () => {
+  const h = await buildHarness();
+  after(() => h.close());
+  const { body: org } = await post(h.baseUrl, "/api/v1/organizations", h.adminCred, {
+    name: "Org",
+    type: "headquarters",
+  });
+  const orgId = (org as { id: string }).id;
+  const { status } = await post(h.baseUrl, "/api/v1/users", h.adminCred, {
+    displayName: "Dave",
+    email: "dave@example.com",
+    organizationId: orgId,
+    roleIds: ["non-existent-role"],
+  });
+  assert.equal(status, 400);
+});
+
+test("POST /api/v1/devices — 400 when organizationId does not exist", async () => {
+  const h = await buildHarness();
+  after(() => h.close());
+  const { status } = await post(h.baseUrl, "/api/v1/devices", h.adminCred, {
+    organizationId: "non-existent-org",
+    kind: "tablet",
+  });
+  assert.equal(status, 400);
+});
+
+test("POST /api/v1/devices — 400 when assignedUserId does not exist", async () => {
+  const h = await buildHarness();
+  after(() => h.close());
+  const { body: org } = await post(h.baseUrl, "/api/v1/organizations", h.adminCred, {
+    name: "Org",
+    type: "headquarters",
+  });
+  const orgId = (org as { id: string }).id;
+  const { status } = await post(h.baseUrl, "/api/v1/devices", h.adminCred, {
+    organizationId: orgId,
+    kind: "tablet",
+    assignedUserId: "non-existent-user",
+  });
+  assert.equal(status, 400);
+});
+
+test("POST /api/v1/applications — 400 when ownerOrganizationId does not exist", async () => {
+  const h = await buildHarness();
+  after(() => h.close());
+  const { status } = await post(h.baseUrl, "/api/v1/applications", h.adminCred, {
+    key: "app-orphan",
+    name: "Orphan App",
+    category: "workflow",
+    ownerOrganizationId: "non-existent-org",
+  });
+  assert.equal(status, 400);
+});

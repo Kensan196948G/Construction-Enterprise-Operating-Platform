@@ -70,6 +70,14 @@ function badRequest(res: ServerResponse, details: unknown): void {
   writeJson(res, 400, { error: "Bad Request", message: "validation failed", details });
 }
 
+// Catches DB-level UNIQUE constraint violations from node:sqlite.
+// The findBy*/save pattern has a TOCTOU window; full atomicity requires UNIQUE
+// constraints in the DB schema (planned for M11). This catch handles the concurrent-write case.
+function isConstraintViolation(e: unknown): boolean {
+  if (!(e instanceof Error)) return false;
+  return e.message.includes("UNIQUE constraint failed") || e.message.includes("SQLITE_CONSTRAINT");
+}
+
 // ---------------------------------------------------------------------------
 // Route registration
 // ---------------------------------------------------------------------------
@@ -120,10 +128,23 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
     writeJson(res, 200, result.value);
   });
 
+  // Fix #1: Prevent deletion when dependent records still reference this organization.
   router.delete("/api/v1/organizations/:id", async (req, ctx, res) => {
     if (!hasPermission(ctx, "organization", "write")) { forbidden(res, "organization:write"); return; }
     const existing = await repositories.organizations.findById(organizationId(req.params["id"] ?? ""));
     if (existing === null) { notFound(res, "organization"); return; }
+    const [depUsers, depDevices, depApps] = await Promise.all([
+      repositories.users.findByOrganization(existing.id),
+      repositories.devices.findByOrganization(existing.id),
+      repositories.applications.findByOwner(existing.id),
+    ]);
+    if (depUsers.length > 0 || depDevices.length > 0 || depApps.length > 0) {
+      writeJson(res, 409, {
+        error: "Conflict",
+        message: "organization has dependent records; remove or reassign users, devices, and applications first",
+      });
+      return;
+    }
     await repositories.organizations.delete(existing.id);
     noContent(res);
   });
@@ -140,21 +161,50 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
   router.post("/api/v1/users", async (req, ctx, res) => {
     if (!hasPermission(ctx, "user", "write")) { forbidden(res, "user:write"); return; }
     const email = str(req.body, "email") ?? "";
+    // TOCTOU: pre-check + isConstraintViolation catch together guard against duplicate email.
     if (email && (await repositories.users.findByEmail(email)) !== null) {
       writeJson(res, 409, { error: "Conflict", message: "email address already in use" });
       return;
     }
+    const orgIdStr = str(req.body, "organizationId") ?? "";
+    const roleIdsArr = strArr(req.body, "roleIds") ?? [];
+    // Fix #3: Validate referenced IDs in parallel before persisting.
+    const [orgRecord, roleRecords] = await Promise.all([
+      orgIdStr
+        ? repositories.organizations.findById(organizationId(orgIdStr))
+        : Promise.resolve(null as null),
+      Promise.all(roleIdsArr.map((rid) => repositories.roles.findById(roleId(rid)))),
+    ]);
+    if (orgIdStr && orgRecord === null) {
+      badRequest(res, [{ field: "organizationId", message: "organization not found" }]);
+      return;
+    }
+    for (let i = 0; i < roleIdsArr.length; i++) {
+      if (roleRecords[i] === null) {
+        badRequest(res, [{ field: `roleIds[${i}]`, message: `role '${roleIdsArr[i]}' not found` }]);
+        return;
+      }
+    }
     const result = createUser({
       id: str(req.body, "id") ?? randomUUID(),
-      organizationId: str(req.body, "organizationId") ?? "",
+      organizationId: orgIdStr,
       displayName: str(req.body, "displayName") ?? "",
       email,
       status: (str(req.body, "status") ?? "invited") as UserStatus,
-      roleIds: strArr(req.body, "roleIds") ?? [],
+      roleIds: roleIdsArr,
       createdAt: nowTs(),
     });
     if (!result.ok) { badRequest(res, result.error); return; }
-    await repositories.users.save(result.value);
+    // Fix #2: Catch DB-level unique constraint violation for concurrent-write edge case.
+    try {
+      await repositories.users.save(result.value);
+    } catch (e) {
+      if (isConstraintViolation(e)) {
+        writeJson(res, 409, { error: "Conflict", message: "email address already in use" });
+        return;
+      }
+      throw e;
+    }
     writeJson(res, 201, result.value);
   });
 
@@ -162,13 +212,24 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
     if (!hasPermission(ctx, "user", "write")) { forbidden(res, "user:write"); return; }
     const existing = await repositories.users.findById(userId(req.params["id"] ?? ""));
     if (existing === null) { notFound(res, "user"); return; }
+    const newRoleIds = strArr(req.body, "roleIds");
+    // Fix #3: Validate updated roleIds references if the field is provided.
+    if (newRoleIds !== undefined && newRoleIds.length > 0) {
+      const roleRecords = await Promise.all(newRoleIds.map((rid) => repositories.roles.findById(roleId(rid))));
+      for (let i = 0; i < newRoleIds.length; i++) {
+        if (roleRecords[i] === null) {
+          badRequest(res, [{ field: `roleIds[${i}]`, message: `role '${newRoleIds[i]}' not found` }]);
+          return;
+        }
+      }
+    }
     const result = createUser({
       id: existing.id,
       organizationId: existing.organizationId,
       displayName: str(req.body, "displayName") ?? existing.displayName,
       email: existing.email,
       status: (str(req.body, "status") ?? existing.status) as UserStatus,
-      roleIds: strArr(req.body, "roleIds") ?? ([...existing.roleIds] as string[]),
+      roleIds: newRoleIds ?? ([...existing.roleIds] as string[]),
       createdAt: existing.createdAt,
     });
     if (!result.ok) { badRequest(res, result.error); return; }
@@ -213,6 +274,7 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
   router.post("/api/v1/roles", async (req, ctx, res) => {
     if (!hasPermission(ctx, "role", "write")) { forbidden(res, "role:write"); return; }
     const name = str(req.body, "name") ?? "";
+    // TOCTOU: pre-check + isConstraintViolation catch together guard against duplicate name.
     if (name && (await repositories.roles.findByName(name)) !== null) {
       writeJson(res, 409, { error: "Conflict", message: "role name already exists" });
       return;
@@ -225,7 +287,16 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
       permissions: strArr(req.body, "permissions") ?? [],
     });
     if (!result.ok) { badRequest(res, result.error); return; }
-    await repositories.roles.save(result.value);
+    // Fix #2: Catch DB-level unique constraint violation for concurrent-write edge case.
+    try {
+      await repositories.roles.save(result.value);
+    } catch (e) {
+      if (isConstraintViolation(e)) {
+        writeJson(res, 409, { error: "Conflict", message: "role name already exists" });
+        return;
+      }
+      throw e;
+    }
     writeJson(res, 201, result.value);
   });
 
@@ -245,10 +316,21 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
     writeJson(res, 200, result.value);
   });
 
+  // Fix #1: Prevent deletion if any user still has this role assigned.
   router.delete("/api/v1/roles/:id", async (req, ctx, res) => {
     if (!hasPermission(ctx, "role", "write")) { forbidden(res, "role:write"); return; }
     const existing = await repositories.roles.findById(roleId(req.params["id"] ?? ""));
     if (existing === null) { notFound(res, "role"); return; }
+    const allUsers = await repositories.users.findAll();
+    const rid = String(existing.id);
+    const hasAssignedUsers = allUsers.some((u) => u.roleIds.some((r) => String(r) === rid));
+    if (hasAssignedUsers) {
+      writeJson(res, 409, {
+        error: "Conflict",
+        message: "role is assigned to one or more users; unassign them first",
+      });
+      return;
+    }
     await repositories.roles.delete(existing.id);
     noContent(res);
   });
@@ -264,14 +346,32 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
 
   router.post("/api/v1/devices", async (req, ctx, res) => {
     if (!hasPermission(ctx, "device", "write")) { forbidden(res, "device:write"); return; }
-    const assignedUserId = str(req.body, "assignedUserId");
+    const rawOrgId = str(req.body, "organizationId") ?? "";
+    const assignedUserIdStr = str(req.body, "assignedUserId");
+    // Fix #3: Validate referenced IDs in parallel before persisting.
+    const [orgRecord, userRecord] = await Promise.all([
+      rawOrgId
+        ? repositories.organizations.findById(organizationId(rawOrgId))
+        : Promise.resolve(null as null),
+      assignedUserIdStr !== undefined
+        ? repositories.users.findById(userId(assignedUserIdStr))
+        : Promise.resolve(null as null),
+    ]);
+    if (rawOrgId && orgRecord === null) {
+      badRequest(res, [{ field: "organizationId", message: "organization not found" }]);
+      return;
+    }
+    if (assignedUserIdStr !== undefined && userRecord === null) {
+      badRequest(res, [{ field: "assignedUserId", message: "user not found" }]);
+      return;
+    }
     const lastSeenAt = str(req.body, "lastSeenAt");
     const result = createDevice({
       id: str(req.body, "id") ?? randomUUID(),
-      organizationId: str(req.body, "organizationId") ?? "",
+      organizationId: rawOrgId,
       kind: (str(req.body, "kind") ?? "") as DeviceKind,
       status: (str(req.body, "status") ?? "provisioned") as DeviceStatus,
-      ...(assignedUserId !== undefined ? { assignedUserId } : {}),
+      ...(assignedUserIdStr !== undefined ? { assignedUserId: assignedUserIdStr } : {}),
       ...(lastSeenAt !== undefined ? { lastSeenAt: lastSeenAt as IsoTimestamp } : {}),
     });
     if (!result.ok) { badRequest(res, result.error); return; }
@@ -283,8 +383,17 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
     if (!hasPermission(ctx, "device", "write")) { forbidden(res, "device:write"); return; }
     const existing = await repositories.devices.findById(deviceId(req.params["id"] ?? ""));
     if (existing === null) { notFound(res, "device"); return; }
-    const assignedUserId =
-      str(req.body, "assignedUserId") ?? (existing.assignedUserId as string | undefined);
+    const newAssignedUserIdStr = str(req.body, "assignedUserId");
+    // Fix #3: Validate updated assignedUserId reference if the field is provided.
+    if (newAssignedUserIdStr !== undefined) {
+      const userRecord = await repositories.users.findById(userId(newAssignedUserIdStr));
+      if (userRecord === null) {
+        badRequest(res, [{ field: "assignedUserId", message: "user not found" }]);
+        return;
+      }
+    }
+    const assignedUserIdVal =
+      newAssignedUserIdStr ?? (existing.assignedUserId as string | undefined);
     const lastSeenAtRaw = str(req.body, "lastSeenAt");
     const lastSeenAt = (lastSeenAtRaw !== undefined
       ? lastSeenAtRaw
@@ -294,7 +403,7 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
       organizationId: existing.organizationId,
       kind: existing.kind,
       status: (str(req.body, "status") ?? existing.status) as DeviceStatus,
-      ...(assignedUserId !== undefined ? { assignedUserId } : {}),
+      ...(assignedUserIdVal !== undefined ? { assignedUserId: assignedUserIdVal } : {}),
       ...(lastSeenAt !== undefined ? { lastSeenAt } : {}),
     });
     if (!result.ok) { badRequest(res, result.error); return; }
@@ -322,9 +431,19 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
   router.post("/api/v1/applications", async (req, ctx, res) => {
     if (!hasPermission(ctx, "application", "write")) { forbidden(res, "application:write"); return; }
     const key = str(req.body, "key") ?? "";
+    // TOCTOU: pre-check + isConstraintViolation catch together guard against duplicate key.
     if (key && (await repositories.applications.findByKey(key)) !== null) {
       writeJson(res, 409, { error: "Conflict", message: "application key already exists" });
       return;
+    }
+    const ownerOrgIdStr = str(req.body, "ownerOrganizationId") ?? "";
+    // Fix #3: Validate ownerOrganizationId reference before persisting.
+    if (ownerOrgIdStr) {
+      const ownerOrg = await repositories.organizations.findById(organizationId(ownerOrgIdStr));
+      if (ownerOrg === null) {
+        badRequest(res, [{ field: "ownerOrganizationId", message: "organization not found" }]);
+        return;
+      }
     }
     const result = createApplication({
       id: str(req.body, "id") ?? randomUUID(),
@@ -332,10 +451,19 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
       name: str(req.body, "name") ?? "",
       category: (str(req.body, "category") ?? "") as ApplicationCategory,
       health: (str(req.body, "health") ?? "unknown") as ApplicationHealth,
-      ownerOrganizationId: str(req.body, "ownerOrganizationId") ?? "",
+      ownerOrganizationId: ownerOrgIdStr,
     });
     if (!result.ok) { badRequest(res, result.error); return; }
-    await repositories.applications.save(result.value);
+    // Fix #2: Catch DB-level unique constraint violation for concurrent-write edge case.
+    try {
+      await repositories.applications.save(result.value);
+    } catch (e) {
+      if (isConstraintViolation(e)) {
+        writeJson(res, 409, { error: "Conflict", message: "application key already exists" });
+        return;
+      }
+      throw e;
+    }
     writeJson(res, 201, result.value);
   });
 
