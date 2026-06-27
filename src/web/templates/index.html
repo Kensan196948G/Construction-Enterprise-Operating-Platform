@@ -678,13 +678,26 @@
     /* =========================================================
        レスポンシブ
     ========================================================= */
+    .hamburger {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 1.4rem;
+      cursor: pointer;
+      padding: 6px 10px;
+      margin-right: 8px;
+      line-height: 1;
+    }
+
     @media (max-width: 768px) {
       :root { --sidebar-w: 0px; }
-      .sidebar { transform: translateX(-240px); transition: transform .3s; }
+      .sidebar { transform: translateX(-240px); transition: transform .3s; position: fixed; z-index: 200; height: 100%; }
       .sidebar.open { transform: translateX(0); width: 240px; }
       .main { margin-left: 0; padding: 16px; }
       .footer { margin-left: 0; }
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .hamburger { display: block; }
     }
   </style>
 </head>
@@ -692,6 +705,7 @@
 
 <!-- ========= ヘッダー ========= -->
 <header class="header">
+  <button class="hamburger" id="hamburgerBtn" aria-label="メニューを開閉" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
   <a class="header__logo" href="/dashboard">
     <div class="header__logo-icon">🏗</div>
     <div>

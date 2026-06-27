@@ -63,6 +63,13 @@ function parseArgs(argv: string[]): {
   }
 
   const permissions = permissionsRaw.split(",").map((p) => p.trim()).filter(Boolean);
+  if (permissions.length === 0) {
+    console.error(
+      "[provision] Error: --permissions value resolved to an empty list after parsing.\n" +
+        "  Provide at least one permission, e.g. --permissions application:read",
+    );
+    process.exit(1);
+  }
 
   return { subject, permissions, dbPath };
 }

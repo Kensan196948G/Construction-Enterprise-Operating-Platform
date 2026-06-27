@@ -45,7 +45,10 @@ export function createInMemoryRevocationStore(): RevocationStore {
       store.set(jti, prunableAt);
     },
     isRevoked(jti) {
-      return store.has(jti);
+      const prunableAt = store.get(jti);
+      if (prunableAt === undefined) return false;
+      const now = Math.floor(Date.now() / 1000);
+      return prunableAt > now;
     },
     prune(now) {
       for (const [id, prunableAt] of store) {

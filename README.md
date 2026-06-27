@@ -18,7 +18,7 @@
 | 項目           | 内容                                                                                |
 | -------------- | ----------------------------------------------------------------------------------- |
 | 役割           | 統制・ガバナンス・共通ワークフローの調整基盤                                        |
-| バージョン     | v0.5.0（SQLite 永続化・JWT 認証・セキュリティ強化・M8 本番デプロイ・M9 CRUD API・M10 Pagination + Policy CRUD・M11 SQLite 監査ログ・M12 Workflow CRUD API 完了）|
+| バージョン     | v0.5.0 + M14/M15（SQLite 永続化・JWT 認証・セキュリティ強化 R2・M8 本番デプロイ・M9 CRUD API・M10 Pagination + Policy CRUD・M11 SQLite 監査ログ・M12 Workflow CRUD API・M13/M14/M15 CodeRabbit 全対応 完了）|
 | 言語           | TypeScript 5.7（strict / `noUncheckedIndexedAccess` / 例外を投げない設計）          |
 | ランタイム     | Node.js v22.13+（ネイティブ TS 実行・ビルトインテストランナー）                      |
 | HTTP サーバ    | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                            |
@@ -668,6 +668,10 @@ sequenceDiagram
 | CSP ヘッダ                    | SSR ページに `Content-Security-Policy: default-src 'self'` を付与              | `routes/web.ts`               |
 | 秘密情報のログ漏洩防止        | デモキーログを `NODE_ENV !== production` 条件で制限                              | `app.ts`                      |
 | 監査アクター詐称防止          | 評価 API の `actor` を認証済み `ctx.subject` から取得（リクエストボディ不使用）  | `routes/governance.ts`        |
+| HSTS（M14）                   | SSR ページに `Strict-Transport-Security: max-age=63072000; includeSubDomains` を付与 | `routes/web.ts`           |
+| CORS opt-in（M14）            | `CEOP_CORS_ORIGIN` 環境変数 or `corsOrigin` 設定が明示された場合のみ CORS ヘッダを出力（デフォルト非出力） | `api/server.ts` |
+| JWT 無効化永続化（M14）       | `RevocationStore` ポート（in-memory / SQLite 差し替え可）で `jti` を永続的に無効化。`CEOP_SQLITE_FILE` 設定時は自動で SQLite backing に切り替わる | `persistence/sqlite/revocation-store.ts` |
+| SQLite FK 制約（M14）         | users/devices/applications は `REFERENCES organizations(id)` を DDL で宣言し、orphan レコード挿入を DB レベルで拒否 | `persistence/sqlite/index.ts` |
 
 ### ⚖️ ポリシーエンジン（Governance Core）
 
@@ -690,13 +694,14 @@ ABAC 条件（`{ attribute, equals }`）はポリシーレベルで評価され�
 
 ### 🔒 HTTP セキュリティヘッダ（SSR ページ）
 
-| ヘッダ                         | 値                                  |
-| ------------------------------ | ----------------------------------- |
-| `Content-Security-Policy`      | `default-src 'self'`                |
-| `X-Content-Type-Options`       | `nosniff`                           |
-| `X-Frame-Options`              | `SAMEORIGIN`                        |
-| `Referrer-Policy`              | `same-origin`                       |
-| `Access-Control-Allow-Origin`  | `*`（`corsOrigin` 設定で変更可）    |
+| ヘッダ                              | 値                                                          |
+| ----------------------------------- | ----------------------------------------------------------- |
+| `Content-Security-Policy`           | `default-src 'self'`                                        |
+| `X-Content-Type-Options`            | `nosniff`                                                   |
+| `X-Frame-Options`                   | `SAMEORIGIN`                                                |
+| `Referrer-Policy`                   | `same-origin`                                               |
+| `Strict-Transport-Security`         | `max-age=63072000; includeSubDomains`（2年間・SSR ページのみ） |
+| `Access-Control-Allow-Origin`       | **opt-in のみ**（`CEOP_CORS_ORIGIN` 環境変数 or `corsOrigin` 設定を明示した場合のみ出力） |
 
 ---
 
@@ -724,6 +729,10 @@ gantt
         M10 Pagination + Policy CRUD     :done,    m10, 2026-06-27, 1d
         M11 SQLite 監査ログ              :done,    m11, 2026-06-27, 1d
         M12 Workflow CRUD API            :done,    m12, 2026-06-27, 1d
+    section セキュリティ強化 R2
+        M13 CodeRabbit Minor 9 件対応    :done,    m13, 2026-06-27, 1d
+        M14 HSTS / CORS opt-in / JWT 無効化永続化 / SQLite FK :done, m14, 2026-06-27, 1d
+        M15 CI pnpm バージョン競合修正   :done,    m15, 2026-06-27, 1d
     section リリース
         Production Release               :milestone, 2026-12-25, 0d
 ```
@@ -744,6 +753,9 @@ gantt
 | ✅ M10        | 共通ペジネーション（`parsePagination`/`paginate`）+ Policy CRUD（5 エンドポイント）+ 26 ガバナンステスト | **completed**  |
 | ✅ M11        | SQLite 監査ログ（`node:sqlite`・WAL・ハッシュチェーン・改ざん検知）+ CodeRabbit Major×9 解消           | **completed**  |
 | ✅ M12        | Workflow CRUD API（5 エンドポイント）+ CodeRabbit Critical×1/Major×13 解消・`AuditEvent.metadata` 凍結  | **completed**  |
+| ✅ M13        | CodeRabbit Minor×9 対応（rate-limiter off-by-one・bodyHasKey ガード・trim 一貫性・SQLite リソースリーク）| **completed**  |
+| ✅ M14        | セキュリティ強化 R2：HSTS（2年）・CORS opt-in（`CEOP_CORS_ORIGIN`）・JWT 無効化 SQLite 永続化（`RevocationStore`）・SQLite FK 制約（users/devices/applications/organizations） | **completed**  |
+| ✅ M15        | CI pnpm バージョン競合修正（`ERR_PNPM_BAD_PM_VERSION` 解消・ci.yml + release.yml 修正）                | **completed**  |
 
 ---
 
@@ -778,7 +790,7 @@ interface WorkflowStep {
 | ---------- | ------ | ------------------------------------------ |
 | `type`     | string | `WorkflowType` でフィルタ                  |
 | `status`   | string | `WorkflowStatus` でフィルタ                |
-| `limit`    | number | 1ページあたりの件数（デフォルト: 20・最大: 100） |
+| `limit`    | number | 1ページあたりの件数（デフォルト: 20・最大: 200） |
 | `offset`   | number | スキップ件数（デフォルト: 0）              |
 
 ### レスポンス例（一覧）

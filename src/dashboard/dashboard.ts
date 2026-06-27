@@ -126,9 +126,10 @@ export function buildDashboard(input: DashboardInput): DashboardView {
     ? input.auditLog.query((entry) => entry.event.outcome === "denied").length
     : 0;
 
+  const canReadUsers = allow("user");
   const governance: GovernanceSummary = {
-    totalUsers: input.users.length,
-    activeUsers: input.users.filter(isActiveUser).length,
+    totalUsers: canReadUsers ? input.users.length : 0,
+    activeUsers: canReadUsers ? input.users.filter(isActiveUser).length : 0,
     visibleApplications: applications.length,
     unhealthyApplications: canReadApplications ? input.applications.filter(isUnhealthy).length : 0,
     visibleDevices: devices.length,

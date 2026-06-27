@@ -64,6 +64,8 @@ export function createServer(config: ServerConfig, container: AppContainer): Ser
       if (!res.headersSent && !res.writableEnded) {
         res.writeHead(500, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ error: "Internal Server Error" }));
+      } else if (!res.writableEnded) {
+        res.end();
       }
     });
   });

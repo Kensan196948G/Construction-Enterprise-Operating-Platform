@@ -75,6 +75,10 @@ export async function createApp(): Promise<AppContainer> {
   // Keys are created via scripts/provision-api-key.ts after running migrations.
   if (sqliteFile) {
     loadApiKeysFromSqlite(sqliteFile, apiKeyStore);
+  } else if (process.env["NODE_ENV"]?.toLowerCase() === "production") {
+    throw new Error(
+      "CEOP_SQLITE_FILE must be set in production: SQLite is required for persistent API key management",
+    );
   }
 
   // JWT issuer: generate a fresh ephemeral secret per process (suitable for single-node).
@@ -270,7 +274,11 @@ export async function createApp(): Promise<AppContainer> {
   const viewerCred = createApiKey("user-viewer", [...viewerRole.permissions], apiKeyStore);
 
   // Explicit opt-in only — never log secret material by default.
+  // Blocked outside interactive terminals to prevent credentials leaking into CI logs.
   if (process.env["CEOP_LOG_DEMO_CREDS"] === "true") {
+    if (!process.stderr.isTTY) {
+      throw new Error("CEOP_LOG_DEMO_CREDS can only be used from an interactive terminal");
+    }
     console.error(
       "[app] demo API keys (use as: Authorization: Bearer <key>:<secret>)\n" +
         `  admin  key=${adminCred.key}  secret=${adminCred.secret}\n` +

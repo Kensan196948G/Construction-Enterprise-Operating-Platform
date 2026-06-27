@@ -562,13 +562,44 @@
      ポリシー読込
   ========================================================= */
   async function loadPolicies() {
-    // ポリシー一覧は /api/v1/governance/audit 経由では来ないため
-    // dashboard から推測する（実際のポリシー一覧エンドポイント未実装時はスキップ）
+    const tbody = document.getElementById('policyTableBody');
+    const apiKey = document.getElementById('inputApiKey').value.trim();
+    if (!apiKey) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:16px">API キーを入力すると最新ポリシーを表示できます</td></tr>';
+      return;
+    }
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:16px">読込中...</td></tr>';
     try {
-      const res = await fetch('/api/v1/governance/policies');
-      if (!res.ok) return;
-      // ポリシーデータはサーバーサイドレンダリングで初期描画済み
-    } catch (_) {}
+      const res = await fetch('/api/v1/governance/policies?limit=200', {
+        headers: { 'Authorization': 'Bearer ' + apiKey }
+      });
+      if (res.status === 403) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--yellow);padding:16px">policy:read 権限がありません</td></tr>';
+        return;
+      }
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const policies = data.policies ?? [];
+      if (policies.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:16px">登録済みポリシーはありません</td></tr>';
+        return;
+      }
+      tbody.innerHTML = policies.map(p => {
+        const conditions = (p.conditions && p.conditions.length > 0)
+          ? p.conditions.map(c => `${escapeHtml(c.attribute)}=${escapeHtml(String(c.equals))}`).join(', ')
+          : '—';
+        return `<tr>
+          <td>${escapeHtml(p.id)}</td>
+          <td>${escapeHtml(p.name)}</td>
+          <td><span class="badge ${p.effect === 'allow' ? 'badge-green' : 'badge-red'}">${escapeHtml(EFFECT_LABELS[p.effect] ?? p.effect)}</span></td>
+          <td>${escapeHtml((p.actions ?? []).join(', '))}</td>
+          <td>${escapeHtml((p.resources ?? []).join(', '))}</td>
+          <td>${conditions}</td>
+        </tr>`;
+      }).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--red);padding:16px">取得に失敗しました: ${escapeHtml(err.message)}</td></tr>`;
+    }
   }
 
   /* =========================================================
@@ -658,8 +689,15 @@
   async function loadAuditLog() {
     const tbody = document.getElementById('auditTableBody');
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:20px">読込中...</td></tr>';
+    const apiKey = document.getElementById('inputApiKey').value.trim();
+    if (!apiKey) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:20px">API キーを入力すると監査ログが表示されます</td></tr>';
+      return;
+    }
     try {
-      const res = await fetch('/api/v1/governance/audit?limit=20');
+      const res = await fetch('/api/v1/governance/audit?limit=20', {
+        headers: { 'Authorization': 'Bearer ' + apiKey }
+      });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
       const entries = (data.entries || []).slice().reverse();

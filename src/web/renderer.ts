@@ -230,9 +230,9 @@ export async function renderTemplate(
  */
 export async function renderDashboard(data: DashboardView): Promise<string> {
   const context: RenderContext = {
-    VERSION: _platformVersion,
+    VERSION: esc(_platformVersion),
     VIEWER: esc(data.viewer),
-    GENERATED_AT: fmtTime(data.generatedAt),
+    GENERATED_AT: esc(fmtTime(data.generatedAt)),
 
     // Governance summary
     TOTAL_USERS: data.governance.totalUsers,
@@ -311,7 +311,7 @@ export async function renderGovernance(
   policies: readonly GovernancePolicyRow[],
 ): Promise<string> {
   const context: RenderContext = {
-    VERSION: _platformVersion,
+    VERSION: esc(_platformVersion),
     POLICY_ROWS: renderPolicyRows(policies),
   };
 

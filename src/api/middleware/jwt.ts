@@ -94,6 +94,9 @@ export function createJwtIssuer(config: JwtConfig): JwtIssuer {
   if (!Number.isSafeInteger(ttlSeconds) || ttlSeconds <= 0) {
     throw new Error("ttlSeconds must be a positive safe integer");
   }
+  if (!Number.isSafeInteger(Math.floor(Date.now() / 1000) + ttlSeconds)) {
+    throw new Error("ttlSeconds would overflow Unix timestamp range");
+  }
 
   function issue(subject: string, permissions: readonly Permission[]): string {
     const now = Math.floor(Date.now() / 1000);

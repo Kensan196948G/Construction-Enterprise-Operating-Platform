@@ -24,6 +24,17 @@ const _require = createRequire(import.meta.url);
 const _sqlite = _require("node:sqlite") as { DatabaseSync: new (path: string) => DatabaseSync };
 
 // ---------------------------------------------------------------------------
+// SQL identifier safety guard
+// ---------------------------------------------------------------------------
+
+/** Reject any identifier that is not a plain word (letters, digits, underscores). */
+function assertSafeIdentifier(name: string): void {
+  if (!/^[a-z_][a-z0-9_]*$/i.test(name)) {
+    throw new Error(`Unsafe SQL identifier: "${name}"`);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Column / index helpers
 // ---------------------------------------------------------------------------
 
@@ -53,6 +64,8 @@ export class BaseSqliteRepository<T extends { id: string }>
     indexes: readonly IndexDef[] = [],
     extraColNames: readonly string[] = [],
   ) {
+    assertSafeIdentifier(table);
+    for (const colName of extraColNames) assertSafeIdentifier(colName);
     this.db = db;
     this.#table = table;
     this.#extraColNames = extraColNames;
@@ -68,6 +81,8 @@ export class BaseSqliteRepository<T extends { id: string }>
       )
     `);
     for (const idx of indexes) {
+      assertSafeIdentifier(idx.name);
+      for (const col of idx.columns) assertSafeIdentifier(col);
       const unique = idx.unique === true ? "UNIQUE " : "";
       this.db.exec(
         `CREATE ${unique}INDEX IF NOT EXISTS ${idx.name} ON ${this.#table} (${idx.columns.join(", ")})`,

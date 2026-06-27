@@ -46,7 +46,7 @@ tags:
     name: Workflows
     description: Workflow templates and CRUD
 paths:
-  /api/v1/health:
+  /health:
     get:
       operationId: getHealth
       summary: Health check
@@ -1376,7 +1376,8 @@ paths:
                   enum:
                     - healthy
                     - degraded
-                    - unavailable
+                    - down
+                    - unknown
       responses:
         200:
           description: OK
