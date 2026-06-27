@@ -76,14 +76,28 @@ export class BaseFileRepository<T extends { id: string }> implements Repository<
 
   async save(entity: T): Promise<void> {
     const store = await this.#load();
+    const previous = store.get(entity.id);
     store.set(entity.id, entity);
-    await this.#enqueuedFlush(store);
+    try {
+      await this.#enqueuedFlush(store);
+    } catch (e) {
+      // Roll back cache so in-memory state stays consistent with disk.
+      previous === undefined ? store.delete(entity.id) : store.set(entity.id, previous);
+      throw e;
+    }
   }
 
   async delete(id: string): Promise<void> {
     const store = await this.#load();
+    const previous = store.get(id);
+    if (previous === undefined) return;
     store.delete(id);
-    await this.#enqueuedFlush(store);
+    try {
+      await this.#enqueuedFlush(store);
+    } catch (e) {
+      store.set(id, previous);
+      throw e;
+    }
   }
 }
 
