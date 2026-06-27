@@ -44,7 +44,7 @@ export function createDevice(input: CreateDeviceInput): Result<Device> {
     .oneOf(input.kind, DEVICE_KINDS, "kind")
     .oneOf(input.status, DEVICE_STATUSES, "status")
     .require(
-      input.assignedUserId === undefined || input.assignedUserId.length > 0,
+      input.assignedUserId === undefined || input.assignedUserId.trim().length > 0,
       "assignedUserId",
       "assignedUserId must be a non-empty string when present",
     )

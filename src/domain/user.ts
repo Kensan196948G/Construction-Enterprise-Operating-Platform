@@ -61,7 +61,7 @@ export function createUser(input: CreateUserInput): Result<User> {
     displayName: input.displayName,
     email: input.email,
     status: input.status,
-    roleIds: input.roleIds.map(roleId),
+    roleIds: input.roleIds.map(rid => roleId(rid.trim())),
     createdAt: input.createdAt,
   });
 }

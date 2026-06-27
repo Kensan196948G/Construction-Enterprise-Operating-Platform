@@ -159,9 +159,7 @@ examples/
 | -------- | ----------------------- | ----------------------------------------------------------------------------- |
 | `GET`    | `/health`               | ライブネスプローブ。`{ status, timestamp, uptime }`                           |
 | `GET`    | `/api/v1/info`          | ビルド情報。`{ name, version, environment }`                                  |
-| `GET`    | `/`                     | `/dashboard` へ 302 リダイレクト                                              |
-| `GET`    | `/dashboard`            | ダッシュボード HTML（SSR・ゲストビュー）                                      |
-| `GET`    | `/governance`           | ガバナンス管理 HTML（SSR・ポリシー一覧）                                      |
+| `GET`    | `/`                     | `/dashboard` へ 302 リダイレクト（認証不要）                                  |
 | `POST`   | `/api/v1/auth/token`    | API キーを JWT に交換。`{ credential: "keyId:secret" }` → `{ token, expiresIn: 3600, subject }` |
 
 > ⏱ `/api/v1/auth/token` はレート制限あり（**10 req/min per socket IP**）。超過時は `429 Too Many Requests` + `X-RateLimit-*` ヘッダ。
@@ -170,6 +168,8 @@ examples/
 
 | メソッド | パス                              | 必要権限           | 説明                                                      |
 | -------- | --------------------------------- | ------------------ | --------------------------------------------------------- |
+| `GET`    | `/dashboard`                      | 認証のみ           | ダッシュボード HTML（SSR・ロールベース表示）              |
+| `GET`    | `/governance`                     | `policy:read`      | ガバナンス管理 HTML（SSR・ポリシー一覧）                  |
 | `GET`    | `/api/v1/dashboard`               | 認証のみ           | ロールフィルタ済みダッシュボード JSON                     |
 | `GET`    | `/api/v1/organizations`           | `organization:read`| 組織一覧（ページネーション）`{ organizations[], count, total, limit, offset }` |
 | `GET`    | `/api/v1/users`                   | `user:read`        | ユーザー一覧（ページネーション）`{ users[], count, total, limit, offset }` |
@@ -528,7 +528,7 @@ curl -H "Authorization: Bearer <keyId>:<secret>" http://localhost:3000/api/v1/da
 ## 🧪 テスト実行
 
 ```bash
-# 全テスト実行（178 tests）
+# 全テスト実行（213 tests）
 pnpm run test
 
 # typecheck + lint + test 一括

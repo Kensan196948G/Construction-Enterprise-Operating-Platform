@@ -112,9 +112,12 @@ describe("SqliteAuditLog", () => {
       log1.close();
 
       const log2 = new SqliteAuditLog(dbPath);
-      assert.equal(log2.size, 1);
-      assert.equal(log2.entries[0]!.event.actor, "first");
-      log2.close();
+      try {
+        assert.equal(log2.size, 1);
+        assert.equal(log2.entries[0]!.event.actor, "first");
+      } finally {
+        log2.close();
+      }
     } finally {
       for (const suffix of ["", "-wal", "-shm"]) {
         const p = dbPath + suffix;
@@ -139,11 +142,14 @@ describe("SqliteAuditLog", () => {
       log1.close();
 
       const log2 = new SqliteAuditLog(dbPath);
-      const e3 = log2.append(makeEvent({ actor: "session-2-event-3" }));
-      assert.equal(e3.previousHash, lastHash, "chain resumes from persisted tail");
-      assert.equal(e3.sequence, 2);
-      assert.deepEqual(log2.verify(), { valid: true });
-      log2.close();
+      try {
+        const e3 = log2.append(makeEvent({ actor: "session-2-event-3" }));
+        assert.equal(e3.previousHash, lastHash, "chain resumes from persisted tail");
+        assert.equal(e3.sequence, 2);
+        assert.deepEqual(log2.verify(), { valid: true });
+      } finally {
+        log2.close();
+      }
     } finally {
       for (const suffix of ["", "-wal", "-shm"]) {
         const p = dbPath + suffix;
@@ -177,9 +183,12 @@ describe("SqliteAuditLog", () => {
       raw.close();
 
       const log2 = new SqliteAuditLog(dbPath);
-      const report = log2.verify();
-      assert.equal(report.valid, false);
-      log2.close();
+      try {
+        const report = log2.verify();
+        assert.equal(report.valid, false);
+      } finally {
+        log2.close();
+      }
     } finally {
       for (const suffix of ["", "-wal", "-shm"]) {
         const p = dbPath + suffix;

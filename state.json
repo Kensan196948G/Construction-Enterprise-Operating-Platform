@@ -50,7 +50,8 @@
     "M9_crud_api_roles_ci": "completed",
     "M10_pagination_policy_crud": "completed",
     "M11_sqlite_audit_log_coderabbit_fixes": "completed",
-    "M12_workflow_api_coderabbit_allfix": "completed"
+    "M12_workflow_api_coderabbit_allfix": "completed",
+    "M13_coderabbit_minor_fixes": "completed"
   },
   "completed_issues": [
     "M1: TypeScript foundation scaffold (pnpm + strict tsc + node:test + eslint + CI)",
@@ -109,7 +110,8 @@
     "M12: Object.freeze() for AuditEvent.metadata (runtime immutability)",
     "M12: SqliteAuditLog #lastHash dead field removed (stale-cache fix副作用)",
     "M12: /governance route auth gated (false→true), audit:read permission gate on dashboard",
-    "M12: 53/53 tests pass, typecheck/lint clean"
+    "M12: 53/53 tests pass, typecheck/lint clean",
+    "M13: CodeRabbit 9 Minor fixes — rate-limiter off-by-one, bodyHasKey guards, trim consistency (device/user/org), SQLite resource leaks in tests, README endpoint table + test count"
   ],
   "blocked_issues": [],
   "learning": {
@@ -181,6 +183,23 @@
         "/governance route auth gated (false→true), audit:read permission gate on dashboard"
       ],
       "new_tests": 26,
+      "completed_at": "2026-06-27"
+    },
+    "m13_verify": {
+      "all_tests": "213/213 pass",
+      "typecheck": "clean",
+      "lint": "clean",
+      "fixes": [
+        "Fix 1: rate-limiter off-by-one (< MAX_BUCKETS not <=)",
+        "Fix 2: workflows.ts bodyHasKey guards for wrong-type fields",
+        "Fix 3: device.ts assignedUserId trim whitespace check",
+        "Fix 4: user.ts roleIds stored with trim (not just validated)",
+        "Fix 5: organization.ts parentId stored with trim",
+        "Fix 6: sqlite-audit-log.test.ts log2/raw in try/finally",
+        "Fix 7: README public endpoint table (moved /dashboard + /governance to auth-required)",
+        "Fix 8: README test count 178 → 213",
+        "Fix 9: state.json M13 milestone + completed_issues added"
+      ],
       "completed_at": "2026-06-27"
     }
   }

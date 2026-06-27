@@ -64,7 +64,7 @@ export function createOrganization(input: CreateOrganizationInput): Result<Organ
     type: input.type,
     status: input.status,
     createdAt: input.createdAt,
-    ...(input.parentId !== undefined ? { parentId: organizationId(input.parentId) } : {}),
+    ...(input.parentId !== undefined ? { parentId: organizationId(input.parentId.trim()) } : {}),
   };
   return ok(organization);
 }

@@ -46,7 +46,7 @@ export function createRateLimiter(config: RateLimiterConfig): RateLimiter {
   // First pass: remove fully-expired buckets (no active timestamps in current window).
   // Second pass: if still over cap, evict oldest active buckets (FIFO) to enforce hard limit.
   function pruneStale(nowMs: number): void {
-    if (buckets.size <= MAX_BUCKETS) return;
+    if (buckets.size < MAX_BUCKETS) return;
     const windowStart = nowMs - windowMs;
     for (const [key, timestamps] of buckets) {
       const lastSeen = timestamps[timestamps.length - 1];
