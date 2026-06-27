@@ -4,7 +4,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-22.6+-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Zero Runtime Deps](https://img.shields.io/badge/runtime%20deps-zero-brightgreen)](package.json)
 [![CI](https://img.shields.io/github/actions/workflow/status/kensan/construction-eop/ci.yml?label=CI&logo=github)](/.github/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-112%20pass-brightgreen)](src/)
+[![Tests](https://img.shields.io/badge/tests-146%20pass-brightgreen)](src/)
 [![Security](https://img.shields.io/badge/security-hardened-blue)](src/api/middleware/auth.ts)
 [![License](https://img.shields.io/badge/license-private-lightgrey)](package.json)
 
@@ -18,13 +18,13 @@
 | 項目           | 内容                                                                                |
 | -------------- | ----------------------------------------------------------------------------------- |
 | 役割           | 統制・ガバナンス・共通ワークフローの調整基盤                                        |
-| バージョン     | v0.5.0（SQLite 永続化・JWT 認証・セキュリティ強化・M8 本番デプロイ準備完了）         |
+| バージョン     | v0.5.0（SQLite 永続化・JWT 認証・セキュリティ強化・M8 本番デプロイ・M9 CRUD API 完了）|
 | 言語           | TypeScript 5.7（strict / `noUncheckedIndexedAccess` / 例外を投げない設計）          |
 | ランタイム     | Node.js v22.6+（ネイティブ TS 実行・ビルトインテストランナー）                      |
 | HTTP サーバ    | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                            |
 | 依存方針       | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）    |
 | パッケージ     | pnpm 10.26.2                                                                        |
-| テスト         | 112 tests pass（node:test ビルトインランナー）                                      |
+| テスト         | 146 tests pass（node:test ビルトインランナー）                                      |
 | コンテナ       | Docker multi-stage build（non-root・HEALTHCHECK 付き）                              |
 | セキュリティ   | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限  |
 
@@ -135,7 +135,7 @@ src/
 │   │   ├── jwt.ts          … HS256 JWT 発行・検証（createJwtIssuer・1h 有効期限）
 │   │   ├── rate-limiter.ts … スライディングウィンドウ（10 req/min per socket IP）
 │   │   └── request-logger.ts
-│   ├── routes/    … health / auth / governance / dashboard / web
+│   ├── routes/    … health / auth / governance / dashboard / entity-crud / web
 │   └── types.ts   … AppContainer・ApiKeyContext・ApiRequest（remoteAddress）型
 ├── web/           … SSR レンダラー
 │   ├── renderer.ts … buildDashboard → HTML 変換（XSS エスケープ）
@@ -166,7 +166,7 @@ examples/
 
 > ⏱ `/api/v1/auth/token` はレート制限あり（**10 req/min per socket IP**）。超過時は `429 Too Many Requests` + `X-RateLimit-*` ヘッダ。
 
-### 🔐 認証必須エンドポイント（`Bearer keyId:secret`）
+### 🔐 認証必須エンドポイント — ダッシュボード・統制（`Bearer keyId:secret`）
 
 | メソッド | パス                              | 必要権限           | 説明                                                      |
 | -------- | --------------------------------- | ------------------ | --------------------------------------------------------- |
@@ -180,6 +180,68 @@ examples/
 | `POST`   | `/api/v1/governance/evaluate`     | 認証のみ           | アクセス評価。評価結果は監査ログへ自動記録                |
 
 > 📌 `*:*` または `*:read` ワイルドカード権限でも `policy:read` / `audit:read` ゲートを通過します。
+
+### 🗂️ Entity CRUD API（M9）— 5 エンティティ × 4 操作
+
+> 全エンドポイントで Bearer 認証必須。操作種別ごとに `<resource>:read` / `<resource>:write` 権限をチェックします。
+
+#### 🏢 Organizations（組織）
+
+| メソッド | パス                                | 必要権限            | 説明                                               | 成功ステータス |
+| -------- | ----------------------------------- | ------------------- | -------------------------------------------------- | -------------- |
+| `GET`    | `/api/v1/organizations/:id`         | `organization:read` | 組織を 1 件取得。未存在時は `404`                  | `200`          |
+| `POST`   | `/api/v1/organizations`             | `organization:write`| 組織を新規作成。バリデーション失敗時は `400`        | `201`          |
+| `PUT`    | `/api/v1/organizations/:id`         | `organization:write`| 組織を全項目更新。未存在時は `404`                 | `200`          |
+| `DELETE` | `/api/v1/organizations/:id`         | `organization:write`| 組織を削除。未存在時は `404`                       | `204`          |
+
+#### 👤 Users（ユーザー）
+
+| メソッド | パス                      | 必要権限      | 説明                                                                               | 成功ステータス |
+| -------- | ------------------------- | ------------- | ---------------------------------------------------------------------------------- | -------------- |
+| `GET`    | `/api/v1/users/:id`       | `user:read`   | ユーザーを 1 件取得（ソフトデリート後も参照可）                                    | `200`          |
+| `POST`   | `/api/v1/users`           | `user:write`  | ユーザーを新規作成。重複 email は `409 Conflict`                                   | `201`          |
+| `PUT`    | `/api/v1/users/:id`       | `user:write`  | ユーザーを全項目更新                                                               | `200`          |
+| `DELETE` | `/api/v1/users/:id`       | `user:write`  | **ソフトデリート** — `status: "deactivated"` に変更（ハード削除しない・監査証跡保持） | `200`          |
+
+> ⚠️ ユーザーは物理削除しません。監査証跡の参照整合性を保つため、DELETE は status を `deactivated` に遷移させます。
+
+#### 🎭 Roles（ロール）
+
+| メソッド | パス                      | 必要権限      | 説明                                                   | 成功ステータス |
+| -------- | ------------------------- | ------------- | ------------------------------------------------------ | -------------- |
+| `GET`    | `/api/v1/roles`           | `role:read`   | ロール一覧 `{ roles[], count }`                        | `200`          |
+| `GET`    | `/api/v1/roles/:id`       | `role:read`   | ロールを 1 件取得                                      | `200`          |
+| `POST`   | `/api/v1/roles`           | `role:write`  | ロールを新規作成。重複名は `409`、権限空は `400`        | `201`          |
+| `PUT`    | `/api/v1/roles/:id`       | `role:write`  | ロールを全項目更新                                     | `200`          |
+| `DELETE` | `/api/v1/roles/:id`       | `role:write`  | ロールを削除                                           | `204`          |
+
+#### 📱 Devices（デバイス）
+
+| メソッド | パス                        | 必要権限        | 説明                                                   | 成功ステータス |
+| -------- | --------------------------- | --------------- | ------------------------------------------------------ | -------------- |
+| `GET`    | `/api/v1/devices/:id`       | `device:read`   | デバイスを 1 件取得                                    | `200`          |
+| `POST`   | `/api/v1/devices`           | `device:write`  | デバイスを新規作成。不正 kind は `400`                  | `201`          |
+| `PUT`    | `/api/v1/devices/:id`       | `device:write`  | デバイスを更新（`assignedUserId` / `lastSeenAt` 省略可）| `200`          |
+| `DELETE` | `/api/v1/devices/:id`       | `device:write`  | デバイスを削除                                         | `204`          |
+
+#### 🗂️ Applications（アプリケーション）
+
+| メソッド | パス                            | 必要権限            | 説明                                                        | 成功ステータス |
+| -------- | ------------------------------- | ------------------- | ----------------------------------------------------------- | -------------- |
+| `GET`    | `/api/v1/applications/:id`      | `application:read`  | アプリを 1 件取得                                           | `200`          |
+| `POST`   | `/api/v1/applications`          | `application:write` | アプリを新規作成。重複 key は `409`、不正形式 key は `400`  | `201`          |
+| `PUT`    | `/api/v1/applications/:id`      | `application:write` | アプリを全項目更新                                          | `200`          |
+| `DELETE` | `/api/v1/applications/:id`      | `application:write` | アプリを削除                                                | `204`          |
+
+#### 🔒 共通エラー応答
+
+| ステータス | 意味               | 条件                                                      |
+| ---------- | ------------------ | --------------------------------------------------------- |
+| `400`      | Bad Request        | ドメインバリデーション失敗（`result.error` を返却）       |
+| `401`      | Unauthorized       | 認証情報なし / 不正                                       |
+| `403`      | Forbidden          | 認証済みだが当該権限不足                                  |
+| `404`      | Not Found          | 指定 ID のリソースが存在しない                            |
+| `409`      | Conflict           | 重複 email / name / key でユニーク制約違反                |
 
 #### POST /api/v1/governance/evaluate — リクエスト例
 
@@ -424,7 +486,7 @@ curl -H "Authorization: Bearer <keyId>:<secret>" http://localhost:3000/api/v1/da
 ## 🧪 テスト実行
 
 ```bash
-# 全テスト実行（112 tests）
+# 全テスト実行（146 tests）
 pnpm run test
 
 # typecheck + lint + test 一括
@@ -449,7 +511,7 @@ pnpm run build
 | ----------- | ----------------- | ------------------------------------------------------- |
 | typecheck   | ✅ pass           | strict・`noUncheckedIndexedAccess`・0 error             |
 | lint        | ✅ pass           | ESLint flat config + typescript-eslint・0 warning       |
-| test        | ✅ 112/112        | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo |
+| test        | ✅ 146/146        | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud (34) |
 | build       | ✅ pass           | `dist/` に型定義付き出力                                |
 | CI          | ✅ 設定済み       | `.github/workflows/ci.yml`（push / PR トリガー）        |
 | Docker      | ✅ multi-stage    | non-root ユーザー・HEALTHCHECK 付き                     |
@@ -616,6 +678,7 @@ gantt
         M7 SQLite 永続化（node:sqlite）  :done,    m7, 2026-06-27, 1d
         M7.5 セキュリティ強化（C-1/H-1）:done,    m75, 2026-06-27, 1d
         M8 本番デプロイ準備              :done,    m8, 2026-06-27, 1d
+        M9 全エンティティ CRUD API       :done,    m9, 2026-06-27, 1d
     section リリース
         Production Release               :milestone, 2026-12-25, 0d
 ```
@@ -632,6 +695,7 @@ gantt
 | ✅ M7         | SQLite 永続化（`node:sqlite`・WAL・×6 repos）・`CEOP_SQLITE_FILE` 環境変数・15 統合テスト | **completed**  |
 | ✅ M7.5       | セキュリティ強化（C-1 ABAC deny-bypass・H-1 JWT 無効化・13 Major 指摘解消）          | **completed**  |
 | ✅ M8         | 本番デプロイ準備（docker-compose.prod.yml・scripts/migrate.ts・provision-api-key.ts）  | **completed**  |
+| ✅ M9         | 全エンティティ CRUD API（21 エンドポイント・ソフトデリート・409 Conflict 検出・34 テスト）| **completed**  |
 
 ---
 
