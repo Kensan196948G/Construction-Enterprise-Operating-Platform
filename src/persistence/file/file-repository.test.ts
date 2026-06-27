@@ -194,7 +194,7 @@ test("file-repo: Organization findHeadquarters", async () => {
   const now = nowTs();
 
   const hqResult = createOrganization({ id: "org-hq", name: "HQ", type: "headquarters", status: "active", createdAt: now });
-  const siteResult = createOrganization({ id: "org-site", name: "Site", type: "site", status: "active", createdAt: now });
+  const siteResult = createOrganization({ id: "org-site", name: "Site", type: "site", status: "active", createdAt: now, parentId: "org-hq" });
   assert.ok(hqResult.ok && siteResult.ok);
   await repos.organizations.save(hqResult.value);
   await repos.organizations.save(siteResult.value);
