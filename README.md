@@ -4,7 +4,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-22.13+-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Zero Runtime Deps](https://img.shields.io/badge/runtime%20deps-zero-brightgreen)](package.json)
 [![CI](https://img.shields.io/github/actions/workflow/status/kensan/construction-eop/ci.yml?label=CI&logo=github)](/.github/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-178%20pass-brightgreen)](src/)
+[![Tests](https://img.shields.io/badge/tests-213%20pass-brightgreen)](src/)
 [![Security](https://img.shields.io/badge/security-hardened-blue)](src/api/middleware/auth.ts)
 [![License](https://img.shields.io/badge/license-private-lightgrey)](package.json)
 
@@ -18,13 +18,13 @@
 | 項目           | 内容                                                                                |
 | -------------- | ----------------------------------------------------------------------------------- |
 | 役割           | 統制・ガバナンス・共通ワークフローの調整基盤                                        |
-| バージョン     | v0.5.0（SQLite 永続化・JWT 認証・セキュリティ強化・M8 本番デプロイ・M9 CRUD API・M10 Pagination + Policy CRUD 完了）|
+| バージョン     | v0.5.0（SQLite 永続化・JWT 認証・セキュリティ強化・M8 本番デプロイ・M9 CRUD API・M10 Pagination + Policy CRUD・M11 SQLite 監査ログ・M12 Workflow CRUD API 完了）|
 | 言語           | TypeScript 5.7（strict / `noUncheckedIndexedAccess` / 例外を投げない設計）          |
 | ランタイム     | Node.js v22.13+（ネイティブ TS 実行・ビルトインテストランナー）                      |
 | HTTP サーバ    | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                            |
 | 依存方針       | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）    |
 | パッケージ     | pnpm 10.26.2                                                                        |
-| テスト         | 178 tests pass（node:test ビルトインランナー）                                      |
+| テスト         | 213 tests pass（node:test ビルトインランナー）                                      |
 | コンテナ       | Docker multi-stage build（non-root・HEALTHCHECK 付き）                              |
 | セキュリティ   | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限  |
 
@@ -553,7 +553,7 @@ pnpm run build
 | ----------- | ----------------- | ------------------------------------------------------- |
 | typecheck   | ✅ pass           | strict・`noUncheckedIndexedAccess`・0 error             |
 | lint        | ✅ pass           | ESLint flat config + typescript-eslint・0 warning       |
-| test        | ✅ 178/178        | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud (34) + governance-crud (26) |
+| test        | ✅ 213/213        | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud (34) + governance-crud (26) + sqlite-audit-log (9) + workflow-crud (26) |
 | build       | ✅ pass           | `dist/` に型定義付き出力                                |
 | CI          | ✅ 設定済み       | `.github/workflows/ci.yml`（push / PR トリガー）        |
 | Docker      | ✅ multi-stage    | non-root ユーザー・HEALTHCHECK 付き                     |
@@ -722,6 +722,8 @@ gantt
         M8 本番デプロイ準備              :done,    m8, 2026-06-27, 1d
         M9 全エンティティ CRUD API       :done,    m9, 2026-06-27, 1d
         M10 Pagination + Policy CRUD     :done,    m10, 2026-06-27, 1d
+        M11 SQLite 監査ログ              :done,    m11, 2026-06-27, 1d
+        M12 Workflow CRUD API            :done,    m12, 2026-06-27, 1d
     section リリース
         Production Release               :milestone, 2026-12-25, 0d
 ```
@@ -740,6 +742,69 @@ gantt
 | ✅ M8         | 本番デプロイ準備（docker-compose.prod.yml・scripts/migrate.ts・provision-api-key.ts）  | **completed**  |
 | ✅ M9         | 全エンティティ CRUD API（21 エンドポイント・ソフトデリート・409 Conflict 検出・34 テスト）| **completed**  |
 | ✅ M10        | 共通ペジネーション（`parsePagination`/`paginate`）+ Policy CRUD（5 エンドポイント）+ 26 ガバナンステスト | **completed**  |
+| ✅ M11        | SQLite 監査ログ（`node:sqlite`・WAL・ハッシュチェーン・改ざん検知）+ CodeRabbit Major×9 解消           | **completed**  |
+| ✅ M12        | Workflow CRUD API（5 エンドポイント）+ CodeRabbit Critical×1/Major×13 解消・`AuditEvent.metadata` 凍結  | **completed**  |
+
+---
+
+## 📋 Workflow API（M12）
+
+### エンドポイント一覧
+
+| メソッド | パス                           | 権限               | 説明                           |
+| -------- | ------------------------------ | ------------------ | ------------------------------ |
+| `GET`    | `/api/v1/workflows`            | `workflow:read`    | ワークフロー一覧（ページネーション・フィルタ対応） |
+| `GET`    | `/api/v1/workflows/:id`        | `workflow:read`    | ワークフロー詳細取得           |
+| `POST`   | `/api/v1/workflows`            | `workflow:write`   | ワークフロー作成               |
+| `PUT`    | `/api/v1/workflows/:id`        | `workflow:write`   | ワークフロー更新（mutable フィールドのみ） |
+| `DELETE` | `/api/v1/workflows/:id`        | `workflow:write`   | ワークフロー削除               |
+
+### ワークフロードメイン型
+
+```typescript
+type WorkflowType   = "approval" | "onboarding" | "procurement" | "inspection" | "incident";
+type WorkflowStatus = "draft" | "active" | "suspended" | "archived";
+
+interface WorkflowStep {
+  key: string;                // ステップ識別子
+  name: string;               // 表示名
+  requiredPermission: string; // 実行に必要な権限文字列
+}
+```
+
+### クエリパラメータ（一覧取得）
+
+| パラメータ | 型     | 説明                                       |
+| ---------- | ------ | ------------------------------------------ |
+| `type`     | string | `WorkflowType` でフィルタ                  |
+| `status`   | string | `WorkflowStatus` でフィルタ                |
+| `limit`    | number | 1ページあたりの件数（デフォルト: 20・最大: 100） |
+| `offset`   | number | スキップ件数（デフォルト: 0）              |
+
+### レスポンス例（一覧）
+
+```json
+{
+  "items": [
+    {
+      "id": "wf-01J...",
+      "name": "現場入退場申請",
+      "type": "approval",
+      "status": "active",
+      "steps": [
+        { "key": "submit",  "name": "申請",   "requiredPermission": "workflow:read"  },
+        { "key": "approve", "name": "承認",   "requiredPermission": "workflow:write" }
+      ],
+      "createdAt": "2026-06-27T00:00:00.000Z",
+      "updatedAt": "2026-06-27T00:00:00.000Z"
+    }
+  ],
+  "count": 1,
+  "total": 1,
+  "limit": 20,
+  "offset": 0
+}
+```
 
 ---
 

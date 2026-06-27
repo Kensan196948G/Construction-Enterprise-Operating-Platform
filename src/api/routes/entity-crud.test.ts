@@ -140,6 +140,7 @@ test("GET /api/v1/organizations/:id — returns created org", async () => {
   const { body: created } = await post(h.baseUrl, "/api/v1/organizations", h.adminCred, {
     name: "Branch A",
     type: "branch",
+    parentId: "hq-placeholder",
   });
   const id = (created as { id: string }).id;
   const { status, body } = await get(h.baseUrl, `/api/v1/organizations/${id}`, h.adminCred);
@@ -160,6 +161,7 @@ test("GET /api/v1/organizations/:id — 200 for reader (organization:read)", asy
   const { body: created } = await post(h.baseUrl, "/api/v1/organizations", h.adminCred, {
     name: "Readable Org",
     type: "site",
+    parentId: "hq-placeholder",
   });
   const id = (created as { id: string }).id;
   const { status } = await get(h.baseUrl, `/api/v1/organizations/${id}`, h.readerCred);
@@ -172,6 +174,7 @@ test("PUT /api/v1/organizations/:id — updates status", async () => {
   const { body: created } = await post(h.baseUrl, "/api/v1/organizations", h.adminCred, {
     name: "Site X",
     type: "site",
+    parentId: "hq-placeholder",
   });
   const id = (created as { id: string }).id;
   const { status, body } = await put(h.baseUrl, `/api/v1/organizations/${id}`, h.adminCred, {
@@ -187,6 +190,7 @@ test("DELETE /api/v1/organizations/:id — returns 204", async () => {
   const { body: created } = await post(h.baseUrl, "/api/v1/organizations", h.adminCred, {
     name: "To Delete",
     type: "partner",
+    parentId: "hq-placeholder",
   });
   const id = (created as { id: string }).id;
   const { status } = await del(h.baseUrl, `/api/v1/organizations/${id}`, h.adminCred);
@@ -434,6 +438,7 @@ test("POST /api/v1/devices — creates device", async () => {
   const { body: org } = await post(h.baseUrl, "/api/v1/organizations", h.adminCred, {
     name: "Site",
     type: "site",
+    parentId: "hq-placeholder",
   });
   const orgId = (org as { id: string }).id;
   const { status, body } = await post(h.baseUrl, "/api/v1/devices", h.adminCred, {
@@ -461,6 +466,7 @@ test("GET /api/v1/devices/:id — returns device", async () => {
   const { body: org } = await post(h.baseUrl, "/api/v1/organizations", h.adminCred, {
     name: "Site",
     type: "site",
+    parentId: "hq-placeholder",
   });
   const orgId = (org as { id: string }).id;
   const { body: created } = await post(h.baseUrl, "/api/v1/devices", h.adminCred, {
@@ -479,6 +485,7 @@ test("PUT /api/v1/devices/:id — updates status", async () => {
   const { body: org } = await post(h.baseUrl, "/api/v1/organizations", h.adminCred, {
     name: "Site",
     type: "site",
+    parentId: "hq-placeholder",
   });
   const orgId = (org as { id: string }).id;
   const { body: created } = await post(h.baseUrl, "/api/v1/devices", h.adminCred, {
@@ -499,6 +506,7 @@ test("DELETE /api/v1/devices/:id — returns 204", async () => {
   const { body: org } = await post(h.baseUrl, "/api/v1/organizations", h.adminCred, {
     name: "Site",
     type: "site",
+    parentId: "hq-placeholder",
   });
   const orgId = (org as { id: string }).id;
   const { body: created } = await post(h.baseUrl, "/api/v1/devices", h.adminCred, {

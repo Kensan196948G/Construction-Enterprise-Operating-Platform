@@ -86,7 +86,7 @@ test("sqlite-org: findHeadquarters returns only headquarters orgs", async () => 
   const now = nowTs();
 
   const hq = createOrganization({ id: "org-hq", name: "HQ", type: "headquarters", status: "active", createdAt: now });
-  const site = createOrganization({ id: "org-site", name: "Site A", type: "site", status: "active", createdAt: now });
+  const site = createOrganization({ id: "org-site", name: "Site A", type: "site", status: "active", createdAt: now, parentId: "org-hq" });
   assert.ok(hq.ok && site.ok);
 
   await repos.organizations.save(hq.value);
@@ -123,7 +123,7 @@ test("sqlite-org: findByParent filters correctly", async () => {
 test("sqlite-org: delete removes the entity", async () => {
   const repos = memRepos();
   const now = nowTs();
-  const result = createOrganization({ id: "org-del", name: "Del", type: "site", status: "active", createdAt: now });
+  const result = createOrganization({ id: "org-del", name: "Del", type: "site", status: "active", createdAt: now, parentId: "org-del-parent" });
   assert.ok(result.ok);
 
   await repos.organizations.save(result.value);

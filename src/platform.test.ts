@@ -38,7 +38,7 @@ test("a field supervisor's access is governed, audited, and surfaced end-to-end"
       name: "Field Supervisor",
       description: "reads field apps and devices",
       scope: "site",
-      permissions: ["application:read", "device:read"],
+      permissions: ["application:read", "device:read", "audit:read"],
     }),
   );
   const permissions = resolvePermissions([supervisorRole]);

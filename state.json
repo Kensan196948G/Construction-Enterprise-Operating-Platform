@@ -22,7 +22,7 @@
     "success_rate_target": 0.9,
     "ci_success_rate": 0.0,
     "test_pass_rate": 1.0,
-    "test_count": 53,
+    "test_count": 213,
     "security_critical": 0,
     "security_high_resolved": 17,
     "blocker_count": 0
@@ -166,6 +166,21 @@
         "JWT test hardened: HMAC-signed hand-crafted expired token"
       ],
       "new_tests": 9,
+      "completed_at": "2026-06-27"
+    },
+    "m12_verify": {
+      "all_tests": "213/213 pass",
+      "typecheck": "clean",
+      "lint": "clean",
+      "new_features": [
+        "Workflow CRUD API (GET list / GET by id / POST / PUT / DELETE) with workflow:read + workflow:write guards",
+        "Paginated workflow list with ?type= and ?status= filters",
+        "CodeRabbit Critical=1 + Major=13 + Minor=3 全16件解消",
+        "Object.freeze() on AuditEvent.metadata (runtime immutability)",
+        "SqliteAuditLog #lastHash dead field removed (stale-cache fix)",
+        "/governance route auth gated (false→true), audit:read permission gate on dashboard"
+      ],
+      "new_tests": 26,
       "completed_at": "2026-06-27"
     }
   }
