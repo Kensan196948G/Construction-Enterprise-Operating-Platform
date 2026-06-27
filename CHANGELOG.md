@@ -6,6 +6,30 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 ## [Unreleased]
 
+### Added
+
+#### M9 — Full Entity CRUD API (21 endpoints)
+
+- **`src/api/routes/entity-crud.ts`** — complete Create/Read/Update/Delete for all 5 platform entities
+  - `GET /api/v1/organizations/:id`, `POST`, `PUT`, `DELETE` — organization lifecycle
+  - `GET /api/v1/users/:id`, `POST`, `PUT`, `DELETE` — user lifecycle; DELETE is **soft-delete** (status → `deactivated`) to preserve audit trail references
+  - `GET /api/v1/roles`, `GET /api/v1/roles/:id`, `POST`, `PUT`, `DELETE` — role management; list endpoint was previously missing
+  - `GET /api/v1/devices/:id`, `POST`, `PUT`, `DELETE` — device lifecycle; optional fields `assignedUserId`/`lastSeenAt` preserved on PUT when omitted
+  - `GET /api/v1/applications/:id`, `POST`, `PUT`, `DELETE` — application lifecycle
+  - Conflict detection (409) via repository lookup for duplicate email, role name, application key
+  - All mutations validate through domain factory functions (`createOrganization`, `createUser`, etc.) — invariants always enforced
+  - Permission model: `<resource>:read` for GET; `<resource>:write` for POST/PUT/DELETE
+
+- **`src/api/routes/entity-crud.test.ts`** — 34 integration tests (entities + auth guards)
+  - Covers: create (201), conflict (409), validation (400), read (200/404), update (200), delete (204/200), permission denial (403), no-auth (401)
+  - Users DELETE test verifies `status: "deactivated"` returned and record still accessible via GET
+
+- **`src/api/routes/health.ts`** — `/api/v1/info` version updated to `0.5.0`
+
+### Changed
+
+- **Test count**: 112 → 146 (all pass)
+
 ---
 
 ## [0.5.0] - 2026-06-27
