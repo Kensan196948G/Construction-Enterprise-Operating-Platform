@@ -18,6 +18,10 @@ import { SqliteAuditLog } from "./governance/sqlite-audit-log.ts";
 import { createInMemoryRepositories } from "./persistence/in-memory/index.ts";
 import { createFileRepositories } from "./persistence/file/index.ts";
 import { createSqliteRepositories, loadApiKeysFromSqlite } from "./persistence/sqlite/index.ts";
+import {
+  createSqliteRevocationStore,
+  openRevocationDatabase,
+} from "./persistence/sqlite/revocation-store.ts";
 import { createApiKey } from "./api/middleware/auth.ts";
 import { createJwtIssuer, generateJwtSecret } from "./api/middleware/jwt.ts";
 import { createServer } from "./api/server.ts";
@@ -80,7 +84,18 @@ export async function createApp(): Promise<AppContainer> {
     throw new Error("CEOP_JWT_SECRET must be set in production");
   }
   const jwtSecret = configuredJwtSecret ?? generateJwtSecret();
-  const jwtIssuer = createJwtIssuer({ secret: jwtSecret, ttlSeconds: 3600 });
+
+  // In SQLite mode, persist revoked JTIs so they survive process restarts.
+  // The revocation table is stored in the same database file for simplicity.
+  const revocationStore = sqliteFile
+    ? createSqliteRevocationStore(openRevocationDatabase(sqliteFile))
+    : undefined;
+
+  const jwtIssuer = createJwtIssuer({
+    secret: jwtSecret,
+    ttlSeconds: 3600,
+    ...(revocationStore !== undefined ? { revocationStore } : {}),
+  });
 
   const isProduction = process.env["NODE_ENV"]?.toLowerCase() === "production";
   const seedDemo = process.env["CEOP_SEED_DEMO"] === "true";

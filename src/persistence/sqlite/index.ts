@@ -46,7 +46,7 @@ class SqliteUserRepository
     super(
       db,
       "users",
-      ["email TEXT NOT NULL", "org_id TEXT NOT NULL"],
+      ["email TEXT NOT NULL", "org_id TEXT NOT NULL REFERENCES organizations(id)"],
       [
         { name: "idx_users_email", columns: ["email"], unique: true },
         { name: "idx_users_org", columns: ["org_id"] },
@@ -92,7 +92,7 @@ class SqliteOrganizationRepository
     super(
       db,
       "organizations",
-      ["type TEXT NOT NULL", "parent_id TEXT"],
+      ["type TEXT NOT NULL", "parent_id TEXT REFERENCES organizations(id)"],
       [
         { name: "idx_orgs_type", columns: ["type"] },
         { name: "idx_orgs_parent", columns: ["parent_id"] },
@@ -177,7 +177,7 @@ class SqliteDeviceRepository
     super(
       db,
       "devices",
-      ["org_id TEXT NOT NULL"],
+      ["org_id TEXT NOT NULL REFERENCES organizations(id)"],
       [{ name: "idx_devices_org", columns: ["org_id"] }],
       ["org_id"],
     );
@@ -212,7 +212,7 @@ class SqliteApplicationRepository
     super(
       db,
       "applications",
-      ["app_key TEXT NOT NULL", "owner_org_id TEXT NOT NULL"],
+      ["app_key TEXT NOT NULL", "owner_org_id TEXT NOT NULL REFERENCES organizations(id)"],
       [
         { name: "idx_apps_key", columns: ["app_key"], unique: true },
         { name: "idx_apps_owner", columns: ["owner_org_id"] },
@@ -344,9 +344,11 @@ class SqliteWorkflowRepository
  */
 export function createSqliteRepositories(dbPath: string): Repositories {
   const db = openDatabase(dbPath);
+  // organizations must be created first — users/devices/applications reference it via FK.
+  const organizations = new SqliteOrganizationRepository(db);
   return {
     users: new SqliteUserRepository(db),
-    organizations: new SqliteOrganizationRepository(db),
+    organizations,
     roles: new SqliteRoleRepository(db),
     devices: new SqliteDeviceRepository(db),
     applications: new SqliteApplicationRepository(db),

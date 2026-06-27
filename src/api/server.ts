@@ -26,7 +26,10 @@ export interface ServerConfig {
 }
 
 export function createServer(config: ServerConfig, container: AppContainer): Server {
-  const corsOrigin = config.corsOrigin ?? "*";
+  // CORS is opt-in: only emit Access-Control-* headers when an explicit origin is
+  // provided via config or the CEOP_CORS_ORIGIN environment variable.
+  // Defaulting to "*" would allow any origin to read authenticated API responses.
+  const corsOrigin = config.corsOrigin ?? process.env["CEOP_CORS_ORIGIN"];
   const router = new Router({
     apiKeyStore: container.apiKeyStore,
     ...(container.jwtIssuer !== undefined ? { jwtIssuer: container.jwtIssuer } : {}),
@@ -42,10 +45,12 @@ export function createServer(config: ServerConfig, container: AppContainer): Ser
   registerWebRoutes(router, container);
 
   return httpCreateServer((req: IncomingMessage, res: ServerResponse): void => {
-    res.setHeader("Access-Control-Allow-Origin", corsOrigin);
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    res.setHeader("Access-Control-Max-Age", "86400");
+    if (corsOrigin !== undefined) {
+      res.setHeader("Access-Control-Allow-Origin", corsOrigin);
+      res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+      res.setHeader("Access-Control-Max-Age", "86400");
+    }
 
     if (req.method === "OPTIONS") {
       res.writeHead(204);

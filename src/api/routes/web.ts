@@ -42,6 +42,9 @@ function sendHtml(res: ServerResponse, status: number, html: string): void {
     "Referrer-Policy": "same-origin",
     // Prevent authenticated dashboard pages from being cached by browsers or proxies.
     "Cache-Control": "no-store",
+    // Instruct browsers to enforce HTTPS for 2 years including subdomains.
+    // Safe to send even over HTTP (proxied TLS termination) — browsers ignore HSTS on plain HTTP.
+    "Strict-Transport-Security": "max-age=63072000; includeSubDomains",
   });
   res.end(buf);
 }

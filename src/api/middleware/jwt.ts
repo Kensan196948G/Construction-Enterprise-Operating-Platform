@@ -8,6 +8,10 @@
 
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import type { Permission } from "../../domain/role.ts";
+import {
+  createInMemoryRevocationStore,
+  type RevocationStore,
+} from "../../persistence/sqlite/revocation-store.ts";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -63,6 +67,13 @@ export interface JwtConfig {
   readonly secret: string;
   /** Token lifetime in seconds (default: 3600). */
   readonly ttlSeconds?: number;
+  /**
+   * Backing store for revoked JTIs.
+   * Defaults to an in-memory store (revocations lost on process restart).
+   * Pass a SQLite-backed store for production deployments where restart
+   * resilience is required.
+   */
+  readonly revocationStore?: RevocationStore;
 }
 
 export interface JwtIssuer {
@@ -75,7 +86,7 @@ export interface JwtIssuer {
 const HEADER_B64 = b64urlEncodeStr(JSON.stringify({ alg: "HS256", typ: "JWT" }));
 
 export function createJwtIssuer(config: JwtConfig): JwtIssuer {
-  const { secret, ttlSeconds = 3600 } = config;
+  const { secret, ttlSeconds = 3600, revocationStore = createInMemoryRevocationStore() } = config;
 
   if (Buffer.byteLength(secret, "utf8") < 32) {
     throw new Error("JWT signing secret must be at least 32 bytes");
@@ -83,10 +94,6 @@ export function createJwtIssuer(config: JwtConfig): JwtIssuer {
   if (!Number.isSafeInteger(ttlSeconds) || ttlSeconds <= 0) {
     throw new Error("ttlSeconds must be a positive safe integer");
   }
-
-  // jti → Unix second at which the revocation entry can be pruned.
-  // We store jti values for tokens that should be blocked before their natural expiry.
-  const revokedJtis = new Map<string, number>();
 
   function issue(subject: string, permissions: readonly Permission[]): string {
     const now = Math.floor(Date.now() / 1000);
@@ -103,14 +110,10 @@ export function createJwtIssuer(config: JwtConfig): JwtIssuer {
     return `${HEADER_B64}.${payload}.${b64urlEncode(sigBuf)}`;
   }
 
-  // NOTE: Revocation state is in-memory only — revoked tokens become valid
-  // again after a process restart or across multiple nodes. For multi-node
-  // or persistence-required deployments, persist revoked JTIs to a shared
-  // store (e.g. the SQLite api_keys-adjacent table) or rely on short TTLs
-  // (≤ 15 min) combined with token rotation instead of explicit revocation.
   function revoke(jti: string): void {
-    // Store until the token would have expired at most (now + ttlSeconds).
-    revokedJtis.set(jti, Math.floor(Date.now() / 1000) + ttlSeconds);
+    // Store the JTI until the token would have expired at most (now + ttlSeconds).
+    // In SQLite mode, this survives process restarts.
+    revocationStore.revoke(jti, Math.floor(Date.now() / 1000) + ttlSeconds);
   }
 
   function verify(token: string): JwtVerifyResult {
@@ -169,16 +172,14 @@ export function createJwtIssuer(config: JwtConfig): JwtIssuer {
 
     const now = Math.floor(Date.now() / 1000);
 
-    // Prune expired revocation entries to bound memory use.
-    for (const [id, prunableAt] of revokedJtis) {
-      if (prunableAt <= now) revokedJtis.delete(id);
-    }
+    // Prune expired revocation entries to bound store size.
+    revocationStore.prune(now);
 
     if ((record["exp"] as number) <= now) {
       return { ok: false, reason: "expired" };
     }
 
-    if (revokedJtis.has(record["jti"] as string)) {
+    if (revocationStore.isRevoked(record["jti"] as string)) {
       return { ok: false, reason: "invalid" };
     }
 

@@ -123,7 +123,7 @@ test("sqlite-org: findByParent filters correctly", async () => {
 test("sqlite-org: delete removes the entity", async () => {
   const repos = memRepos();
   const now = nowTs();
-  const result = createOrganization({ id: "org-del", name: "Del", type: "site", status: "active", createdAt: now, parentId: "org-del-parent" });
+  const result = createOrganization({ id: "org-del", name: "Del", type: "headquarters", status: "active", createdAt: now });
   assert.ok(result.ok);
 
   await repos.organizations.save(result.value);
@@ -140,6 +140,10 @@ test("sqlite-user: save and findByEmail", async () => {
   const repos = memRepos();
   const now = nowTs();
 
+  const orgHq = createOrganization({ id: "org-hq", name: "HQ", type: "headquarters", status: "active", createdAt: now });
+  assert.ok(orgHq.ok);
+  await repos.organizations.save(orgHq.value);
+
   const result = createUser({ id: "u-1", organizationId: "org-hq", displayName: "Alice", email: "alice@example.com", status: "active", roleIds: [], createdAt: now });
   assert.ok(result.ok);
   await repos.users.save(result.value);
@@ -155,6 +159,12 @@ test("sqlite-user: save and findByEmail", async () => {
 test("sqlite-user: findByOrganization returns correct users", async () => {
   const repos = memRepos();
   const now = nowTs();
+
+  const orgA = createOrganization({ id: "org-a", name: "Org A", type: "headquarters", status: "active", createdAt: now });
+  const orgB = createOrganization({ id: "org-b", name: "Org B", type: "headquarters", status: "active", createdAt: now });
+  assert.ok(orgA.ok && orgB.ok);
+  await repos.organizations.save(orgA.value);
+  await repos.organizations.save(orgB.value);
 
   const u1 = createUser({ id: "u-1", organizationId: "org-a", displayName: "Alice", email: "alice@example.com", status: "active", roleIds: [], createdAt: now });
   const u2 = createUser({ id: "u-2", organizationId: "org-a", displayName: "Bob", email: "bob@example.com", status: "active", roleIds: [], createdAt: now });
@@ -176,6 +186,10 @@ test("sqlite-user: findByOrganization returns correct users", async () => {
 test("sqlite-user: save overwrites existing (upsert)", async () => {
   const repos = memRepos();
   const now = nowTs();
+
+  const orgA = createOrganization({ id: "org-a", name: "Org A", type: "headquarters", status: "active", createdAt: now });
+  assert.ok(orgA.ok);
+  await repos.organizations.save(orgA.value);
 
   const v1 = createUser({ id: "u-upsert", organizationId: "org-a", displayName: "V1", email: "upsert@example.com", status: "active", roleIds: [], createdAt: now });
   assert.ok(v1.ok);
@@ -220,6 +234,13 @@ test("sqlite-role: findByName exact match", async () => {
 
 test("sqlite-device: findByOrganization", async () => {
   const repos = memRepos();
+  const now = nowTs();
+
+  const seedA = createOrganization({ id: "org-a", name: "Org A", type: "headquarters", status: "active", createdAt: now });
+  const seedB = createOrganization({ id: "org-b", name: "Org B", type: "headquarters", status: "active", createdAt: now });
+  assert.ok(seedA.ok && seedB.ok);
+  await repos.organizations.save(seedA.value);
+  await repos.organizations.save(seedB.value);
 
   const d1 = createDevice({ id: "dev-1", organizationId: "org-a", kind: "phone", status: "active" });
   const d2 = createDevice({ id: "dev-2", organizationId: "org-a", kind: "phone", status: "active" });
@@ -244,6 +265,13 @@ test("sqlite-device: findByOrganization", async () => {
 
 test("sqlite-app: findByKey and findByOwner", async () => {
   const repos = memRepos();
+  const now = nowTs();
+
+  const seedA = createOrganization({ id: "org-a", name: "Org A", type: "headquarters", status: "active", createdAt: now });
+  const seedB = createOrganization({ id: "org-b", name: "Org B", type: "headquarters", status: "active", createdAt: now });
+  assert.ok(seedA.ok && seedB.ok);
+  await repos.organizations.save(seedA.value);
+  await repos.organizations.save(seedB.value);
 
   const a1 = createApplication({ id: "app-1", key: "cmdb", name: "CMDB", category: "governance", ownerOrganizationId: "org-a", health: "healthy" });
   const a2 = createApplication({ id: "app-2", key: "itsm", name: "ITSM", category: "workflow", ownerOrganizationId: "org-a", health: "healthy" });
