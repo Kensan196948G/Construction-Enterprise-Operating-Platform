@@ -13,7 +13,6 @@ permissions:
   contents: read
 
 env:
-  PNPM_VERSION: "10"
   NODE_VERSION: "22"
 
 jobs:
@@ -28,8 +27,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
@@ -76,8 +73,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
@@ -112,8 +107,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
