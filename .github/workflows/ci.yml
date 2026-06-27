@@ -48,6 +48,7 @@ jobs:
 
       - name: Test (with coverage)
         run: |
+          set -eo pipefail
           pnpm run test \
             --experimental-test-coverage \
             --test-reporter=tap \

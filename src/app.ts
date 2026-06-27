@@ -276,10 +276,14 @@ export async function start(port = 3000): Promise<void> {
   const container = await createApp();
   const server = createServer({ port }, container);
 
-  server.listen(port, () => {
-    console.error(`[app] Construction Enterprise Operating Platform listening on port ${port}`);
-    console.error(`[app] Health: http://localhost:${port}/health`);
-    console.error(`[app] Info:   http://localhost:${port}/api/v1/info`);
+  await new Promise<void>((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(port, () => {
+      console.error(`[app] Construction Enterprise Operating Platform listening on port ${port}`);
+      console.error(`[app] Health: http://localhost:${port}/health`);
+      console.error(`[app] Info:   http://localhost:${port}/api/v1/info`);
+      resolve();
+    });
   });
 
   // Graceful shutdown on SIGTERM / SIGINT.

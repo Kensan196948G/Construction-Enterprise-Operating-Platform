@@ -44,7 +44,7 @@ export function createApiKey(
   const secret = randomBytes(32).toString("hex");
   const secretHash = computeSecretHash(keyId, secret);
 
-  const record: ApiKeyRecord = { keyId, subject, permissions, secretHash };
+  const record: ApiKeyRecord = { keyId, subject, permissions: [...permissions], secretHash };
   store.set(keyId, record);
 
   return { key: keyId, secret };
@@ -95,6 +95,6 @@ export function validateApiKey(
   return ok({
     keyId: record.keyId,
     subject: record.subject,
-    permissions: record.permissions,
+    permissions: [...record.permissions],
   });
 }

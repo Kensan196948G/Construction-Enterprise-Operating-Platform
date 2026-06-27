@@ -13,7 +13,7 @@ export class InMemoryLegalOpsAdapter implements LegalOpsPort {
   }
 
   listObligations(): Promise<readonly LegalObligation[]> {
-    return Promise.resolve(this.#obligations);
+    return Promise.resolve(this.#obligations.map((o) => ({ ...o })));
   }
 }
 

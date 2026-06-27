@@ -12,10 +12,8 @@ export class InMemoryImsAdapter implements ImsPort {
   }
 
   listControls(standard?: string): Promise<readonly ManagementControl[]> {
-    const result =
-      standard === undefined
-        ? this.#controls
-        : this.#controls.filter((c) => c.standard === standard);
+    const all = this.#controls.map((c) => ({ ...c }));
+    const result = standard === undefined ? all : all.filter((c) => c.standard === standard);
     return Promise.resolve(result);
   }
 }

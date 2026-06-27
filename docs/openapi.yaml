@@ -245,8 +245,8 @@ paths:
                   type: string
                   enum:
                     - active
-                    - inactive
                     - suspended
+                    - archived
       responses:
         201:
           description: Created
@@ -343,8 +343,8 @@ paths:
                   type: string
                   enum:
                     - active
-                    - inactive
                     - suspended
+                    - archived
       responses:
         200:
           description: OK
@@ -406,6 +406,12 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         404:
           description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        409:
+          description: Conflict — dependent users, devices, or applications still reference this organization
           content:
             application/json:
               schema:
@@ -495,8 +501,8 @@ paths:
                 status:
                   type: string
                   enum:
+                    - invited
                     - active
-                    - inactive
                     - suspended
                 roleIds:
                   type: array
@@ -597,8 +603,8 @@ paths:
                 status:
                   type: string
                   enum:
+                    - invited
                     - active
-                    - inactive
                     - suspended
                 roleIds:
                   type: array
@@ -649,8 +655,12 @@ paths:
         - 
           $ref: "#/components/parameters/idPath"
       responses:
-        204:
-          description: Deactivated
+        200:
+          description: Deactivated — returns the updated user with status "deactivated"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
         401:
           description: Unauthorized
           content:
@@ -1010,10 +1020,10 @@ paths:
                 status:
                   type: string
                   enum:
+                    - provisioned
                     - active
-                    - inactive
-                    - maintenance
-                    - decommissioned
+                    - lost
+                    - retired
       responses:
         201:
           description: Created
@@ -1101,10 +1111,10 @@ paths:
                 status:
                   type: string
                   enum:
+                    - provisioned
                     - active
-                    - inactive
-                    - maintenance
-                    - decommissioned
+                    - lost
+                    - retired
       responses:
         200:
           description: OK
@@ -1265,7 +1275,8 @@ paths:
                   enum:
                     - healthy
                     - degraded
-                    - unavailable
+                    - down
+                    - unknown
                 ownerOrganizationId:
                   type: string
       responses:
@@ -2167,8 +2178,8 @@ components:
           type: string
           enum:
             - active
-            - inactive
             - suspended
+            - archived
         parentId:
           type: string
         createdAt:
@@ -2197,8 +2208,8 @@ components:
         status:
           type: string
           enum:
+            - invited
             - active
-            - inactive
             - suspended
             - deactivated
         roleIds:
@@ -2257,10 +2268,10 @@ components:
         status:
           type: string
           enum:
+            - provisioned
             - active
-            - inactive
-            - maintenance
-            - decommissioned
+            - lost
+            - retired
     Application:
       type: object
       required:
@@ -2291,7 +2302,8 @@ components:
           enum:
             - healthy
             - degraded
-            - unavailable
+            - down
+            - unknown
         ownerOrganizationId:
           type: string
     Policy:
@@ -2320,6 +2332,18 @@ components:
           type: array
           items:
             type: string
+        conditions:
+          type: array
+          items:
+            type: object
+            required:
+              - attribute
+              - equals
+            properties:
+              attribute:
+                type: string
+              equals:
+                type: string
     Workflow:
       type: object
       required:
@@ -2396,7 +2420,8 @@ components:
         outcome:
           type: string
           enum:
-            - allowed
+            - success
+            - failure
             - denied
         hash:
           type: string

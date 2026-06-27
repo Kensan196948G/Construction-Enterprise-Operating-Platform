@@ -565,7 +565,7 @@
     // ポリシー一覧は /api/v1/governance/audit 経由では来ないため
     // dashboard から推測する（実際のポリシー一覧エンドポイント未実装時はスキップ）
     try {
-      const res = await fetch('/api/v1/governance/audit?limit=1');
+      const res = await fetch('/api/v1/governance/policies');
       if (!res.ok) return;
       // ポリシーデータはサーバーサイドレンダリングで初期描画済み
     } catch (_) {}

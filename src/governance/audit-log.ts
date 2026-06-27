@@ -79,7 +79,7 @@ export class AuditLog implements IAuditLog {
     const last = this.#entries.at(-1);
     const previousHash = last?.hash ?? GENESIS_HASH;
     const entry: AuditLogEntry = {
-      event,
+      event: Object.freeze({ ...event }),
       sequence: this.#entries.length,
       previousHash,
       hash: hashAuditEntry(previousHash, event),

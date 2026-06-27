@@ -25,7 +25,7 @@ export class InMemoryCmdbAdapter implements CmdbPort {
 
   /** Add or replace a configuration item — useful in tests. */
   addItem(item: ConfigurationItem): void {
-    this.#items.set(item.id, item);
+    this.#items.set(item.id, { ...item, attributes: { ...item.attributes } });
   }
 }
 

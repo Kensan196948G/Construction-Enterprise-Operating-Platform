@@ -55,8 +55,11 @@ export function createRateLimiter(config: RateLimiterConfig): RateLimiter {
       }
       if (buckets.size <= MAX_BUCKETS) return;
     }
-    // Still over cap after expiry pass: force-evict oldest live buckets.
-    for (const key of buckets.keys()) {
+    // Still over cap after expiry pass: force-evict oldest live buckets (LRU order).
+    const candidates = [...buckets.entries()]
+      .map(([key, ts]) => [key, ts[ts.length - 1] ?? 0] as const)
+      .sort((a, b) => a[1] - b[1]);
+    for (const [key] of candidates) {
       buckets.delete(key);
       if (buckets.size <= MAX_BUCKETS) break;
     }

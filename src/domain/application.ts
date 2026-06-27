@@ -37,7 +37,7 @@ export interface CreateApplicationInput {
   readonly ownerOrganizationId: string;
 }
 
-const KEY_PATTERN = /^[a-z][a-z0-9-]*$/;
+const KEY_PATTERN = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
 
 export function createApplication(input: CreateApplicationInput): Result<Application> {
   const issues = new ValidationBuilder()

@@ -12,6 +12,9 @@
 const LIMIT_DEFAULT = 20;
 const LIMIT_MAX = 200;
 
+// Matches non-negative integers without leading zeros (rejects "1.5", "1abc", "01").
+const NON_NEG_INT_RE = /^(0|[1-9]\d*)$/;
+
 export interface Pagination {
   readonly limit: number;
   readonly offset: number;
@@ -22,12 +25,14 @@ export function parsePagination(query: Readonly<Record<string, string>>): Pagina
   const rawLimit = query["limit"];
   const rawOffset = query["offset"];
 
-  const parsedLimit = rawLimit !== undefined ? Number.parseInt(rawLimit, 10) : LIMIT_DEFAULT;
-  const parsedOffset = rawOffset !== undefined ? Number.parseInt(rawOffset, 10) : 0;
+  const parsedLimit =
+    rawLimit !== undefined && NON_NEG_INT_RE.test(rawLimit) ? Number(rawLimit) : undefined;
+  const parsedOffset =
+    rawOffset !== undefined && NON_NEG_INT_RE.test(rawOffset) ? Number(rawOffset) : undefined;
 
   const limit =
-    Number.isNaN(parsedLimit) || parsedLimit < 1 ? LIMIT_DEFAULT : Math.min(parsedLimit, LIMIT_MAX);
-  const offset = Number.isNaN(parsedOffset) || parsedOffset < 0 ? 0 : parsedOffset;
+    parsedLimit === undefined || parsedLimit < 1 ? LIMIT_DEFAULT : Math.min(parsedLimit, LIMIT_MAX);
+  const offset = parsedOffset === undefined ? 0 : parsedOffset;
 
   return { limit, offset };
 }

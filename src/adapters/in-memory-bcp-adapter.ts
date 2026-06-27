@@ -12,7 +12,7 @@ export class InMemoryBcpAdapter implements BcpPort {
   }
 
   listPlans(): Promise<readonly ContinuityPlan[]> {
-    return Promise.resolve(this.#plans);
+    return Promise.resolve(this.#plans.map((p) => ({ ...p })));
   }
 }
 

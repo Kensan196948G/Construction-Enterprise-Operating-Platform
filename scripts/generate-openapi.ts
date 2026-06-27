@@ -208,7 +208,7 @@ const schemas: { [k: string]: YamlValue } = {
       actor: { type: "string" },
       action: { type: "string" },
       resource: { type: "string" },
-      outcome: { type: "string", enum: ["allowed", "denied"] },
+      outcome: { type: "string", enum: ["success", "failure", "denied"] },
       hash: { type: "string", description: "SHA-256 of previous entry hash + this entry (tamper-evident chain)" },
       metadata: { type: "object", additionalProperties: { type: "string" } },
     },

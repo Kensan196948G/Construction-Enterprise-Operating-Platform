@@ -15,7 +15,12 @@ import { start } from "../src/app.ts";
 
 // ── Environment ───────────────────────────────────────────────────────────────
 
-const port = parseInt(process.env["PORT"] ?? "3000", 10);
+const rawPort = Number(process.env["PORT"] ?? "3000");
+if (!Number.isInteger(rawPort) || rawPort < 1 || rawPort > 65535) {
+  console.error(`[start] Invalid PORT: "${process.env["PORT"]}" — must be an integer between 1 and 65535`);
+  process.exit(1);
+}
+const port = rawPort;
 const env = process.env["NODE_ENV"] ?? "production";
 const logLevel = process.env["LOG_LEVEL"] ?? "info";
 const platformName =

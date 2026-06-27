@@ -20,12 +20,13 @@ export class InMemoryItsmAdapter implements ItsmPort {
       id: randomUUID(),
       status: "open",
     };
-    this.#incidents.set(incident.id, incident);
+    this.#incidents.set(incident.id, { ...incident });
     return Promise.resolve(incident);
   }
 
   getIncident(id: string): Promise<Incident | null> {
-    return Promise.resolve(this.#incidents.get(id) ?? null);
+    const inc = this.#incidents.get(id);
+    return Promise.resolve(inc !== undefined ? { ...inc } : null);
   }
 
   /** Expose current incident count — useful in tests. */

@@ -52,6 +52,11 @@ export function createOrganization(input: CreateOrganizationInput): Result<Organ
       "parentId",
       "non-headquarters organizations must specify a parent organization",
     )
+    .require(
+      input.parentId === undefined || input.parentId !== input.id,
+      "parentId",
+      "organization cannot be its own parent",
+    )
     .build();
 
   if (issues.length > 0) {

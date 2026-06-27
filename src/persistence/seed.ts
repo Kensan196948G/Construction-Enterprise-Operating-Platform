@@ -250,10 +250,10 @@ export async function seed(repos: Repositories): Promise<SeedResult> {
     createPolicy({
       id: "policy-write-governance-admin-only",
       name: "Write Governance Admin Only",
-      effect: "deny",
+      effect: "allow",
       actions: ["write", "delete"],
       resources: ["governance"],
-      conditions: [],
+      conditions: [{ attribute: "role", equals: "role-platform-admin" }],
     }),
     "policy-write-governance-admin-only",
   );

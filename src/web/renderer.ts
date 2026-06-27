@@ -67,7 +67,9 @@ function esc(value: string | number | boolean | undefined | null): string {
  */
 function fmtTime(iso: string): string {
   try {
-    return new Date(iso).toLocaleString("ja-JP", {
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return iso;
+    return date.toLocaleString("ja-JP", {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",

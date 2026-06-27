@@ -6,7 +6,7 @@
  * and JWT issuance.
  */
 
-import { test, after } from "node:test";
+import { test } from "node:test";
 import assert from "node:assert/strict";
 import type { AddressInfo } from "node:net";
 
@@ -80,9 +80,9 @@ async function post(
 // Success
 // ---------------------------------------------------------------------------
 
-test("POST /api/v1/auth/token — valid credential returns 200 with JWT", async () => {
+test("POST /api/v1/auth/token — valid credential returns 200 with JWT", async (t) => {
   const h = await buildAuthHarness();
-  after(() => h.close());
+  t.after(() => h.close());
 
   const { status, body } = await post(h.baseUrl, "/api/v1/auth/token", {
     credential: h.credential,
@@ -96,9 +96,9 @@ test("POST /api/v1/auth/token — valid credential returns 200 with JWT", async 
   assert.equal(b.subject, h.subject);
 });
 
-test("POST /api/v1/auth/token — returned JWT is verifiable", async () => {
+test("POST /api/v1/auth/token — returned JWT is verifiable", async (t) => {
   const h = await buildAuthHarness();
-  after(() => h.close());
+  t.after(() => h.close());
 
   const { body } = await post(h.baseUrl, "/api/v1/auth/token", {
     credential: h.credential,
@@ -110,9 +110,9 @@ test("POST /api/v1/auth/token — returned JWT is verifiable", async () => {
   assert.equal(result.payload.sub, h.subject);
 });
 
-test("POST /api/v1/auth/token — response includes X-RateLimit headers", async () => {
+test("POST /api/v1/auth/token — response includes X-RateLimit headers", async (t) => {
   const h = await buildAuthHarness();
-  after(() => h.close());
+  t.after(() => h.close());
 
   const { headers } = await post(h.baseUrl, "/api/v1/auth/token", {
     credential: h.credential,
@@ -127,9 +127,9 @@ test("POST /api/v1/auth/token — response includes X-RateLimit headers", async 
 // Auth failure
 // ---------------------------------------------------------------------------
 
-test("POST /api/v1/auth/token — invalid credential returns 401", async () => {
+test("POST /api/v1/auth/token — invalid credential returns 401", async (t) => {
   const h = await buildAuthHarness();
-  after(() => h.close());
+  t.after(() => h.close());
 
   const { status, body } = await post(h.baseUrl, "/api/v1/auth/token", {
     credential: "bad-key:bad-secret",
@@ -139,9 +139,9 @@ test("POST /api/v1/auth/token — invalid credential returns 401", async () => {
   assert.equal((body as { error: string }).error, "Unauthorized");
 });
 
-test("POST /api/v1/auth/token — malformed credential (no colon) returns 401", async () => {
+test("POST /api/v1/auth/token — malformed credential (no colon) returns 401", async (t) => {
   const h = await buildAuthHarness();
-  after(() => h.close());
+  t.after(() => h.close());
 
   const { status } = await post(h.baseUrl, "/api/v1/auth/token", {
     credential: "notanapikey",
@@ -154,18 +154,18 @@ test("POST /api/v1/auth/token — malformed credential (no colon) returns 401", 
 // Bad request
 // ---------------------------------------------------------------------------
 
-test("POST /api/v1/auth/token — missing credential field returns 400", async () => {
+test("POST /api/v1/auth/token — missing credential field returns 400", async (t) => {
   const h = await buildAuthHarness();
-  after(() => h.close());
+  t.after(() => h.close());
 
   const { status } = await post(h.baseUrl, "/api/v1/auth/token", {});
 
   assert.equal(status, 400);
 });
 
-test("POST /api/v1/auth/token — numeric credential field returns 400", async () => {
+test("POST /api/v1/auth/token — numeric credential field returns 400", async (t) => {
   const h = await buildAuthHarness();
-  after(() => h.close());
+  t.after(() => h.close());
 
   const { status } = await post(h.baseUrl, "/api/v1/auth/token", { credential: 42 });
 
@@ -176,9 +176,9 @@ test("POST /api/v1/auth/token — numeric credential field returns 400", async (
 // JWT returned from /auth/token can authorize a protected route
 // ---------------------------------------------------------------------------
 
-test("POST /api/v1/auth/token — JWT can be used as Bearer on protected route", async () => {
+test("POST /api/v1/auth/token — JWT can be used as Bearer on protected route", async (t) => {
   const h = await buildAuthHarness();
-  after(() => h.close());
+  t.after(() => h.close());
 
   const { body: tokenBody } = await post(h.baseUrl, "/api/v1/auth/token", {
     credential: h.credential,
@@ -188,6 +188,5 @@ test("POST /api/v1/auth/token — JWT can be used as Bearer on protected route",
   const appsRes = await fetch(`${h.baseUrl}/api/v1/applications`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  // 200 or 403 (permissions), not 401 — the JWT was accepted as valid auth.
-  assert.ok(appsRes.status !== 401, `expected authenticated response, got ${appsRes.status}`);
+  assert.equal(appsRes.status, 200, `expected 200 from JWT-authenticated request, got ${appsRes.status}`);
 });

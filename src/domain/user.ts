@@ -41,6 +41,7 @@ export function createUser(input: CreateUserInput): Result<User> {
     .nonEmpty(input.id, "id")
     .nonEmpty(input.organizationId, "organizationId")
     .nonEmpty(input.displayName, "displayName")
+    .nonEmpty(input.createdAt, "createdAt")
     .oneOf(input.status, USER_STATUSES, "status")
     .require(isEmailLike(input.email), "email", "email must be a valid address")
     .build();

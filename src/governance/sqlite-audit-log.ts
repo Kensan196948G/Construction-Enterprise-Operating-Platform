@@ -80,41 +80,45 @@ export class SqliteAuditLog implements IAuditLog {
 
   /** Seal an event into the log and persist it atomically. */
   append(event: AuditEvent): AuditLogEntry {
-    // Re-read tail state from DB on every append to avoid stale cache when
-    // multiple SqliteAuditLog instances share the same WAL file.
-    const countRow = this.#db
-      .prepare("SELECT COUNT(*) AS n FROM audit_log")
-      .get() as { n: number };
-    const lastRow = this.#db
-      .prepare("SELECT hash FROM audit_log ORDER BY sequence DESC LIMIT 1")
-      .get() as { hash: string } | undefined;
-    const previousHash = lastRow?.hash ?? GENESIS_HASH;
-    const sequence = countRow.n;
+    // BEGIN IMMEDIATE acquires the write lock before reading tail state so that
+    // COUNT + hash-lookup + INSERT form a single atomic unit. Without this,
+    // concurrent writers on the same WAL file could interleave and break the chain.
+    let entry!: AuditLogEntry;
+    this.#db.exec("BEGIN IMMEDIATE");
+    try {
+      const countRow = this.#db
+        .prepare("SELECT COUNT(*) AS n FROM audit_log")
+        .get() as { n: number };
+      const lastRow = this.#db
+        .prepare("SELECT hash FROM audit_log ORDER BY sequence DESC LIMIT 1")
+        .get() as { hash: string } | undefined;
+      const previousHash = lastRow?.hash ?? GENESIS_HASH;
+      const sequence = countRow.n;
 
-    const hash = hashAuditEntry(previousHash, event);
-    const entry: AuditLogEntry = {
-      event,
-      sequence,
-      previousHash,
-      hash,
-    };
-    const stmt: StatementSync = this.#db.prepare(`
-      INSERT INTO audit_log
-        (sequence, event_id, at, actor, action, resource, outcome, prev_hash, hash, data)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    stmt.run(
-      entry.sequence,
-      event.id,
-      event.at as string,
-      event.actor,
-      event.action,
-      event.resource,
-      event.outcome,
-      previousHash,
-      hash,
-      JSON.stringify(entry),
-    );
+      const hash = hashAuditEntry(previousHash, event);
+      entry = { event, sequence, previousHash, hash };
+      const stmt: StatementSync = this.#db.prepare(`
+        INSERT INTO audit_log
+          (sequence, event_id, at, actor, action, resource, outcome, prev_hash, hash, data)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      stmt.run(
+        entry.sequence,
+        event.id,
+        event.at as string,
+        event.actor,
+        event.action,
+        event.resource,
+        event.outcome,
+        previousHash,
+        hash,
+        JSON.stringify(entry),
+      );
+      this.#db.exec("COMMIT");
+    } catch (e) {
+      try { this.#db.exec("ROLLBACK"); } catch { /* already rolled back or never started */ }
+      throw e;
+    }
     return entry;
   }
 
@@ -163,8 +167,9 @@ export class SqliteAuditLog implements IAuditLog {
       }
       const expected = hashAuditEntry(previousHash, entry.event);
       // Cross-check hash chain AND all indexed columns against the JSON blob
-      // so that direct column-level tampering (UPDATE on actor, at, etc.) is caught.
+      // so that direct column-level tampering (UPDATE on actor, at, sequence, etc.) is caught.
       if (
+        row.sequence !== entry.sequence ||
         entry.previousHash !== previousHash ||
         entry.hash !== expected ||
         row.prev_hash !== previousHash ||
