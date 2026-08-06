@@ -5,6 +5,7 @@ import { type User } from "../domain/user.ts";
 import { type Permission } from "../domain/role.ts";
 import { type Policy } from "../domain/policy.ts";
 import { type WorkflowId } from "../domain/workflow.ts";
+import { AUDIT_ORG_KEY } from "../domain/audit-event.ts";
 import { isUnhealthy } from "../domain/application.ts";
 import { isActiveUser } from "../domain/user.ts";
 import { type IAuditLog } from "../governance/audit-log.ts";
@@ -132,9 +133,17 @@ export function buildDashboard(input: DashboardInput): DashboardView {
   const pendingApprovals = canReadApprovals ? [...input.pendingApprovals] : [];
 
   const canReadAudit = allow("audit");
-  const deniedAccessEvents = canReadAudit
-    ? input.auditLog.query((entry) => entry.event.outcome === "denied").length
-    : 0;
+  // The audit log is one platform-wide chain, so an org-scoped viewer must be
+  // held to its own entries here too — otherwise these counters disclose the
+  // volume of other tenants' activity. Entries predating tenant attribution
+  // carry no organization key and are withheld (fail-closed).
+  const inTenant = (entry: {
+    readonly event: { readonly metadata: Readonly<Record<string, string>> };
+  }) => !orgScoped || entry.event.metadata[AUDIT_ORG_KEY] === input.viewer.organizationId;
+  const visibleAuditEntries = canReadAudit ? input.auditLog.query(inTenant) : [];
+  const deniedAccessEvents = visibleAuditEntries.filter(
+    (entry) => entry.event.outcome === "denied",
+  ).length;
 
   const visibleUsers = canReadUsers
     ? orgScoped
@@ -148,7 +157,7 @@ export function buildDashboard(input: DashboardInput): DashboardView {
     unhealthyApplications: visibleApplications.filter(isUnhealthy).length,
     visibleDevices: devices.length,
     openApprovals: pendingApprovals.length,
-    auditEvents: canReadAudit ? input.auditLog.size : 0,
+    auditEvents: visibleAuditEntries.length,
     deniedAccessEvents,
   };
 

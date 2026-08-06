@@ -9,7 +9,7 @@
 
 import { randomUUID } from "node:crypto";
 import type { IsoTimestamp } from "../domain/common.ts";
-import { createAuditEvent } from "../domain/audit-event.ts";
+import { AUDIT_ORG_KEY, createAuditEvent } from "../domain/audit-event.ts";
 import type { IAuditLog } from "../governance/audit-log.ts";
 import type { ApiKeyContext } from "./types.ts";
 
@@ -30,7 +30,13 @@ export function recordAudit(
     action,
     resource,
     outcome,
-    metadata,
+    // Tenant attribution is taken from the resolved context, never from the
+    // caller, for the same reason `actor` is: a route must not be able to
+    // mislabel which organization an event belongs to.
+    metadata:
+      ctx?.organizationId !== undefined
+        ? { ...metadata, [AUDIT_ORG_KEY]: ctx.organizationId }
+        : metadata,
   });
   if (!result.ok) {
     // Audit failure must never be silent — log for investigation.

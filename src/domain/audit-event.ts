@@ -10,6 +10,17 @@ import {
 export type AuditEventId = Brand<string, "AuditEventId">;
 export const auditEventId = (value: string): AuditEventId => value as AuditEventId;
 
+/**
+ * Reserved `metadata` key carrying the tenant an event belongs to.
+ *
+ * Tenant attribution lives in `metadata` rather than as a top-level field on
+ * purpose: the audit hash chain canonicalizes an explicit field list plus the
+ * whole metadata map, so a metadata key is covered by tamper evidence without
+ * redefining the hash — which would invalidate every previously sealed entry.
+ * Only the audit recorder may set it, from the resolved caller context.
+ */
+export const AUDIT_ORG_KEY = "organizationId";
+
 /** The terminal disposition of an audited action. */
 export const AUDIT_OUTCOMES = ["success", "failure", "denied"] as const;
 export type AuditOutcome = (typeof AUDIT_OUTCOMES)[number];

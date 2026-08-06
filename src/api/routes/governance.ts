@@ -13,7 +13,7 @@
 import { randomUUID } from "node:crypto";
 import type { ServerResponse } from "node:http";
 import type { IsoTimestamp } from "../../domain/common.ts";
-import { createAuditEvent } from "../../domain/audit-event.ts";
+import { AUDIT_ORG_KEY, createAuditEvent } from "../../domain/audit-event.ts";
 import { createPolicy, policyId } from "../../domain/policy.ts";
 import type { PolicyEffect, PolicyCondition } from "../../domain/policy.ts";
 import type { Permission } from "../../domain/role.ts";
@@ -58,6 +58,26 @@ export function canAccessOrganization(
   if (ctx === null) return false;
   if (ctx.organizationId === undefined) return true;
   return ctx.organizationId === orgId;
+}
+
+/**
+ * Restrict audit entries to the caller's tenant.
+ *
+ * The audit log is a single platform-wide chain (its hash chain has to be), so
+ * `audit:read` on an organization-scoped credential would otherwise expose
+ * every other tenant's actors, resources and metadata. Entries recorded before
+ * tenant attribution existed carry no organization key and are therefore
+ * withheld from scoped credentials — the fail-closed direction.
+ *
+ * A globally-scoped credential still sees the whole chain, which is what makes
+ * platform-level integrity verification possible.
+ */
+export function scopeAuditEntries<
+  T extends { readonly event: { readonly metadata: Readonly<Record<string, string>> } },
+>(entries: readonly T[], ctx: { readonly organizationId?: string } | null): readonly T[] {
+  const orgId = ctx?.organizationId;
+  if (orgId === undefined) return entries;
+  return entries.filter((e) => e.event.metadata[AUDIT_ORG_KEY] === orgId);
 }
 
 /** True when a single target permission is covered by the grantor's permissions. */
@@ -294,7 +314,7 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
     const parsedOffset = rawOffset !== undefined ? Number.parseInt(rawOffset, 10) : 0;
     const offset = Number.isNaN(parsedOffset) || parsedOffset < 0 ? 0 : parsedOffset;
 
-    const allEntries = container.auditLog.entries;
+    const allEntries = scopeAuditEntries(container.auditLog.entries, ctx);
     const end = Math.max(0, allEntries.length - offset);
     const entries = allEntries.slice(Math.max(0, end - limit), end);
 
