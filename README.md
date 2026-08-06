@@ -3,10 +3,10 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-22.13+-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Zero Runtime Deps](https://img.shields.io/badge/runtime%20deps-zero-brightgreen)](package.json)
-[![CI](https://img.shields.io/github/actions/workflow/status/kensan/construction-eop/ci.yml?label=CI&logo=github)](/.github/workflows/ci.yml)
+[![CI](https://img.shields.io/github/actions/workflow/status/Kensan196948G/Construction-Enterprise-Operating-Platform/ci.yml?label=CI&logo=github)](/.github/workflows/ci.yml)
 [![Tests](https://img.shields.io/badge/tests-213%20pass-brightgreen)](src/)
 [![Security](https://img.shields.io/badge/security-hardened-blue)](src/api/middleware/auth.ts)
-[![License](https://img.shields.io/badge/license-private-lightgrey)](package.json)
+[![License](https://img.shields.io/badge/license-proprietary-lightgrey)](LICENSE.md)
 
 建設会社の **業務ポータル・現場/端末 OS・統制/AI ガバナンス** を統合する上位基盤（coordination layer）です。
 個別の業務アプリを吸収せず、**共通ドメイン・統制ゲート・監査証跡・HTTP API** を一元的に提供します。
@@ -18,7 +18,7 @@
 | 項目           | 内容                                                                                |
 | -------------- | ----------------------------------------------------------------------------------- |
 | 役割           | 統制・ガバナンス・共通ワークフローの調整基盤                                        |
-| バージョン     | v0.5.0 + M14/M15（SQLite 永続化・JWT 認証・セキュリティ強化 R2・M8 本番デプロイ・M9 CRUD API・M10 Pagination + Policy CRUD・M11 SQLite 監査ログ・M12 Workflow CRUD API・M13/M14/M15 CodeRabbit 全対応 完了）|
+| バージョン     | v0.6.0（本番対応リリース: SQLite 永続化・JWT 認証・監査証跡・CRUD/Workflow/Policy API・本番デプロイ準備・運用文書）|
 | 言語           | TypeScript 5.7（strict / `noUncheckedIndexedAccess` / 例外を投げない設計）          |
 | ランタイム     | Node.js v22.13+（ネイティブ TS 実行・ビルトインテストランナー）                      |
 | HTTP サーバ    | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                            |

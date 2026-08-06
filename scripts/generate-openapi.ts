@@ -9,6 +9,7 @@
 
 import { writeFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
+import { PLATFORM_VERSION } from "../src/version.ts";
 
 // ---------------------------------------------------------------------------
 // YAML helpers (minimal — no library)
@@ -1163,11 +1164,11 @@ const spec: { [k: string]: YamlValue } = {
   openapi: "3.1.0",
   info: {
     title: "Construction Enterprise Operating Platform API",
-    version: "0.5.0",
+    version: PLATFORM_VERSION,
     description:
       "Unified enterprise operating platform for construction company governance, business portal, field OS, and AI governance.",
     contact: { name: "Platform Team" },
-    license: { name: "MIT" },
+    license: { name: "Proprietary" },
   },
   servers: [
     { url: "http://localhost:3000", description: "Local development" },

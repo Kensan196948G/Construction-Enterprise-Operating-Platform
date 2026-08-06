@@ -13,6 +13,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { PLATFORM_VERSION } from "../version.ts";
 import type {
   DashboardView,
   AppHealthItem,
@@ -33,7 +34,7 @@ export const TEMPLATES = {
 } as const;
 
 /** The platform version string. Callers may override at bootstrap. */
-let _platformVersion = "0.1.0";
+let _platformVersion = PLATFORM_VERSION;
 
 export function setPlatformVersion(version: string): void {
   _platformVersion = version;

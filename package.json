@@ -1,7 +1,8 @@
 {
   "name": "construction-eop",
-  "version": "0.1.0",
+  "version": "0.6.0",
   "private": true,
+  "license": "UNLICENSED",
   "description": "Construction Enterprise Operating Platform - governance, portal, field OS, and AI governance coordination layer",
   "type": "module",
   "engines": {
@@ -26,6 +27,13 @@
     "verify": "pnpm run typecheck && pnpm run lint && pnpm run test",
     "demo": "node --experimental-strip-types examples/quickstart.ts",
     "openapi:gen": "node --experimental-strip-types scripts/generate-openapi.ts"
+  },
+  "pnpm": {
+    "overrides": {
+      "brace-expansion@<1.1.18": "1.1.18",
+      "brace-expansion@>=4.0.0 <5.0.9": "5.0.9",
+      "js-yaml@<4.3.0": "4.3.0"
+    }
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",

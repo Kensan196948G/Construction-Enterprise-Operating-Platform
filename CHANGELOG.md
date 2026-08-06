@@ -4,9 +4,19 @@ All notable changes to the Construction Enterprise Operating Platform are docume
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.6.0] - 2026-08-06
+
+Production readiness release: version unification, CRUD/auth audit coverage,
+JWT revocation endpoint, schema consolidation, dependency audit fix, and
+operations documentation for the first main-branch release.
 
 ### Added
+
+#### Production Readiness (v0.6.0)
+
+- **Version single-source-of-truth** — `src/version.ts` + `PLATFORM_VERSION` guard test; `package.json`, `/api/v1/info`, OpenAPI, SSR UI, and Docker labels unified to `0.6.0`.
+- **OpenAPI license corrected** — previously declared `MIT`; now matches the proprietary/UNLICENSED status of the private repository (`LICENSE.md` added).
+- **README CI badge fixed** — pointed at the correct GitHub repository.
 
 #### M9 — Full Entity CRUD API (21 endpoints)
 
@@ -29,6 +39,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 ### Changed
 
 - **Test count**: 112 → 146 (all pass)
+
+### Security
+
+- No code-level security change in this section yet; see subsequent commits for v0.6.0 hardening (audit coverage, migration consolidation, JWT validation, API security headers).
 
 ---
 

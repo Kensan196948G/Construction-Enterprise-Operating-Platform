@@ -5,8 +5,7 @@
  * that enforces access decisions and records tamper-evident audit evidence.
  * Business applications integrate as adapters; they are never absorbed here.
  */
-export const PLATFORM_NAME = "Construction Enterprise Operating Platform";
-export const PLATFORM_VERSION = "0.1.0";
+export { PLATFORM_NAME, PLATFORM_VERSION } from "./version.ts";
 
 export * as domain from "./domain/index.ts";
 export * as governance from "./governance/index.ts";

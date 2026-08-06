@@ -8,6 +8,7 @@
 
 import type { Router } from "../router.ts";
 import { writeJson } from "../router.ts";
+import { PLATFORM_VERSION } from "../../version.ts";
 
 export function registerHealthRoutes(router: Router): void {
   router.get(
@@ -27,7 +28,7 @@ export function registerHealthRoutes(router: Router): void {
     async (_req, _ctx, res) => {
       writeJson(res, 200, {
         name: "construction-eop",
-        version: "0.5.0",
+        version: PLATFORM_VERSION,
       });
     },
     false,
