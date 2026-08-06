@@ -4,9 +4,22 @@
 
 - アプリ: Node.js 22+ / TypeScript（ランタイム依存ゼロ）
 - 永続化: SQLite（WAL、`/data/ceop.db`）
-- 配布: Docker イメージ（GHCR `ghcr.io/<owner>/construction-eop`）
+- 配布: Docker イメージ（GHCR `ghcr.io/kensan196948g/construction-eop:v0.6.1` / ローカル `ceop-platform:v0.6.1`）
 - ヘルス: `GET /health`（liveness）、`GET /health/ready`（readiness）
 - ログ: stdout/stderr（json-file ローテーション 10 MiB × 3）
+
+### 本番環境（2026-08-06 現在）
+
+| 項目 | 値 |
+|---|---|
+| URL | https://ceop.mirai-dx-platform.com |
+| ホスト | 192.168.0.185（LAN） |
+| コンテナ | `ceop-platform`（`--restart unless-stopped`、127.0.0.1:3120→3000） |
+| トンネル | Cloudflare Tunnel `ceop`（systemd: `cloudflared-ceop.service`） |
+| DB | `/home/kensan/.ceop/data/ceop.db` |
+| 認証情報 | `/home/kensan/.ceop/*-credential.txt`（chmod 600） |
+| バックアップ | cron 02:15 JST → `/home/kensan/.ceop/backups/` |
+| ヘルス確認 | cron 02:30 JST → `/home/kensan/.ceop/health.log` |
 
 ## 2. デプロイ手順（初回）
 
@@ -15,17 +28,17 @@
 openssl rand -hex 32   # CEOP_JWT_SECRET
 
 # 2. イメージ取得
-docker pull ghcr.io/<owner>/construction-eop:v0.6.0
+docker pull ghcr.io/kensan196948g/construction-eop:v0.6.1
 
 # 3. .env 作成（.env.example を複製し CEOP_JWT_SECRET 等を設定）
 # 4. マイグレーション
 docker run --rm -v ceop-data:/data -e CEOP_SQLITE_FILE=/data/ceop.db \
-  -e CEOP_JWT_SECRET=<secret> ghcr.io/<owner>/construction-eop:v0.6.0 \
+  -e CEOP_JWT_SECRET=<secret> ghcr.io/kensan196948g/construction-eop:v0.6.1 \
   node --experimental-strip-types scripts/migrate.ts
 
 # 5. API キー発行（出力は Secrets 管理へ）
 docker run --rm -v ceop-data:/data -e CEOP_SQLITE_FILE=/data/ceop.db \
-  ghcr.io/<owner>/construction-eop:v0.6.0 \
+  ghcr.io/kensan196948g/construction-eop:v0.6.1 \
   node --experimental-strip-types scripts/provision-api-key.ts \
   --subject admin --permissions "*:*"
 

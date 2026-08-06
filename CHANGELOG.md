@@ -23,6 +23,14 @@ WebUI design refresh and hardening release.
   'self'; script-src 'self'` (closes SEC-009 backlog item).
 - Static assets served with `X-Content-Type-Options: nosniff` and short cache.
 
+### Deploy
+
+- Deployed to production at **https://ceop.mirai-dx-platform.com** (Docker on
+  192.168.0.185 + Cloudflare Tunnel `ceop`, systemd `cloudflared-ceop.service`).
+- SQLite migrations 001–005 applied; admin/viewer API keys provisioned and
+  stored outside the repository (root-only files under `/home/kensan/.ceop/`).
+- Daily backup (02:15 JST) and health/ready check (02:30 JST) scheduled via cron.
+
 ## [0.6.0] - 2026-08-06
 
 Production readiness release: version unification, CRUD/auth audit coverage,

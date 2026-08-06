@@ -9,13 +9,14 @@
 | 項目 | 状態 |
 |---|---|
 | 実装本体 | `feat/platform-foundation`（M1〜M16）→ 本作業ブランチ `feat/production-hardening` で v0.6.0 化 |
-| main | v0.6.0 統合済み（PR #2 + #3）・タグ v0.6.0・GHCR イメージ・GitHub Release 作成済み |
+| main | v0.6.1 統合済み（PR #2〜#5）・タグ v0.6.1・GHCR イメージ・GitHub Release 作成済み |
 | テスト | 226/226 pass（ローカル + GitHub Actions 検証済み） |
 | typecheck / lint / build | 全パス |
 | 依存監査 | `pnpm audit --audit-level=high` → 0 vulnerabilities（override で解消） |
 | CI | グリーン（main: typecheck/lint/test/build/security/Docker 全成功） |
 | セキュリティ | 単一パスレビュー実施（`reports/security/report.md`）。P0/P1 の修正済み項目は本リリースに含む |
 | ライセンス | なし → `LICENSE.md`（Proprietary / UNLICENSED）を追加、OpenAPI の MIT 表記を修正 |
+| 本番 | https://ceop.mirai-dx-platform.com 稼働中（Docker + Cloudflare Tunnel、v0.6.1） |
 
 ## 2. 強み
 
@@ -54,7 +55,7 @@
 - コード品質: typecheck / lint / build / 221 tests / audit 0 / OpenAPI 生成一致
 - セキュリティ: 認証・認可・監査・レート制限・ヘッダ・FK・依存監査を確認
 - 運用: バックアップ・復元手順・監視・Runbook・運用台帳を整備
-- 残ブロッカー: 本番デプロイ先の確定のみ（人間/権限が必要）。判定: **GO（デプロイ先確定後に実施）**
+- 判定: **GO（v0.6.1 を本番デプロイ済み）**。残作業は初期安定化監視と四半期運用試験
 
 ## 5. バックログ（実装対象外）
 
