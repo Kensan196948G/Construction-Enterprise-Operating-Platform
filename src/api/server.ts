@@ -10,6 +10,7 @@
 import { createServer as httpCreateServer } from "node:http";
 import type { IncomingMessage, Server, ServerResponse } from "node:http";
 import { Router } from "./router.ts";
+import { createRateLimiter } from "./middleware/rate-limiter.ts";
 import { registerAuthRoutes } from "./routes/auth.ts";
 import { registerHealthRoutes } from "./routes/health.ts";
 import { registerGovernanceRoutes } from "./routes/governance.ts";
@@ -23,6 +24,8 @@ export interface ServerConfig {
   readonly port: number;
   readonly host?: string;
   readonly corsOrigin?: string;
+  /** Optional global API rate limit (per socket IP). Defaults from env or 300 req/min. */
+  readonly rateLimit?: { readonly maxRequests: number; readonly windowMs: number };
 }
 
 export function createServer(config: ServerConfig, container: AppContainer): Server {
@@ -30,6 +33,20 @@ export function createServer(config: ServerConfig, container: AppContainer): Ser
   // provided via config or the CEOP_CORS_ORIGIN environment variable.
   // Defaulting to "*" would allow any origin to read authenticated API responses.
   const corsOrigin = config.corsOrigin ?? process.env["CEOP_CORS_ORIGIN"];
+  const rateLimitMaxRaw = Number(process.env["CEOP_RATE_LIMIT_MAX"] ?? "300");
+  const rateLimitWindowRaw = Number(process.env["CEOP_RATE_LIMIT_WINDOW_MS"] ?? "60000");
+  const rateLimit =
+    config.rateLimit ??
+    (Number.isSafeInteger(rateLimitMaxRaw) &&
+    rateLimitMaxRaw > 0 &&
+    Number.isSafeInteger(rateLimitWindowRaw) &&
+    rateLimitWindowRaw > 0
+      ? { maxRequests: rateLimitMaxRaw, windowMs: rateLimitWindowRaw }
+      : { maxRequests: 300, windowMs: 60_000 });
+  const apiRateLimiter = createRateLimiter({
+    maxRequests: rateLimit.maxRequests,
+    windowMs: rateLimit.windowMs,
+  });
   const router = new Router({
     apiKeyStore: container.apiKeyStore,
     ...(container.jwtIssuer !== undefined ? { jwtIssuer: container.jwtIssuer } : {}),
@@ -56,6 +73,23 @@ export function createServer(config: ServerConfig, container: AppContainer): Ser
       res.writeHead(204);
       res.end();
       return;
+    }
+
+    // Global API rate limit (per socket IP) — applies to all /api/v1/* paths.
+    const pathOnly = (req.url ?? "/").split("?")[0] ?? "/";
+    if (pathOnly.startsWith("/api/v1/")) {
+      const clientIp = req.socket?.remoteAddress;
+      if (clientIp !== undefined) {
+        const rl = apiRateLimiter.check(clientIp);
+        res.setHeader("X-RateLimit-Limit", String(rateLimit.maxRequests));
+        res.setHeader("X-RateLimit-Remaining", String(rl.remaining));
+        res.setHeader("X-RateLimit-Reset", String(Math.ceil(rl.resetAt / 1000)));
+        if (!rl.allowed) {
+          res.writeHead(429, { "Content-Type": "application/json; charset=utf-8" });
+          res.end(JSON.stringify({ error: "Too Many Requests", message: "rate limit exceeded" }));
+          return;
+        }
+      }
     }
 
     router.handle(req, res).catch((e: unknown) => {

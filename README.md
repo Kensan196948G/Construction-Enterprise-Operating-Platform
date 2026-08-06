@@ -578,6 +578,9 @@ pnpm run build
 | `CEOP_DATA_DIR`   | —（未設定 = In-Memory モード）                    | ファイル永続化の保存先ディレクトリ。設定時は POSIX-atomic ファイル repo が有効 |
 | `CEOP_SEED_DEMO`  | `false`                                           | `true` のとき起動時にデモデータを投入（In-Memory モードでは常に投入） |
 | `CEOP_LOG_DEMO_CREDS` | `false`                                       | `true` のときデモ API キーの認証情報を stderr に出力（**本番では絶対に `false`**） |
+| `CEOP_RATE_LIMIT_MAX` | `300`                                           | `/api/v1/*` のグローバルレート制限（1 分あたり・socket IP 単位） |
+| `CEOP_RATE_LIMIT_WINDOW_MS` | `60000`                                    | グローバルレート制限のウィンドウ長（ミリ秒） |
+| `CEOP_CORS_ORIGIN` | —（未設定 = CORS 無効）                            | 明示した場合のみ `Access-Control-Allow-Origin` を出力（認証 API では `*` 禁止） |
 
 ### 🗄️ 永続化ティア選択
 
@@ -665,6 +668,7 @@ sequenceDiagram
 | タイミング攻撃対策            | HMAC ハッシュ比較を `timingSafeEqual` で実施                                    | `middleware/auth.ts`          |
 | JWT 署名・検証                | HS256（`node:crypto` HMAC-SHA256）・jti replay guard・1h 有効期限・`iat < exp` 検証 | `middleware/jwt.ts`           |
 | レート制限（Credential-Stuffing 対策） | sliding-window 10 req/min を **socket.remoteAddress** でキー（X-Forwarded-For 非信頼） | `middleware/rate-limiter.ts` |
+| グローバル API レート制限（v0.6.0） | `/api/v1/*` 全体を per-socket-IP で制限（既定 300 req/min、`CEOP_RATE_LIMIT_MAX`/`CEOP_RATE_LIMIT_WINDOW_MS` で調整可） | `api/server.ts` |
 | DoS 防止                      | リクエストボディを **1 MiB** で打ち切り（`req.destroy` 即断）                   | `router.ts`                   |
 | 監査ログ権限                  | `GET /api/v1/governance/audit` に `audit:read` 権限チェック                     | `routes/governance.ts`        |
 | ポリシー一覧権限              | `GET /api/v1/governance/policies` に `policy:read` 権限チェック                 | `routes/governance.ts`        |
