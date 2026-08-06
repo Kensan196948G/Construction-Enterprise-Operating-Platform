@@ -530,3 +530,7 @@ First foundation release: a verifiable coordination layer for the platform.
 
 - Runtime has **no production dependencies**; it runs on Node v22.6+ native TypeScript.
 - Not yet production-ready: persistence, API gateway, and concrete adapters land in M4.
+
+## [0.6.0] - 2026-08-06
+
+Post-merge verification run (CI on main).
