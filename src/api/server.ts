@@ -36,7 +36,7 @@ export function createServer(config: ServerConfig, container: AppContainer): Ser
   });
   registerHealthRoutes(router);
   if (container.jwtIssuer !== undefined) {
-    registerAuthRoutes(router, container.apiKeyStore, container.jwtIssuer);
+    registerAuthRoutes(router, container.apiKeyStore, container.jwtIssuer, container.auditLog);
   }
   registerGovernanceRoutes(router, container);
   registerDashboardRoutes(router, container);

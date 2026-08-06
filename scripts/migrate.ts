@@ -36,6 +36,13 @@ interface Migration {
   readonly version: string;
   readonly description: string;
   readonly up: string; // SQL executed inside a transaction
+  /**
+   * Set to true when the migration rebuilds tables that participate in foreign
+   * keys. `PRAGMA foreign_keys` cannot be changed inside a transaction, so the
+   * runner disables enforcement before BEGIN and re-enables (with an integrity
+   * check) after COMMIT.
+   */
+  readonly disableForeignKeys?: boolean;
 }
 
 const MIGRATIONS: readonly Migration[] = [
@@ -128,6 +135,80 @@ const MIGRATIONS: readonly Migration[] = [
       CREATE INDEX IF NOT EXISTS idx_audit_resource ON audit_log (resource);
     `,
   },
+  {
+    version: "004",
+    description: "schema consolidation: workflows/revoked_jtis tables + FK constraints on domain tables (v0.6.0)",
+    disableForeignKeys: true,
+    up: `
+      CREATE TABLE IF NOT EXISTS workflows (
+        id            TEXT PRIMARY KEY,
+        data          TEXT NOT NULL,
+        workflow_type TEXT NOT NULL,
+        status        TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_workflows_type   ON workflows (workflow_type);
+      CREATE INDEX IF NOT EXISTS idx_workflows_status ON workflows (status);
+
+      CREATE TABLE IF NOT EXISTS revoked_jtis (
+        jti         TEXT PRIMARY KEY,
+        prunable_at INTEGER NOT NULL
+      );
+
+      -- Rebuild organizations with a self-referencing FK on parent_id.
+      CREATE TABLE organizations_new (
+        id        TEXT PRIMARY KEY,
+        data      TEXT NOT NULL,
+        type      TEXT NOT NULL,
+        parent_id TEXT REFERENCES organizations(id)
+      );
+      INSERT INTO organizations_new (id, data, type, parent_id)
+        SELECT id, data, type, parent_id FROM organizations;
+      DROP TABLE organizations;
+      ALTER TABLE organizations_new RENAME TO organizations;
+      CREATE INDEX IF NOT EXISTS idx_orgs_type   ON organizations(type);
+      CREATE INDEX IF NOT EXISTS idx_orgs_parent ON organizations(parent_id);
+
+      -- Rebuild users with an FK on organizations(id).
+      CREATE TABLE users_new (
+        id     TEXT PRIMARY KEY,
+        data   TEXT NOT NULL,
+        email  TEXT NOT NULL,
+        org_id TEXT NOT NULL REFERENCES organizations(id)
+      );
+      INSERT INTO users_new (id, data, email, org_id)
+        SELECT id, data, email, org_id FROM users;
+      DROP TABLE users;
+      ALTER TABLE users_new RENAME TO users;
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email);
+      CREATE        INDEX IF NOT EXISTS idx_users_org   ON users(org_id);
+
+      -- Rebuild devices with an FK on organizations(id).
+      CREATE TABLE devices_new (
+        id     TEXT PRIMARY KEY,
+        data   TEXT NOT NULL,
+        org_id TEXT NOT NULL REFERENCES organizations(id)
+      );
+      INSERT INTO devices_new (id, data, org_id)
+        SELECT id, data, org_id FROM devices;
+      DROP TABLE devices;
+      ALTER TABLE devices_new RENAME TO devices;
+      CREATE INDEX IF NOT EXISTS idx_devices_org ON devices(org_id);
+
+      -- Rebuild applications with an FK on organizations(id).
+      CREATE TABLE applications_new (
+        id           TEXT PRIMARY KEY,
+        data         TEXT NOT NULL,
+        app_key      TEXT NOT NULL,
+        owner_org_id TEXT NOT NULL REFERENCES organizations(id)
+      );
+      INSERT INTO applications_new (id, data, app_key, owner_org_id)
+        SELECT id, data, app_key, owner_org_id FROM applications;
+      DROP TABLE applications;
+      ALTER TABLE applications_new RENAME TO applications;
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_apps_key   ON applications(app_key);
+      CREATE        INDEX IF NOT EXISTS idx_apps_owner ON applications(owner_org_id);
+    `,
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -167,6 +248,9 @@ function appliedVersions(db: DatabaseSync): Set<string> {
 }
 
 function runMigration(db: DatabaseSync, m: Migration): void {
+  if (m.disableForeignKeys === true) {
+    db.exec("PRAGMA foreign_keys = OFF");
+  }
   db.exec("BEGIN");
   try {
     db.exec(m.up);
@@ -174,9 +258,25 @@ function runMigration(db: DatabaseSync, m: Migration): void {
       "INSERT INTO schema_migrations (version, description, applied_at) VALUES (?, ?, ?)",
     ).run(m.version, m.description, new Date().toISOString());
     db.exec("COMMIT");
+    if (m.disableForeignKeys === true) {
+      const violations = db.prepare("PRAGMA foreign_key_check").all() as unknown[];
+      if (violations.length > 0) {
+        throw new Error(
+          `foreign key violations after migration ${m.version}: ${JSON.stringify(violations)}`,
+        );
+      }
+    }
   } catch (e) {
-    db.exec("ROLLBACK");
+    try {
+      db.exec("ROLLBACK");
+    } catch {
+      // No active transaction (already committed) — the post-commit FK check failed.
+    }
     throw e;
+  } finally {
+    if (m.disableForeignKeys === true) {
+      db.exec("PRAGMA foreign_keys = ON");
+    }
   }
 }
 

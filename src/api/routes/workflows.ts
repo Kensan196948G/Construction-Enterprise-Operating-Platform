@@ -20,6 +20,7 @@ import {
 } from "../../domain/workflow.ts";
 import type { WorkflowStep, WorkflowType, WorkflowStatus } from "../../domain/workflow.ts";
 import { parsePagination, paginate } from "../pagination.ts";
+import { recordAudit } from "../audit.ts";
 import type { Router } from "../router.ts";
 import { writeJson } from "../router.ts";
 import { hasPermission } from "./governance.ts";
@@ -160,6 +161,11 @@ export function registerWorkflowRoutes(router: Router, container: AppContainer):
     });
     if (!result.ok) { badRequest(res, result.error); return; }
     await repositories.workflows.save(result.value);
+    recordAudit(container.auditLog, ctx, "workflow:create", result.value.id, "success", {
+      name: result.value.name,
+      type: result.value.type,
+      status: result.value.status,
+    });
     writeJson(res, 201, result.value);
   });
 
@@ -198,6 +204,11 @@ export function registerWorkflowRoutes(router: Router, container: AppContainer):
     });
     if (!result.ok) { badRequest(res, result.error); return; }
     await repositories.workflows.save(result.value);
+    recordAudit(container.auditLog, ctx, "workflow:update", existing.id, "success", {
+      name: result.value.name,
+      type: result.value.type,
+      status: result.value.status,
+    });
     writeJson(res, 200, result.value);
   });
 
@@ -208,6 +219,9 @@ export function registerWorkflowRoutes(router: Router, container: AppContainer):
     const existing = await repositories.workflows.findById(workflowId(req.params["id"] ?? ""));
     if (existing === null) { notFound(res); return; }
     await repositories.workflows.delete(existing.id);
+    recordAudit(container.auditLog, ctx, "workflow:delete", existing.id, "success", {
+      name: existing.name,
+    });
     noContent(res);
   });
 }

@@ -385,6 +385,23 @@ const paths: { [k: string]: YamlValue } = {
     },
   },
 
+  "/api/v1/auth/revoke": {
+    post: {
+      operationId: "revokeToken",
+      summary: "Revoke the caller's current JWT (logout)",
+      tags: ["Auth"],
+      security: authSecurity,
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["revoked"],
+          properties: { revoked: { type: "boolean", example: true } },
+        }),
+        ...errorResponses(400, 401, 403),
+      },
+    },
+  },
+
   // ── Dashboard ────────────────────────────────────────────────────────────
   "/api/v1/dashboard": {
     get: {

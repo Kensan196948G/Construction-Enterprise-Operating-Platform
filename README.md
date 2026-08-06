@@ -4,7 +4,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-22.13+-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Zero Runtime Deps](https://img.shields.io/badge/runtime%20deps-zero-brightgreen)](package.json)
 [![CI](https://img.shields.io/github/actions/workflow/status/Kensan196948G/Construction-Enterprise-Operating-Platform/ci.yml?label=CI&logo=github)](/.github/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-213%20pass-brightgreen)](src/)
+[![Tests](https://img.shields.io/badge/tests-218%20pass-brightgreen)](src/)
 [![Security](https://img.shields.io/badge/security-hardened-blue)](src/api/middleware/auth.ts)
 [![License](https://img.shields.io/badge/license-proprietary-lightgrey)](LICENSE.md)
 
@@ -178,6 +178,7 @@ examples/
 | `GET`    | `/api/v1/governance/policies`     | `policy:read`      | ポリシー一覧（ページネーション）`{ policies[], count, total, limit, offset }` |
 | `GET`    | `/api/v1/governance/audit`        | `audit:read`       | 監査ログ取得（`?limit=50`、最大 200）                     |
 | `POST`   | `/api/v1/governance/evaluate`     | 認証のみ           | アクセス評価。評価結果は監査ログへ自動記録                |
+| `POST`   | `/api/v1/auth/revoke`             | `auth:write`       | 現在の JWT を失効（ログアウト）。JWT Bearer 必須          |
 
 > 📌 `*:*` または `*:read` ワイルドカード権限でも `policy:read` / `audit:read` ゲートを通過します。
 
@@ -518,6 +519,8 @@ curl -H "Authorization: Bearer <keyId>:<secret>" http://localhost:3000/api/v1/da
 | ---------- | ------------------------------------------ | ------- |
 | `001`      | ドメインエンティティテーブル（M7）         | ✅ 適用済 |
 | `002`      | `api_keys` テーブル（CLI プロビジョニング） | ✅ 適用済 |
+| `003`      | `audit_log` テーブル（ハッシュチェーン）    | ✅ 適用済 |
+| `004`      | workflows/revoked_jtis 追加 + FK 制約再構築（v0.6.0） | ✅ 適用済 |
 
 - マイグレーションは `schema_migrations` テーブルでバージョン管理されます
 - 新しいマイグレーションは `scripts/migrate.ts` の `MIGRATIONS` 配列に追記します
@@ -553,11 +556,11 @@ pnpm run build
 | ----------- | ----------------- | ------------------------------------------------------- |
 | typecheck   | ✅ pass           | strict・`noUncheckedIndexedAccess`・0 error             |
 | lint        | ✅ pass           | ESLint flat config + typescript-eslint・0 warning       |
-| test        | ✅ 213/213        | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud (34) + governance-crud (26) + sqlite-audit-log (9) + workflow-crud (26) |
+| test        | ✅ 218/218        | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud (34) + governance-crud (26) + sqlite-audit-log (9) + workflow-crud (26) + audit-coverage (3) |
 | build       | ✅ pass           | `dist/` に型定義付き出力                                |
 | CI          | ✅ 設定済み       | `.github/workflows/ci.yml`（push / PR トリガー）        |
 | Docker      | ✅ multi-stage    | non-root ユーザー・HEALTHCHECK 付き                     |
-| security    | ✅ hardened       | timingSafeEqual・ボディ制限・権限ゲート・CSP            |
+| security    | ✅ hardened       | timingSafeEqual・ボディ制限・権限ゲート・CSP・API セキュリティヘッダ・監査網羅 |
 
 ---
 
@@ -659,7 +662,7 @@ sequenceDiagram
 | カテゴリ                      | 実装内容                                                                        | ファイル                      |
 | ----------------------------- | ------------------------------------------------------------------------------- | ----------------------------- |
 | タイミング攻撃対策            | HMAC ハッシュ比較を `timingSafeEqual` で実施                                    | `middleware/auth.ts`          |
-| JWT 署名・検証                | HS256（`node:crypto` HMAC-SHA256）・jti replay guard・1h 有効期限               | `middleware/jwt.ts`           |
+| JWT 署名・検証                | HS256（`node:crypto` HMAC-SHA256）・jti replay guard・1h 有効期限・`iat < exp` 検証 | `middleware/jwt.ts`           |
 | レート制限（Credential-Stuffing 対策） | sliding-window 10 req/min を **socket.remoteAddress** でキー（X-Forwarded-For 非信頼） | `middleware/rate-limiter.ts` |
 | DoS 防止                      | リクエストボディを **1 MiB** で打ち切り（`req.destroy` 即断）                   | `router.ts`                   |
 | 監査ログ権限                  | `GET /api/v1/governance/audit` に `audit:read` 権限チェック                     | `routes/governance.ts`        |
@@ -668,10 +671,13 @@ sequenceDiagram
 | CSP ヘッダ                    | SSR ページに `Content-Security-Policy: default-src 'self'` を付与              | `routes/web.ts`               |
 | 秘密情報のログ漏洩防止        | デモキーログを `NODE_ENV !== production` 条件で制限                              | `app.ts`                      |
 | 監査アクター詐称防止          | 評価 API の `actor` を認証済み `ctx.subject` から取得（リクエストボディ不使用）  | `routes/governance.ts`        |
+| 監査網羅（v0.6.0）            | CRUD・Policy/Workflow 変更・トークン発行/失効を監査ログへ記録（actor は認証済み subject） | `api/audit.ts` + routes |
+| JWT 失効 API（v0.6.0）        | `POST /api/v1/auth/revoke` で現在の JWT を失効し、以後の認証を拒否             | `routes/auth.ts` |
+| API レスポンスセキュリティヘッダ（v0.6.0） | JSON 応答に `X-Content-Type-Options: nosniff` / `X-Frame-Options: DENY` / `Referrer-Policy: no-referrer` / `Cache-Control: no-store` | `router.ts` |
 | HSTS（M14）                   | SSR ページに `Strict-Transport-Security: max-age=63072000; includeSubDomains` を付与 | `routes/web.ts`           |
 | CORS opt-in（M14）            | `CEOP_CORS_ORIGIN` 環境変数 or `corsOrigin` 設定が明示された場合のみ CORS ヘッダを出力（デフォルト非出力） | `api/server.ts` |
 | JWT 無効化永続化（M14）       | `RevocationStore` ポート（in-memory / SQLite 差し替え可）で `jti` を永続的に無効化。`CEOP_SQLITE_FILE` 設定時は自動で SQLite backing に切り替わる | `persistence/sqlite/revocation-store.ts` |
-| SQLite FK 制約（M14）         | users/devices/applications は `REFERENCES organizations(id)` を DDL で宣言し、orphan レコード挿入を DB レベルで拒否 | `persistence/sqlite/index.ts` |
+| SQLite FK 制約（M14 + v0.6.0 migration 004） | users/devices/applications は `REFERENCES organizations(id)`、organizations.parent_id は自己参照 FK。マイグレーション 004 で既存 DB を再構築して適用 | `scripts/migrate.ts` |
 
 ### ⚖️ ポリシーエンジン（Governance Core）
 

@@ -18,6 +18,7 @@ import { createPolicy, policyId } from "../../domain/policy.ts";
 import type { PolicyEffect, PolicyCondition } from "../../domain/policy.ts";
 import type { Permission } from "../../domain/role.ts";
 import { evaluateAccess, resolvePermissions } from "../../governance/policy-engine.ts";
+import { recordAudit } from "../audit.ts";
 import type { Router } from "../router.ts";
 import { writeJson } from "../router.ts";
 import { parsePagination, paginate } from "../pagination.ts";
@@ -287,6 +288,10 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
     });
     if (!result.ok) { badRequest(res, result.error); return; }
     await container.repositories.policies.save(result.value);
+    recordAudit(container.auditLog, ctx, "policy:create", result.value.id, "success", {
+      name: result.value.name,
+      effect: result.value.effect,
+    });
     writeJson(res, 201, result.value);
   });
 
@@ -322,6 +327,10 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
     });
     if (!result.ok) { badRequest(res, result.error); return; }
     await container.repositories.policies.save(result.value);
+    recordAudit(container.auditLog, ctx, "policy:update", existing.id, "success", {
+      name: result.value.name,
+      effect: result.value.effect,
+    });
     writeJson(res, 200, result.value);
   });
 
@@ -331,6 +340,9 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
     const existing = await container.repositories.policies.findById(policyId(req.params["id"] ?? ""));
     if (existing === null) { notFound(res, "policy"); return; }
     await container.repositories.policies.delete(existing.id);
+    recordAudit(container.auditLog, ctx, "policy:delete", existing.id, "success", {
+      name: existing.name,
+    });
     noContent(res);
   });
 }

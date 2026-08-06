@@ -96,5 +96,6 @@ export function validateApiKey(
     keyId: record.keyId,
     subject: record.subject,
     permissions: [...record.permissions],
+    authKind: "apikey",
   });
 }

@@ -168,6 +168,7 @@ export function createJwtIssuer(config: JwtConfig): JwtIssuer {
       !(record["permissions"] as unknown[]).every((p) => typeof p === "string") ||
       !Number.isSafeInteger(record["iat"]) ||
       !Number.isSafeInteger(record["exp"]) ||
+      (record["iat"] as number) >= (record["exp"] as number) ||
       typeof record["jti"] !== "string"
     ) {
       return { ok: false, reason: "malformed" };

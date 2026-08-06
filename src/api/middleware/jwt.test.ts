@@ -110,6 +110,26 @@ test("jwt: verify rejects tampered payload", () => {
   assert.equal(result.reason, "invalid");
 });
 
+test("jwt: verify rejects token where iat >= exp", () => {
+  const secret = generateJwtSecret();
+  const issuer = createJwtIssuer({ secret, ttlSeconds: 3600 });
+  const nowSec = Math.floor(Date.now() / 1000);
+  const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url");
+  const payload = Buffer.from(
+    JSON.stringify({
+      sub: "u",
+      permissions: [],
+      iat: nowSec + 3600,
+      exp: nowSec,
+      jti: "test-iat-gte-exp",
+    }),
+  ).toString("base64url");
+  const sig = createHmac("sha256", secret).update(`${header}.${payload}`).digest("base64url");
+  const result = issuer.verify(`${header}.${payload}.${sig}`);
+  assert.ok(!result.ok);
+  assert.equal(result.reason, "malformed");
+});
+
 test("jwt: verify rejects empty string", () => {
   const issuer = createJwtIssuer({ secret: generateJwtSecret() });
   const result = issuer.verify("");

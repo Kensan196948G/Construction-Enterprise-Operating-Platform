@@ -196,6 +196,7 @@ export class Router {
           keyId: result.payload.jti,
           subject: result.payload.sub,
           permissions: result.payload.permissions as unknown as ApiKeyContext["permissions"],
+          authKind: "jwt",
         };
       } else {
         writeJson(res, 401, { error: "Unauthorized", message: "invalid credentials" });
@@ -309,6 +310,11 @@ export function writeJson(res: ServerResponse, status: number, data: unknown): v
   res.writeHead(status, {
     "Content-Type": "application/json; charset=utf-8",
     "Content-Length": Buffer.byteLength(body),
+    // Baseline hardening for every JSON response (including public endpoints).
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "no-referrer",
+    "Cache-Control": "no-store",
   });
   res.end(body);
 }

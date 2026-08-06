@@ -27,10 +27,11 @@ import { createDevice, deviceId } from "../../domain/device.ts";
 import type { DeviceKind, DeviceStatus } from "../../domain/device.ts";
 import { createApplication, applicationId } from "../../domain/application.ts";
 import type { ApplicationCategory, ApplicationHealth } from "../../domain/application.ts";
+import { recordAudit, type AuditMetadata } from "../audit.ts";
 import type { Router } from "../router.ts";
 import { writeJson } from "../router.ts";
 import { hasPermission } from "./governance.ts";
-import type { AppContainer } from "../types.ts";
+import type { ApiKeyContext, AppContainer } from "../types.ts";
 
 // ---------------------------------------------------------------------------
 // Internal body-extraction helpers
@@ -71,6 +72,17 @@ function badRequest(res: ServerResponse, details: unknown): void {
   writeJson(res, 400, { error: "Bad Request", message: "validation failed", details });
 }
 
+/** Record a successful mutation in the tamper-evident audit log. */
+function audit(
+  container: AppContainer,
+  ctx: ApiKeyContext | null,
+  action: string,
+  resource: string,
+  metadata: AuditMetadata = {},
+): void {
+  recordAudit(container.auditLog, ctx, action, resource, "success", metadata);
+}
+
 // Catches DB-level UNIQUE constraint violations from node:sqlite.
 // The findBy*/save pattern has a TOCTOU window; full atomicity requires UNIQUE
 // constraints in the DB schema (planned for M11). This catch handles the concurrent-write case.
@@ -108,6 +120,10 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
     });
     if (!result.ok) { badRequest(res, result.error); return; }
     await repositories.organizations.save(result.value);
+    audit(container, ctx, "organization:create", result.value.id, {
+      name: result.value.name,
+      type: result.value.type,
+    });
     writeJson(res, 201, result.value);
   });
 
@@ -126,6 +142,10 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
     });
     if (!result.ok) { badRequest(res, result.error); return; }
     await repositories.organizations.save(result.value);
+    audit(container, ctx, "organization:update", existing.id, {
+      name: result.value.name,
+      status: result.value.status,
+    });
     writeJson(res, 200, result.value);
   });
 
@@ -147,6 +167,9 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
       return;
     }
     await repositories.organizations.delete(existing.id);
+    audit(container, ctx, "organization:delete", existing.id, {
+      name: existing.name,
+    });
     noContent(res);
   });
 
@@ -206,6 +229,10 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
       }
       throw e;
     }
+    audit(container, ctx, "user:create", result.value.id, {
+      status: result.value.status,
+      organizationId: result.value.organizationId,
+    });
     writeJson(res, 201, result.value);
   });
 
@@ -235,6 +262,10 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
     });
     if (!result.ok) { badRequest(res, result.error); return; }
     await repositories.users.save(result.value);
+    audit(container, ctx, "user:update", existing.id, {
+      status: result.value.status,
+      displayName: result.value.displayName,
+    });
     writeJson(res, 200, result.value);
   });
 
@@ -254,6 +285,9 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
     });
     if (!result.ok) { badRequest(res, result.error); return; }
     await repositories.users.save(result.value);
+    audit(container, ctx, "user:deactivate", existing.id, {
+      status: result.value.status,
+    });
     writeJson(res, 200, result.value);
   });
 
@@ -299,6 +333,10 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
       }
       throw e;
     }
+    audit(container, ctx, "role:create", result.value.id, {
+      name: result.value.name,
+      scope: result.value.scope,
+    });
     writeJson(res, 201, result.value);
   });
 
@@ -315,6 +353,10 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
     });
     if (!result.ok) { badRequest(res, result.error); return; }
     await repositories.roles.save(result.value);
+    audit(container, ctx, "role:update", existing.id, {
+      name: result.value.name,
+      scope: result.value.scope,
+    });
     writeJson(res, 200, result.value);
   });
 
@@ -334,6 +376,9 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
       return;
     }
     await repositories.roles.delete(existing.id);
+    audit(container, ctx, "role:delete", existing.id, {
+      name: existing.name,
+    });
     noContent(res);
   });
 
@@ -383,6 +428,11 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
     });
     if (!result.ok) { badRequest(res, result.error); return; }
     await repositories.devices.save(result.value);
+    audit(container, ctx, "device:create", result.value.id, {
+      kind: result.value.kind,
+      status: result.value.status,
+      organizationId: result.value.organizationId,
+    });
     writeJson(res, 201, result.value);
   });
 
@@ -419,6 +469,10 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
     });
     if (!result.ok) { badRequest(res, result.error); return; }
     await repositories.devices.save(result.value);
+    audit(container, ctx, "device:update", existing.id, {
+      kind: result.value.kind,
+      status: result.value.status,
+    });
     writeJson(res, 200, result.value);
   });
 
@@ -427,6 +481,7 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
     const existing = await repositories.devices.findById(deviceId(req.params["id"] ?? ""));
     if (existing === null) { notFound(res, "device"); return; }
     await repositories.devices.delete(existing.id);
+    audit(container, ctx, "device:delete", existing.id, {});
     noContent(res);
   });
 
@@ -475,6 +530,10 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
       }
       throw e;
     }
+    audit(container, ctx, "application:create", result.value.id, {
+      key: result.value.key,
+      category: result.value.category,
+    });
     writeJson(res, 201, result.value);
   });
 
@@ -492,6 +551,10 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
     });
     if (!result.ok) { badRequest(res, result.error); return; }
     await repositories.applications.save(result.value);
+    audit(container, ctx, "application:update", existing.id, {
+      key: result.value.key,
+      health: result.value.health,
+    });
     writeJson(res, 200, result.value);
   });
 
@@ -500,6 +563,9 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
     const existing = await repositories.applications.findById(applicationId(req.params["id"] ?? ""));
     if (existing === null) { notFound(res, "application"); return; }
     await repositories.applications.delete(existing.id);
+    audit(container, ctx, "application:delete", existing.id, {
+      key: existing.key,
+    });
     noContent(res);
   });
 }

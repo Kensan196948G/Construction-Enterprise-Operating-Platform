@@ -68,6 +68,8 @@ export interface ApiKeyContext {
   readonly keyId: string;
   readonly subject: string;
   readonly permissions: readonly Permission[];
+  /** How the caller authenticated — used for JWT-specific operations (e.g. revocation). */
+  readonly authKind: "apikey" | "jwt";
 }
 
 // ---------------------------------------------------------------------------

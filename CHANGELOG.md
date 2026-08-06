@@ -17,6 +17,12 @@ operations documentation for the first main-branch release.
 - **Version single-source-of-truth** — `src/version.ts` + `PLATFORM_VERSION` guard test; `package.json`, `/api/v1/info`, OpenAPI, SSR UI, and Docker labels unified to `0.6.0`.
 - **OpenAPI license corrected** — previously declared `MIT`; now matches the proprietary/UNLICENSED status of the private repository (`LICENSE.md` added).
 - **README CI badge fixed** — pointed at the correct GitHub repository.
+- **Audit coverage for mutations** — every CRUD mutation (organizations/users/roles/devices/applications), policy CRUD, workflow CRUD, and authentication events (`auth:token`, `auth:revoke`) now append tamper-evident audit events with the authenticated actor (`src/api/audit.ts`).
+- **JWT revocation endpoint** — `POST /api/v1/auth/revoke` revokes the caller's current JWT via the persistent revocation store (`auth:write` permission required).
+- **Migration 004** — consolidates `workflows`/`revoked_jtis` into the migration set and rebuilds domain tables with foreign-key constraints (works on fresh and legacy databases; verified with `PRAGMA foreign_key_check`).
+- **Dependency audit clean** — pnpm overrides resolve the 7 high-severity devDependency advisories (brace-expansion, js-yaml); `pnpm audit --audit-level=high` reports 0 vulnerabilities.
+- **API response hardening** — JSON responses now carry `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, and `Cache-Control: no-store`.
+- **JWT claim validation** — tokens with `iat >= exp` are rejected as malformed.
 
 #### M9 — Full Entity CRUD API (21 endpoints)
 
@@ -42,7 +48,12 @@ operations documentation for the first main-branch release.
 
 ### Security
 
-- No code-level security change in this section yet; see subsequent commits for v0.6.0 hardening (audit coverage, migration consolidation, JWT validation, API security headers).
+- Full mutation audit trail (actor from authenticated context, never request body).
+- JWT revocation API + revocation audit events.
+- Migration 004 foreign-key enforcement for existing and fresh databases.
+- Baseline security headers on all JSON API responses.
+- `iat < exp` JWT claim validation.
+- `pnpm audit` high-severity findings resolved (devDependencies).
 
 ---
 

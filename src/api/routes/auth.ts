@@ -10,12 +10,15 @@
  */
 
 import type { ServerResponse } from "node:http";
+import type { IAuditLog } from "../../governance/audit-log.ts";
+import { recordAudit } from "../audit.ts";
 import { validateApiKey } from "../middleware/auth.ts";
 import type { JwtIssuer } from "../middleware/jwt.ts";
 import { createRateLimiter } from "../middleware/rate-limiter.ts";
 import type { Router } from "../router.ts";
 import { writeJson } from "../router.ts";
 import type { ApiKeyStore, ApiRequest } from "../types.ts";
+import { hasPermission } from "./governance.ts";
 
 /**
  * Return the TCP-layer remote address as the rate-limit key, or null when the
@@ -38,6 +41,7 @@ export function registerAuthRoutes(
   router: Router,
   apiKeyStore: ApiKeyStore,
   jwtIssuer: JwtIssuer,
+  auditLog: IAuditLog,
 ): void {
   // 10 requests per minute per client IP — enough for interactive use, tight
   // enough to blunt credential-stuffing at scale.
@@ -97,8 +101,40 @@ export function registerAuthRoutes(
       const token = jwtIssuer.issue(subject, permissions);
       const expiresIn = jwtIssuer.ttlSeconds;
 
+      recordAudit(
+        auditLog,
+        {
+          keyId: result.value.keyId,
+          subject,
+          permissions,
+          authKind: "apikey",
+        },
+        "auth:token",
+        "jwt",
+        "success",
+        { subject, keyId: result.value.keyId },
+      );
       writeJson(res, 200, { token, expiresIn, subject });
     },
     false, // public route — auth handled internally
   );
+
+  // POST /api/v1/auth/revoke — revoke the caller's current JWT (logout).
+  router.post("/api/v1/auth/revoke", async (_req, ctx, res) => {
+    if (!hasPermission(ctx, "auth", "write")) {
+      writeJson(res, 403, { error: "Forbidden", message: "requires 'auth:write' permission" });
+      return;
+    }
+    if (ctx === null || ctx.authKind !== "jwt") {
+      writeJson(res, 400, {
+        error: "Bad Request",
+        message: "revocation requires a JWT Bearer token",
+      });
+      return;
+    }
+    const jti = ctx.keyId;
+    jwtIssuer.revoke(jti);
+    recordAudit(auditLog, ctx, "auth:revoke", jti, "success");
+    writeJson(res, 200, { revoked: true });
+  });
 }
