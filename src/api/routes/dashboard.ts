@@ -51,16 +51,23 @@ export function registerDashboardRoutes(router: Router, container: AppContainer)
   // GET /api/v1/organizations?limit=&offset=  (requires organization:read or wildcard)
   router.get("/api/v1/organizations", async (req, ctx, res) => {
     if (!hasPermission(ctx, "organization", "read")) {
-      writeJson(res, 403, { error: "Forbidden", message: "requires 'organization:read' permission" });
+      writeJson(res, 403, {
+        error: "Forbidden",
+        message: "requires 'organization:read' permission",
+      });
       return;
     }
     const all = await container.repositories.organizations.findAll();
     const scoped =
-      ctx?.organizationId !== undefined
-        ? all.filter((o) => o.id === ctx.organizationId)
-        : all;
+      ctx?.organizationId !== undefined ? all.filter((o) => o.id === ctx.organizationId) : all;
     const pg = paginate(scoped, parsePagination(req.query));
-    writeJson(res, 200, { organizations: pg.items, count: pg.count, total: pg.total, limit: pg.limit, offset: pg.offset });
+    writeJson(res, 200, {
+      organizations: pg.items,
+      count: pg.count,
+      total: pg.total,
+      limit: pg.limit,
+      offset: pg.offset,
+    });
   });
 
   // GET /api/v1/users?limit=&offset=  (requires user:read or wildcard)
@@ -75,13 +82,22 @@ export function registerDashboardRoutes(router: Router, container: AppContainer)
         ? all.filter((u) => u.organizationId === ctx.organizationId)
         : all;
     const pg = paginate(scoped, parsePagination(req.query));
-    writeJson(res, 200, { users: pg.items, count: pg.count, total: pg.total, limit: pg.limit, offset: pg.offset });
+    writeJson(res, 200, {
+      users: pg.items,
+      count: pg.count,
+      total: pg.total,
+      limit: pg.limit,
+      offset: pg.offset,
+    });
   });
 
   // GET /api/v1/applications?limit=&offset=  (requires application:read or wildcard)
   router.get("/api/v1/applications", async (req, ctx, res) => {
     if (!hasPermission(ctx, "application", "read")) {
-      writeJson(res, 403, { error: "Forbidden", message: "requires 'application:read' permission" });
+      writeJson(res, 403, {
+        error: "Forbidden",
+        message: "requires 'application:read' permission",
+      });
       return;
     }
     const all = await container.repositories.applications.findAll();
@@ -90,7 +106,13 @@ export function registerDashboardRoutes(router: Router, container: AppContainer)
         ? all.filter((a) => a.ownerOrganizationId === ctx.organizationId)
         : all;
     const pg = paginate(scoped, parsePagination(req.query));
-    writeJson(res, 200, { applications: pg.items, count: pg.count, total: pg.total, limit: pg.limit, offset: pg.offset });
+    writeJson(res, 200, {
+      applications: pg.items,
+      count: pg.count,
+      total: pg.total,
+      limit: pg.limit,
+      offset: pg.offset,
+    });
   });
 
   // GET /api/v1/devices?limit=&offset=  (requires device:read or wildcard)
@@ -105,6 +127,12 @@ export function registerDashboardRoutes(router: Router, container: AppContainer)
         ? all.filter((d) => d.organizationId === ctx.organizationId)
         : all;
     const pg = paginate(scoped, parsePagination(req.query));
-    writeJson(res, 200, { devices: pg.items, count: pg.count, total: pg.total, limit: pg.limit, offset: pg.offset });
+    writeJson(res, 200, {
+      devices: pg.items,
+      count: pg.count,
+      total: pg.total,
+      limit: pg.limit,
+      offset: pg.offset,
+    });
   });
 }

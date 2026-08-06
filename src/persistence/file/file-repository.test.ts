@@ -41,7 +41,9 @@ test("file-repo: starts empty when file does not exist (ENOENT)", async () => {
 
   // Use a concrete subclass wrapper for testing.
   class TestRepo extends BaseFileRepository<{ id: string; name: string }> {
-    constructor(d: string) { super(d, "items.json"); }
+    constructor(d: string) {
+      super(d, "items.json");
+    }
   }
   const repo = new TestRepo(dir);
   const all = await repo.findAll();
@@ -53,7 +55,9 @@ test("file-repo: save then findById returns the entity", async () => {
   after(() => rm(dir, { recursive: true, force: true }));
 
   class TestRepo extends BaseFileRepository<{ id: string; value: number }> {
-    constructor(d: string) { super(d, "items.json"); }
+    constructor(d: string) {
+      super(d, "items.json");
+    }
   }
   const repo = new TestRepo(dir);
 
@@ -67,7 +71,9 @@ test("file-repo: findById returns null for unknown id", async () => {
   after(() => rm(dir, { recursive: true, force: true }));
 
   class TestRepo extends BaseFileRepository<{ id: string }> {
-    constructor(d: string) { super(d, "items.json"); }
+    constructor(d: string) {
+      super(d, "items.json");
+    }
   }
   const repo = new TestRepo(dir);
   const found = await repo.findById("nonexistent");
@@ -79,7 +85,9 @@ test("file-repo: findAll returns all saved entities", async () => {
   after(() => rm(dir, { recursive: true, force: true }));
 
   class TestRepo extends BaseFileRepository<{ id: string; n: number }> {
-    constructor(d: string) { super(d, "items.json"); }
+    constructor(d: string) {
+      super(d, "items.json");
+    }
   }
   const repo = new TestRepo(dir);
 
@@ -98,7 +106,9 @@ test("file-repo: save overwrites existing entity with same id", async () => {
   after(() => rm(dir, { recursive: true, force: true }));
 
   class TestRepo extends BaseFileRepository<{ id: string; value: string }> {
-    constructor(d: string) { super(d, "items.json"); }
+    constructor(d: string) {
+      super(d, "items.json");
+    }
   }
   const repo = new TestRepo(dir);
 
@@ -114,7 +124,9 @@ test("file-repo: delete removes the entity", async () => {
   after(() => rm(dir, { recursive: true, force: true }));
 
   class TestRepo extends BaseFileRepository<{ id: string }> {
-    constructor(d: string) { super(d, "items.json"); }
+    constructor(d: string) {
+      super(d, "items.json");
+    }
   }
   const repo = new TestRepo(dir);
 
@@ -129,7 +141,9 @@ test("file-repo: data persists across repository instances", async () => {
   after(() => rm(dir, { recursive: true, force: true }));
 
   class TestRepo extends BaseFileRepository<{ id: string; label: string }> {
-    constructor(d: string) { super(d, "items.json"); }
+    constructor(d: string) {
+      super(d, "items.json");
+    }
   }
 
   const repo1 = new TestRepo(dir);
@@ -153,7 +167,9 @@ test("ensureDataDir: creates nested directories", async () => {
   await ensureDataDir(nested);
 
   class TestRepo extends BaseFileRepository<{ id: string }> {
-    constructor() { super(nested, "t.json"); }
+    constructor() {
+      super(nested, "t.json");
+    }
   }
   const repo = new TestRepo();
   await repo.save({ id: "x" });
@@ -193,8 +209,21 @@ test("file-repo: Organization findHeadquarters", async () => {
   const repos = await createFileRepositories(dir);
   const now = nowTs();
 
-  const hqResult = createOrganization({ id: "org-hq", name: "HQ", type: "headquarters", status: "active", createdAt: now });
-  const siteResult = createOrganization({ id: "org-site", name: "Site", type: "site", status: "active", createdAt: now, parentId: "org-hq" });
+  const hqResult = createOrganization({
+    id: "org-hq",
+    name: "HQ",
+    type: "headquarters",
+    status: "active",
+    createdAt: now,
+  });
+  const siteResult = createOrganization({
+    id: "org-site",
+    name: "Site",
+    type: "site",
+    status: "active",
+    createdAt: now,
+    parentId: "org-hq",
+  });
   assert.ok(hqResult.ok && siteResult.ok);
   await repos.organizations.save(hqResult.value);
   await repos.organizations.save(siteResult.value);

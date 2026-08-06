@@ -20,7 +20,7 @@ WebUI design refresh and hardening release.
 ### Security
 
 - **CSP hardened** — `unsafe-inline` removed: `default-src 'self'; style-src
-  'self'; script-src 'self'` (closes SEC-009 backlog item).
+'self'; script-src 'self'` (closes SEC-009 backlog item).
 - Static assets served with `X-Content-Type-Options: nosniff` and short cache.
 
 ### Deploy
@@ -114,7 +114,7 @@ migration runner, and CLI API key provisioning.
   - `json-file` log driver with 10 MiB / 3-file rotation.
 
 - **`scripts/migrate.ts`** — idempotent SQLite schema migration runner
-  - `schema_migrations` tracking table (version, description, applied\_at).
+  - `schema_migrations` tracking table (version, description, applied_at).
   - Defined migrations: `001` (domain entity tables from M7), `002` (`api_keys` table for CLI-provisioned credentials).
   - Each migration wrapped in `BEGIN` / `COMMIT` / `ROLLBACK` — failures roll back cleanly.
   - Re-runs are safe: already-applied versions are skipped with a `✓ already applied` message.

@@ -50,9 +50,7 @@ export interface IndexDef {
 // Base class
 // ---------------------------------------------------------------------------
 
-export class BaseSqliteRepository<T extends { id: string }>
-  implements Repository<T, string>
-{
+export class BaseSqliteRepository<T extends { id: string }> implements Repository<T, string> {
   protected readonly db: DatabaseSync;
   readonly #table: string;
   readonly #extraColNames: readonly string[];
@@ -114,9 +112,7 @@ export class BaseSqliteRepository<T extends { id: string }>
   }
 
   async findById(id: string): Promise<T | null> {
-    const stmt: StatementSync = this.db.prepare(
-      `SELECT data FROM ${this.#table} WHERE id = ?`,
-    );
+    const stmt: StatementSync = this.db.prepare(`SELECT data FROM ${this.#table} WHERE id = ?`);
     const row = stmt.get(id) as { data: string } | undefined;
     return row !== undefined ? (JSON.parse(row.data) as T) : null;
   }
@@ -133,9 +129,7 @@ export class BaseSqliteRepository<T extends { id: string }>
   }
 
   async delete(id: string): Promise<void> {
-    const stmt: StatementSync = this.db.prepare(
-      `DELETE FROM ${this.#table} WHERE id = ?`,
-    );
+    const stmt: StatementSync = this.db.prepare(`DELETE FROM ${this.#table} WHERE id = ?`);
     stmt.run(id);
   }
 }

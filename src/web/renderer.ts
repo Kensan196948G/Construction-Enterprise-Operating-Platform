@@ -279,12 +279,8 @@ function renderPolicyRows(policies: readonly GovernancePolicyRow[]): string {
     .map((p) => {
       const effectClass = p.effect === "allow" ? "badge-green" : "badge-red";
       const effectLabel = p.effect === "allow" ? "許可" : "拒否";
-      const actionTags = p.actions
-        .map((a) => `<span class="tag">${esc(a)}</span>`)
-        .join("");
-      const resourceTags = p.resources
-        .map((r) => `<span class="tag">${esc(r)}</span>`)
-        .join("");
+      const actionTags = p.actions.map((a) => `<span class="tag">${esc(a)}</span>`).join("");
+      const resourceTags = p.resources.map((r) => `<span class="tag">${esc(r)}</span>`).join("");
       const condLabel =
         p.conditionCount > 0
           ? `<span class="badge badge-yellow">${esc(p.conditionCount)} 件</span>`

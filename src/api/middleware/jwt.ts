@@ -152,8 +152,7 @@ export function createJwtIssuer(config: JwtConfig): JwtIssuer {
     // Constant-time HMAC comparison on raw 32-byte buffers.
     const expected = hmacRaw(header, payload, secret);
     const actual = b64urlDecode(sigB64);
-    const sigOk =
-      expected.length === actual.length && timingSafeEqual(expected, actual);
+    const sigOk = expected.length === actual.length && timingSafeEqual(expected, actual);
     if (!sigOk) {
       return { ok: false, reason: "invalid" };
     }
@@ -176,8 +175,7 @@ export function createJwtIssuer(config: JwtConfig): JwtIssuer {
       !Number.isSafeInteger(record["iat"]) ||
       !Number.isSafeInteger(record["exp"]) ||
       (record["iat"] as number) >= (record["exp"] as number) ||
-      (record["organizationId"] !== undefined &&
-        typeof record["organizationId"] !== "string") ||
+      (record["organizationId"] !== undefined && typeof record["organizationId"] !== "string") ||
       typeof record["jti"] !== "string"
     ) {
       return { ok: false, reason: "malformed" };

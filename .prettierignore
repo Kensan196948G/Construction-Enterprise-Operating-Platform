@@ -5,3 +5,7 @@ coverage/
 pnpm-lock.yaml
 CLAUDE.md
 .claude/
+# Machine-generated runtime state: rewritten by tooling, so enforcing a
+# formatter on it would fail the gate on every state update.
+state.json
+reports/

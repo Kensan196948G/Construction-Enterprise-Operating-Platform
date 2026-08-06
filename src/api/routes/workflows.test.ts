@@ -41,7 +41,13 @@ async function buildHarness(): Promise<Harness> {
   const apiKeyStore: ApiKeyStore = new Map();
 
   const adminRole = unwrap(
-    createRole({ id: "r-admin", name: "Admin", description: "", scope: "global", permissions: ["*:*"] }),
+    createRole({
+      id: "r-admin",
+      name: "Admin",
+      description: "",
+      scope: "global",
+      permissions: ["*:*"],
+    }),
   );
   const readerRole = unwrap(
     createRole({
@@ -82,7 +88,8 @@ async function buildHarness(): Promise<Harness> {
     readerCred: `${readerKV.key}:${readerKV.secret}`,
     noPermCred: `${noPermKV.key}:${noPermKV.secret}`,
     noCred: null,
-    close: () => new Promise<void>((resolve, reject) => server.close((e) => (e ? reject(e) : resolve()))),
+    close: () =>
+      new Promise<void>((resolve, reject) => server.close((e) => (e ? reject(e) : resolve()))),
   };
 }
 
@@ -109,7 +116,8 @@ const post = (baseUrl: string, path: string, cred: string | null, body: unknown)
   req("POST", baseUrl, path, cred, body);
 const put = (baseUrl: string, path: string, cred: string | null, body: unknown) =>
   req("PUT", baseUrl, path, cred, body);
-const del = (baseUrl: string, path: string, cred: string | null) => req("DELETE", baseUrl, path, cred);
+const del = (baseUrl: string, path: string, cred: string | null) =>
+  req("DELETE", baseUrl, path, cred);
 
 const WORKFLOW_PAYLOAD = {
   id: "wf-approval-01",
@@ -129,7 +137,12 @@ const WORKFLOW_PAYLOAD = {
 test("POST /api/v1/workflows — 201 with admin key", async () => {
   const h = await buildHarness();
   after(() => h.close());
-  const { status, body } = await post(h.baseUrl, "/api/v1/workflows", h.adminCred, WORKFLOW_PAYLOAD);
+  const { status, body } = await post(
+    h.baseUrl,
+    "/api/v1/workflows",
+    h.adminCred,
+    WORKFLOW_PAYLOAD,
+  );
   assert.equal(status, 201);
   const b = body as { id: string; name: string; type: string; status: string; steps: unknown[] };
   assert.equal(b.id, "wf-approval-01");
@@ -293,7 +306,13 @@ test("GET /api/v1/workflows — pagination works", async () => {
   }
   const { status, body } = await get(h.baseUrl, "/api/v1/workflows?limit=2&offset=0", h.readerCred);
   assert.equal(status, 200);
-  const b = body as { workflows: unknown[]; total: number; limit: number; offset: number; count: number };
+  const b = body as {
+    workflows: unknown[];
+    total: number;
+    limit: number;
+    offset: number;
+    count: number;
+  };
   assert.equal(b.total, 5);
   assert.equal(b.count, 2);
   assert.equal(b.limit, 2);
@@ -336,12 +355,10 @@ test("PUT /api/v1/workflows/:id — 200 updates name and status", async () => {
   const h = await buildHarness();
   after(() => h.close());
   await post(h.baseUrl, "/api/v1/workflows", h.adminCred, WORKFLOW_PAYLOAD);
-  const { status, body } = await put(
-    h.baseUrl,
-    "/api/v1/workflows/wf-approval-01",
-    h.adminCred,
-    { name: "Updated Approval", status: "active" },
-  );
+  const { status, body } = await put(h.baseUrl, "/api/v1/workflows/wf-approval-01", h.adminCred, {
+    name: "Updated Approval",
+    status: "active",
+  });
   assert.equal(status, 200);
   const b = body as { name: string; status: string; type: string };
   assert.equal(b.name, "Updated Approval");
@@ -353,15 +370,10 @@ test("PUT /api/v1/workflows/:id — 200 updates steps", async () => {
   const h = await buildHarness();
   after(() => h.close());
   await post(h.baseUrl, "/api/v1/workflows", h.adminCred, WORKFLOW_PAYLOAD);
-  const newSteps = [
-    { key: "review", name: "Review Step", requiredPermission: "workflow:read" },
-  ];
-  const { status, body } = await put(
-    h.baseUrl,
-    "/api/v1/workflows/wf-approval-01",
-    h.adminCred,
-    { steps: newSteps },
-  );
+  const newSteps = [{ key: "review", name: "Review Step", requiredPermission: "workflow:read" }];
+  const { status, body } = await put(h.baseUrl, "/api/v1/workflows/wf-approval-01", h.adminCred, {
+    steps: newSteps,
+  });
   assert.equal(status, 200);
   const b = body as { steps: { key: string }[] };
   assert.equal(b.steps.length, 1);
@@ -371,7 +383,9 @@ test("PUT /api/v1/workflows/:id — 200 updates steps", async () => {
 test("PUT /api/v1/workflows/:id — 404 for unknown id", async () => {
   const h = await buildHarness();
   after(() => h.close());
-  const { status } = await put(h.baseUrl, "/api/v1/workflows/not-exist", h.adminCred, { name: "X" });
+  const { status } = await put(h.baseUrl, "/api/v1/workflows/not-exist", h.adminCred, {
+    name: "X",
+  });
   assert.equal(status, 404);
 });
 
@@ -379,12 +393,9 @@ test("PUT /api/v1/workflows/:id — 403 with reader key", async () => {
   const h = await buildHarness();
   after(() => h.close());
   await post(h.baseUrl, "/api/v1/workflows", h.adminCred, WORKFLOW_PAYLOAD);
-  const { status } = await put(
-    h.baseUrl,
-    "/api/v1/workflows/wf-approval-01",
-    h.readerCred,
-    { name: "X" },
-  );
+  const { status } = await put(h.baseUrl, "/api/v1/workflows/wf-approval-01", h.readerCred, {
+    name: "X",
+  });
   assert.equal(status, 403);
 });
 
@@ -392,12 +403,9 @@ test("PUT /api/v1/workflows/:id — 400 on malformed steps in body", async () =>
   const h = await buildHarness();
   after(() => h.close());
   await post(h.baseUrl, "/api/v1/workflows", h.adminCred, WORKFLOW_PAYLOAD);
-  const { status } = await put(
-    h.baseUrl,
-    "/api/v1/workflows/wf-approval-01",
-    h.adminCred,
-    { steps: [{ key: "bad" }] },
-  );
+  const { status } = await put(h.baseUrl, "/api/v1/workflows/wf-approval-01", h.adminCred, {
+    steps: [{ key: "bad" }],
+  });
   assert.equal(status, 400);
 });
 
@@ -411,7 +419,11 @@ test("DELETE /api/v1/workflows/:id — 204 deletes existing workflow", async () 
   await post(h.baseUrl, "/api/v1/workflows", h.adminCred, WORKFLOW_PAYLOAD);
   const { status } = await del(h.baseUrl, "/api/v1/workflows/wf-approval-01", h.adminCred);
   assert.equal(status, 204);
-  const { status: getStatus } = await get(h.baseUrl, "/api/v1/workflows/wf-approval-01", h.readerCred);
+  const { status: getStatus } = await get(
+    h.baseUrl,
+    "/api/v1/workflows/wf-approval-01",
+    h.readerCred,
+  );
   assert.equal(getStatus, 404);
 });
 

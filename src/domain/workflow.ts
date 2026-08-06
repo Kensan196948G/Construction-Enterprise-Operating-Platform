@@ -51,7 +51,10 @@ export function createWorkflow(input: CreateWorkflowInput): Result<Workflow> {
     }
     seenKeys.add(step.key);
     if (!/^[^\s:]+:[^\s:]+$/.test(step.requiredPermission)) {
-      issues.push({ path: `steps[${index}].requiredPermission`, message: "requiredPermission must be in 'resource:action' format with no spaces" });
+      issues.push({
+        path: `steps[${index}].requiredPermission`,
+        message: "requiredPermission must be in 'resource:action' format with no spaces",
+      });
     }
   });
 

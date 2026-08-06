@@ -64,18 +64,10 @@ export class SqliteAuditLog implements IAuditLog {
         data      TEXT    NOT NULL
       )
     `);
-    this.#db.exec(
-      "CREATE INDEX IF NOT EXISTS idx_audit_actor  ON audit_log (actor)",
-    );
-    this.#db.exec(
-      "CREATE INDEX IF NOT EXISTS idx_audit_action ON audit_log (action)",
-    );
-    this.#db.exec(
-      "CREATE INDEX IF NOT EXISTS idx_audit_at     ON audit_log (at)",
-    );
-    this.#db.exec(
-      "CREATE INDEX IF NOT EXISTS idx_audit_resource ON audit_log (resource)",
-    );
+    this.#db.exec("CREATE INDEX IF NOT EXISTS idx_audit_actor  ON audit_log (actor)");
+    this.#db.exec("CREATE INDEX IF NOT EXISTS idx_audit_action ON audit_log (action)");
+    this.#db.exec("CREATE INDEX IF NOT EXISTS idx_audit_at     ON audit_log (at)");
+    this.#db.exec("CREATE INDEX IF NOT EXISTS idx_audit_resource ON audit_log (resource)");
   }
 
   /** Seal an event into the log and persist it atomically. */
@@ -86,9 +78,9 @@ export class SqliteAuditLog implements IAuditLog {
     let entry!: AuditLogEntry;
     this.#db.exec("BEGIN IMMEDIATE");
     try {
-      const countRow = this.#db
-        .prepare("SELECT COUNT(*) AS n FROM audit_log")
-        .get() as { n: number };
+      const countRow = this.#db.prepare("SELECT COUNT(*) AS n FROM audit_log").get() as {
+        n: number;
+      };
       const lastRow = this.#db
         .prepare("SELECT hash FROM audit_log ORDER BY sequence DESC LIMIT 1")
         .get() as { hash: string } | undefined;
@@ -116,7 +108,11 @@ export class SqliteAuditLog implements IAuditLog {
       );
       this.#db.exec("COMMIT");
     } catch (e) {
-      try { this.#db.exec("ROLLBACK"); } catch { /* already rolled back or never started */ }
+      try {
+        this.#db.exec("ROLLBACK");
+      } catch {
+        /* already rolled back or never started */
+      }
       throw e;
     }
     return entry;

@@ -113,183 +113,183 @@ export async function createApp(): Promise<AppContainer> {
     );
   }
   if (inMemory || seedDemo) {
-  const createdAt = nowTs();
+    const createdAt = nowTs();
 
-  // ── 1. Organisation ───────────────────────────────────────────────────────
+    // ── 1. Organisation ───────────────────────────────────────────────────────
 
-  const org = mustOk(
-    "headquarters org",
-    createOrganization({
-      id: "org-hq",
-      name: "Kensan Construction HQ",
-      type: "headquarters",
-      status: "active",
-      createdAt,
-    }),
-  );
-  await repositories.organizations.save(org);
-
-  const siteBranch = mustOk(
-    "site branch org",
-    createOrganization({
-      id: "org-site-01",
-      name: "Kensan Site Branch 01",
-      type: "site",
-      status: "active",
-      parentId: "org-hq",
-      createdAt,
-    }),
-  );
-  await repositories.organizations.save(siteBranch);
-
-  // ── 2. Roles ──────────────────────────────────────────────────────────────
-
-  const adminRole = mustOk(
-    "admin role",
-    createRole({
-      id: "role-admin",
-      name: "Platform Administrator",
-      description: "Full platform access for governance administrators.",
-      scope: "global",
-      permissions: ["*:*"],
-    }),
-  );
-  await repositories.roles.save(adminRole);
-
-  const viewerRole = mustOk(
-    "viewer role",
-    createRole({
-      id: "role-viewer",
-      name: "Read-Only Viewer",
-      description: "Read-only access to applications and devices.",
-      scope: "organization",
-      permissions: ["application:read", "device:read", "audit:read"],
-    }),
-  );
-  await repositories.roles.save(viewerRole);
-
-  // ── 3. Users ──────────────────────────────────────────────────────────────
-
-  const adminUser = mustOk(
-    "admin user",
-    createUser({
-      id: "user-admin",
-      organizationId: "org-hq",
-      displayName: "Platform Admin",
-      email: "admin@kensan-construction.example",
-      status: "active",
-      roleIds: ["role-admin"],
-      createdAt,
-    }),
-  );
-  await repositories.users.save(adminUser);
-
-  const viewerUser = mustOk(
-    "viewer user",
-    createUser({
-      id: "user-viewer",
-      organizationId: "org-hq",
-      displayName: "Dashboard Viewer",
-      email: "viewer@kensan-construction.example",
-      status: "active",
-      roleIds: ["role-viewer"],
-      createdAt,
-    }),
-  );
-  await repositories.users.save(viewerUser);
-
-  // ── 4. Policies ───────────────────────────────────────────────────────────
-
-  const allowPortalPolicy = mustOk(
-    "allow portal policy",
-    createPolicy({
-      id: "policy-allow-portal",
-      name: "Allow Portal Read Access",
-      effect: "allow",
-      actions: ["read"],
-      resources: ["application", "device"],
-    }),
-  );
-  await repositories.policies.save(allowPortalPolicy);
-
-  const denyGuestAuditPolicy = mustOk(
-    "deny guest audit policy",
-    createPolicy({
-      id: "policy-deny-guest-audit",
-      name: "Deny Guest Audit Access",
-      effect: "deny",
-      actions: ["read"],
-      resources: ["audit"],
-      conditions: [{ attribute: "subject", equals: "guest" }],
-    }),
-  );
-  await repositories.policies.save(denyGuestAuditPolicy);
-
-  // ── 5. Applications ───────────────────────────────────────────────────────
-
-  const portalApp = mustOk(
-    "enterprise portal app",
-    createApplication({
-      id: "app-portal",
-      key: "enterprise-portal",
-      name: "Enterprise Portal",
-      category: "portal",
-      health: "healthy",
-      ownerOrganizationId: "org-hq",
-    }),
-  );
-  await repositories.applications.save(portalApp);
-
-  const fieldApp = mustOk(
-    "field os app",
-    createApplication({
-      id: "app-field",
-      key: "field-os",
-      name: "Field OS",
-      category: "field",
-      health: "degraded",
-      ownerOrganizationId: "org-site-01",
-    }),
-  );
-  await repositories.applications.save(fieldApp);
-
-  // ── 6. Device ─────────────────────────────────────────────────────────────
-
-  const tablet = mustOk(
-    "site tablet",
-    createDevice({
-      id: "device-tablet-01",
-      organizationId: "org-site-01",
-      kind: "tablet",
-      status: "active",
-      assignedUserId: "user-viewer",
-      lastSeenAt: createdAt,
-    }),
-  );
-  await repositories.devices.save(tablet);
-
-  // ── 7. API keys ───────────────────────────────────────────────────────────
-
-  const adminCred = createApiKey("user-admin", [...adminRole.permissions], apiKeyStore);
-  const viewerCred = createApiKey(
-    "user-viewer",
-    [...viewerRole.permissions],
-    apiKeyStore,
-    "org-hq",
-  );
-
-  // Explicit opt-in only — never log secret material by default.
-  // Blocked outside interactive terminals to prevent credentials leaking into CI logs.
-  if (process.env["CEOP_LOG_DEMO_CREDS"] === "true") {
-    if (!process.stderr.isTTY) {
-      throw new Error("CEOP_LOG_DEMO_CREDS can only be used from an interactive terminal");
-    }
-    console.error(
-      "[app] demo API keys (use as: Authorization: Bearer <key>:<secret>)\n" +
-        `  admin  key=${adminCred.key}  secret=${adminCred.secret}\n` +
-        `  viewer key=${viewerCred.key}  secret=${viewerCred.secret}`,
+    const org = mustOk(
+      "headquarters org",
+      createOrganization({
+        id: "org-hq",
+        name: "Kensan Construction HQ",
+        type: "headquarters",
+        status: "active",
+        createdAt,
+      }),
     );
-  }
+    await repositories.organizations.save(org);
+
+    const siteBranch = mustOk(
+      "site branch org",
+      createOrganization({
+        id: "org-site-01",
+        name: "Kensan Site Branch 01",
+        type: "site",
+        status: "active",
+        parentId: "org-hq",
+        createdAt,
+      }),
+    );
+    await repositories.organizations.save(siteBranch);
+
+    // ── 2. Roles ──────────────────────────────────────────────────────────────
+
+    const adminRole = mustOk(
+      "admin role",
+      createRole({
+        id: "role-admin",
+        name: "Platform Administrator",
+        description: "Full platform access for governance administrators.",
+        scope: "global",
+        permissions: ["*:*"],
+      }),
+    );
+    await repositories.roles.save(adminRole);
+
+    const viewerRole = mustOk(
+      "viewer role",
+      createRole({
+        id: "role-viewer",
+        name: "Read-Only Viewer",
+        description: "Read-only access to applications and devices.",
+        scope: "organization",
+        permissions: ["application:read", "device:read", "audit:read"],
+      }),
+    );
+    await repositories.roles.save(viewerRole);
+
+    // ── 3. Users ──────────────────────────────────────────────────────────────
+
+    const adminUser = mustOk(
+      "admin user",
+      createUser({
+        id: "user-admin",
+        organizationId: "org-hq",
+        displayName: "Platform Admin",
+        email: "admin@kensan-construction.example",
+        status: "active",
+        roleIds: ["role-admin"],
+        createdAt,
+      }),
+    );
+    await repositories.users.save(adminUser);
+
+    const viewerUser = mustOk(
+      "viewer user",
+      createUser({
+        id: "user-viewer",
+        organizationId: "org-hq",
+        displayName: "Dashboard Viewer",
+        email: "viewer@kensan-construction.example",
+        status: "active",
+        roleIds: ["role-viewer"],
+        createdAt,
+      }),
+    );
+    await repositories.users.save(viewerUser);
+
+    // ── 4. Policies ───────────────────────────────────────────────────────────
+
+    const allowPortalPolicy = mustOk(
+      "allow portal policy",
+      createPolicy({
+        id: "policy-allow-portal",
+        name: "Allow Portal Read Access",
+        effect: "allow",
+        actions: ["read"],
+        resources: ["application", "device"],
+      }),
+    );
+    await repositories.policies.save(allowPortalPolicy);
+
+    const denyGuestAuditPolicy = mustOk(
+      "deny guest audit policy",
+      createPolicy({
+        id: "policy-deny-guest-audit",
+        name: "Deny Guest Audit Access",
+        effect: "deny",
+        actions: ["read"],
+        resources: ["audit"],
+        conditions: [{ attribute: "subject", equals: "guest" }],
+      }),
+    );
+    await repositories.policies.save(denyGuestAuditPolicy);
+
+    // ── 5. Applications ───────────────────────────────────────────────────────
+
+    const portalApp = mustOk(
+      "enterprise portal app",
+      createApplication({
+        id: "app-portal",
+        key: "enterprise-portal",
+        name: "Enterprise Portal",
+        category: "portal",
+        health: "healthy",
+        ownerOrganizationId: "org-hq",
+      }),
+    );
+    await repositories.applications.save(portalApp);
+
+    const fieldApp = mustOk(
+      "field os app",
+      createApplication({
+        id: "app-field",
+        key: "field-os",
+        name: "Field OS",
+        category: "field",
+        health: "degraded",
+        ownerOrganizationId: "org-site-01",
+      }),
+    );
+    await repositories.applications.save(fieldApp);
+
+    // ── 6. Device ─────────────────────────────────────────────────────────────
+
+    const tablet = mustOk(
+      "site tablet",
+      createDevice({
+        id: "device-tablet-01",
+        organizationId: "org-site-01",
+        kind: "tablet",
+        status: "active",
+        assignedUserId: "user-viewer",
+        lastSeenAt: createdAt,
+      }),
+    );
+    await repositories.devices.save(tablet);
+
+    // ── 7. API keys ───────────────────────────────────────────────────────────
+
+    const adminCred = createApiKey("user-admin", [...adminRole.permissions], apiKeyStore);
+    const viewerCred = createApiKey(
+      "user-viewer",
+      [...viewerRole.permissions],
+      apiKeyStore,
+      "org-hq",
+    );
+
+    // Explicit opt-in only — never log secret material by default.
+    // Blocked outside interactive terminals to prevent credentials leaking into CI logs.
+    if (process.env["CEOP_LOG_DEMO_CREDS"] === "true") {
+      if (!process.stderr.isTTY) {
+        throw new Error("CEOP_LOG_DEMO_CREDS can only be used from an interactive terminal");
+      }
+      console.error(
+        "[app] demo API keys (use as: Authorization: Bearer <key>:<secret>)\n" +
+          `  admin  key=${adminCred.key}  secret=${adminCred.secret}\n` +
+          `  viewer key=${viewerCred.key}  secret=${viewerCred.secret}`,
+      );
+    }
   } // end demo seeding
 
   return {

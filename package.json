@@ -24,7 +24,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.ts\" \"examples/**/*.ts\" \"*.json\" \"*.md\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"examples/**/*.ts\" \"*.json\" \"*.md\"",
-    "verify": "pnpm run typecheck && pnpm run lint && pnpm run test",
+    "verify": "pnpm run format:check && pnpm run typecheck && pnpm run lint && pnpm run test",
     "demo": "node --experimental-strip-types examples/quickstart.ts",
     "openapi:gen": "node --experimental-strip-types scripts/generate-openapi.ts"
   },
@@ -32,7 +32,7 @@
     "overrides": {
       "brace-expansion@<1.1.18": "1.1.18",
       "brace-expansion@>=4.0.0 <5.0.9": "5.0.9",
-      "js-yaml@<4.3.0": "4.3.0"
+      "js-yaml@<4.3.1": "4.3.1"
     }
   },
   "devDependencies": {

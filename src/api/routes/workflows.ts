@@ -52,7 +52,11 @@ function parseSteps(body: unknown): WorkflowStep[] | undefined {
     const key = it["key"];
     const name = it["name"];
     const requiredPermission = it["requiredPermission"];
-    if (typeof key !== "string" || typeof name !== "string" || typeof requiredPermission !== "string") {
+    if (
+      typeof key !== "string" ||
+      typeof name !== "string" ||
+      typeof requiredPermission !== "string"
+    ) {
       return undefined;
     }
     result.push({ key, name, requiredPermission });
@@ -91,7 +95,10 @@ export function registerWorkflowRoutes(router: Router, container: AppContainer):
   // ── List (with optional type/status filter) ───────────────────────────────
 
   router.get("/api/v1/workflows", async (req, ctx, res) => {
-    if (!hasPermission(ctx, "workflow", "read")) { forbidden(res, "workflow:read"); return; }
+    if (!hasPermission(ctx, "workflow", "read")) {
+      forbidden(res, "workflow:read");
+      return;
+    }
 
     const typeFilter = req.query["type"];
     const statusFilter = req.query["status"];
@@ -101,7 +108,10 @@ export function registerWorkflowRoutes(router: Router, container: AppContainer):
     if (typeof typeFilter === "string" && WORKFLOW_TYPES.includes(typeFilter as WorkflowType)) {
       all = all.filter((w) => w.type === typeFilter);
     }
-    if (typeof statusFilter === "string" && WORKFLOW_STATUSES.includes(statusFilter as WorkflowStatus)) {
+    if (
+      typeof statusFilter === "string" &&
+      WORKFLOW_STATUSES.includes(statusFilter as WorkflowStatus)
+    ) {
       all = all.filter((w) => w.status === statusFilter);
     }
 
@@ -118,20 +128,31 @@ export function registerWorkflowRoutes(router: Router, container: AppContainer):
   // ── Get by id ─────────────────────────────────────────────────────────────
 
   router.get("/api/v1/workflows/:id", async (req, ctx, res) => {
-    if (!hasPermission(ctx, "workflow", "read")) { forbidden(res, "workflow:read"); return; }
+    if (!hasPermission(ctx, "workflow", "read")) {
+      forbidden(res, "workflow:read");
+      return;
+    }
     const workflow = await repositories.workflows.findById(workflowId(req.params["id"] ?? ""));
-    if (workflow === null) { notFound(res); return; }
+    if (workflow === null) {
+      notFound(res);
+      return;
+    }
     writeJson(res, 200, workflow);
   });
 
   // ── Create ────────────────────────────────────────────────────────────────
 
   router.post("/api/v1/workflows", async (req, ctx, res) => {
-    if (!hasPermission(ctx, "workflow", "write")) { forbidden(res, "workflow:write"); return; }
+    if (!hasPermission(ctx, "workflow", "write")) {
+      forbidden(res, "workflow:write");
+      return;
+    }
 
     const steps = parseSteps(req.body);
     if (steps === undefined) {
-      badRequest(res, [{ field: "steps", message: "steps must be an array of {key, name, requiredPermission}" }]);
+      badRequest(res, [
+        { field: "steps", message: "steps must be an array of {key, name, requiredPermission}" },
+      ]);
       return;
     }
 
@@ -159,7 +180,10 @@ export function registerWorkflowRoutes(router: Router, container: AppContainer):
       status: (str(req.body, "status") ?? "draft") as WorkflowStatus,
       steps,
     });
-    if (!result.ok) { badRequest(res, result.error); return; }
+    if (!result.ok) {
+      badRequest(res, result.error);
+      return;
+    }
     await repositories.workflows.save(result.value);
     recordAudit(container.auditLog, ctx, "workflow:create", result.value.id, "success", {
       name: result.value.name,
@@ -172,16 +196,27 @@ export function registerWorkflowRoutes(router: Router, container: AppContainer):
   // ── Update ────────────────────────────────────────────────────────────────
 
   router.put("/api/v1/workflows/:id", async (req, ctx, res) => {
-    if (!hasPermission(ctx, "workflow", "write")) { forbidden(res, "workflow:write"); return; }
+    if (!hasPermission(ctx, "workflow", "write")) {
+      forbidden(res, "workflow:write");
+      return;
+    }
 
     const existing = await repositories.workflows.findById(workflowId(req.params["id"] ?? ""));
-    if (existing === null) { notFound(res); return; }
+    if (existing === null) {
+      notFound(res);
+      return;
+    }
 
     const newStepsRaw = parseSteps(req.body);
     // If body contains `steps` key but it is malformed, reject.
-    const bodyObj = typeof req.body === "object" && req.body !== null ? req.body as Record<string, unknown> : {};
+    const bodyObj =
+      typeof req.body === "object" && req.body !== null
+        ? (req.body as Record<string, unknown>)
+        : {};
     if ("steps" in bodyObj && newStepsRaw === undefined) {
-      badRequest(res, [{ field: "steps", message: "steps must be an array of {key, name, requiredPermission}" }]);
+      badRequest(res, [
+        { field: "steps", message: "steps must be an array of {key, name, requiredPermission}" },
+      ]);
       return;
     }
     const steps = newStepsRaw ?? [...existing.steps];
@@ -202,7 +237,10 @@ export function registerWorkflowRoutes(router: Router, container: AppContainer):
       status: (str(req.body, "status") ?? existing.status) as WorkflowStatus,
       steps,
     });
-    if (!result.ok) { badRequest(res, result.error); return; }
+    if (!result.ok) {
+      badRequest(res, result.error);
+      return;
+    }
     await repositories.workflows.save(result.value);
     recordAudit(container.auditLog, ctx, "workflow:update", existing.id, "success", {
       name: result.value.name,
@@ -215,9 +253,15 @@ export function registerWorkflowRoutes(router: Router, container: AppContainer):
   // ── Delete ────────────────────────────────────────────────────────────────
 
   router.delete("/api/v1/workflows/:id", async (req, ctx, res) => {
-    if (!hasPermission(ctx, "workflow", "write")) { forbidden(res, "workflow:write"); return; }
+    if (!hasPermission(ctx, "workflow", "write")) {
+      forbidden(res, "workflow:write");
+      return;
+    }
     const existing = await repositories.workflows.findById(workflowId(req.params["id"] ?? ""));
-    if (existing === null) { notFound(res); return; }
+    if (existing === null) {
+      notFound(res);
+      return;
+    }
     await repositories.workflows.delete(existing.id);
     recordAudit(container.auditLog, ctx, "workflow:delete", existing.id, "success", {
       name: existing.name,

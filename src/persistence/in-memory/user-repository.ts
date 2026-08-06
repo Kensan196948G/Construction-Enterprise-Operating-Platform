@@ -23,7 +23,9 @@ export class InMemoryUserRepository implements UserRepository {
   async save(entity: User): Promise<void> {
     for (const existing of this.#store.values()) {
       if (existing.email === entity.email && (existing.id as string) !== (entity.id as string)) {
-        throw new Error(`Email "${entity.email}" is already registered to user id "${existing.id as string}"`);
+        throw new Error(
+          `Email "${entity.email}" is already registered to user id "${existing.id as string}"`,
+        );
       }
     }
     this.#store.set(entity.id as string, entity);

@@ -63,24 +63,17 @@ export function createApiKey(
  * Returns an {@link ApiKeyContext} on success, or a list of
  * {@link ValidationIssue}-compatible errors on failure.
  */
-export function validateApiKey(
-  credential: string,
-  store: ApiKeyStore,
-): Result<ApiKeyContext> {
+export function validateApiKey(credential: string, store: ApiKeyStore): Result<ApiKeyContext> {
   const colonIdx = credential.indexOf(":");
   if (colonIdx === -1) {
-    return err([
-      { path: "credential", message: "invalid API key format: expected keyId:secret" },
-    ]);
+    return err([{ path: "credential", message: "invalid API key format: expected keyId:secret" }]);
   }
 
   const keyId = credential.slice(0, colonIdx);
   const secret = credential.slice(colonIdx + 1);
 
   if (keyId.length === 0 || secret.length === 0) {
-    return err([
-      { path: "credential", message: "keyId and secret must both be non-empty" },
-    ]);
+    return err([{ path: "credential", message: "keyId and secret must both be non-empty" }]);
   }
 
   const record = store.get(keyId);

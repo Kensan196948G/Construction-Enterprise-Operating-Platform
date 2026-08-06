@@ -33,7 +33,10 @@ test("migrate: applies all migrations and is idempotent", () => {
     const rows = db.prepare("SELECT version FROM schema_migrations ORDER BY version").all() as {
       version: string;
     }[];
-    assert.deepEqual(rows.map((r) => r.version), MIGRATIONS.map((m) => m.version));
+    assert.deepEqual(
+      rows.map((r) => r.version),
+      MIGRATIONS.map((m) => m.version),
+    );
   } finally {
     db.close();
     rmSync(dir, { recursive: true, force: true });

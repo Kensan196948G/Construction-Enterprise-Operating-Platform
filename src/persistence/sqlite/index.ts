@@ -38,10 +38,7 @@ import { BaseSqliteRepository, openDatabase } from "./base-sqlite-repository.ts"
 // Concrete repositories
 // ---------------------------------------------------------------------------
 
-class SqliteUserRepository
-  extends BaseSqliteRepository<User>
-  implements UserRepository
-{
+class SqliteUserRepository extends BaseSqliteRepository<User> implements UserRepository {
   constructor(db: unknown) {
     super(
       db,
@@ -70,7 +67,7 @@ class SqliteUserRepository
   async findByEmail(email: string): Promise<User | null> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const stmt = (this.db as any).prepare("SELECT data FROM users WHERE email = ?");
-     
+
     const row = stmt.get(email) as { data: string } | undefined;
     return row !== undefined ? (JSON.parse(row.data) as User) : null;
   }
@@ -78,7 +75,7 @@ class SqliteUserRepository
   async findByOrganization(orgId: OrganizationId): Promise<readonly User[]> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const stmt = (this.db as any).prepare("SELECT data FROM users WHERE org_id = ?");
-     
+
     const rows = stmt.all(orgId as string) as { data: string }[];
     return rows.map((r) => JSON.parse(r.data) as User);
   }
@@ -118,26 +115,21 @@ class SqliteOrganizationRepository
     const stmt = (this.db as any).prepare(
       "SELECT data FROM organizations WHERE type = 'headquarters'",
     );
-     
+
     const rows = stmt.all() as { data: string }[];
     return rows.map((r) => JSON.parse(r.data) as Organization);
   }
 
   async findByParent(parentId: OrganizationId): Promise<readonly Organization[]> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const stmt = (this.db as any).prepare(
-      "SELECT data FROM organizations WHERE parent_id = ?",
-    );
-     
+    const stmt = (this.db as any).prepare("SELECT data FROM organizations WHERE parent_id = ?");
+
     const rows = stmt.all(parentId as string) as { data: string }[];
     return rows.map((r) => JSON.parse(r.data) as Organization);
   }
 }
 
-class SqliteRoleRepository
-  extends BaseSqliteRepository<Role>
-  implements RoleRepository
-{
+class SqliteRoleRepository extends BaseSqliteRepository<Role> implements RoleRepository {
   constructor(db: unknown) {
     super(
       db,
@@ -163,16 +155,13 @@ class SqliteRoleRepository
   async findByName(name: string): Promise<Role | null> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const stmt = (this.db as any).prepare("SELECT data FROM roles WHERE name = ?");
-     
+
     const row = stmt.get(name) as { data: string } | undefined;
     return row !== undefined ? (JSON.parse(row.data) as Role) : null;
   }
 }
 
-class SqliteDeviceRepository
-  extends BaseSqliteRepository<Device>
-  implements DeviceRepository
-{
+class SqliteDeviceRepository extends BaseSqliteRepository<Device> implements DeviceRepository {
   constructor(db: unknown) {
     super(
       db,
@@ -198,7 +187,7 @@ class SqliteDeviceRepository
   async findByOrganization(orgId: OrganizationId): Promise<readonly Device[]> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const stmt = (this.db as any).prepare("SELECT data FROM devices WHERE org_id = ?");
-     
+
     const rows = stmt.all(orgId as string) as { data: string }[];
     return rows.map((r) => JSON.parse(r.data) as Device);
   }
@@ -236,26 +225,21 @@ class SqliteApplicationRepository
   async findByKey(key: string): Promise<Application | null> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const stmt = (this.db as any).prepare("SELECT data FROM applications WHERE app_key = ?");
-     
+
     const row = stmt.get(key) as { data: string } | undefined;
     return row !== undefined ? (JSON.parse(row.data) as Application) : null;
   }
 
   async findByOwner(orgId: OrganizationId): Promise<readonly Application[]> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const stmt = (this.db as any).prepare(
-      "SELECT data FROM applications WHERE owner_org_id = ?",
-    );
-     
+    const stmt = (this.db as any).prepare("SELECT data FROM applications WHERE owner_org_id = ?");
+
     const rows = stmt.all(orgId as string) as { data: string }[];
     return rows.map((r) => JSON.parse(r.data) as Application);
   }
 }
 
-class SqlitePolicyRepository
-  extends BaseSqliteRepository<Policy>
-  implements PolicyRepository
-{
+class SqlitePolicyRepository extends BaseSqliteRepository<Policy> implements PolicyRepository {
   constructor(db: unknown) {
     super(
       db,
@@ -372,9 +356,9 @@ export function loadApiKeysFromSqlite(dbPath: string, store: ApiKeyStore): void 
   const db = openDatabase(dbPath);
   try {
     type TableRow = { name: string };
-    const tableExists = db.prepare(
-      "SELECT name FROM sqlite_master WHERE type='table' AND name='api_keys'",
-    ).get() as TableRow | undefined;
+    const tableExists = db
+      .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='api_keys'")
+      .get() as TableRow | undefined;
     if (!tableExists) {
       console.error(
         "[app] Warning: api_keys table not found — run migrations first: node --experimental-strip-types scripts/migrate.ts",
@@ -390,11 +374,13 @@ export function loadApiKeysFromSqlite(dbPath: string, store: ApiKeyStore): void 
       secret_hash: string;
       organization_id?: string | null;
     };
-    const rows = db.prepare(
-      hasOrgColumn
-        ? "SELECT key_id, subject, permissions, secret_hash, organization_id FROM api_keys"
-        : "SELECT key_id, subject, permissions, secret_hash FROM api_keys",
-    ).all() as ApiKeyRow[];
+    const rows = db
+      .prepare(
+        hasOrgColumn
+          ? "SELECT key_id, subject, permissions, secret_hash, organization_id FROM api_keys"
+          : "SELECT key_id, subject, permissions, secret_hash FROM api_keys",
+      )
+      .all() as ApiKeyRow[];
     for (const row of rows) {
       store.set(row.key_id, {
         keyId: row.key_id,

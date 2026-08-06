@@ -41,7 +41,13 @@ async function buildHarness(): Promise<Harness> {
   const apiKeyStore: ApiKeyStore = new Map();
 
   const adminRole = unwrap(
-    createRole({ id: "r-admin", name: "Admin", description: "", scope: "global", permissions: ["*:*"] }),
+    createRole({
+      id: "r-admin",
+      name: "Admin",
+      description: "",
+      scope: "global",
+      permissions: ["*:*"],
+    }),
   );
   const viewerRole = unwrap(
     createRole({
@@ -77,11 +83,16 @@ async function buildHarness(): Promise<Harness> {
     adminCredential: `${adminKV.key}:${adminKV.secret}`,
     viewerCredential: `${viewerKV.key}:${viewerKV.secret}`,
     unauthenticated: null,
-    close: () => new Promise<void>((resolve, reject) => server.close((e) => (e ? reject(e) : resolve()))),
+    close: () =>
+      new Promise<void>((resolve, reject) => server.close((e) => (e ? reject(e) : resolve()))),
   };
 }
 
-async function get(baseUrl: string, path: string, credential: string | null): Promise<{ status: number; body: unknown }> {
+async function get(
+  baseUrl: string,
+  path: string,
+  credential: string | null,
+): Promise<{ status: number; body: unknown }> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (credential !== null) {
     headers["Authorization"] = `Bearer ${credential}`;

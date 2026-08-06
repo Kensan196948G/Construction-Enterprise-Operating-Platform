@@ -8,7 +8,10 @@ import assert from "node:assert/strict";
 import { createJwtIssuer, generateJwtSecret } from "./jwt.ts";
 import type { Permission } from "../../domain/role.ts";
 
-const PERMS: readonly Permission[] = ["application:read" as Permission, "device:read" as Permission];
+const PERMS: readonly Permission[] = [
+  "application:read" as Permission,
+  "device:read" as Permission,
+];
 
 // ---------------------------------------------------------------------------
 // Happy path
@@ -96,7 +99,13 @@ test("jwt: verify rejects expired token", () => {
   const nowSec = Math.floor(Date.now() / 1000);
   const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url");
   const payload = Buffer.from(
-    JSON.stringify({ sub: "u", permissions: [], iat: nowSec - 7200, exp: nowSec - 3600, jti: "test-expired" }),
+    JSON.stringify({
+      sub: "u",
+      permissions: [],
+      iat: nowSec - 7200,
+      exp: nowSec - 3600,
+      jti: "test-expired",
+    }),
   ).toString("base64url");
   const sig = createHmac("sha256", secret).update(`${header}.${payload}`).digest("base64url");
   const result = issuer.verify(`${header}.${payload}.${sig}`);
@@ -118,7 +127,13 @@ test("jwt: verify rejects tampered payload", () => {
   const [header, , sig] = token.split(".");
   // Replace payload with one claiming admin subject.
   const fakePay = Buffer.from(
-    JSON.stringify({ sub: "user-admin", permissions: ["*:*"], iat: Math.floor(Date.now() / 1000), exp: Math.floor(Date.now() / 1000) + 3600, jti: "fake" }),
+    JSON.stringify({
+      sub: "user-admin",
+      permissions: ["*:*"],
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 3600,
+      jti: "fake",
+    }),
   ).toString("base64url");
   const tampered = `${header}.${fakePay}.${sig}`;
   const result = issuer.verify(tampered);
