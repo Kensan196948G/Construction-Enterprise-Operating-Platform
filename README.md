@@ -4,7 +4,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-22.13+-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Zero Runtime Deps](https://img.shields.io/badge/runtime%20deps-zero-brightgreen)](package.json)
 [![CI](https://img.shields.io/github/actions/workflow/status/Kensan196948G/Construction-Enterprise-Operating-Platform/ci.yml?label=CI&logo=github)](/.github/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-218%20pass-brightgreen)](src/)
+[![Tests](https://img.shields.io/badge/tests-221%20pass-brightgreen)](src/)
 [![Security](https://img.shields.io/badge/security-hardened-blue)](src/api/middleware/auth.ts)
 [![License](https://img.shields.io/badge/license-proprietary-lightgrey)](LICENSE.md)
 
@@ -532,7 +532,7 @@ curl -H "Authorization: Bearer <keyId>:<secret>" http://localhost:3000/api/v1/da
 ## 🧪 テスト実行
 
 ```bash
-# 全テスト実行（213 tests）
+# 全テスト実行（221 tests）
 pnpm run test
 
 # typecheck + lint + test 一括
@@ -551,13 +551,30 @@ pnpm run lint:fix
 pnpm run build
 ```
 
+## 📋 運用ドキュメント（v0.6.0）
+
+| 文書 | 内容 |
+|---|---|
+| [Runbook](docs/operations/RUNBOOK.md) | デプロイ・更新・rollback・インシデント対応 |
+| [バックアップ/復元](docs/operations/BACKUP_RESTORE.md) | SQLite スナップショット手順・RPO/RTO・復元試験 |
+| [監視設計](docs/operations/MONITORING.md) | SLI/SLO・監視項目・アラート |
+| [運用台帳](docs/operations/OPERATIONS_LEDGER.md) | 日次〜年次の運用タスク |
+| [セキュリティ対応](docs/operations/SECURITY_RESPONSE.md) | P0 対応・秘密ローテーション |
+| [総合評価](docs/assessment/ROOT-ASSESSMENT.md) | 現状評価・ギャップ・決定記録 |
+
+バックアップ実行:
+
+```bash
+node --experimental-strip-types scripts/sqlite-backup.ts /data/ceop.db /backup/ceop-$(date -u +%Y%m%dT%H%M%SZ).db
+```
+
 ### 📊 現在の品質状態
 
 | ゲート      | 状態              | 備考                                                    |
 | ----------- | ----------------- | ------------------------------------------------------- |
 | typecheck   | ✅ pass           | strict・`noUncheckedIndexedAccess`・0 error             |
 | lint        | ✅ pass           | ESLint flat config + typescript-eslint・0 warning       |
-| test        | ✅ 218/218        | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud (34) + governance-crud (26) + sqlite-audit-log (9) + workflow-crud (26) + audit-coverage (3) |
+| test        | ✅ 221/221        | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud (34) + governance-crud (26) + sqlite-audit-log (9) + workflow-crud (26) + audit-coverage (3) + migrate (2) + rate-limit (1) |
 | build       | ✅ pass           | `dist/` に型定義付き出力                                |
 | CI          | ✅ 設定済み       | `.github/workflows/ci.yml`（push / PR トリガー）        |
 | Docker      | ✅ multi-stage    | non-root ユーザー・HEALTHCHECK 付き                     |

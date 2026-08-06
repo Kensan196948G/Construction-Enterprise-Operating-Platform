@@ -23,6 +23,12 @@ operations documentation for the first main-branch release.
 - **Dependency audit clean** — pnpm overrides resolve the 7 high-severity devDependency advisories (brace-expansion, js-yaml); `pnpm audit --audit-level=high` reports 0 vulnerabilities.
 - **API response hardening** — JSON responses now carry `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, and `Cache-Control: no-store`.
 - **JWT claim validation** — tokens with `iat >= exp` are rejected as malformed.
+- **Readiness probe** — `GET /health/ready` verifies the active persistence tier (in addition to liveness).
+- **Audit log pagination** — `GET /api/v1/governance/audit` now supports `offset` and returns `total`/`limit`.
+- **Global API rate limit** — `/api/v1/*` is limited per socket IP (default 300 req/min, configurable via `CEOP_RATE_LIMIT_MAX` / `CEOP_RATE_LIMIT_WINDOW_MS`).
+- **Migration runner tests** — `applyMigrations()` is now importable and covered by integration tests (idempotency, schema, FK enforcement).
+- **SQLite backup script** — `scripts/sqlite-backup.ts` writes a consistent `VACUUM INTO` snapshot and replaces the destination atomically.
+- **Operations documentation** — Runbook, backup/restore, monitoring (SLI/SLO), operations ledger, and security response procedures under `docs/operations/`; root `AGENTS.md` and `SECURITY.md` added.
 
 #### M9 — Full Entity CRUD API (21 endpoints)
 
@@ -54,6 +60,7 @@ operations documentation for the first main-branch release.
 - Baseline security headers on all JSON API responses.
 - `iat < exp` JWT claim validation.
 - `pnpm audit` high-severity findings resolved (devDependencies).
+- Global per-IP rate limiting on `/api/v1/*`.
 
 ---
 

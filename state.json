@@ -6,7 +6,7 @@
     "registered_at": "2026-06-25",
     "phase_mode": "development"
   },
-  "goal": "v0.6.0 CI 安定化 + セキュリティ強化R2 完了 — CI 全 job グリーン・213テスト pass・PR マージ準備",
+  "goal": "v0.6.0 本番対応リリース完了 — 221テスト pass・CI グリーン・PR 統合・運用文書完備・本番デプロイ判定",
   "phase": "Verify",
   "release": {
     "v0_1_0_foundation": "release_ready",
@@ -22,7 +22,7 @@
     "success_rate_target": 0.9,
     "ci_success_rate": 0.0,
     "test_pass_rate": 1.0,
-    "test_count": 213,
+    "test_count": 221,
     "security_critical": 0,
     "security_high_resolved": 17,
     "blocker_count": 0
@@ -54,9 +54,22 @@
     "M13_coderabbit_minor_fixes": "completed",
     "M14_security_hardening_r2": "completed",
     "M15_ci_pnpm_fix": "completed",
-    "M16_coderabbit_all16_fixes": "completed"
+    "M16_coderabbit_all16_fixes": "completed",
+    "v0_6_0_production_readiness": "in_progress"
   },
   "completed_issues": [
+    "v0.6.0: version unification (src/version.ts + guard test, package.json/info/OpenAPI/UI/Docker 0.6.0)",
+    "v0.6.0: LICENSE.md (Proprietary/UNLICENSED) + OpenAPI license correction",
+    "v0.6.0: dependency audit clean (brace-expansion/js-yaml overrides) — 0 vulnerabilities",
+    "v0.6.0: full mutation audit trail (CRUD/policy/workflow/auth events) via src/api/audit.ts",
+    "v0.6.0: POST /api/v1/auth/revoke JWT revocation API",
+    "v0.6.0: migration 004 — FK constraints + workflows/revoked_jtis consolidation (fresh+legacy verified)",
+    "v0.6.0: JWT iat<exp validation, API security headers",
+    "v0.6.0: GET /health/ready readiness probe",
+    "v0.6.0: audit log offset pagination",
+    "v0.6.0: global API rate limit (per socket IP, configurable)",
+    "v0.6.0: migration runner tests (idempotent/FK) + scripts/sqlite-backup.ts",
+    "v0.6.0: operations docs (RUNBOOK/BACKUP/MONITORING/LEDGER/SECURITY_RESPONSE) + AGENTS.md + SECURITY.md",
     "M1: TypeScript foundation scaffold (pnpm + strict tsc + node:test + eslint + CI)",
     "M1: 8 platform domains (organization/user/role/device/application/workflow/policy/audit-event)",
     "M1: Governance Core (policy engine deny-overrides + tamper-evident audit log)",
@@ -130,14 +143,25 @@
     ]
   },
   "notes": {
-    "remote": "未設定（ローカルのみ）。GitHub リポジトリ作成・push は外部サービス変更のため人間承認待ち。",
-    "branch": "feat/platform-foundation",
+    "remote": "https://github.com/Kensan196948G/Construction-Enterprise-Operating-Platform (PRIVATE)",
+    "branch": "feat/production-hardening (base: feat/platform-foundation)",
     "next_actions": [
-      "OpenAPI/Swagger 仕様書生成（任意）",
-      "v0.5.0 git タグ付け（人間承認後）",
-      "リモートリポジトリ作成 + PR 作成（人間承認後）",
-      "本番デプロイ（人間が実施） — deploy ガイドは README M8 セクション参照"
+      "PR #1 を本ブランチへ更新（または新 PR 作成）して CI グリーンを確認",
+      "ブランチ保護・Actions 権限の設定",
+      "main マージ（ユーザー事前承認済み・品質条件確認後）",
+      "v0.6.0 タグ作成と GitHub Release / GHCR イメージ",
+      "本番デプロイ先の一意特定とデプロイ（要人間/権限）",
+      "初期安定化監視と運用台帳の開始"
     ],
+    "v060_verify": {
+      "all_tests": "221/221 pass",
+      "typecheck": "clean",
+      "lint": "clean",
+      "build": "clean",
+      "audit": "0 vulnerabilities (--audit-level=high)",
+      "openapi": "regenerated",
+      "completed_at": "2026-08-06"
+    },
     "verify_completed": {
       "codex_adversarial_review": "P1×2 + P2×1 全解消 (commit b5e3c28)",
       "coderabbit_major": "major×6 全解消 (commit b5e3c28)",
