@@ -6,8 +6,8 @@
     "registered_at": "2026-06-25",
     "phase_mode": "development"
   },
-  "goal": "v0.6.0 本番対応リリース完了 — 221テスト pass・CI グリーン・PR 統合・運用文書完備・本番デプロイ判定",
-  "phase": "Verify",
+  "goal": "v0.6.0 本番対応リリース完了 — 226テスト pass・CI グリーン・main 統合・v0.6.0 タグ/GHCR/Release 作成済み・本番デプロイ判定待ち",
+  "phase": "Release",
   "release": {
     "v0_1_0_foundation": "release_ready",
     "v0_2_0_api_gateway": "release_ready",
@@ -20,7 +20,7 @@
   },
   "kpi": {
     "success_rate_target": 0.9,
-    "ci_success_rate": 0.0,
+    "ci_success_rate": 1.0,
     "test_pass_rate": 1.0,
     "test_count": 226,
     "security_critical": 0,
@@ -55,7 +55,7 @@
     "M14_security_hardening_r2": "completed",
     "M15_ci_pnpm_fix": "completed",
     "M16_coderabbit_all16_fixes": "completed",
-    "v0_6_0_production_readiness": "in_progress"
+    "v0_6_0_production_readiness": "completed"
   },
   "completed_issues": [
     "v0.6.0: version unification (src/version.ts + guard test, package.json/info/OpenAPI/UI/Docker 0.6.0)",
@@ -149,12 +149,10 @@
     "remote": "https://github.com/Kensan196948G/Construction-Enterprise-Operating-Platform (PRIVATE)",
     "branch": "feat/production-hardening (base: feat/platform-foundation)",
     "next_actions": [
-      "PR #1 を本ブランチへ更新（または新 PR 作成）して CI グリーンを確認",
-      "ブランチ保護・Actions 権限の設定",
-      "main マージ（ユーザー事前承認済み・品質条件確認後）",
-      "v0.6.0 タグ作成と GitHub Release / GHCR イメージ",
-      "本番デプロイ先の一意特定とデプロイ（要人間/権限）",
-      "初期安定化監視と運用台帳の開始"
+      "本番デプロイ先（ホスト/コンテナ基盤）の一意特定とデプロイ（要人間/権限）",
+      "初期安定化監視（health/ready・ログ・エラー率）と運用台帳の開始",
+      "四半期バックアップ復元試験と権限棚卸し",
+      "P3 バックログ（CSP nonce 化、リクエスト ID、SSO、実アダプタ接続等）"
     ],
     "v060_verify": {
       "all_tests": "226/226 pass",
