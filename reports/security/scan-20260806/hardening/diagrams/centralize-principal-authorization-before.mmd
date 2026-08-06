@@ -1,0 +1,17 @@
+flowchart TB
+    subgraph Client["Authenticated client"]
+        C[API key / JWT with permission strings]
+    end
+    subgraph App["CEOP HTTP app"]
+        R[Router + hasPermission]
+        RE[Repositories findAll/save]
+        G[Governance engine]
+        U[User/Role store]
+    end
+    C -->|resource:action token| R
+    R -->|no org predicate| RE
+    R -->|roleIds/permissions from body| U
+    R -->|resolve roles| G
+    G --> RE
+    style R fill:#fbb,stroke:#900
+    style RE fill:#fbb,stroke:#900

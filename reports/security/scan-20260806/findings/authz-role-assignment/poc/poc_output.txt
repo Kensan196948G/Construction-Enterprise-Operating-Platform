@@ -1,0 +1,60 @@
+(node:1721653) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+[2026-08-06T11:57:37.967Z] GET /api/v1/devices 200 4ms
+[2026-08-06T11:57:37.990Z] POST /api/v1/devices 201 3ms
+[2026-08-06T11:57:37.996Z] PUT /api/v1/devices/device-cross-org 200 1ms
+[2026-08-06T11:57:38.003Z] POST /api/v1/users 201 2ms
+[2026-08-06T11:57:38.008Z] GET /api/v1/users 200 1ms
+[2026-08-06T11:57:38.012Z] POST /api/v1/roles 201 1ms
+[2026-08-06T11:57:38.015Z] PUT /api/v1/users/user-site-x 200 1ms
+[2026-08-06T11:57:38.020Z] POST /api/v1/governance/evaluate 200 2ms
+{
+  "c2_devices_before_orgs": [
+    {
+      "id": "device-tablet-01",
+      "organizationId": "org-site-01"
+    }
+  ],
+  "c2_create_device_in_org_hq_status": 201,
+  "c2_create_device_in_org_hq_body": {
+    "id": "device-cross-org",
+    "organizationId": "org-hq",
+    "kind": "sensor",
+    "status": "provisioned"
+  },
+  "c2_update_device_in_org_hq_status": 200,
+  "c2_create_user_in_org_site_status": 201,
+  "c2_users_visible": [
+    {
+      "id": "user-admin",
+      "organizationId": "org-hq"
+    },
+    {
+      "id": "user-viewer",
+      "organizationId": "org-hq"
+    },
+    {
+      "id": "user-site-x",
+      "organizationId": "org-site-01"
+    }
+  ],
+  "c1_create_role_star_star_status": 201,
+  "c1_create_role_star_star_body": {
+    "id": "role-hax",
+    "name": "Hax",
+    "description": "created by user manager",
+    "scope": "global",
+    "permissions": [
+      "*:*"
+    ]
+  },
+  "c1_assign_admin_role_status": 200,
+  "c1_governance_evaluate_after_assign": {
+    "decision": "allow",
+    "reason": "granted by role permission: *:*",
+    "matchedPolicyIds": [],
+    "subject": "user-site-x",
+    "resource": "user",
+    "action": "write"
+  }
+}

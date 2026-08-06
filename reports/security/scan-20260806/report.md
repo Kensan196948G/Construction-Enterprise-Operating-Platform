@@ -89,3 +89,10 @@
   exhaustive スキャンではない（環境制約による代替）。
 - ペネトレーションテスト・外部スキャナ（CodeRabbit 等）は PR で別途実施。
 - 本番デプロイ先のネットワーク・TLS・IdP 連携は未確認。
+
+## 補足: 並列セキュリティスキャン成果物
+
+別エージェントが実行したセキュリティスキャン（`scan-report-agent.md`, `findings/`,
+`coverage.json`, `exports/results.sarif`, `hardening/`）を本ディレクトリへ統合済み。
+同スキャンの指摘 SEC-014（テナント横断）・SEC-015（権限昇格）は v0.6.0 で修正し、
+`tenant-scope.test.ts` で回帰検証している。

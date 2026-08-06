@@ -1,0 +1,145 @@
+{
+  "documentType": "codex-security.scan-manifest",
+  "scan": {
+    "artifacts": [
+      {
+        "mediaType": "application/json",
+        "path": "findings.json",
+        "sha256": "af6fd8bb3eb37ec86524acccd3233900a1790b513cd2b1e2133a6d7b360a9bc7"
+      },
+      {
+        "mediaType": "application/json",
+        "path": "coverage.json",
+        "sha256": "71891b1cdee7c11374c7e6cf8b526602929d0d53933bcd7ef103b2a920248f35"
+      },
+      {
+        "mediaType": "application/octet-stream",
+        "path": "artifacts/02_discovery/work_ledger.jsonl",
+        "sha256": "b94391fad8aa193e3c3756b6c20b8ca81cfa9b6e288a133577aa024e3ac19991"
+      },
+      {
+        "mediaType": "application/octet-stream",
+        "path": "artifacts/03_coverage/repository_coverage_ledger.md",
+        "sha256": "164c1fa8424a1fc7c0385aa63c132ba9e4bb24fe51b3f0dbc8055bc374b0e700"
+      },
+      {
+        "mediaType": "application/octet-stream",
+        "path": "artifacts/05_findings/authz-role-assignment/attack_path_analysis_report.md",
+        "sha256": "083d4d18efb61b33150d7ca4500b3f58677ff5d0171a60a567e74d0ac8ac3dc9"
+      },
+      {
+        "mediaType": "application/octet-stream",
+        "path": "artifacts/05_findings/authz-role-assignment/candidate_ledger.jsonl",
+        "sha256": "fc1a524020d09388924a30c4962d7f059cfe294bfb29ad35c74b22a3787153b1"
+      },
+      {
+        "mediaType": "application/octet-stream",
+        "path": "artifacts/05_findings/authz-role-assignment/validation_report.md",
+        "sha256": "d11359fd55057a6a645fe1cf3a6bbfcc32c9656e179aa7e354e17a9a411d2757"
+      },
+      {
+        "mediaType": "application/octet-stream",
+        "path": "artifacts/05_findings/authz-tenant-scoping/attack_path_analysis_report.md",
+        "sha256": "f668c7dfda17684ed688633413f4b9cf0202fb13d0c57f86199c25307b9d8fdb"
+      },
+      {
+        "mediaType": "application/octet-stream",
+        "path": "artifacts/05_findings/authz-tenant-scoping/candidate_ledger.jsonl",
+        "sha256": "58d73e56be9cba0ffc387529cc3d41e7b8b3469ef0e1230bb3a0ef944d27d1f1"
+      },
+      {
+        "mediaType": "application/octet-stream",
+        "path": "artifacts/05_findings/authz-tenant-scoping/validation_report.md",
+        "sha256": "529b8431eba94ac5fca9f94d68f4a8b5be3bb47c9e74b3a5f65bc81c7aa1aab8"
+      }
+    ],
+    "completedAt": "2026-08-06T12:04:59Z",
+    "coverageRef": "coverage.json",
+    "findingsRef": "findings.json",
+    "hardening": {
+      "portfolioPath": "hardening/hardening.md"
+    },
+    "id": "scan_ceop_87fb6102_20260806-204905",
+    "producer": {
+      "name": "codex-security-plugin",
+      "version": "0.1.0"
+    },
+    "scope": {
+      "artifactsReviewed": [
+        "src/**",
+        "scripts/**",
+        "Dockerfile",
+        "docker-compose.yml",
+        "docker-compose.prod.yml",
+        ".env.example",
+        ".github/workflows/*.yml",
+        "docs/openapi.yaml",
+        "package.json",
+        "pnpm-lock.yaml",
+        "state.json"
+      ],
+      "context": "Agent task payload arrived empty; security-scan role inferred from task name and team context (siblings: legacy_gap_analysis, ops_release_review).",
+      "excludePaths": [],
+      "includePaths": [
+        "."
+      ],
+      "limitations": [
+        "Parent-agent-only review: usable worker slots were 3 of the 6 recommended, and all slots were occupied by sibling agents; no sub-agent sharding was used.",
+        "Legacy-projects/** excluded as reference trees (recorded in coverage.explicitExclusions).",
+        "Test files reviewed as test-only surfaces; not read line-by-line (no runtime imports, no secrets).",
+        "Deployment ingress/topology is outside the repository; exposure is inferred from Docker/compose."
+      ],
+      "runtimeStatus": "Node v25.2.1 with --experimental-strip-types; app boots and HTTP reproduction ran successfully against in-memory repositories",
+      "summary": "Repository-wide scan of the active runtime tree (99 files: src/, scripts/, Docker/compose, CI workflows, env template, OpenAPI). Threat model generated during Phase 1 (not externally provided). Parent-agent audit only: concurrency slots were fully occupied by sibling agents, so no ranking/file-review/validation/write-up sub-agents were dispatched; coverage is bounded accordingly and recorded in the work ledger.",
+      "validationMode": "realistic interface reproduction (live HTTP) + full-file code review"
+    },
+    "sealedAt": "2026-08-06T12:04:59Z",
+    "startedAt": "2026-08-06T11:48:00Z",
+    "status": "completed",
+    "target": {
+      "displayName": "Construction-Enterprise-Operating-Platform",
+      "kind": "git_worktree",
+      "revision": "87fb6102df5e0bc96af72208de9b611ed2ca86b0",
+      "snapshotDigest": "codex-security-snapshot/v1:sha256:806dfa4169510ceec5558cff53ef4ca065efc8246a505382bb0336ab3daf3b92",
+      "targetId": "dedd4e3fb917a3913ee7ffdfba58bb63cb58a3b8748f5e722820928748656d7a"
+    },
+    "threatModel": {
+      "assets": [
+        "API keys and JWTs",
+        "platform data (orgs/users/roles/devices/apps/policies/workflows)",
+        "governance decisions",
+        "audit evidence",
+        "operator configuration and secrets"
+      ],
+      "assumptions": [
+        "production requires CEOP_SQLITE_FILE and CEOP_JWT_SECRET",
+        "rate limiter keys on socket.remoteAddress with trusted proxy SNAT",
+        "no upload/email/outbound fetch features yet"
+      ],
+      "attackerCapabilities": [
+        "unauthenticated remote requests",
+        "authenticated requests with granted permissions",
+        "org/site-scoped credential misuse",
+        "operator misconfiguration"
+      ],
+      "securityObjectives": [
+        "deny by default",
+        "no cross-tenant access",
+        "no privilege escalation",
+        "tamper-evident audit",
+        "no secret leakage",
+        "bounded resource use"
+      ],
+      "summary": "TypeScript coordination layer exposing an HTTP API (API-key HMAC + HS256 JWT auth), RBAC/ABAC governance core, tamper-evident audit log, and SQLite/file/in-memory persistence. Trust boundaries: untrusted HTTP clients, authenticated users/services, browsers, operators, persistence, and CI. Core invariants: authn/authz gates, deny-overrides, tenant boundaries, audit integrity, secret handling, bounded DoS surfaces.",
+      "trustBoundaries": [
+        "untrusted HTTP clients -> gateway",
+        "authenticated users -> protected routes/policy engine",
+        "browsers -> SSR pages",
+        "operators -> env/config/CLI/storage",
+        "persistence -> repositories/audit",
+        "developers/CI -> source/lockfile/build"
+      ]
+    }
+  },
+  "schemaVersion": "1.0"
+}

@@ -1,0 +1,379 @@
+{
+  "documentType": "codex-security.hardening-analysis",
+  "schemaVersion": "1.0",
+  "analysisId": "hardening_final",
+  "sourceScan": {
+    "scanId": "scan_ceop_87fb6102_20260806",
+    "targetRevision": "87fb6102df5e0bc96af72208de9b611ed2ca86b0",
+    "sourceDrift": "none"
+  },
+  "assessment": {
+    "outcome": "opportunities_identified",
+    "summary": "One cross-cutting authorization-control opportunity: resolve a full principal at the auth boundary and enforce tenant scope and grant authority through a single owned service."
+  },
+  "constraints": {
+    "profile": "balanced",
+    "changeHorizons": [
+      "incremental",
+      "medium_term"
+    ],
+    "nonNegotiables": [
+      "single-node deployment remains supported",
+      "no public API surface change"
+    ],
+    "assumptions": [
+      "No measured latency or memory budget was supplied."
+    ]
+  },
+  "opportunities": [
+    {
+      "opportunityId": "centralize-principal-authorization",
+      "title": "Centralize principal authorization and tenant scoping",
+      "summary": "Resolve subject, organization, and role scope into one principal at authentication, and enforce tenant bounds and grantor authority through one authorization service.",
+      "diagnosis": "Route-level auth compares only permission strings; tenant scope and grantor authority are never checked, producing two independent authorization bypasses.",
+      "evidence": [
+        {
+          "claimType": "observed",
+          "sourceKind": "finding",
+          "findingId": null,
+          "path": "src/api/routes/governance.ts",
+          "claim": "hasPermission checks only resource:action tokens; ApiKeyContext carries no organizationId"
+        },
+        {
+          "claimType": "observed",
+          "sourceKind": "finding",
+          "findingId": null,
+          "path": "src/api/routes/entity-crud.ts",
+          "claim": "roleIds and permissions from request bodies are persisted without grantor-authority checks"
+        },
+        {
+          "claimType": "observed",
+          "sourceKind": "poc",
+          "path": "artifacts/05_findings/authz-tenant-scoping/poc/poc.ts",
+          "claim": "Org-scoped key created and updated a device in another organization via HTTP"
+        },
+        {
+          "claimType": "observed",
+          "sourceKind": "poc",
+          "path": "artifacts/05_findings/authz-role-assignment/poc/poc.ts",
+          "claim": "Non-admin user manager created a *:* role, assigned it, and governance returned allow"
+        },
+        {
+          "claimType": "inferred",
+          "sourceKind": "source",
+          "path": "src/domain/role.ts",
+          "claim": "RoleScope declares org/site boundaries that no enforcement point consumes"
+        }
+      ],
+      "desiredInvariants": [
+        "Every request resolves exactly one principal with subject, organization, and role scope.",
+        "Every repository read or mutation is bounded by the principal's scope.",
+        "No grantor may create or assign authority beyond their own."
+      ],
+      "proposalPath": "proposals/centralize-principal-authorization.md",
+      "options": [
+        {
+          "optionId": "local-guards",
+          "title": "Strengthen local route guards",
+          "kind": "baseline",
+          "summary": "Patch each affected route with org predicates and grantor-subset checks.",
+          "diagramPaths": {
+            "before": "diagrams/centralize-principal-authorization-before.mmd",
+            "after": "diagrams/centralize-principal-authorization-local-guards-after.mmd"
+          },
+          "findingCoverage": [
+            {
+              "findingId": "authz-tenant-scoping",
+              "effect": "addresses",
+              "tacticalFixRequired": true,
+              "rationale": "Org predicates are the direct fix for each route."
+            },
+            {
+              "findingId": "authz-role-assignment",
+              "effect": "addresses",
+              "tacticalFixRequired": true,
+              "rationale": "Grantor-subset checks are the direct fix for each grant route."
+            }
+          ],
+          "tradeoffs": [
+            {
+              "dimension": "security",
+              "direction": "improves",
+              "confidence": "high",
+              "basis": "source-derived",
+              "assessment": "Known paths are closed; recurrence risk remains because the control is duplicated per route.",
+              "validationPlan": "Re-run both PoCs and audit every route for org predicates."
+            },
+            {
+              "dimension": "performance",
+              "direction": "neutral",
+              "confidence": "medium",
+              "basis": "source-derived",
+              "assessment": "No additional lookups or hops.",
+              "validationPlan": "No benchmark needed beyond existing request tests."
+            },
+            {
+              "dimension": "memory",
+              "direction": "neutral",
+              "confidence": "medium",
+              "basis": "source-derived",
+              "assessment": "No new retained state.",
+              "validationPlan": "None."
+            },
+            {
+              "dimension": "reliability",
+              "direction": "improves",
+              "confidence": "medium",
+              "basis": "source-derived",
+              "assessment": "Bad grants fail before persistence; guard drift remains a reliability risk.",
+              "validationPlan": "Regression suite for each route group."
+            },
+            {
+              "dimension": "operability",
+              "direction": "neutral",
+              "confidence": "low",
+              "basis": "hypothetical",
+              "assessment": "No new operational burden; little central observability for denials.",
+              "validationPlan": "Confirm route errors are observable in logs."
+            },
+            {
+              "dimension": "migration",
+              "direction": "improves",
+              "confidence": "high",
+              "basis": "source-derived",
+              "assessment": "Small per-route changes; no data migration.",
+              "validationPlan": "Existing API tests remain green."
+            }
+          ],
+          "residualRisks": [
+            "Control drift across future routes",
+            "Inconsistent tenant predicate semantics between handlers"
+          ],
+          "implementationReadiness": {
+            "affectedComponents": [
+              "src/api/routes/*.ts"
+            ],
+            "workPackages": [
+              "Add org predicates and grantor checks per route; add regression tests."
+            ],
+            "acceptanceCriteria": [
+              "Both PoCs return 403 for the crossing/grant actions."
+            ],
+            "migrationNotes": [],
+            "rollback": "Revert the focused route changes."
+          }
+        },
+        {
+          "optionId": "central-principal-scope",
+          "title": "Central resolved principal and authorization service",
+          "kind": "structural",
+          "summary": "Resolve subject, organization, and role scope at authentication; enforce tenant bounds and grant authority through one authorization service used by all routes.",
+          "diagramPaths": {
+            "before": "diagrams/centralize-principal-authorization-before.mmd",
+            "after": "diagrams/centralize-principal-authorization-central-principal-scope-after.mmd"
+          },
+          "findingCoverage": [
+            {
+              "findingId": "authz-tenant-scoping",
+              "effect": "addresses",
+              "tacticalFixRequired": true,
+              "rationale": "Tenant predicate becomes a property of the shared authorization boundary."
+            },
+            {
+              "findingId": "authz-role-assignment",
+              "effect": "addresses",
+              "tacticalFixRequired": true,
+              "rationale": "Grantor authority is compared inside the shared service."
+            }
+          ],
+          "tradeoffs": [
+            {
+              "dimension": "security",
+              "direction": "improves",
+              "confidence": "high",
+              "basis": "source-derived",
+              "assessment": "Both findings closed at one control point; future routes inherit the boundary.",
+              "validationPlan": "Re-run PoCs; add a route-audit lint rule banning direct findAll() in handlers."
+            },
+            {
+              "dimension": "performance",
+              "direction": "neutral",
+              "confidence": "medium",
+              "basis": "analogous",
+              "assessment": "One user+roles lookup per request on the auth path; cacheable.",
+              "validationPlan": "Benchmark requests/sec before/after with and without cache."
+            },
+            {
+              "dimension": "memory",
+              "direction": "neutral",
+              "confidence": "medium",
+              "basis": "source-derived",
+              "assessment": "Small principal context per request; no retained growth.",
+              "validationPlan": "Observe RSS under load if desired."
+            },
+            {
+              "dimension": "reliability",
+              "direction": "improves",
+              "confidence": "medium",
+              "basis": "source-derived",
+              "assessment": "Central failure point, but small and exhaustively tested; denials become consistent.",
+              "validationPlan": "Property tests over principal combinations."
+            },
+            {
+              "dimension": "operability",
+              "direction": "improves",
+              "confidence": "medium",
+              "basis": "hypothetical",
+              "assessment": "Single place to log/alert denied cross-tenant and grant-denied events.",
+              "validationPlan": "Add structured denial logging and verify in integration tests."
+            },
+            {
+              "dimension": "migration",
+              "direction": "regresses",
+              "confidence": "medium",
+              "basis": "source-derived",
+              "assessment": "Context type change, repository signature change, route refactor across ~20 handlers.",
+              "validationPlan": "Migrate one route group at a time with green tests."
+            }
+          ],
+          "residualRisks": [
+            "Single authorization service becomes a prime target; keep it minimal and tested",
+            "Org resolution depends on the subject's user record being present"
+          ],
+          "implementationReadiness": {
+            "affectedComponents": [
+              "src/api/types.ts",
+              "src/api/middleware/*",
+              "src/api/routes/*.ts",
+              "src/persistence/ports.ts",
+              "src/persistence/sqlite/*",
+              "src/persistence/file/*",
+              "src/persistence/in-memory/*"
+            ],
+            "workPackages": [
+              "Extend auth context",
+              "Add tenant-bounded repository methods",
+              "Build authorization service",
+              "Migrate route groups",
+              "Add regression tests"
+            ],
+            "acceptanceCriteria": [
+              "Both PoCs return 403",
+              "No route calls repository findAll/findById without tenant scope",
+              "All existing tests pass"
+            ],
+            "migrationNotes": [
+              "Keep Option 1 guards until each group migrates"
+            ],
+            "rollback": "Reintroduce the old context type behind a flag while keeping tenant predicates."
+          }
+        },
+        {
+          "optionId": "tenant-service-isolation",
+          "title": "Per-tenant service and store isolation",
+          "kind": "isolation",
+          "summary": "Deploy one application/store unit per organization behind a tenant-routing edge.",
+          "diagramPaths": {
+            "before": "diagrams/centralize-principal-authorization-before.mmd",
+            "after": "diagrams/centralize-principal-authorization-tenant-isolation-after.mmd"
+          },
+          "findingCoverage": [
+            {
+              "findingId": "authz-tenant-scoping",
+              "effect": "addresses",
+              "tacticalFixRequired": true,
+              "rationale": "Cross-tenant repository access is structurally impossible, but route-level tenant binding is still needed at the edge."
+            },
+            {
+              "findingId": "authz-role-assignment",
+              "effect": "mitigates",
+              "tacticalFixRequired": true,
+              "rationale": "Isolation limits blast radius to one tenant but does not stop intra-tenant role escalation."
+            }
+          ],
+          "tradeoffs": [
+            {
+              "dimension": "security",
+              "direction": "improves",
+              "confidence": "high",
+              "basis": "analogous",
+              "assessment": "Strongest containment for tenant data; grant escalation still needs Option 1/2 checks.",
+              "validationPlan": "Tenant-level integration tests across deployed units."
+            },
+            {
+              "dimension": "performance",
+              "direction": "regresses",
+              "confidence": "low",
+              "basis": "hypothetical",
+              "assessment": "Additional edge hop and per-tenant connections.",
+              "validationPlan": "End-to-end latency benchmark."
+            },
+            {
+              "dimension": "memory",
+              "direction": "regresses",
+              "confidence": "low",
+              "basis": "hypothetical",
+              "assessment": "Per-tenant processes/databases multiply resource use.",
+              "validationPlan": "Measure per-tenant footprint at target tenant count."
+            },
+            {
+              "dimension": "reliability",
+              "direction": "regresses",
+              "confidence": "low",
+              "basis": "hypothetical",
+              "assessment": "More moving parts; failure modes multiply.",
+              "validationPlan": "Chaos tests across tenant units."
+            },
+            {
+              "dimension": "operability",
+              "direction": "regresses",
+              "confidence": "low",
+              "basis": "hypothetical",
+              "assessment": "Fleet provisioning, monitoring, and secret management multiply.",
+              "validationPlan": "Trial deployment of two tenant units."
+            },
+            {
+              "dimension": "migration",
+              "direction": "regresses",
+              "confidence": "medium",
+              "basis": "source-derived",
+              "assessment": "Requires deployment architecture change; current single-node SQLite/file model does not support it directly.",
+              "validationPlan": "Architecture spike with tenant-routed ingress."
+            }
+          ],
+          "residualRisks": [
+            "Operational complexity",
+            "Tenant routing misconfiguration",
+            "Intra-tenant grant escalation remains"
+          ],
+          "implementationReadiness": {
+            "affectedComponents": [
+              "deployment/compose",
+              "edge routing",
+              "per-tenant storage provisioning"
+            ],
+            "workPackages": [
+              "Design tenant routing",
+              "Provision per-tenant stores",
+              "Move JWT/secret management to per-tenant scope"
+            ],
+            "acceptanceCriteria": [
+              "Tenant A cannot reach tenant B store at the network layer"
+            ],
+            "migrationNotes": [
+              "Requires Option 2 grant checks inside each tenant"
+            ],
+            "rollback": "Return to single-instance topology."
+          }
+        }
+      ],
+      "recommendedOptionId": "central-principal-scope",
+      "recommendation": "Adopt the central principal/authorization-service design; use local guards only as an interim patch."
+    }
+  ],
+  "openQuestions": [
+    "Should API keys be bound to an organization at provisioning time?",
+    "Should JWT claims carry the org or be resolved per request?",
+    "Do planned downstream services need explicit cross-tenant grants?"
+  ]
+}

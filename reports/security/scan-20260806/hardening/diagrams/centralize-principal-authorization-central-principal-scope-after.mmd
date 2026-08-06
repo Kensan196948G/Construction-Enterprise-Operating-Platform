@@ -1,0 +1,19 @@
+flowchart TB
+    subgraph Client["Authenticated client"]
+        C[API key / JWT]
+    end
+    subgraph App["CEOP HTTP app"]
+        A[Authn: resolve principal org + scope]
+        Z[Authorization service: grants + tenant predicate]
+        RE[Repositories with tenant-bounded API]
+        G[Governance engine]
+        U[User/Role store]
+    end
+    C -->|credential| A
+    A -->|principal: subject, org, scope, permissions| Z
+    Z -->|tenant-scoped reads/writes| RE
+    Z -->|grantor subset + scope checks| U
+    Z -->|resolved principal| G
+    style A fill:#dfd,stroke:#080
+    style Z fill:#dfd,stroke:#080
+    style RE fill:#dfd,stroke:#080
