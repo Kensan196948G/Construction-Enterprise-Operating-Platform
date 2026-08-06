@@ -153,7 +153,7 @@ function renderAppCards(applications: readonly AppHealthItem[]): string {
 
 function renderDeviceRows(devices: readonly DeviceStatusItem[]): string {
   if (devices.length === 0) {
-    return '<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:20px">デバイスが見つかりません</td></tr>';
+    return '<tr><td colspan="4" class="empty-cell">デバイスが見つかりません</td></tr>';
   }
   return devices
     .map((d) => {
@@ -163,13 +163,13 @@ function renderDeviceRows(devices: readonly DeviceStatusItem[]): string {
       const assignedCell =
         d.assignedUserId !== undefined
           ? esc(d.assignedUserId)
-          : '<span style="color:var(--text-dim)">—</span>';
+          : '<span class="cell-muted">—</span>';
       return [
         "<tr>",
-        `  <td><code style="font-size:.8rem;color:var(--text-muted)">${esc(d.id)}</code></td>`,
+        `  <td><code class="cell-muted">${esc(d.id)}</code></td>`,
         `  <td><span class="device-kind">${esc(kindIcon)} ${esc(kindLabel)}</span></td>`,
         `  <td><span class="device-status ${esc(d.status)}">${esc(statusLabel)}</span></td>`,
-        `  <td style="color:var(--text-muted)">${assignedCell}</td>`,
+        `  <td class="cell-soft">${assignedCell}</td>`,
         "</tr>",
       ].join("\n");
     })
@@ -229,7 +229,7 @@ export async function renderTemplate(
  * Build the full dashboard HTML from a `DashboardView` snapshot.
  * All data is embedded server-side; the client-side JS provides auto-refresh.
  */
-export async function renderDashboard(data: DashboardView): Promise<string> {
+export async function renderDashboard(data: DashboardView, apiToken = ""): Promise<string> {
   const context: RenderContext = {
     VERSION: esc(_platformVersion),
     VIEWER: esc(data.viewer),
@@ -252,6 +252,7 @@ export async function renderDashboard(data: DashboardView): Promise<string> {
     // Audit log is fetched client-side for freshness
     AUDIT_ITEMS:
       '<div class="empty-state"><div class="empty-state-icon">📋</div>監査ログはAPIから動的に読み込まれます</div>',
+    API_TOKEN: esc(apiToken),
   };
 
   return renderTemplate(TEMPLATES.INDEX, context);
@@ -272,7 +273,7 @@ export interface GovernancePolicyRow {
 
 function renderPolicyRows(policies: readonly GovernancePolicyRow[]): string {
   if (policies.length === 0) {
-    return '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:20px">ポリシーが見つかりません</td></tr>';
+    return '<tr><td colspan="6" class="empty-cell">ポリシーが見つかりません</td></tr>';
   }
   return policies
     .map((p) => {
@@ -287,11 +288,11 @@ function renderPolicyRows(policies: readonly GovernancePolicyRow[]): string {
       const condLabel =
         p.conditionCount > 0
           ? `<span class="badge badge-yellow">${esc(p.conditionCount)} 件</span>`
-          : '<span style="color:var(--text-dim)">—</span>';
+          : '<span class="cell-muted">—</span>';
       return [
         "<tr>",
-        `  <td><code style="font-size:.78rem;color:var(--text-muted)">${esc(p.id)}</code></td>`,
-        `  <td style="font-weight:600">${esc(p.name)}</td>`,
+        `  <td><code class="cell-muted">${esc(p.id)}</code></td>`,
+        `  <td class="cell-strong">${esc(p.name)}</td>`,
         `  <td><span class="badge ${effectClass}">${esc(effectLabel)}</span></td>`,
         `  <td>${actionTags}</td>`,
         `  <td>${resourceTags}</td>`,
@@ -310,10 +311,12 @@ function renderPolicyRows(policies: readonly GovernancePolicyRow[]): string {
  */
 export async function renderGovernance(
   policies: readonly GovernancePolicyRow[],
+  apiToken = "",
 ): Promise<string> {
   const context: RenderContext = {
     VERSION: esc(_platformVersion),
     POLICY_ROWS: renderPolicyRows(policies),
+    API_TOKEN: esc(apiToken),
   };
 
   return renderTemplate(TEMPLATES.GOVERNANCE, context);

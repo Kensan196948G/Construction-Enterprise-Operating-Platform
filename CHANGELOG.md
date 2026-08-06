@@ -4,6 +4,25 @@ All notable changes to the Construction Enterprise Operating Platform are docume
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [0.6.1] - 2026-08-06
+
+WebUI design refresh and hardening release.
+
+### Added
+
+- **Claude-inspired WebUI** — dashboard/governance pages redesigned with a warm
+  paper palette, terracotta accent, serif headings, and generous whitespace.
+- **External static assets** — `src/web/static/app.css` / `app.js` served from
+  `/assets/*`; inline `<style>`/`<script>` blocks removed.
+- **SSR session token** — dashboard/governance pages embed a short-lived JWT so
+  client-side auto-refresh and audit/policy fetches are authenticated.
+
+### Security
+
+- **CSP hardened** — `unsafe-inline` removed: `default-src 'self'; style-src
+  'self'; script-src 'self'` (closes SEC-009 backlog item).
+- Static assets served with `X-Content-Type-Options: nosniff` and short cache.
+
 ## [0.6.0] - 2026-08-06
 
 Production readiness release: version unification, CRUD/auth audit coverage,

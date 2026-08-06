@@ -18,7 +18,7 @@
 | 項目           | 内容                                                                                |
 | -------------- | ----------------------------------------------------------------------------------- |
 | 役割           | 統制・ガバナンス・共通ワークフローの調整基盤                                        |
-| バージョン     | v0.6.0（本番対応リリース: SQLite 永続化・JWT 認証・監査証跡・CRUD/Workflow/Policy API・本番デプロイ準備・運用文書）|
+| バージョン     | v0.6.1（本番対応リリース: SQLite 永続化・JWT 認証・監査証跡・CRUD/Workflow/Policy API・Claude 系デザイン WebUI・本番デプロイ準備・運用文書）|
 | 言語           | TypeScript 5.7（strict / `noUncheckedIndexedAccess` / 例外を投げない設計）          |
 | ランタイム     | Node.js v22.13+（ネイティブ TS 実行・ビルトインテストランナー）                      |
 | HTTP サーバ    | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                            |
@@ -180,6 +180,14 @@ examples/
 | `GET`    | `/api/v1/governance/audit`        | `audit:read`       | 監査ログ取得（`?limit=50&offset=0`、limit 最大 200）      |
 | `POST`   | `/api/v1/governance/evaluate`     | 認証のみ           | アクセス評価。評価結果は監査ログへ自動記録                |
 | `POST`   | `/api/v1/auth/revoke`             | `auth:write`       | 現在の JWT を失効（ログアウト）。JWT Bearer 必須          |
+
+### 🎨 WebUI デザイン（v0.6.1）
+
+ダッシュボード/ガバナンス画面を Claude 系デザイン言語（温かいペーパー基調・
+テラコッタアクセント・セリフ見出し・余白を活かしたミニマル構成）で刷新しました。
+CSS/JS は外部アセット（`/assets/app.css`・`/assets/app.js`）へ分離し、
+SSR 時の CSP から `unsafe-inline` を撤廃しています。SSR 時に短命 JWT を
+ページへ埋め込み、自動更新 API 呼び出しにも認証が通るよう修正しています。
 
 > 📌 `*:*` または `*:read` ワイルドカード権限でも `policy:read` / `audit:read` ゲートを通過します。
 

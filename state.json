@@ -6,7 +6,7 @@
     "registered_at": "2026-06-25",
     "phase_mode": "development"
   },
-  "goal": "v0.6.0 本番対応リリース完了 — 226テスト pass・CI グリーン・main 統合・v0.6.0 タグ/GHCR/Release 作成済み・本番デプロイ判定待ち",
+  "goal": "v0.6.1 デザイン刷新 + ceop.mirai-dx-platform.com へ本番デプロイ完了 — 226テスト pass・CI グリーン・CSP 強化",
   "phase": "Release",
   "release": {
     "v0_1_0_foundation": "release_ready",

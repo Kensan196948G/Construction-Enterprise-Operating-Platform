@@ -13,6 +13,10 @@
  */
 
 import type { ServerResponse } from "node:http";
+import { existsSync } from "node:fs";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { IsoTimestamp } from "../../domain/common.ts";
 import type { Permission } from "../../domain/role.ts";
 import { buildDashboard } from "../../dashboard/dashboard.ts";
@@ -33,10 +37,8 @@ function sendHtml(res: ServerResponse, status: number, html: string): void {
     "Content-Type": "text/html; charset=utf-8",
     "Content-Length": buf.byteLength,
     // default-src 'self' acts as fallback for style-src/script-src, blocking all inline.
-    // HTML templates use inline <style> and <script> blocks, so permit 'unsafe-inline' explicitly.
-    // form-action, base-uri, frame-ancestors are not covered by default-src — list them explicitly.
     "Content-Security-Policy":
-      "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'self'",
+      "default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; font-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'self'",
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "SAMEORIGIN",
     "Referrer-Policy": "same-origin",
@@ -68,6 +70,42 @@ function policyToRow(p: Policy): GovernancePolicyRow {
 }
 
 export function registerWebRoutes(router: Router, container: AppContainer): void {
+  const staticDirCandidates = [
+    fileURLToPath(new URL("../../web/static/", import.meta.url)),
+    join(process.cwd(), "src", "web", "static"),
+  ];
+  const staticDir =
+    staticDirCandidates.find((p) => existsSync(p)) ??
+    join(process.cwd(), "src", "web", "static");
+
+  const sendFile = async (
+    res: ServerResponse,
+    filePath: string,
+    contentType: string,
+  ): Promise<void> => {
+    try {
+      const buf = await readFile(filePath);
+      res.writeHead(200, {
+        "Content-Type": contentType,
+        "Content-Length": buf.byteLength,
+        "Cache-Control": "public, max-age=300",
+        "X-Content-Type-Options": "nosniff",
+      });
+      res.end(buf);
+    } catch {
+      res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+      res.end("Not Found");
+    }
+  };
+
+  // Static assets — CSP allows only 'self', so styles/scripts are external files.
+  router.get("/assets/app.css", async (_req, _ctx, res) => {
+    await sendFile(res, join(staticDir, "app.css"), "text/css; charset=utf-8");
+  }, false);
+  router.get("/assets/app.js", async (_req, _ctx, res) => {
+    await sendFile(res, join(staticDir, "app.js"), "text/javascript; charset=utf-8");
+  }, false);
+
   router.get(
     "/",
     async (_req, _ctx, res) => {
@@ -81,6 +119,10 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
     async (_req, ctx, res) => {
       const subject: string = ctx!.subject;
       const permissions: readonly Permission[] = ctx!.permissions;
+      const webToken =
+        container.jwtIssuer !== undefined
+          ? container.jwtIssuer.issue(subject, permissions, ctx!.organizationId)
+          : "";
 
       const [users, applications, devices, policies] = await Promise.all([
         container.repositories.users.findAll(),
@@ -104,7 +146,7 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
         auditLog: container.auditLog,
       });
 
-      sendHtml(res, 200, await renderDashboard(view));
+      sendHtml(res, 200, await renderDashboard(view, webToken));
     },
     true,
   );
@@ -117,7 +159,11 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
         return;
       }
       const policyRows = (await container.repositories.policies.findAll()).map(policyToRow);
-      sendHtml(res, 200, await renderGovernance(policyRows));
+      const webToken =
+        container.jwtIssuer !== undefined
+          ? container.jwtIssuer.issue(ctx!.subject, ctx!.permissions, ctx!.organizationId)
+          : "";
+      sendHtml(res, 200, await renderGovernance(policyRows, webToken));
     },
     true,
   );
