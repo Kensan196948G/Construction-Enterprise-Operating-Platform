@@ -450,7 +450,23 @@ curl -H "Authorization: Bearer <jwt>" http://localhost:3000/api/v1/dashboard
 
 ## 🚀 本番デプロイ（M8）
 
+### 🌐 本番環境（v0.6.1 稼働中）
+
+| 項目 | 値 |
+|---|---|
+| 本番 URL | https://ceop.mirai-dx-platform.com |
+| 形態 | 本機 Docker コンテナ + Cloudflare Tunnel（cloudflared-ceop.service） |
+| イメージ | `ceop-platform:v0.6.1`（GHCR: `ghcr.io/kensan196948g/construction-eop:v0.6.1`） |
+| ホスト | 192.168.0.185（127.0.0.1:3120 → コンテナ 3000） |
+| DB | `/home/kensan/.ceop/data/ceop.db`（SQLite WAL、migration 001〜005 適用済み） |
+| 認証情報 | `/home/kensan/.ceop/admin-credential.txt`・`viewer-credential.txt`（root のみ閲覧可。値は Secrets 管理へ移行推奨） |
+| バックアップ | cron 毎日 02:15 → `/home/kensan/.ceop/backups/` |
+| ヘルス監視 | cron 毎日 02:30 に `/health/ready` を確認 |
+
 ### 前提フロー
+
+- デプロイ先が決まったら本セクションの手順を実行。本番では `CEOP_JWT_SECRET`・API キーは
+  必ずファイル/Secrets 管理に保持し、リポジトリへコミットしない。
 
 ```
 ① シークレット生成  →  ② DB マイグレーション  →  ③ API キー発行  →  ④ Compose 起動

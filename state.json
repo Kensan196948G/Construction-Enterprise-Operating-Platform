@@ -6,17 +6,17 @@
     "registered_at": "2026-06-25",
     "phase_mode": "development"
   },
-  "goal": "v0.6.1 デザイン刷新 + ceop.mirai-dx-platform.com へ本番デプロイ完了 — 226テスト pass・CI グリーン・CSP 強化",
-  "phase": "Release",
+  "goal": "v0.6.1 本番運用開始 — ceop.mirai-dx-platform.com 公開・226テスト pass・CI グリーン・監視/バックアップ稼働",
+  "phase": "maintenance",
   "release": {
     "v0_1_0_foundation": "release_ready",
     "v0_2_0_api_gateway": "release_ready",
     "v0_3_0_jwt_persistence": "release_ready",
     "v0_4_0_security_hardening": "release_ready",
     "v0_5_0_m8_production_deploy": "release_ready",
-    "production_deploy": "pending_human_decision",
+    "production_deploy": "completed",
     "judged_by": "CTO",
-    "judged_at": "2026-06-27"
+    "judged_at": "2026-08-06"
   },
   "kpi": {
     "success_rate_target": 0.9,
@@ -149,8 +149,7 @@
     "remote": "https://github.com/Kensan196948G/Construction-Enterprise-Operating-Platform (PRIVATE)",
     "branch": "feat/production-hardening (base: feat/platform-foundation)",
     "next_actions": [
-      "本番デプロイ先（ホスト/コンテナ基盤）の一意特定とデプロイ（要人間/権限）",
-      "初期安定化監視（health/ready・ログ・エラー率）と運用台帳の開始",
+      "初期安定化監視の継続（health/ready cron・ログ・エラー率）と運用台帳の開始",
       "四半期バックアップ復元試験と権限棚卸し",
       "P3 バックログ（CSP nonce 化、リクエスト ID、SSO、実アダプタ接続等）"
     ],
