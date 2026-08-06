@@ -84,6 +84,8 @@ export interface AppContainer {
   readonly repositories: Repositories;
   readonly auditLog: IAuditLog;
   readonly apiKeyStore: ApiKeyStore;
+  /** Persistence tier in use — used by the readiness probe. */
+  readonly storageTier?: "in-memory" | "file" | "sqlite";
   /** Optional JWT issuer/verifier — when present, Bearer JWT tokens are accepted. */
   readonly jwtIssuer?: JwtIssuer;
 }

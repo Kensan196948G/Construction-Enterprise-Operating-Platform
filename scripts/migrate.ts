@@ -27,12 +27,13 @@
  */
 
 import { DatabaseSync } from "node:sqlite";
+import { pathToFileURL } from "node:url";
 
 // ---------------------------------------------------------------------------
 // Migration definitions
 // ---------------------------------------------------------------------------
 
-interface Migration {
+export interface Migration {
   readonly version: string;
   readonly description: string;
   readonly up: string; // SQL executed inside a transaction
@@ -45,7 +46,7 @@ interface Migration {
   readonly disableForeignKeys?: boolean;
 }
 
-const MIGRATIONS: readonly Migration[] = [
+export const MIGRATIONS: readonly Migration[] = [
   {
     version: "001",
     description: "initial schema — domain entity tables (M7)",
@@ -281,49 +282,60 @@ function runMigration(db: DatabaseSync, m: Migration): void {
 }
 
 // ---------------------------------------------------------------------------
-// Main
+// Public runner + CLI main
 // ---------------------------------------------------------------------------
 
-const dbPath = resolveDbPath();
-console.error(`[migrate] Opening database: ${dbPath}`);
-
-let db: DatabaseSync;
-try {
-  db = new DatabaseSync(dbPath);
-  db.exec("PRAGMA journal_mode=WAL");
-  db.exec("PRAGMA foreign_keys=ON");
-} catch (e) {
-  console.error("[migrate] Failed to open database:", e);
-  process.exit(1);
-}
-
-let applied: Set<string>;
-try {
+/**
+ * Apply all pending migrations to an open database.
+ * Idempotent: already-applied versions are skipped.
+ *
+ * @returns the number of migrations applied in this run.
+ * @throws if any migration fails (transaction is rolled back).
+ */
+export function applyMigrations(db: DatabaseSync): number {
   ensureMigrationsTable(db);
-  applied = appliedVersions(db);
-} catch (e) {
-  console.error("[migrate] Failed during migration bootstrap:", e);
-  db.close();
-  process.exit(2);
-}
-
-let ran = 0;
-for (const m of MIGRATIONS) {
-  if (applied.has(m.version)) {
-    console.error(`[migrate] ✓ ${m.version} already applied — ${m.description}`);
-    continue;
-  }
-  console.error(`[migrate] ➜ applying ${m.version} — ${m.description}`);
-  try {
+  const applied = appliedVersions(db);
+  let ran = 0;
+  for (const m of MIGRATIONS) {
+    if (applied.has(m.version)) {
+      console.error(`[migrate] ✓ ${m.version} already applied — ${m.description}`);
+      continue;
+    }
+    console.error(`[migrate] ➜ applying ${m.version} — ${m.description}`);
     runMigration(db, m);
     ran++;
     console.error(`[migrate] ✓ ${m.version} OK`);
+  }
+  console.error(`[migrate] Done. ${ran} migration(s) applied.`);
+  return ran;
+}
+
+function main(): void {
+  const dbPath = resolveDbPath();
+  console.error(`[migrate] Opening database: ${dbPath}`);
+
+  let db: DatabaseSync;
+  try {
+    db = new DatabaseSync(dbPath);
+    db.exec("PRAGMA journal_mode=WAL");
+    db.exec("PRAGMA foreign_keys=ON");
   } catch (e) {
-    console.error(`[migrate] ✗ ${m.version} FAILED (rolled back):`, e);
+    console.error("[migrate] Failed to open database:", e);
+    process.exit(1);
+  }
+
+  try {
+    applyMigrations(db);
+  } catch (e) {
+    console.error("[migrate] Migration failed:", e);
     db.close();
     process.exit(2);
   }
+
+  db.close();
 }
 
-db.close();
-console.error(`[migrate] Done. ${ran} migration(s) applied.`);
+// Run as a CLI only when executed directly (not when imported by tests).
+if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main();
+}

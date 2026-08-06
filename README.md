@@ -158,6 +158,7 @@ examples/
 | メソッド | パス                    | 説明                                                                          |
 | -------- | ----------------------- | ----------------------------------------------------------------------------- |
 | `GET`    | `/health`               | ライブネスプローブ。`{ status, timestamp, uptime }`                           |
+| `GET`    | `/health/ready`         | レディネスプローブ。永続化層を確認して `{ status, storage, timestamp }`       |
 | `GET`    | `/api/v1/info`          | ビルド情報。`{ name, version, environment }`                                  |
 | `GET`    | `/`                     | `/dashboard` へ 302 リダイレクト（認証不要）                                  |
 | `POST`   | `/api/v1/auth/token`    | API キーを JWT に交換。`{ credential: "keyId:secret" }` → `{ token, expiresIn: 3600, subject }` |
@@ -176,7 +177,7 @@ examples/
 | `GET`    | `/api/v1/applications`            | `application:read` | アプリ一覧（ページネーション）`{ applications[], count, total, limit, offset }` |
 | `GET`    | `/api/v1/devices`                 | `device:read`      | デバイス一覧（ページネーション）`{ devices[], count, total, limit, offset }` |
 | `GET`    | `/api/v1/governance/policies`     | `policy:read`      | ポリシー一覧（ページネーション）`{ policies[], count, total, limit, offset }` |
-| `GET`    | `/api/v1/governance/audit`        | `audit:read`       | 監査ログ取得（`?limit=50`、最大 200）                     |
+| `GET`    | `/api/v1/governance/audit`        | `audit:read`       | 監査ログ取得（`?limit=50&offset=0`、limit 最大 200）      |
 | `POST`   | `/api/v1/governance/evaluate`     | 認証のみ           | アクセス評価。評価結果は監査ログへ自動記録                |
 | `POST`   | `/api/v1/auth/revoke`             | `auth:write`       | 現在の JWT を失効（ログアウト）。JWT Bearer 必須          |
 

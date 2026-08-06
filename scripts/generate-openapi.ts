@@ -322,16 +322,42 @@ const authSecurity: YamlValue = [{ ApiKeyAuth: [] }, { BearerJwt: [] }];
 
 const paths: { [k: string]: YamlValue } = {
   // ── Health ──────────────────────────────────────────────────────────────
-  "/api/v1/health": {
+  "/health": {
     get: {
       operationId: "getHealth",
-      summary: "Health check",
+      summary: "Liveness probe",
       tags: ["System"],
       responses: {
         "200": {
           description: "Service is healthy",
           content: { "application/json": { schema: { type: "object", properties: { status: { type: "string" } } } } },
         },
+      },
+    },
+  },
+  "/health/ready": {
+    get: {
+      operationId: "getReady",
+      summary: "Readiness probe (verifies persistence tier)",
+      tags: ["System"],
+      responses: {
+        "200": {
+          description: "Persistence tier responds",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["status", "storage", "timestamp"],
+                properties: {
+                  status: { type: "string", enum: ["ready"] },
+                  storage: { type: "string" },
+                  timestamp: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+        ...errorResponses(503),
       },
     },
   },
@@ -933,6 +959,12 @@ const paths: { [k: string]: YamlValue } = {
           schema: { type: "integer", default: 50, minimum: 1, maximum: 200 },
           description: "Maximum number of recent entries to return",
         },
+        {
+          name: "offset",
+          in: "query",
+          schema: { type: "integer", default: 0, minimum: 0 },
+          description: "Number of most-recent entries to skip",
+        },
       ],
       responses: {
         "200": {
@@ -941,10 +973,13 @@ const paths: { [k: string]: YamlValue } = {
             "application/json": {
               schema: {
                 type: "object",
-                required: ["entries", "count"],
+                required: ["entries", "count", "total", "limit", "offset"],
                 properties: {
                   entries: { type: "array", items: { "$ref": "#/components/schemas/AuditEntry" } },
                   count: { type: "integer" },
+                  total: { type: "integer" },
+                  limit: { type: "integer" },
+                  offset: { type: "integer" },
                 },
               },
             },

@@ -287,7 +287,13 @@ export async function createApp(): Promise<AppContainer> {
   }
   } // end demo seeding
 
-  return { repositories, auditLog, apiKeyStore, jwtIssuer };
+  return {
+    repositories,
+    auditLog,
+    apiKeyStore,
+    storageTier: sqliteFile ? "sqlite" : dataDir ? "file" : "in-memory",
+    jwtIssuer,
+  };
 }
 
 /**

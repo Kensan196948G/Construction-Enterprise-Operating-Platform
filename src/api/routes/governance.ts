@@ -232,7 +232,7 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
 
   // ── Audit log ─────────────────────────────────────────────────────────────
 
-  // GET /api/v1/governance/audit  (requires audit:read or wildcard permission)
+  // GET /api/v1/governance/audit?limit=&offset=  (requires audit:read or wildcard permission)
   router.get("/api/v1/governance/audit", async (req, ctx, res) => {
     if (!hasPermission(ctx, "audit", "read")) {
       writeJson(res, 403, { error: "Forbidden", message: "requires 'audit:read' permission" });
@@ -242,11 +242,21 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
     const parsed = rawLimit !== undefined ? Number.parseInt(rawLimit, 10) : AUDIT_LIMIT_DEFAULT;
     const limit =
       Number.isNaN(parsed) || parsed < 1 ? AUDIT_LIMIT_DEFAULT : Math.min(parsed, AUDIT_LIMIT_MAX);
+    const rawOffset = req.query["offset"];
+    const parsedOffset = rawOffset !== undefined ? Number.parseInt(rawOffset, 10) : 0;
+    const offset = Number.isNaN(parsedOffset) || parsedOffset < 0 ? 0 : parsedOffset;
 
     const allEntries = container.auditLog.entries;
-    const entries = allEntries.slice(Math.max(0, allEntries.length - limit));
+    const end = Math.max(0, allEntries.length - offset);
+    const entries = allEntries.slice(Math.max(0, end - limit), end);
 
-    writeJson(res, 200, { entries, count: entries.length });
+    writeJson(res, 200, {
+      entries,
+      count: entries.length,
+      total: allEntries.length,
+      limit,
+      offset,
+    });
   });
 
   // ── Policy CRUD ───────────────────────────────────────────────────────────

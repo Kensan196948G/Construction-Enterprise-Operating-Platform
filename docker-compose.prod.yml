@@ -39,6 +39,8 @@ services:
       CEOP_SEED_DEMO: "${CEOP_SEED_DEMO:-false}"
       # Never enable in production; kept here as an explicit no-op.
       CEOP_LOG_DEMO_CREDS: "false"
+      # Optional: exact origin for browser-based clients (off when unset).
+      CEOP_CORS_ORIGIN: "${CEOP_CORS_ORIGIN:-}"
 
     volumes:
       # Named volume keeps the SQLite file across container restarts.
