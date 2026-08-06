@@ -4,7 +4,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-22.13+-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Zero Runtime Deps](https://img.shields.io/badge/runtime%20deps-zero-brightgreen)](package.json)
 [![CI](https://img.shields.io/github/actions/workflow/status/Kensan196948G/Construction-Enterprise-Operating-Platform/ci.yml?label=CI&logo=github)](/.github/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-221%20pass-brightgreen)](src/)
+[![Tests](https://img.shields.io/badge/tests-224%20pass-brightgreen)](src/)
 [![Security](https://img.shields.io/badge/security-hardened-blue)](src/api/middleware/auth.ts)
 [![License](https://img.shields.io/badge/license-proprietary-lightgrey)](LICENSE.md)
 
@@ -485,6 +485,11 @@ node --experimental-strip-types scripts/provision-api-key.ts \
 # CREDENTIAL=<keyId>:<secret>   ← これを安全なシークレットマネージャに保存
 
 # 閲覧者キーを発行
+# （組織スコープは --organization-id <orgId> で指定。未指定 = プラットフォーム全体）
+# 例:
+#   node --experimental-strip-types scripts/provision-api-key.ts \
+#     --subject site-manager --permissions "device:read,device:write" \
+#     --organization-id org-site-01
 node --experimental-strip-types scripts/provision-api-key.ts \
   --subject viewer \
   --permissions "application:read,device:read,audit:read" \
@@ -522,6 +527,7 @@ curl -H "Authorization: Bearer <keyId>:<secret>" http://localhost:3000/api/v1/da
 | `002`      | `api_keys` テーブル（CLI プロビジョニング） | ✅ 適用済 |
 | `003`      | `audit_log` テーブル（ハッシュチェーン）    | ✅ 適用済 |
 | `004`      | workflows/revoked_jtis 追加 + FK 制約再構築（v0.6.0） | ✅ 適用済 |
+| `005`      | `api_keys.organization_id`（組織スコープ API キー、v0.6.0） | ✅ 適用済 |
 
 - マイグレーションは `schema_migrations` テーブルでバージョン管理されます
 - 新しいマイグレーションは `scripts/migrate.ts` の `MIGRATIONS` 配列に追記します
@@ -574,7 +580,7 @@ node --experimental-strip-types scripts/sqlite-backup.ts /data/ceop.db /backup/c
 | ----------- | ----------------- | ------------------------------------------------------- |
 | typecheck   | ✅ pass           | strict・`noUncheckedIndexedAccess`・0 error             |
 | lint        | ✅ pass           | ESLint flat config + typescript-eslint・0 warning       |
-| test        | ✅ 221/221        | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud (34) + governance-crud (26) + sqlite-audit-log (9) + workflow-crud (26) + audit-coverage (3) + migrate (2) + rate-limit (1) |
+| test        | ✅ 224/224        | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud (34) + governance-crud (26) + sqlite-audit-log (9) + workflow-crud (26) + audit-coverage (3) + migrate (2) + rate-limit (1) + tenant-scope (3) |
 | build       | ✅ pass           | `dist/` に型定義付き出力                                |
 | CI          | ✅ 設定済み       | `.github/workflows/ci.yml`（push / PR トリガー）        |
 | Docker      | ✅ multi-stage    | non-root ユーザー・HEALTHCHECK 付き                     |
@@ -694,6 +700,8 @@ sequenceDiagram
 | 秘密情報のログ漏洩防止        | デモキーログを `NODE_ENV !== production` 条件で制限                              | `app.ts`                      |
 | 監査アクター詐称防止          | 評価 API の `actor` を認証済み `ctx.subject` から取得（リクエストボディ不使用）  | `routes/governance.ts`        |
 | 監査網羅（v0.6.0）            | CRUD・Policy/Workflow 変更・トークン発行/失効を監査ログへ記録（actor は認証済み subject） | `api/audit.ts` + routes |
+| テナント分離（v0.6.0）        | API キー/JWT に `organizationId` を持ち、組織スコープ認証情報は自組織の entity のみ参照・変更可能（他組織は 404 で非公開） | `api/routes/*` + `dashboard.ts` |
+| 権限昇格防止（v0.6.0）        | ロール作成/更新・ユーザーへのロール割当は「自身が保有する権限の範囲内」のみ許可 | `api/routes/governance.ts` |
 | JWT 失効 API（v0.6.0）        | `POST /api/v1/auth/revoke` で現在の JWT を失効し、以後の認証を拒否             | `routes/auth.ts` |
 | API レスポンスセキュリティヘッダ（v0.6.0） | JSON 応答に `X-Content-Type-Options: nosniff` / `X-Frame-Options: DENY` / `Referrer-Policy: no-referrer` / `Cache-Control: no-store` | `router.ts` |
 | HSTS（M14）                   | SSR ページに `Strict-Transport-Security: max-age=63072000; includeSubDomains` を付与 | `routes/web.ts`           |

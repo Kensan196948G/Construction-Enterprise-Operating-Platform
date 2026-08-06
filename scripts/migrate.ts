@@ -210,6 +210,13 @@ export const MIGRATIONS: readonly Migration[] = [
       CREATE        INDEX IF NOT EXISTS idx_apps_owner ON applications(owner_org_id);
     `,
   },
+  {
+    version: "005",
+    description: "api_keys.organization_id column for tenant-scoped credentials (v0.6.0)",
+    up: `
+      ALTER TABLE api_keys ADD COLUMN organization_id TEXT;
+    `,
+  },
 ];
 
 // ---------------------------------------------------------------------------

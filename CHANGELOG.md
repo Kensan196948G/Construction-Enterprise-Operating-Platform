@@ -29,6 +29,9 @@ operations documentation for the first main-branch release.
 - **Migration runner tests** — `applyMigrations()` is now importable and covered by integration tests (idempotency, schema, FK enforcement).
 - **SQLite backup script** — `scripts/sqlite-backup.ts` writes a consistent `VACUUM INTO` snapshot and replaces the destination atomically.
 - **Operations documentation** — Runbook, backup/restore, monitoring (SLI/SLO), operations ledger, and security response procedures under `docs/operations/`; root `AGENTS.md` and `SECURITY.md` added.
+- **Tenant scoping** — API keys/JWTs may carry `organizationId`; org-scoped credentials can only list/read/create/update/delete entities in their own organization (cross-org access returns 404/403). Dashboard and list endpoints are org-filtered.
+- **Privilege-escalation control** — role create/update and user role assignment require the grantor to already hold every granted permission (wildcard-aware); `user:write`/`role:write` alone can no longer mint `*:*`.
+- **Migration 005** — `api_keys.organization_id` column; `provision-api-key.ts --organization-id` support.
 
 #### M9 — Full Entity CRUD API (21 endpoints)
 
@@ -61,6 +64,8 @@ operations documentation for the first main-branch release.
 - `iat < exp` JWT claim validation.
 - `pnpm audit` high-severity findings resolved (devDependencies).
 - Global per-IP rate limiting on `/api/v1/*`.
+- Organization-scoped authorization (tenant isolation) for entities and dashboard.
+- Anti-escalation checks on role grants and user role assignment.
 
 ---
 

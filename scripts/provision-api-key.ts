@@ -31,11 +31,13 @@ import { DatabaseSync } from "node:sqlite";
 function parseArgs(argv: string[]): {
   subject: string;
   permissions: string[];
+  organizationId?: string;
   dbPath: string;
 } {
   const args = argv.slice(2);
   let subject = "";
   let permissionsRaw = "";
+  let organizationId: string | undefined;
   let dbPath = process.env["CEOP_SQLITE_FILE"] ?? "/data/ceop.db";
 
   for (let i = 0; i < args.length; i++) {
@@ -44,6 +46,8 @@ function parseArgs(argv: string[]): {
       subject = args[++i] ?? "";
     } else if (arg === "--permissions" && args[i + 1]) {
       permissionsRaw = args[++i] ?? "";
+    } else if (arg === "--organization-id" && args[i + 1]) {
+      organizationId = args[++i] ?? undefined;
     } else if (arg === "--db" && args[i + 1]) {
       dbPath = args[++i] ?? dbPath;
     }
@@ -71,7 +75,12 @@ function parseArgs(argv: string[]): {
     process.exit(1);
   }
 
-  return { subject, permissions, dbPath };
+  return {
+    subject,
+    permissions,
+    ...(organizationId !== undefined ? { organizationId } : {}),
+    dbPath,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -124,11 +133,12 @@ function insertApiKey(
     subject: string;
     permissions: readonly string[];
     secretHash: string;
+    organizationId?: string;
   },
 ): void {
   const stmt = db.prepare(
-    `INSERT INTO api_keys (key_id, subject, permissions, secret_hash, created_at)
-     VALUES (?, ?, ?, ?, ?)`,
+    `INSERT INTO api_keys (key_id, subject, permissions, secret_hash, created_at, organization_id)
+     VALUES (?, ?, ?, ?, ?, ?)`,
   );
   stmt.run(
     record.keyId,
@@ -136,6 +146,7 @@ function insertApiKey(
     JSON.stringify(record.permissions),
     record.secretHash,
     new Date().toISOString(),
+    record.organizationId ?? null,
   );
 }
 
@@ -143,7 +154,7 @@ function insertApiKey(
 // Main
 // ---------------------------------------------------------------------------
 
-const { subject, permissions, dbPath } = parseArgs(process.argv);
+const { subject, permissions, organizationId, dbPath } = parseArgs(process.argv);
 
 let db: DatabaseSync;
 try {
@@ -158,13 +169,19 @@ try {
 try {
   assertApiKeyTableExists(db);
   const cred = generateApiKey(subject, permissions);
-  insertApiKey(db, cred);
+  insertApiKey(db, {
+    ...cred,
+    ...(organizationId !== undefined ? { organizationId } : {}),
+  });
 
   // Print credentials once — never stored in plaintext.
   console.log(`KEY_ID=${cred.keyId}`);
   console.log(`KEY_SECRET=${cred.secret}`);
   console.log(`CREDENTIAL=${cred.keyId}:${cred.secret}`);
-  console.error(`[provision] API key created for subject="${subject}" permissions=${JSON.stringify(permissions)}`);
+  console.error(
+    `[provision] API key created for subject="${subject}" permissions=${JSON.stringify(permissions)}` +
+      (organizationId !== undefined ? ` organizationId=${organizationId}` : ""),
+  );
   console.error(`[provision] Store the CREDENTIAL securely — it cannot be recovered.`);
 } catch (e) {
   console.error("[provision] Failed to create API key:", e);

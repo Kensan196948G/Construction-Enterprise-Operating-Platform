@@ -21,6 +21,8 @@ import {
 export interface JwtPayload {
   readonly sub: string;
   readonly permissions: readonly string[];
+  /** Optional organization scope; absent = global token. */
+  readonly organizationId?: string;
   readonly iat: number;
   readonly exp: number;
   /** Unique token id — prevents log-level replay tracking confusion. */
@@ -78,7 +80,7 @@ export interface JwtConfig {
 
 export interface JwtIssuer {
   readonly ttlSeconds: number;
-  issue(subject: string, permissions: readonly Permission[]): string;
+  issue(subject: string, permissions: readonly Permission[], organizationId?: string): string;
   verify(token: string): JwtVerifyResult;
   revoke(jti: string): void;
 }
@@ -98,12 +100,17 @@ export function createJwtIssuer(config: JwtConfig): JwtIssuer {
     throw new Error("ttlSeconds would overflow Unix timestamp range");
   }
 
-  function issue(subject: string, permissions: readonly Permission[]): string {
+  function issue(
+    subject: string,
+    permissions: readonly Permission[],
+    organizationId?: string,
+  ): string {
     const now = Math.floor(Date.now() / 1000);
     const payload = b64urlEncodeStr(
       JSON.stringify({
         sub: subject,
         permissions: [...permissions],
+        ...(organizationId !== undefined ? { organizationId } : {}),
         iat: now,
         exp: now + ttlSeconds,
         jti: randomBytes(16).toString("hex"),
@@ -169,6 +176,8 @@ export function createJwtIssuer(config: JwtConfig): JwtIssuer {
       !Number.isSafeInteger(record["iat"]) ||
       !Number.isSafeInteger(record["exp"]) ||
       (record["iat"] as number) >= (record["exp"] as number) ||
+      (record["organizationId"] !== undefined &&
+        typeof record["organizationId"] !== "string") ||
       typeof record["jti"] !== "string"
     ) {
       return { ok: false, reason: "malformed" };

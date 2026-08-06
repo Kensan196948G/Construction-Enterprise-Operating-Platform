@@ -10,7 +10,7 @@
 |---|---|
 | 実装本体 | `feat/platform-foundation`（M1〜M16）→ 本作業ブランチ `feat/production-hardening` で v0.6.0 化 |
 | main | 初期化コミットのみ（統合は PR 経由で実施予定） |
-| テスト | 221/221 pass（ローカル検証済み） |
+| テスト | 224/224 pass（ローカル検証済み） |
 | typecheck / lint / build | 全パス |
 | 依存監査 | `pnpm audit --audit-level=high` → 0 vulnerabilities（override で解消） |
 | CI | 過去グリーン。本ブランチ push 後に再実行 |
@@ -33,6 +33,8 @@
 | G-02 | P1 | 本番マイグレーションに FK 制約・workflows/revoked_jtis が未収録（スキーマ漂流） | ✅ migration 004 + テスト |
 | G-03 | P1 | `pnpm audit` が high 7 件（devDependencies） | ✅ override + lockfile 更新で 0 件 |
 | G-04 | P1 | main が空・PR #1 未統合（本番リリース不可） | ⏳ PR 更新・CI 後に統合 |
+| G-04b | P1 | 組織スコープ未強制（テナント横断アクセス） | ✅ テナント分離を実装（entity + dashboard フィルタ、404 非公開化） |
+| G-04c | P1 | `user:write`/`role:write` による権限昇格 | ✅ anti-escalation チェックを実装 |
 | G-05 | P2 | バージョン表記の分散（package.json 0.1.0 / info 0.5.0 / UI 0.1.0） | ✅ 一元化 + 回帰テスト |
 | G-06 | P2 | JWT 失効 API なし | ✅ `/api/v1/auth/revoke` 実装 |
 | G-07 | P2 | JWT が `iat >= exp` を受容 | ✅ 拒否に変更 |

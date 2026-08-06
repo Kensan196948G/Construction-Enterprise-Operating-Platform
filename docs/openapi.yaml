@@ -2502,6 +2502,7 @@ components:
       required:
         - token
         - expiresIn
+        - subject
       properties:
         token:
           type: string
@@ -2509,6 +2510,12 @@ components:
         expiresIn:
           type: integer
           description: Seconds until expiry
+        subject:
+          type: string
+          description: Authenticated subject
+        organizationId:
+          type: string
+          description: Organization scope when the credential is org-scoped; absent for global credentials
   parameters:
     limitParam:
       name: limit

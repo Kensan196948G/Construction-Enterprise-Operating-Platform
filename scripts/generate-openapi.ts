@@ -216,10 +216,15 @@ const schemas: { [k: string]: YamlValue } = {
   },
   TokenResponse: {
     type: "object",
-    required: ["token", "expiresIn"],
+    required: ["token", "expiresIn", "subject"],
     properties: {
       token: { type: "string", description: "HS256 JWT" },
       expiresIn: { type: "integer", description: "Seconds until expiry" },
+      subject: { type: "string", description: "Authenticated subject" },
+      organizationId: {
+        type: "string",
+        description: "Organization scope when the credential is org-scoped; absent for global credentials",
+      },
     },
   },
 };

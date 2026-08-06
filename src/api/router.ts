@@ -196,6 +196,9 @@ export class Router {
           keyId: result.payload.jti,
           subject: result.payload.sub,
           permissions: result.payload.permissions as unknown as ApiKeyContext["permissions"],
+          ...(result.payload.organizationId !== undefined
+            ? { organizationId: result.payload.organizationId }
+            : {}),
           authKind: "jwt",
         };
       } else {

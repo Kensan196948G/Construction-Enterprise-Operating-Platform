@@ -66,6 +66,8 @@
 | SEC-006 | P2 | API JSON 応答にセキュリティヘッダなし | `router.writeJson` | nosniff / DENY / no-referrer / no-store を付与 |
 | SEC-007 | P2 | `/api/v1/*` にグローバルレート制限なし | server コード | per-socket-IP 300 req/min + 設定 env |
 | SEC-008 | P2/P3 | OpenAPI の health パス誤り・ライセンス表記 MIT | generator | `/health` 修正、Proprietary に修正 |
+| SEC-014 | P1 | 組織スコープ未強制（テナント横断アクセス） | セキュリティスキャン（実 HTTP 再現） | ✅ v0.6.0: API キー/JWT の `organizationId` + entity/dashboard フィルタ + 404 非公開化 |
+| SEC-015 | P2 | `user:write`/`role:write` による `*:*` 権限昇格 | セキュリティスキャン（実 HTTP 再現） | ✅ v0.6.0: 付与権限が grantor 保有権限の範囲内であることを強制 |
 
 ### 未修正（バックログ）
 

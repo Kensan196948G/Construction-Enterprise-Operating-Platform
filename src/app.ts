@@ -271,7 +271,12 @@ export async function createApp(): Promise<AppContainer> {
   // ── 7. API keys ───────────────────────────────────────────────────────────
 
   const adminCred = createApiKey("user-admin", [...adminRole.permissions], apiKeyStore);
-  const viewerCred = createApiKey("user-viewer", [...viewerRole.permissions], apiKeyStore);
+  const viewerCred = createApiKey(
+    "user-viewer",
+    [...viewerRole.permissions],
+    apiKeyStore,
+    "org-hq",
+  );
 
   // Explicit opt-in only — never log secret material by default.
   // Blocked outside interactive terminals to prevent credentials leaking into CI logs.

@@ -31,7 +31,11 @@ export function registerDashboardRoutes(router: Router, container: AppContainer)
     ]);
 
     const view = buildDashboard({
-      viewer: { subject: ctx.subject, permissions: ctx.permissions },
+      viewer: {
+        subject: ctx.subject,
+        permissions: ctx.permissions,
+        ...(ctx.organizationId !== undefined ? { organizationId: ctx.organizationId } : {}),
+      },
       policies,
       generatedAt: new Date().toISOString() as IsoTimestamp,
       users,
@@ -51,7 +55,11 @@ export function registerDashboardRoutes(router: Router, container: AppContainer)
       return;
     }
     const all = await container.repositories.organizations.findAll();
-    const pg = paginate(all, parsePagination(req.query));
+    const scoped =
+      ctx?.organizationId !== undefined
+        ? all.filter((o) => o.id === ctx.organizationId)
+        : all;
+    const pg = paginate(scoped, parsePagination(req.query));
     writeJson(res, 200, { organizations: pg.items, count: pg.count, total: pg.total, limit: pg.limit, offset: pg.offset });
   });
 
@@ -62,7 +70,11 @@ export function registerDashboardRoutes(router: Router, container: AppContainer)
       return;
     }
     const all = await container.repositories.users.findAll();
-    const pg = paginate(all, parsePagination(req.query));
+    const scoped =
+      ctx?.organizationId !== undefined
+        ? all.filter((u) => u.organizationId === ctx.organizationId)
+        : all;
+    const pg = paginate(scoped, parsePagination(req.query));
     writeJson(res, 200, { users: pg.items, count: pg.count, total: pg.total, limit: pg.limit, offset: pg.offset });
   });
 
@@ -73,7 +85,11 @@ export function registerDashboardRoutes(router: Router, container: AppContainer)
       return;
     }
     const all = await container.repositories.applications.findAll();
-    const pg = paginate(all, parsePagination(req.query));
+    const scoped =
+      ctx?.organizationId !== undefined
+        ? all.filter((a) => a.ownerOrganizationId === ctx.organizationId)
+        : all;
+    const pg = paginate(scoped, parsePagination(req.query));
     writeJson(res, 200, { applications: pg.items, count: pg.count, total: pg.total, limit: pg.limit, offset: pg.offset });
   });
 
@@ -84,7 +100,11 @@ export function registerDashboardRoutes(router: Router, container: AppContainer)
       return;
     }
     const all = await container.repositories.devices.findAll();
-    const pg = paginate(all, parsePagination(req.query));
+    const scoped =
+      ctx?.organizationId !== undefined
+        ? all.filter((d) => d.organizationId === ctx.organizationId)
+        : all;
+    const pg = paginate(scoped, parsePagination(req.query));
     writeJson(res, 200, { devices: pg.items, count: pg.count, total: pg.total, limit: pg.limit, offset: pg.offset });
   });
 }

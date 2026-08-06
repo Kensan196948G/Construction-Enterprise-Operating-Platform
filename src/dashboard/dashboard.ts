@@ -67,6 +67,8 @@ export interface DashboardView {
 export interface DashboardViewer {
   readonly subject: string;
   readonly permissions: readonly Permission[];
+  /** Organization scope; undefined = platform-wide viewer. */
+  readonly organizationId?: string;
 }
 
 export interface DashboardInput {
@@ -99,25 +101,33 @@ export function buildDashboard(input: DashboardInput): DashboardView {
   const canReadApplications = allow("application");
   const canReadDevices = allow("device");
   const canReadApprovals = allow("approval");
+  const canReadUsers = allow("user");
+  const orgScoped = input.viewer.organizationId !== undefined;
 
-  const applications: AppHealthItem[] = canReadApplications
-    ? input.applications.map((app) => ({
+  const visibleApplications = canReadApplications
+    ? orgScoped
+      ? input.applications.filter((app) => app.ownerOrganizationId === input.viewer.organizationId)
+      : input.applications
+    : [];
+  const applications: AppHealthItem[] = visibleApplications.map((app) => ({
         id: app.id,
         key: app.key,
         name: app.name,
         category: app.category,
         health: app.health,
-      }))
-    : [];
+      }));
 
-  const devices: DeviceStatusItem[] = canReadDevices
-    ? input.devices.map((device) => ({
+  const visibleDevices = canReadDevices
+    ? orgScoped
+      ? input.devices.filter((device) => device.organizationId === input.viewer.organizationId)
+      : input.devices
+    : [];
+  const devices: DeviceStatusItem[] = visibleDevices.map((device) => ({
         id: device.id,
         kind: device.kind,
         status: device.status,
         ...(device.assignedUserId !== undefined ? { assignedUserId: device.assignedUserId } : {}),
-      }))
-    : [];
+      }));
 
   const pendingApprovals = canReadApprovals ? [...input.pendingApprovals] : [];
 
@@ -126,12 +136,16 @@ export function buildDashboard(input: DashboardInput): DashboardView {
     ? input.auditLog.query((entry) => entry.event.outcome === "denied").length
     : 0;
 
-  const canReadUsers = allow("user");
+  const visibleUsers = canReadUsers
+    ? orgScoped
+      ? input.users.filter((user) => user.organizationId === input.viewer.organizationId)
+      : input.users
+    : [];
   const governance: GovernanceSummary = {
-    totalUsers: canReadUsers ? input.users.length : 0,
-    activeUsers: canReadUsers ? input.users.filter(isActiveUser).length : 0,
+    totalUsers: visibleUsers.length,
+    activeUsers: visibleUsers.filter(isActiveUser).length,
     visibleApplications: applications.length,
-    unhealthyApplications: canReadApplications ? input.applications.filter(isUnhealthy).length : 0,
+    unhealthyApplications: visibleApplications.filter(isUnhealthy).length,
     visibleDevices: devices.length,
     openApprovals: pendingApprovals.length,
     auditEvents: canReadAudit ? input.auditLog.size : 0,
@@ -146,8 +160,8 @@ export function buildDashboard(input: DashboardInput): DashboardView {
     devices,
     pendingApprovals,
     hidden: {
-      applications: canReadApplications ? 0 : input.applications.length,
-      devices: canReadDevices ? 0 : input.devices.length,
+      applications: input.applications.length - applications.length,
+      devices: input.devices.length - devices.length,
       approvals: canReadApprovals ? 0 : input.pendingApprovals.length,
     },
   };

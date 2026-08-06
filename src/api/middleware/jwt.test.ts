@@ -60,6 +60,22 @@ test("jwt: two tokens issued for the same subject have different jti", () => {
   assert.notEqual(r1.payload.jti, r2.payload.jti);
 });
 
+test("jwt: organizationId claim round-trips when provided", () => {
+  const issuer = createJwtIssuer({ secret: generateJwtSecret() });
+  const token = issuer.issue("u", PERMS, "org-123");
+  const result = issuer.verify(token);
+  assert.ok(result.ok);
+  assert.equal(result.payload.organizationId, "org-123");
+});
+
+test("jwt: token without organizationId has no org claim", () => {
+  const issuer = createJwtIssuer({ secret: generateJwtSecret() });
+  const token = issuer.issue("u", PERMS);
+  const result = issuer.verify(token);
+  assert.ok(result.ok);
+  assert.equal(result.payload.organizationId, undefined);
+});
+
 // ---------------------------------------------------------------------------
 // Negative cases
 // ---------------------------------------------------------------------------

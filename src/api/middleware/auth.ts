@@ -39,12 +39,19 @@ export function createApiKey(
   subject: string,
   permissions: readonly Permission[],
   store: ApiKeyStore,
+  organizationId?: string,
 ): { key: string; secret: string } {
   const keyId = randomBytes(16).toString("hex");
   const secret = randomBytes(32).toString("hex");
   const secretHash = computeSecretHash(keyId, secret);
 
-  const record: ApiKeyRecord = { keyId, subject, permissions: [...permissions], secretHash };
+  const record: ApiKeyRecord = {
+    keyId,
+    subject,
+    permissions: [...permissions],
+    ...(organizationId !== undefined ? { organizationId } : {}),
+    secretHash,
+  };
   store.set(keyId, record);
 
   return { key: keyId, secret };
@@ -96,6 +103,7 @@ export function validateApiKey(
     keyId: record.keyId,
     subject: record.subject,
     permissions: [...record.permissions],
+    ...(record.organizationId !== undefined ? { organizationId: record.organizationId } : {}),
     authKind: "apikey",
   });
 }

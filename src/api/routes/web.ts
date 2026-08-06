@@ -90,7 +90,11 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
       ]);
 
       const view = buildDashboard({
-        viewer: { subject, permissions },
+        viewer: {
+          subject,
+          permissions,
+          ...(ctx?.organizationId !== undefined ? { organizationId: ctx.organizationId } : {}),
+        },
         policies,
         generatedAt: new Date().toISOString() as IsoTimestamp,
         users,

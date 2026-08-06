@@ -53,6 +53,8 @@ export interface ApiKeyRecord {
   readonly keyId: string;
   readonly subject: string;
   readonly permissions: readonly Permission[];
+  /** Organization the credential is scoped to; undefined = global (platform-level). */
+  readonly organizationId?: string;
   /** HMAC-SHA256 of the secret, keyed on keyId. Never store the raw secret. */
   readonly secretHash: string;
 }
@@ -68,6 +70,8 @@ export interface ApiKeyContext {
   readonly keyId: string;
   readonly subject: string;
   readonly permissions: readonly Permission[];
+  /** Organization scope of the authenticated identity; undefined = global. */
+  readonly organizationId?: string;
   /** How the caller authenticated — used for JWT-specific operations (e.g. revocation). */
   readonly authKind: "apikey" | "jwt";
 }

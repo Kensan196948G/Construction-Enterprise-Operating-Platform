@@ -47,6 +47,49 @@ export function hasPermission(
   );
 }
 
+/**
+ * Tenant-scope check: a globally-scoped credential may access any organization;
+ * an organization-scoped credential may only access its own organization.
+ */
+export function canAccessOrganization(
+  ctx: { readonly organizationId?: string } | null,
+  orgId: string | undefined,
+): boolean {
+  if (ctx === null) return false;
+  if (ctx.organizationId === undefined) return true;
+  return ctx.organizationId === orgId;
+}
+
+/** True when a single target permission is covered by the grantor's permissions. */
+function coversPermission(
+  grantor: readonly Permission[],
+  target: string,
+): boolean {
+  const colonIdx = target.indexOf(":");
+  if (colonIdx === -1) return false;
+  const resource = target.slice(0, colonIdx);
+  const action = target.slice(colonIdx + 1);
+  return grantor.some(
+    (p) =>
+      p === "*:*" ||
+      p === `${resource}:*` ||
+      p === `*:${action}` ||
+      p === target,
+  );
+}
+
+/**
+ * Anti-escalation check: the grantor must already hold every permission they
+ * are about to grant (wildcards count). Prevents `user:write`/`role:write`
+ * holders from minting `*:*` roles or assigning roles above their own level.
+ */
+export function coversPermissions(
+  grantor: readonly Permission[],
+  target: readonly Permission[],
+): boolean {
+  return target.every((t) => coversPermission(grantor, String(t)));
+}
+
 interface EvaluateBody {
   readonly subject?: unknown;
   readonly resource?: unknown;

@@ -30,7 +30,7 @@ import type { ApplicationCategory, ApplicationHealth } from "../../domain/applic
 import { recordAudit, type AuditMetadata } from "../audit.ts";
 import type { Router } from "../router.ts";
 import { writeJson } from "../router.ts";
-import { hasPermission } from "./governance.ts";
+import { canAccessOrganization, coversPermissions, hasPermission } from "./governance.ts";
 import type { ApiKeyContext, AppContainer } from "../types.ts";
 
 // ---------------------------------------------------------------------------
@@ -104,11 +104,19 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
     if (!hasPermission(ctx, "organization", "read")) { forbidden(res, "organization:read"); return; }
     const org = await repositories.organizations.findById(organizationId(req.params["id"] ?? ""));
     if (org === null) { notFound(res, "organization"); return; }
+    if (!canAccessOrganization(ctx, org.id)) { notFound(res, "organization"); return; }
     writeJson(res, 200, org);
   });
 
   router.post("/api/v1/organizations", async (req, ctx, res) => {
     if (!hasPermission(ctx, "organization", "write")) { forbidden(res, "organization:write"); return; }
+    if (ctx?.organizationId !== undefined) {
+      writeJson(res, 403, {
+        error: "Forbidden",
+        message: "organization-scoped credentials cannot create organizations",
+      });
+      return;
+    }
     const parentId = str(req.body, "parentId");
     const result = createOrganization({
       id: str(req.body, "id") ?? randomUUID(),
@@ -131,6 +139,7 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
     if (!hasPermission(ctx, "organization", "write")) { forbidden(res, "organization:write"); return; }
     const existing = await repositories.organizations.findById(organizationId(req.params["id"] ?? ""));
     if (existing === null) { notFound(res, "organization"); return; }
+    if (!canAccessOrganization(ctx, existing.id)) { notFound(res, "organization"); return; }
     const parentId = existing.parentId as string | undefined;
     const result = createOrganization({
       id: existing.id,
@@ -154,6 +163,7 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
     if (!hasPermission(ctx, "organization", "write")) { forbidden(res, "organization:write"); return; }
     const existing = await repositories.organizations.findById(organizationId(req.params["id"] ?? ""));
     if (existing === null) { notFound(res, "organization"); return; }
+    if (!canAccessOrganization(ctx, existing.id)) { notFound(res, "organization"); return; }
     const [depUsers, depDevices, depApps] = await Promise.all([
       repositories.users.findByOrganization(existing.id),
       repositories.devices.findByOrganization(existing.id),
@@ -179,6 +189,7 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
     if (!hasPermission(ctx, "user", "read")) { forbidden(res, "user:read"); return; }
     const user = await repositories.users.findById(userId(req.params["id"] ?? ""));
     if (user === null) { notFound(res, "user"); return; }
+    if (!canAccessOrganization(ctx, user.organizationId)) { notFound(res, "user"); return; }
     writeJson(res, 200, user);
   });
 
@@ -190,7 +201,15 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
       writeJson(res, 409, { error: "Conflict", message: "email address already in use" });
       return;
     }
-    const orgIdStr = str(req.body, "organizationId") ?? "";
+    const requestedOrgId = str(req.body, "organizationId");
+    if (ctx?.organizationId !== undefined && requestedOrgId !== undefined && requestedOrgId !== ctx.organizationId) {
+      writeJson(res, 403, {
+        error: "Forbidden",
+        message: "cannot create users outside your organization",
+      });
+      return;
+    }
+    const orgIdStr = ctx?.organizationId ?? requestedOrgId ?? "";
     const roleIdsArr = strArr(req.body, "roleIds") ?? [];
     // Fix #3: Validate referenced IDs in parallel before persisting.
     const [orgRecord, roleRecords] = await Promise.all([
@@ -208,6 +227,17 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
         badRequest(res, [{ field: `roleIds[${i}]`, message: `role '${roleIdsArr[i]}' not found` }]);
         return;
       }
+    }
+    if (
+      roleRecords.some(
+        (r) => r !== null && !coversPermissions(ctx?.permissions ?? [], r.permissions),
+      )
+    ) {
+      writeJson(res, 403, {
+        error: "Forbidden",
+        message: "cannot assign roles with permissions you do not hold",
+      });
+      return;
     }
     const result = createUser({
       id: str(req.body, "id") ?? randomUUID(),
@@ -240,6 +270,7 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
     if (!hasPermission(ctx, "user", "write")) { forbidden(res, "user:write"); return; }
     const existing = await repositories.users.findById(userId(req.params["id"] ?? ""));
     if (existing === null) { notFound(res, "user"); return; }
+    if (!canAccessOrganization(ctx, existing.organizationId)) { notFound(res, "user"); return; }
     const newRoleIds = strArr(req.body, "roleIds");
     // Fix #3: Validate updated roleIds references if the field is provided.
     if (newRoleIds !== undefined && newRoleIds.length > 0) {
@@ -249,6 +280,17 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
           badRequest(res, [{ field: `roleIds[${i}]`, message: `role '${newRoleIds[i]}' not found` }]);
           return;
         }
+      }
+      if (
+        roleRecords.some(
+          (r) => r !== null && !coversPermissions(ctx?.permissions ?? [], r.permissions),
+        )
+      ) {
+        writeJson(res, 403, {
+          error: "Forbidden",
+          message: "cannot assign roles with permissions you do not hold",
+        });
+        return;
       }
     }
     const result = createUser({
@@ -274,6 +316,7 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
     if (!hasPermission(ctx, "user", "write")) { forbidden(res, "user:write"); return; }
     const existing = await repositories.users.findById(userId(req.params["id"] ?? ""));
     if (existing === null) { notFound(res, "user"); return; }
+    if (!canAccessOrganization(ctx, existing.organizationId)) { notFound(res, "user"); return; }
     const result = createUser({
       id: existing.id,
       organizationId: existing.organizationId,
@@ -323,6 +366,13 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
       permissions: strArr(req.body, "permissions") ?? [],
     });
     if (!result.ok) { badRequest(res, result.error); return; }
+    if (!coversPermissions(ctx?.permissions ?? [], result.value.permissions)) {
+      writeJson(res, 403, {
+        error: "Forbidden",
+        message: "cannot grant permissions you do not hold",
+      });
+      return;
+    }
     // Fix #2: Catch DB-level unique constraint violation for concurrent-write edge case.
     try {
       await repositories.roles.save(result.value);
@@ -352,6 +402,13 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
       permissions: strArr(req.body, "permissions") ?? ([...existing.permissions] as string[]),
     });
     if (!result.ok) { badRequest(res, result.error); return; }
+    if (!coversPermissions(ctx?.permissions ?? [], result.value.permissions)) {
+      writeJson(res, 403, {
+        error: "Forbidden",
+        message: "cannot grant permissions you do not hold",
+      });
+      return;
+    }
     await repositories.roles.save(result.value);
     audit(container, ctx, "role:update", existing.id, {
       name: result.value.name,
@@ -388,12 +445,21 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
     if (!hasPermission(ctx, "device", "read")) { forbidden(res, "device:read"); return; }
     const device = await repositories.devices.findById(deviceId(req.params["id"] ?? ""));
     if (device === null) { notFound(res, "device"); return; }
+    if (!canAccessOrganization(ctx, device.organizationId)) { notFound(res, "device"); return; }
     writeJson(res, 200, device);
   });
 
   router.post("/api/v1/devices", async (req, ctx, res) => {
     if (!hasPermission(ctx, "device", "write")) { forbidden(res, "device:write"); return; }
-    const rawOrgId = str(req.body, "organizationId") ?? "";
+    const requestedOrgId = str(req.body, "organizationId");
+    if (ctx?.organizationId !== undefined && requestedOrgId !== undefined && requestedOrgId !== ctx.organizationId) {
+      writeJson(res, 403, {
+        error: "Forbidden",
+        message: "cannot create devices outside your organization",
+      });
+      return;
+    }
+    const rawOrgId = ctx?.organizationId ?? requestedOrgId ?? "";
     const assignedUserIdStr = str(req.body, "assignedUserId");
     // Fix #3: Validate referenced IDs in parallel before persisting.
     const [orgRecord, userRecord] = await Promise.all([
@@ -440,6 +506,7 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
     if (!hasPermission(ctx, "device", "write")) { forbidden(res, "device:write"); return; }
     const existing = await repositories.devices.findById(deviceId(req.params["id"] ?? ""));
     if (existing === null) { notFound(res, "device"); return; }
+    if (!canAccessOrganization(ctx, existing.organizationId)) { notFound(res, "device"); return; }
     const newAssignedUserIdStr = str(req.body, "assignedUserId");
     // Fix #3: Validate updated assignedUserId reference if the field is provided.
     if (newAssignedUserIdStr !== undefined) {
@@ -480,6 +547,7 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
     if (!hasPermission(ctx, "device", "write")) { forbidden(res, "device:write"); return; }
     const existing = await repositories.devices.findById(deviceId(req.params["id"] ?? ""));
     if (existing === null) { notFound(res, "device"); return; }
+    if (!canAccessOrganization(ctx, existing.organizationId)) { notFound(res, "device"); return; }
     await repositories.devices.delete(existing.id);
     audit(container, ctx, "device:delete", existing.id, {});
     noContent(res);
@@ -491,6 +559,7 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
     if (!hasPermission(ctx, "application", "read")) { forbidden(res, "application:read"); return; }
     const app = await repositories.applications.findById(applicationId(req.params["id"] ?? ""));
     if (app === null) { notFound(res, "application"); return; }
+    if (!canAccessOrganization(ctx, app.ownerOrganizationId)) { notFound(res, "application"); return; }
     writeJson(res, 200, app);
   });
 
@@ -502,7 +571,15 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
       writeJson(res, 409, { error: "Conflict", message: "application key already exists" });
       return;
     }
-    const ownerOrgIdStr = str(req.body, "ownerOrganizationId") ?? "";
+    const requestedOwnerOrg = str(req.body, "ownerOrganizationId");
+    if (ctx?.organizationId !== undefined && requestedOwnerOrg !== undefined && requestedOwnerOrg !== ctx.organizationId) {
+      writeJson(res, 403, {
+        error: "Forbidden",
+        message: "cannot create applications outside your organization",
+      });
+      return;
+    }
+    const ownerOrgIdStr = ctx?.organizationId ?? requestedOwnerOrg ?? "";
     // Fix #3: Validate ownerOrganizationId reference before persisting.
     if (ownerOrgIdStr) {
       const ownerOrg = await repositories.organizations.findById(organizationId(ownerOrgIdStr));
@@ -541,6 +618,7 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
     if (!hasPermission(ctx, "application", "write")) { forbidden(res, "application:write"); return; }
     const existing = await repositories.applications.findById(applicationId(req.params["id"] ?? ""));
     if (existing === null) { notFound(res, "application"); return; }
+    if (!canAccessOrganization(ctx, existing.ownerOrganizationId)) { notFound(res, "application"); return; }
     const result = createApplication({
       id: existing.id,
       key: existing.key,
@@ -562,6 +640,7 @@ export function registerEntityCrudRoutes(router: Router, container: AppContainer
     if (!hasPermission(ctx, "application", "write")) { forbidden(res, "application:write"); return; }
     const existing = await repositories.applications.findById(applicationId(req.params["id"] ?? ""));
     if (existing === null) { notFound(res, "application"); return; }
+    if (!canAccessOrganization(ctx, existing.ownerOrganizationId)) { notFound(res, "application"); return; }
     await repositories.applications.delete(existing.id);
     audit(container, ctx, "application:delete", existing.id, {
       key: existing.key,

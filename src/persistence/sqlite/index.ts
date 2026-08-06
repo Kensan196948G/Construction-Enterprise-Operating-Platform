@@ -381,15 +381,28 @@ export function loadApiKeysFromSqlite(dbPath: string, store: ApiKeyStore): void 
       );
       return;
     }
-    type ApiKeyRow = { key_id: string; subject: string; permissions: string; secret_hash: string };
+    const columns = db.prepare("PRAGMA table_info(api_keys)").all() as { name: string }[];
+    const hasOrgColumn = columns.some((c) => c.name === "organization_id");
+    type ApiKeyRow = {
+      key_id: string;
+      subject: string;
+      permissions: string;
+      secret_hash: string;
+      organization_id?: string | null;
+    };
     const rows = db.prepare(
-      "SELECT key_id, subject, permissions, secret_hash FROM api_keys",
+      hasOrgColumn
+        ? "SELECT key_id, subject, permissions, secret_hash, organization_id FROM api_keys"
+        : "SELECT key_id, subject, permissions, secret_hash FROM api_keys",
     ).all() as ApiKeyRow[];
     for (const row of rows) {
       store.set(row.key_id, {
         keyId: row.key_id,
         subject: row.subject,
         permissions: JSON.parse(row.permissions) as readonly Permission[],
+        ...(row.organization_id !== undefined && row.organization_id !== null
+          ? { organizationId: row.organization_id }
+          : {}),
         secretHash: row.secret_hash,
       });
     }

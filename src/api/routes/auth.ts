@@ -98,7 +98,7 @@ export function registerAuthRoutes(
       }
 
       const { subject, permissions } = result.value;
-      const token = jwtIssuer.issue(subject, permissions);
+      const token = jwtIssuer.issue(subject, permissions, result.value.organizationId);
       const expiresIn = jwtIssuer.ttlSeconds;
 
       recordAudit(
@@ -112,7 +112,13 @@ export function registerAuthRoutes(
         "auth:token",
         "jwt",
         "success",
-        { subject, keyId: result.value.keyId },
+        {
+          subject,
+          keyId: result.value.keyId,
+          ...(result.value.organizationId !== undefined
+            ? { organizationId: result.value.organizationId }
+            : {}),
+        },
       );
       writeJson(res, 200, { token, expiresIn, subject });
     },
