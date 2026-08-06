@@ -41,7 +41,13 @@ export function parsePagination(query: Readonly<Record<string, string>>): Pagina
 export function paginate<T>(
   items: readonly T[],
   pagination: Pagination,
-): { readonly items: readonly T[]; readonly total: number; readonly limit: number; readonly offset: number; readonly count: number } {
+): {
+  readonly items: readonly T[];
+  readonly total: number;
+  readonly limit: number;
+  readonly offset: number;
+  readonly count: number;
+} {
   const page = items.slice(pagination.offset, pagination.offset + pagination.limit);
   return {
     items: page,

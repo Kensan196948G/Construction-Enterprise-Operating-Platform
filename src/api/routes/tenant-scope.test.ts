@@ -12,10 +12,7 @@ import { createApiKey } from "../middleware/auth.ts";
 import { createJwtIssuer, generateJwtSecret } from "../middleware/jwt.ts";
 import { createInMemoryRepositories } from "../../persistence/in-memory/index.ts";
 import { AuditLog } from "../../governance/audit-log.ts";
-import {
-  createOrganization,
-  createRole,
-} from "../../domain/index.ts";
+import { createOrganization, createRole } from "../../domain/index.ts";
 import type { Repositories } from "../../persistence/ports.ts";
 import type { IsoTimestamp } from "../../domain/common.ts";
 import type { Permission } from "../../domain/role.ts";
@@ -39,8 +36,24 @@ async function buildHarness(): Promise<Harness> {
   const repositories: Repositories = createInMemoryRepositories();
 
   const now = new Date().toISOString() as IsoTimestamp;
-  const orgA = unwrap(createOrganization({ id: "org-a", name: "Org A", type: "headquarters", status: "active", createdAt: now }));
-  const orgB = unwrap(createOrganization({ id: "org-b", name: "Org B", type: "headquarters", status: "active", createdAt: now }));
+  const orgA = unwrap(
+    createOrganization({
+      id: "org-a",
+      name: "Org A",
+      type: "headquarters",
+      status: "active",
+      createdAt: now,
+    }),
+  );
+  const orgB = unwrap(
+    createOrganization({
+      id: "org-b",
+      name: "Org B",
+      type: "headquarters",
+      status: "active",
+      createdAt: now,
+    }),
+  );
   await repositories.organizations.save(orgA);
   await repositories.organizations.save(orgB);
 
@@ -63,7 +76,13 @@ async function buildHarness(): Promise<Harness> {
   await repositories.roles.save(scopedRole);
 
   const globalAdmin = unwrap(
-    createRole({ id: "r-admin", name: "Admin", description: "", scope: "global", permissions: ["*:*"] as Permission[] }),
+    createRole({
+      id: "r-admin",
+      name: "Admin",
+      description: "",
+      scope: "global",
+      permissions: ["*:*"] as Permission[],
+    }),
   );
   await repositories.roles.save(globalAdmin);
 
@@ -91,9 +110,7 @@ async function buildHarness(): Promise<Harness> {
     adminCred: `${adminKV.key}:${adminKV.secret}`,
     escalatorCred: `${escalatorKV.key}:${escalatorKV.secret}`,
     close: () =>
-      new Promise<void>((resolve, reject) =>
-        server.close((e) => (e ? reject(e) : resolve())),
-      ),
+      new Promise<void>((resolve, reject) => server.close((e) => (e ? reject(e) : resolve()))),
   };
 }
 

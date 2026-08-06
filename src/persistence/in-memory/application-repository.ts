@@ -19,7 +19,9 @@ export class InMemoryApplicationRepository implements ApplicationRepository {
   async save(entity: Application): Promise<void> {
     for (const existing of this.#store.values()) {
       if (existing.key === entity.key && (existing.id as string) !== (entity.id as string)) {
-        throw new Error(`Application key "${entity.key}" is already in use by id "${existing.id as string}"`);
+        throw new Error(
+          `Application key "${entity.key}" is already in use by id "${existing.id as string}"`,
+        );
       }
     }
     this.#store.set(entity.id as string, entity);

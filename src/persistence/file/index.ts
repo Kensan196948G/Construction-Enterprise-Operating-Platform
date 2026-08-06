@@ -115,9 +115,7 @@ class FileApplicationRepository
   }
   async findByOwner(orgId: OrganizationId): Promise<readonly Application[]> {
     const all = await this.findAll();
-    return all.filter(
-      (a) => (a.ownerOrganizationId as string) === (orgId as string),
-    );
+    return all.filter((a) => (a.ownerOrganizationId as string) === (orgId as string));
   }
 }
 

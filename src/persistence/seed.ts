@@ -11,10 +11,7 @@
  *   - 2 devices (tablet / sensor)
  */
 
-import {
-  type Organization,
-  createOrganization,
-} from "../domain/organization.ts";
+import { type Organization, createOrganization } from "../domain/organization.ts";
 import { type User, createUser } from "../domain/user.ts";
 import { type Role, createRole } from "../domain/role.ts";
 import { type Device, createDevice } from "../domain/device.ts";
@@ -73,7 +70,10 @@ function ts(value: string): IsoTimestamp {
  * Unwrap a domain factory result or throw with context.
  * Seed data is hard-coded; any validation error is a programming mistake.
  */
-function unwrap<T>(result: { ok: true; value: T } | { ok: false; error: unknown }, label: string): T {
+function unwrap<T>(
+  result: { ok: true; value: T } | { ok: false; error: unknown },
+  label: string,
+): T {
   if (result.ok) {
     return result.value;
   }

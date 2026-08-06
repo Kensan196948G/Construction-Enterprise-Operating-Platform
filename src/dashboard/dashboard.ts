@@ -110,12 +110,12 @@ export function buildDashboard(input: DashboardInput): DashboardView {
       : input.applications
     : [];
   const applications: AppHealthItem[] = visibleApplications.map((app) => ({
-        id: app.id,
-        key: app.key,
-        name: app.name,
-        category: app.category,
-        health: app.health,
-      }));
+    id: app.id,
+    key: app.key,
+    name: app.name,
+    category: app.category,
+    health: app.health,
+  }));
 
   const visibleDevices = canReadDevices
     ? orgScoped
@@ -123,11 +123,11 @@ export function buildDashboard(input: DashboardInput): DashboardView {
       : input.devices
     : [];
   const devices: DeviceStatusItem[] = visibleDevices.map((device) => ({
-        id: device.id,
-        kind: device.kind,
-        status: device.status,
-        ...(device.assignedUserId !== undefined ? { assignedUserId: device.assignedUserId } : {}),
-      }));
+    id: device.id,
+    kind: device.kind,
+    status: device.status,
+    ...(device.assignedUserId !== undefined ? { assignedUserId: device.assignedUserId } : {}),
+  }));
 
   const pendingApprovals = canReadApprovals ? [...input.pendingApprovals] : [];
 

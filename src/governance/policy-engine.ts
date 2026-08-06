@@ -62,9 +62,7 @@ function conditionsHold(policy: Policy, request: AccessRequest): boolean {
     resource: request.resource,
     action: request.action,
   };
-  return policy.conditions.every(
-    (condition) => lookup[condition.attribute] === condition.equals,
-  );
+  return policy.conditions.every((condition) => lookup[condition.attribute] === condition.equals);
 }
 
 /** True when a policy targets the request's resource, action, and attributes. */

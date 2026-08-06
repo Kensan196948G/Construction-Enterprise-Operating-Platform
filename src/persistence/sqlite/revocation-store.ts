@@ -84,9 +84,7 @@ export function createSqliteRevocationStore(db: DatabaseSync): RevocationStore {
   const stmtIsRevoked: StatementSync = db.prepare(
     "SELECT 1 FROM revoked_jtis WHERE jti = ? AND prunable_at > ?",
   );
-  const stmtPrune: StatementSync = db.prepare(
-    "DELETE FROM revoked_jtis WHERE prunable_at <= ?",
-  );
+  const stmtPrune: StatementSync = db.prepare("DELETE FROM revoked_jtis WHERE prunable_at <= ?");
 
   return {
     revoke(jti, prunableAt) {

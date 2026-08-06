@@ -36,7 +36,10 @@ function memRepos() {
   return createSqliteRepositories(":memory:");
 }
 
-async function makeTmpDb(): Promise<{ repos: ReturnType<typeof createSqliteRepositories>; cleanup: () => Promise<void> }> {
+async function makeTmpDb(): Promise<{
+  repos: ReturnType<typeof createSqliteRepositories>;
+  cleanup: () => Promise<void>;
+}> {
   const dir = await mkdtemp(join(tmpdir(), "ceop-sqlite-test-"));
   const dbPath = join(dir, "test.db");
   const repos = createSqliteRepositories(dbPath);
@@ -65,7 +68,13 @@ test("sqlite: openDatabase returns a working DatabaseSync instance", () => {
 test("sqlite-org: save and findById round-trip", async () => {
   const repos = memRepos();
   const now = nowTs();
-  const result = createOrganization({ id: "org-1", name: "HQ Corp", type: "headquarters", status: "active", createdAt: now });
+  const result = createOrganization({
+    id: "org-1",
+    name: "HQ Corp",
+    type: "headquarters",
+    status: "active",
+    createdAt: now,
+  });
   assert.ok(result.ok);
 
   await repos.organizations.save(result.value);
@@ -85,8 +94,21 @@ test("sqlite-org: findHeadquarters returns only headquarters orgs", async () => 
   const repos = memRepos();
   const now = nowTs();
 
-  const hq = createOrganization({ id: "org-hq", name: "HQ", type: "headquarters", status: "active", createdAt: now });
-  const site = createOrganization({ id: "org-site", name: "Site A", type: "site", status: "active", createdAt: now, parentId: "org-hq" });
+  const hq = createOrganization({
+    id: "org-hq",
+    name: "HQ",
+    type: "headquarters",
+    status: "active",
+    createdAt: now,
+  });
+  const site = createOrganization({
+    id: "org-site",
+    name: "Site A",
+    type: "site",
+    status: "active",
+    createdAt: now,
+    parentId: "org-hq",
+  });
   assert.ok(hq.ok && site.ok);
 
   await repos.organizations.save(hq.value);
@@ -101,13 +123,39 @@ test("sqlite-org: findByParent filters correctly", async () => {
   const repos = memRepos();
   const now = nowTs();
 
-  const hqResult = createOrganization({ id: "org-hq", name: "HQ", type: "headquarters", status: "active", createdAt: now });
+  const hqResult = createOrganization({
+    id: "org-hq",
+    name: "HQ",
+    type: "headquarters",
+    status: "active",
+    createdAt: now,
+  });
   assert.ok(hqResult.ok);
   await repos.organizations.save(hqResult.value);
 
-  const child1 = createOrganization({ id: "org-c1", name: "Child 1", type: "branch", status: "active", createdAt: now, parentId: "org-hq" });
-  const child2 = createOrganization({ id: "org-c2", name: "Child 2", type: "site", status: "active", createdAt: now, parentId: "org-hq" });
-  const other = createOrganization({ id: "org-other", name: "Other HQ", type: "headquarters", status: "active", createdAt: now });
+  const child1 = createOrganization({
+    id: "org-c1",
+    name: "Child 1",
+    type: "branch",
+    status: "active",
+    createdAt: now,
+    parentId: "org-hq",
+  });
+  const child2 = createOrganization({
+    id: "org-c2",
+    name: "Child 2",
+    type: "site",
+    status: "active",
+    createdAt: now,
+    parentId: "org-hq",
+  });
+  const other = createOrganization({
+    id: "org-other",
+    name: "Other HQ",
+    type: "headquarters",
+    status: "active",
+    createdAt: now,
+  });
   assert.ok(child1.ok && child2.ok && other.ok);
 
   await repos.organizations.save(child1.value);
@@ -123,7 +171,13 @@ test("sqlite-org: findByParent filters correctly", async () => {
 test("sqlite-org: delete removes the entity", async () => {
   const repos = memRepos();
   const now = nowTs();
-  const result = createOrganization({ id: "org-del", name: "Del", type: "headquarters", status: "active", createdAt: now });
+  const result = createOrganization({
+    id: "org-del",
+    name: "Del",
+    type: "headquarters",
+    status: "active",
+    createdAt: now,
+  });
   assert.ok(result.ok);
 
   await repos.organizations.save(result.value);
@@ -140,11 +194,25 @@ test("sqlite-user: save and findByEmail", async () => {
   const repos = memRepos();
   const now = nowTs();
 
-  const orgHq = createOrganization({ id: "org-hq", name: "HQ", type: "headquarters", status: "active", createdAt: now });
+  const orgHq = createOrganization({
+    id: "org-hq",
+    name: "HQ",
+    type: "headquarters",
+    status: "active",
+    createdAt: now,
+  });
   assert.ok(orgHq.ok);
   await repos.organizations.save(orgHq.value);
 
-  const result = createUser({ id: "u-1", organizationId: "org-hq", displayName: "Alice", email: "alice@example.com", status: "active", roleIds: [], createdAt: now });
+  const result = createUser({
+    id: "u-1",
+    organizationId: "org-hq",
+    displayName: "Alice",
+    email: "alice@example.com",
+    status: "active",
+    roleIds: [],
+    createdAt: now,
+  });
   assert.ok(result.ok);
   await repos.users.save(result.value);
 
@@ -160,15 +228,51 @@ test("sqlite-user: findByOrganization returns correct users", async () => {
   const repos = memRepos();
   const now = nowTs();
 
-  const orgA = createOrganization({ id: "org-a", name: "Org A", type: "headquarters", status: "active", createdAt: now });
-  const orgB = createOrganization({ id: "org-b", name: "Org B", type: "headquarters", status: "active", createdAt: now });
+  const orgA = createOrganization({
+    id: "org-a",
+    name: "Org A",
+    type: "headquarters",
+    status: "active",
+    createdAt: now,
+  });
+  const orgB = createOrganization({
+    id: "org-b",
+    name: "Org B",
+    type: "headquarters",
+    status: "active",
+    createdAt: now,
+  });
   assert.ok(orgA.ok && orgB.ok);
   await repos.organizations.save(orgA.value);
   await repos.organizations.save(orgB.value);
 
-  const u1 = createUser({ id: "u-1", organizationId: "org-a", displayName: "Alice", email: "alice@example.com", status: "active", roleIds: [], createdAt: now });
-  const u2 = createUser({ id: "u-2", organizationId: "org-a", displayName: "Bob", email: "bob@example.com", status: "active", roleIds: [], createdAt: now });
-  const u3 = createUser({ id: "u-3", organizationId: "org-b", displayName: "Carol", email: "carol@example.com", status: "active", roleIds: [], createdAt: now });
+  const u1 = createUser({
+    id: "u-1",
+    organizationId: "org-a",
+    displayName: "Alice",
+    email: "alice@example.com",
+    status: "active",
+    roleIds: [],
+    createdAt: now,
+  });
+  const u2 = createUser({
+    id: "u-2",
+    organizationId: "org-a",
+    displayName: "Bob",
+    email: "bob@example.com",
+    status: "active",
+    roleIds: [],
+    createdAt: now,
+  });
+  const u3 = createUser({
+    id: "u-3",
+    organizationId: "org-b",
+    displayName: "Carol",
+    email: "carol@example.com",
+    status: "active",
+    roleIds: [],
+    createdAt: now,
+  });
   assert.ok(u1.ok && u2.ok && u3.ok);
 
   await repos.users.save(u1.value);
@@ -187,15 +291,37 @@ test("sqlite-user: save overwrites existing (upsert)", async () => {
   const repos = memRepos();
   const now = nowTs();
 
-  const orgA = createOrganization({ id: "org-a", name: "Org A", type: "headquarters", status: "active", createdAt: now });
+  const orgA = createOrganization({
+    id: "org-a",
+    name: "Org A",
+    type: "headquarters",
+    status: "active",
+    createdAt: now,
+  });
   assert.ok(orgA.ok);
   await repos.organizations.save(orgA.value);
 
-  const v1 = createUser({ id: "u-upsert", organizationId: "org-a", displayName: "V1", email: "upsert@example.com", status: "active", roleIds: [], createdAt: now });
+  const v1 = createUser({
+    id: "u-upsert",
+    organizationId: "org-a",
+    displayName: "V1",
+    email: "upsert@example.com",
+    status: "active",
+    roleIds: [],
+    createdAt: now,
+  });
   assert.ok(v1.ok);
   await repos.users.save(v1.value);
 
-  const v2 = createUser({ id: "u-upsert", organizationId: "org-a", displayName: "V2", email: "upsert@example.com", status: "suspended", roleIds: [], createdAt: now });
+  const v2 = createUser({
+    id: "u-upsert",
+    organizationId: "org-a",
+    displayName: "V2",
+    email: "upsert@example.com",
+    status: "suspended",
+    roleIds: [],
+    createdAt: now,
+  });
   assert.ok(v2.ok);
   await repos.users.save(v2.value);
 
@@ -213,8 +339,20 @@ test("sqlite-user: save overwrites existing (upsert)", async () => {
 test("sqlite-role: findByName exact match", async () => {
   const repos = memRepos();
 
-  const r1 = createRole({ id: "role-admin", name: "Administrator", description: "Full access", scope: "global", permissions: ["*:*"] });
-  const r2 = createRole({ id: "role-viewer", name: "Viewer", description: "Read only", scope: "global", permissions: ["*:read"] });
+  const r1 = createRole({
+    id: "role-admin",
+    name: "Administrator",
+    description: "Full access",
+    scope: "global",
+    permissions: ["*:*"],
+  });
+  const r2 = createRole({
+    id: "role-viewer",
+    name: "Viewer",
+    description: "Read only",
+    scope: "global",
+    permissions: ["*:read"],
+  });
   assert.ok(r1.ok && r2.ok);
 
   await repos.roles.save(r1.value);
@@ -236,15 +374,42 @@ test("sqlite-device: findByOrganization", async () => {
   const repos = memRepos();
   const now = nowTs();
 
-  const seedA = createOrganization({ id: "org-a", name: "Org A", type: "headquarters", status: "active", createdAt: now });
-  const seedB = createOrganization({ id: "org-b", name: "Org B", type: "headquarters", status: "active", createdAt: now });
+  const seedA = createOrganization({
+    id: "org-a",
+    name: "Org A",
+    type: "headquarters",
+    status: "active",
+    createdAt: now,
+  });
+  const seedB = createOrganization({
+    id: "org-b",
+    name: "Org B",
+    type: "headquarters",
+    status: "active",
+    createdAt: now,
+  });
   assert.ok(seedA.ok && seedB.ok);
   await repos.organizations.save(seedA.value);
   await repos.organizations.save(seedB.value);
 
-  const d1 = createDevice({ id: "dev-1", organizationId: "org-a", kind: "phone", status: "active" });
-  const d2 = createDevice({ id: "dev-2", organizationId: "org-a", kind: "phone", status: "active" });
-  const d3 = createDevice({ id: "dev-3", organizationId: "org-b", kind: "kiosk", status: "active" });
+  const d1 = createDevice({
+    id: "dev-1",
+    organizationId: "org-a",
+    kind: "phone",
+    status: "active",
+  });
+  const d2 = createDevice({
+    id: "dev-2",
+    organizationId: "org-a",
+    kind: "phone",
+    status: "active",
+  });
+  const d3 = createDevice({
+    id: "dev-3",
+    organizationId: "org-b",
+    kind: "kiosk",
+    status: "active",
+  });
   assert.ok(d1.ok && d2.ok && d3.ok);
 
   await repos.devices.save(d1.value);
@@ -267,15 +432,48 @@ test("sqlite-app: findByKey and findByOwner", async () => {
   const repos = memRepos();
   const now = nowTs();
 
-  const seedA = createOrganization({ id: "org-a", name: "Org A", type: "headquarters", status: "active", createdAt: now });
-  const seedB = createOrganization({ id: "org-b", name: "Org B", type: "headquarters", status: "active", createdAt: now });
+  const seedA = createOrganization({
+    id: "org-a",
+    name: "Org A",
+    type: "headquarters",
+    status: "active",
+    createdAt: now,
+  });
+  const seedB = createOrganization({
+    id: "org-b",
+    name: "Org B",
+    type: "headquarters",
+    status: "active",
+    createdAt: now,
+  });
   assert.ok(seedA.ok && seedB.ok);
   await repos.organizations.save(seedA.value);
   await repos.organizations.save(seedB.value);
 
-  const a1 = createApplication({ id: "app-1", key: "cmdb", name: "CMDB", category: "governance", ownerOrganizationId: "org-a", health: "healthy" });
-  const a2 = createApplication({ id: "app-2", key: "itsm", name: "ITSM", category: "workflow", ownerOrganizationId: "org-a", health: "healthy" });
-  const a3 = createApplication({ id: "app-3", key: "portal", name: "Portal", category: "portal", ownerOrganizationId: "org-b", health: "healthy" });
+  const a1 = createApplication({
+    id: "app-1",
+    key: "cmdb",
+    name: "CMDB",
+    category: "governance",
+    ownerOrganizationId: "org-a",
+    health: "healthy",
+  });
+  const a2 = createApplication({
+    id: "app-2",
+    key: "itsm",
+    name: "ITSM",
+    category: "workflow",
+    ownerOrganizationId: "org-a",
+    health: "healthy",
+  });
+  const a3 = createApplication({
+    id: "app-3",
+    key: "portal",
+    name: "Portal",
+    category: "portal",
+    ownerOrganizationId: "org-b",
+    health: "healthy",
+  });
   assert.ok(a1.ok && a2.ok && a3.ok);
 
   await repos.applications.save(a1.value);
@@ -304,9 +502,27 @@ test("sqlite-app: findByKey and findByOwner", async () => {
 test("sqlite-policy: findByEffect", async () => {
   const repos = memRepos();
 
-  const allow1 = createPolicy({ id: "p-allow-1", name: "Allow All Read", effect: "allow", resources: ["*"], actions: ["*:read"] });
-  const allow2 = createPolicy({ id: "p-allow-2", name: "Allow Governance", effect: "allow", resources: ["governance:*"], actions: ["*:*"] });
-  const deny1 = createPolicy({ id: "p-deny-1", name: "Deny Write", effect: "deny", resources: ["*"], actions: ["*:write"] });
+  const allow1 = createPolicy({
+    id: "p-allow-1",
+    name: "Allow All Read",
+    effect: "allow",
+    resources: ["*"],
+    actions: ["*:read"],
+  });
+  const allow2 = createPolicy({
+    id: "p-allow-2",
+    name: "Allow Governance",
+    effect: "allow",
+    resources: ["governance:*"],
+    actions: ["*:*"],
+  });
+  const deny1 = createPolicy({
+    id: "p-deny-1",
+    name: "Deny Write",
+    effect: "deny",
+    resources: ["*"],
+    actions: ["*:write"],
+  });
   assert.ok(allow1.ok && allow2.ok && deny1.ok);
 
   await repos.policies.save(allow1.value);
@@ -340,7 +556,13 @@ test("sqlite: data persists across separate openDatabase calls on same file", as
   after(cleanup);
 
   const now = nowTs();
-  const r = createOrganization({ id: "org-persist", name: "Persistent Org", type: "headquarters", status: "active", createdAt: now });
+  const r = createOrganization({
+    id: "org-persist",
+    name: "Persistent Org",
+    type: "headquarters",
+    status: "active",
+    createdAt: now,
+  });
   assert.ok(r.ok);
   await repos1.organizations.save(r.value);
 

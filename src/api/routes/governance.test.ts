@@ -41,7 +41,13 @@ async function buildHarness(): Promise<Harness> {
   const apiKeyStore: ApiKeyStore = new Map();
 
   const adminRole = unwrap(
-    createRole({ id: "r-admin", name: "Admin", description: "", scope: "global", permissions: ["*:*"] }),
+    createRole({
+      id: "r-admin",
+      name: "Admin",
+      description: "",
+      scope: "global",
+      permissions: ["*:*"],
+    }),
   );
   const readerRole = unwrap(
     createRole({
@@ -83,7 +89,8 @@ async function buildHarness(): Promise<Harness> {
     readerCred: `${readerKV.key}:${readerKV.secret}`,
     noPermCred: `${noPermKV.key}:${noPermKV.secret}`,
     noCred: null,
-    close: () => new Promise<void>((resolve, reject) => server.close((e) => (e ? reject(e) : resolve()))),
+    close: () =>
+      new Promise<void>((resolve, reject) => server.close((e) => (e ? reject(e) : resolve()))),
   };
 }
 
@@ -110,7 +117,8 @@ const post = (baseUrl: string, path: string, cred: string | null, body: unknown)
   req("POST", baseUrl, path, cred, body);
 const put = (baseUrl: string, path: string, cred: string | null, body: unknown) =>
   req("PUT", baseUrl, path, cred, body);
-const del = (baseUrl: string, path: string, cred: string | null) => req("DELETE", baseUrl, path, cred);
+const del = (baseUrl: string, path: string, cred: string | null) =>
+  req("DELETE", baseUrl, path, cred);
 
 const POLICY_PAYLOAD = {
   id: "p-allow-org-read",
@@ -128,7 +136,12 @@ const POLICY_PAYLOAD = {
 test("POST /api/v1/governance/policies — 201 with admin key", async () => {
   const h = await buildHarness();
   after(() => h.close());
-  const { status, body } = await post(h.baseUrl, "/api/v1/governance/policies", h.adminCred, POLICY_PAYLOAD);
+  const { status, body } = await post(
+    h.baseUrl,
+    "/api/v1/governance/policies",
+    h.adminCred,
+    POLICY_PAYLOAD,
+  );
   assert.equal(status, 201);
   const b = body as { id: string; name: string; effect: string };
   assert.equal(b.id, "p-allow-org-read");
@@ -139,7 +152,12 @@ test("POST /api/v1/governance/policies — 201 with admin key", async () => {
 test("POST /api/v1/governance/policies — 403 with reader key (no write permission)", async () => {
   const h = await buildHarness();
   after(() => h.close());
-  const { status } = await post(h.baseUrl, "/api/v1/governance/policies", h.readerCred, POLICY_PAYLOAD);
+  const { status } = await post(
+    h.baseUrl,
+    "/api/v1/governance/policies",
+    h.readerCred,
+    POLICY_PAYLOAD,
+  );
   assert.equal(status, 403);
 });
 
@@ -185,7 +203,11 @@ test("GET /api/v1/governance/policies/:id — 200 returns the policy", async () 
   const h = await buildHarness();
   after(() => h.close());
   await post(h.baseUrl, "/api/v1/governance/policies", h.adminCred, POLICY_PAYLOAD);
-  const { status, body } = await get(h.baseUrl, `/api/v1/governance/policies/${POLICY_PAYLOAD.id}`, h.adminCred);
+  const { status, body } = await get(
+    h.baseUrl,
+    `/api/v1/governance/policies/${POLICY_PAYLOAD.id}`,
+    h.adminCred,
+  );
   assert.equal(status, 200);
   const b = body as { id: string; name: string };
   assert.equal(b.id, "p-allow-org-read");
@@ -196,14 +218,22 @@ test("GET /api/v1/governance/policies/:id — 200 with reader key", async () => 
   const h = await buildHarness();
   after(() => h.close());
   await post(h.baseUrl, "/api/v1/governance/policies", h.adminCred, POLICY_PAYLOAD);
-  const { status } = await get(h.baseUrl, `/api/v1/governance/policies/${POLICY_PAYLOAD.id}`, h.readerCred);
+  const { status } = await get(
+    h.baseUrl,
+    `/api/v1/governance/policies/${POLICY_PAYLOAD.id}`,
+    h.readerCred,
+  );
   assert.equal(status, 200);
 });
 
 test("GET /api/v1/governance/policies/:id — 404 for unknown id", async () => {
   const h = await buildHarness();
   after(() => h.close());
-  const { status, body } = await get(h.baseUrl, "/api/v1/governance/policies/nonexistent", h.adminCred);
+  const { status, body } = await get(
+    h.baseUrl,
+    "/api/v1/governance/policies/nonexistent",
+    h.adminCred,
+  );
   assert.equal(status, 404);
   const b = body as { error: string };
   assert.equal(b.error, "Not Found");
@@ -253,7 +283,9 @@ test("PUT /api/v1/governance/policies/:id — preserves effect when not provided
 test("PUT /api/v1/governance/policies/:id — 404 for unknown id", async () => {
   const h = await buildHarness();
   after(() => h.close());
-  const { status } = await put(h.baseUrl, "/api/v1/governance/policies/ghost", h.adminCred, { name: "x" });
+  const { status } = await put(h.baseUrl, "/api/v1/governance/policies/ghost", h.adminCred, {
+    name: "x",
+  });
   assert.equal(status, 404);
 });
 
@@ -278,7 +310,11 @@ test("DELETE /api/v1/governance/policies/:id — 204 removes the policy", async 
   const h = await buildHarness();
   after(() => h.close());
   await post(h.baseUrl, "/api/v1/governance/policies", h.adminCred, POLICY_PAYLOAD);
-  const { status } = await del(h.baseUrl, `/api/v1/governance/policies/${POLICY_PAYLOAD.id}`, h.adminCred);
+  const { status } = await del(
+    h.baseUrl,
+    `/api/v1/governance/policies/${POLICY_PAYLOAD.id}`,
+    h.adminCred,
+  );
   assert.equal(status, 204);
   const { status: getStatus } = await get(
     h.baseUrl,
@@ -316,7 +352,13 @@ test("GET /api/v1/governance/policies — returns empty list initially", async (
   after(() => h.close());
   const { status, body } = await get(h.baseUrl, "/api/v1/governance/policies", h.adminCred);
   assert.equal(status, 200);
-  const b = body as { policies: unknown[]; total: number; count: number; limit: number; offset: number };
+  const b = body as {
+    policies: unknown[];
+    total: number;
+    count: number;
+    limit: number;
+    offset: number;
+  };
   assert.deepEqual(b.policies, []);
   assert.equal(b.total, 0);
   assert.equal(b.count, 0);
@@ -350,9 +392,19 @@ test("GET /api/v1/governance/policies?limit=1 — paginates correctly", async ()
       name: `Policy ${i}`,
     });
   }
-  const { status, body } = await get(h.baseUrl, "/api/v1/governance/policies?limit=1&offset=0", h.adminCred);
+  const { status, body } = await get(
+    h.baseUrl,
+    "/api/v1/governance/policies?limit=1&offset=0",
+    h.adminCred,
+  );
   assert.equal(status, 200);
-  const b = body as { policies: unknown[]; total: number; count: number; limit: number; offset: number };
+  const b = body as {
+    policies: unknown[];
+    total: number;
+    count: number;
+    limit: number;
+    offset: number;
+  };
   assert.equal(b.total, 3);
   assert.equal(b.count, 1);
   assert.equal(b.limit, 1);
@@ -370,7 +422,11 @@ test("GET /api/v1/governance/policies?offset=2 — returns tail items", async ()
       name: `Policy ${i}`,
     });
   }
-  const { body } = await get(h.baseUrl, "/api/v1/governance/policies?limit=10&offset=2", h.adminCred);
+  const { body } = await get(
+    h.baseUrl,
+    "/api/v1/governance/policies?limit=10&offset=2",
+    h.adminCred,
+  );
   const b = body as { policies: unknown[]; total: number; count: number; offset: number };
   assert.equal(b.total, 3);
   assert.equal(b.count, 1);
@@ -439,7 +495,10 @@ test("POST /api/v1/governance/evaluate — 403 without evaluate permission", asy
   const h = await buildHarness();
   after(() => h.close());
   const { status } = await post(h.baseUrl, "/api/v1/governance/evaluate", h.noPermCred, {
-    subject: "u", resource: "r", action: "a", roleIds: [],
+    subject: "u",
+    resource: "r",
+    action: "a",
+    roleIds: [],
   });
   assert.equal(status, 403);
 });

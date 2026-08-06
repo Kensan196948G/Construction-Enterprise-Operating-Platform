@@ -216,7 +216,9 @@ export class Router {
         const isTooBig = e instanceof Error && e.message === "request body too large";
         const status = isTooBig ? 413 : 400;
         const title = isTooBig ? "Payload Too Large" : "Bad Request";
-        const message = isTooBig ? "request body exceeds 1 MiB limit" : "request body must be valid JSON";
+        const message = isTooBig
+          ? "request body exceeds 1 MiB limit"
+          : "request body must be valid JSON";
         writeJson(res, status, { error: title, message });
         finish(status);
         return;

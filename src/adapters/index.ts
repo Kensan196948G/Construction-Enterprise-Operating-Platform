@@ -14,7 +14,14 @@ export * from "./in-memory-legalops-adapter.ts";
 export * from "./in-memory-bcp-adapter.ts";
 
 import { type IsoTimestamp } from "../domain/common.ts";
-import { type BcpPort, type CmdbPort, type DocumentPort, type ImsPort, type ItsmPort, type LegalOpsPort } from "./ports.ts";
+import {
+  type BcpPort,
+  type CmdbPort,
+  type DocumentPort,
+  type ImsPort,
+  type ItsmPort,
+  type LegalOpsPort,
+} from "./ports.ts";
 import { InMemoryBcpAdapter } from "./in-memory-bcp-adapter.ts";
 import { InMemoryCmdbAdapter } from "./in-memory-cmdb-adapter.ts";
 import { InMemoryDocumentAdapter } from "./in-memory-document-adapter.ts";

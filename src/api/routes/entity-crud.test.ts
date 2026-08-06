@@ -38,7 +38,13 @@ async function buildHarness(): Promise<Harness> {
   const apiKeyStore: ApiKeyStore = new Map();
 
   const adminRole = unwrap(
-    createRole({ id: "r-admin", name: "Admin", description: "", scope: "global", permissions: ["*:*"] }),
+    createRole({
+      id: "r-admin",
+      name: "Admin",
+      description: "",
+      scope: "global",
+      permissions: ["*:*"],
+    }),
   );
   const readerRole = unwrap(
     createRole({
@@ -46,7 +52,13 @@ async function buildHarness(): Promise<Harness> {
       name: "Reader",
       description: "",
       scope: "global",
-      permissions: ["organization:read", "user:read", "role:read", "device:read", "application:read"],
+      permissions: [
+        "organization:read",
+        "user:read",
+        "role:read",
+        "device:read",
+        "application:read",
+      ],
     }),
   );
 
@@ -67,7 +79,8 @@ async function buildHarness(): Promise<Harness> {
     baseUrl,
     adminCred: `${adminKV.key}:${adminKV.secret}`,
     readerCred: `${readerKV.key}:${readerKV.secret}`,
-    close: () => new Promise<void>((resolve, reject) => server.close((e) => (e ? reject(e) : resolve()))),
+    close: () =>
+      new Promise<void>((resolve, reject) => server.close((e) => (e ? reject(e) : resolve()))),
   };
 }
 
@@ -89,12 +102,14 @@ async function request(
   return { status: res.status, body: json };
 }
 
-const get = (baseUrl: string, path: string, cred: string | null) => request("GET", baseUrl, path, cred);
+const get = (baseUrl: string, path: string, cred: string | null) =>
+  request("GET", baseUrl, path, cred);
 const post = (baseUrl: string, path: string, cred: string | null, body: unknown) =>
   request("POST", baseUrl, path, cred, body);
 const put = (baseUrl: string, path: string, cred: string | null, body: unknown) =>
   request("PUT", baseUrl, path, cred, body);
-const del = (baseUrl: string, path: string, cred: string | null) => request("DELETE", baseUrl, path, cred);
+const del = (baseUrl: string, path: string, cred: string | null) =>
+  request("DELETE", baseUrl, path, cred);
 
 // ---------------------------------------------------------------------------
 // Organizations
@@ -317,7 +332,13 @@ test("GET /api/v1/roles — 403 without role:read permission", async () => {
   // Create a credential with NO role:read
   const apiKeyStore: ApiKeyStore = new Map();
   const noRoleRole = unwrap(
-    createRole({ id: "r-norole", name: "NoRole", description: "", scope: "global", permissions: ["device:read"] }),
+    createRole({
+      id: "r-norole",
+      name: "NoRole",
+      description: "",
+      scope: "global",
+      permissions: ["device:read"],
+    }),
   );
   const noRoleKV = createApiKey("norole", resolvePermissions([noRoleRole]), apiKeyStore);
   const container = {
@@ -331,10 +352,13 @@ test("GET /api/v1/roles — 403 without role:read permission", async () => {
   const { port } = server.address() as AddressInfo;
   const noRoleBaseUrl = `http://127.0.0.1:${port}`;
   after(
-    () =>
-      new Promise<void>((resolve, reject) => server.close((e) => (e ? reject(e) : resolve()))),
+    () => new Promise<void>((resolve, reject) => server.close((e) => (e ? reject(e) : resolve()))),
   );
-  const { status } = await get(noRoleBaseUrl, "/api/v1/roles", `${noRoleKV.key}:${noRoleKV.secret}`);
+  const { status } = await get(
+    noRoleBaseUrl,
+    "/api/v1/roles",
+    `${noRoleKV.key}:${noRoleKV.secret}`,
+  );
   assert.equal(status, 403);
 });
 
@@ -551,7 +575,12 @@ test("POST /api/v1/applications — 409 on duplicate key", async () => {
     type: "headquarters",
   });
   const orgId = (org as { id: string }).id;
-  const payload = { key: "dup-portal", name: "Portal", category: "portal", ownerOrganizationId: orgId };
+  const payload = {
+    key: "dup-portal",
+    name: "Portal",
+    category: "portal",
+    ownerOrganizationId: orgId,
+  };
   await post(h.baseUrl, "/api/v1/applications", h.adminCred, payload);
   const { status } = await post(h.baseUrl, "/api/v1/applications", h.adminCred, payload);
   assert.equal(status, 409);

@@ -23,11 +23,7 @@ import { buildDashboard } from "../../dashboard/dashboard.ts";
 import type { Policy } from "../../domain/policy.ts";
 import type { Router } from "../router.ts";
 import type { AppContainer } from "../types.ts";
-import {
-  renderDashboard,
-  renderGovernance,
-  type GovernancePolicyRow,
-} from "../../web/renderer.ts";
+import { renderDashboard, renderGovernance, type GovernancePolicyRow } from "../../web/renderer.ts";
 import { hasPermission } from "./governance.ts";
 
 /** Write a complete HTML response with browser security headers. */
@@ -75,8 +71,7 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
     join(process.cwd(), "src", "web", "static"),
   ];
   const staticDir =
-    staticDirCandidates.find((p) => existsSync(p)) ??
-    join(process.cwd(), "src", "web", "static");
+    staticDirCandidates.find((p) => existsSync(p)) ?? join(process.cwd(), "src", "web", "static");
 
   const sendFile = async (
     res: ServerResponse,
@@ -99,12 +94,20 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
   };
 
   // Static assets — CSP allows only 'self', so styles/scripts are external files.
-  router.get("/assets/app.css", async (_req, _ctx, res) => {
-    await sendFile(res, join(staticDir, "app.css"), "text/css; charset=utf-8");
-  }, false);
-  router.get("/assets/app.js", async (_req, _ctx, res) => {
-    await sendFile(res, join(staticDir, "app.js"), "text/javascript; charset=utf-8");
-  }, false);
+  router.get(
+    "/assets/app.css",
+    async (_req, _ctx, res) => {
+      await sendFile(res, join(staticDir, "app.css"), "text/css; charset=utf-8");
+    },
+    false,
+  );
+  router.get(
+    "/assets/app.js",
+    async (_req, _ctx, res) => {
+      await sendFile(res, join(staticDir, "app.js"), "text/javascript; charset=utf-8");
+    },
+    false,
+  );
 
   router.get(
     "/",
@@ -155,7 +158,11 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
     "/governance",
     async (_req, ctx, res) => {
       if (!hasPermission(ctx, "policy", "read")) {
-        sendHtml(res, 403, "<html><body><h1>403 Forbidden</h1><p>requires policy:read permission</p></body></html>");
+        sendHtml(
+          res,
+          403,
+          "<html><body><h1>403 Forbidden</h1><p>requires policy:read permission</p></body></html>",
+        );
         return;
       }
       const policyRows = (await container.repositories.policies.findAll()).map(policyToRow);

@@ -23,10 +23,7 @@ test("rate-limit: /api/v1/* is limited per socket IP while /health stays open", 
   );
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   t.after(
-    () =>
-      new Promise<void>((resolve, reject) =>
-        server.close((e) => (e ? reject(e) : resolve())),
-      ),
+    () => new Promise<void>((resolve, reject) => server.close((e) => (e ? reject(e) : resolve()))),
   );
   const { port } = server.address() as AddressInfo;
   const base = `http://127.0.0.1:${port}`;

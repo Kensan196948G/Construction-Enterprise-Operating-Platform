@@ -177,9 +177,11 @@ describe("SqliteAuditLog", () => {
       // will no longer match the stored hash in the same entry.
       const raw = new DatabaseSync(dbPath);
       raw.exec("PRAGMA journal_mode=WAL");
-      raw.prepare(
-        "UPDATE audit_log SET data = json_set(data, '$.event.actor', 'tampered') WHERE sequence=1",
-      ).run();
+      raw
+        .prepare(
+          "UPDATE audit_log SET data = json_set(data, '$.event.actor', 'tampered') WHERE sequence=1",
+        )
+        .run();
       raw.close();
 
       const log2 = new SqliteAuditLog(dbPath);

@@ -61,20 +61,13 @@ export function canAccessOrganization(
 }
 
 /** True when a single target permission is covered by the grantor's permissions. */
-function coversPermission(
-  grantor: readonly Permission[],
-  target: string,
-): boolean {
+function coversPermission(grantor: readonly Permission[], target: string): boolean {
   const colonIdx = target.indexOf(":");
   if (colonIdx === -1) return false;
   const resource = target.slice(0, colonIdx);
   const action = target.slice(colonIdx + 1);
   return grantor.some(
-    (p) =>
-      p === "*:*" ||
-      p === `${resource}:*` ||
-      p === `*:${action}` ||
-      p === target,
+    (p) => p === "*:*" || p === `${resource}:*` || p === `*:${action}` || p === target,
   );
 }
 
@@ -184,18 +177,27 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
   // POST /api/v1/governance/evaluate  (requires governance:evaluate or wildcard permission)
   router.post("/api/v1/governance/evaluate", async (req, ctx, res) => {
     if (!hasPermission(ctx, "governance", "evaluate")) {
-      writeJson(res, 403, { error: "Forbidden", message: "requires 'governance:evaluate' permission" });
+      writeJson(res, 403, {
+        error: "Forbidden",
+        message: "requires 'governance:evaluate' permission",
+      });
       return;
     }
     const body = (req.body ?? {}) as EvaluateBody;
     const { subject, resource, action, roleIds, attributes } = body;
 
     if (typeof subject !== "string" || subject.length === 0) {
-      writeJson(res, 400, { error: "Bad Request", message: "'subject' must be a non-empty string" });
+      writeJson(res, 400, {
+        error: "Bad Request",
+        message: "'subject' must be a non-empty string",
+      });
       return;
     }
     if (typeof resource !== "string" || resource.length === 0) {
-      writeJson(res, 400, { error: "Bad Request", message: "'resource' must be a non-empty string" });
+      writeJson(res, 400, {
+        error: "Bad Request",
+        message: "'resource' must be a non-empty string",
+      });
       return;
     }
     if (typeof action !== "string" || action.length === 0) {
@@ -203,7 +205,10 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
       return;
     }
     if (!Array.isArray(roleIds) || roleIds.some((r) => typeof r !== "string")) {
-      writeJson(res, 400, { error: "Bad Request", message: "'roleIds' must be an array of strings" });
+      writeJson(res, 400, {
+        error: "Bad Request",
+        message: "'roleIds' must be an array of strings",
+      });
       return;
     }
 
@@ -312,23 +317,43 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
     }
     const all = await container.repositories.policies.findAll();
     const pg = paginate(all, parsePagination(req.query));
-    writeJson(res, 200, { policies: pg.items, count: pg.count, total: pg.total, limit: pg.limit, offset: pg.offset });
+    writeJson(res, 200, {
+      policies: pg.items,
+      count: pg.count,
+      total: pg.total,
+      limit: pg.limit,
+      offset: pg.offset,
+    });
   });
 
   // GET /api/v1/governance/policies/:id  (requires policy:read or wildcard)
   router.get("/api/v1/governance/policies/:id", async (req, ctx, res) => {
-    if (!hasPermission(ctx, "policy", "read")) { forbidden(res, "policy:read"); return; }
+    if (!hasPermission(ctx, "policy", "read")) {
+      forbidden(res, "policy:read");
+      return;
+    }
     const policy = await container.repositories.policies.findById(policyId(req.params["id"] ?? ""));
-    if (policy === null) { notFound(res, "policy"); return; }
+    if (policy === null) {
+      notFound(res, "policy");
+      return;
+    }
     writeJson(res, 200, policy);
   });
 
   // POST /api/v1/governance/policies  (requires policy:write or wildcard)
   router.post("/api/v1/governance/policies", async (req, ctx, res) => {
-    if (!hasPermission(ctx, "policy", "write")) { forbidden(res, "policy:write"); return; }
+    if (!hasPermission(ctx, "policy", "write")) {
+      forbidden(res, "policy:write");
+      return;
+    }
     const parsedConditions = conditionsArr(req.body, "conditions");
     if (parsedConditions === undefined && bodyHasKey(req.body, "conditions")) {
-      badRequest(res, [{ field: "conditions", message: "each condition must have string 'attribute' and 'equals' fields" }]);
+      badRequest(res, [
+        {
+          field: "conditions",
+          message: "each condition must have string 'attribute' and 'equals' fields",
+        },
+      ]);
       return;
     }
     const result = createPolicy({
@@ -339,7 +364,10 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
       resources: strArr(req.body, "resources") ?? [],
       conditions: parsedConditions ?? [],
     });
-    if (!result.ok) { badRequest(res, result.error); return; }
+    if (!result.ok) {
+      badRequest(res, result.error);
+      return;
+    }
     await container.repositories.policies.save(result.value);
     recordAudit(container.auditLog, ctx, "policy:create", result.value.id, "success", {
       name: result.value.name,
@@ -350,9 +378,17 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
 
   // PUT /api/v1/governance/policies/:id  (requires policy:write or wildcard)
   router.put("/api/v1/governance/policies/:id", async (req, ctx, res) => {
-    if (!hasPermission(ctx, "policy", "write")) { forbidden(res, "policy:write"); return; }
-    const existing = await container.repositories.policies.findById(policyId(req.params["id"] ?? ""));
-    if (existing === null) { notFound(res, "policy"); return; }
+    if (!hasPermission(ctx, "policy", "write")) {
+      forbidden(res, "policy:write");
+      return;
+    }
+    const existing = await container.repositories.policies.findById(
+      policyId(req.params["id"] ?? ""),
+    );
+    if (existing === null) {
+      notFound(res, "policy");
+      return;
+    }
     if (bodyHasKey(req.body, "name") && str(req.body, "name") === undefined) {
       badRequest(res, [{ field: "name", message: "name must be a string" }]);
       return;
@@ -367,7 +403,12 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
     }
     const parsedConditions = conditionsArr(req.body, "conditions");
     if (parsedConditions === undefined && bodyHasKey(req.body, "conditions")) {
-      badRequest(res, [{ field: "conditions", message: "each condition must have string 'attribute' and 'equals' fields" }]);
+      badRequest(res, [
+        {
+          field: "conditions",
+          message: "each condition must have string 'attribute' and 'equals' fields",
+        },
+      ]);
       return;
     }
     const result = createPolicy({
@@ -378,7 +419,10 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
       resources: strArr(req.body, "resources") ?? ([...existing.resources] as string[]),
       conditions: parsedConditions ?? ([...existing.conditions] as PolicyCondition[]),
     });
-    if (!result.ok) { badRequest(res, result.error); return; }
+    if (!result.ok) {
+      badRequest(res, result.error);
+      return;
+    }
     await container.repositories.policies.save(result.value);
     recordAudit(container.auditLog, ctx, "policy:update", existing.id, "success", {
       name: result.value.name,
@@ -389,9 +433,17 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
 
   // DELETE /api/v1/governance/policies/:id  (requires policy:write or wildcard)
   router.delete("/api/v1/governance/policies/:id", async (req, ctx, res) => {
-    if (!hasPermission(ctx, "policy", "write")) { forbidden(res, "policy:write"); return; }
-    const existing = await container.repositories.policies.findById(policyId(req.params["id"] ?? ""));
-    if (existing === null) { notFound(res, "policy"); return; }
+    if (!hasPermission(ctx, "policy", "write")) {
+      forbidden(res, "policy:write");
+      return;
+    }
+    const existing = await container.repositories.policies.findById(
+      policyId(req.params["id"] ?? ""),
+    );
+    if (existing === null) {
+      notFound(res, "policy");
+      return;
+    }
     await container.repositories.policies.delete(existing.id);
     recordAudit(container.auditLog, ctx, "policy:delete", existing.id, "success", {
       name: existing.name,

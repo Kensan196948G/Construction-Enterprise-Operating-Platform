@@ -36,11 +36,17 @@ export class BaseFileRepository<T extends { id: string }> implements Repository<
       if (!Array.isArray(parsed)) {
         throw new Error(`Invalid repository file format: expected JSON array at ${this.#filePath}`);
       }
-      if (!parsed.every((entry): entry is T =>
-        typeof entry === "object" && entry !== null &&
-        typeof (entry as { id?: unknown }).id === "string"
-      )) {
-        throw new Error(`Invalid repository file format: every entry must have a string id at ${this.#filePath}`);
+      if (
+        !parsed.every(
+          (entry): entry is T =>
+            typeof entry === "object" &&
+            entry !== null &&
+            typeof (entry as { id?: unknown }).id === "string",
+        )
+      ) {
+        throw new Error(
+          `Invalid repository file format: every entry must have a string id at ${this.#filePath}`,
+        );
       }
       entries = parsed;
     } catch (e) {
@@ -85,7 +91,11 @@ export class BaseFileRepository<T extends { id: string }> implements Repository<
       await this.#enqueuedFlush(snapshot);
     } catch (e) {
       // Roll back cache so in-memory state stays consistent with disk.
-      if (previous === undefined) { store.delete(entity.id); } else { store.set(entity.id, previous); }
+      if (previous === undefined) {
+        store.delete(entity.id);
+      } else {
+        store.set(entity.id, previous);
+      }
       throw e;
     }
   }

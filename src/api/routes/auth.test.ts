@@ -55,9 +55,7 @@ async function buildAuthHarness(): Promise<AuthHarness> {
     subject,
     jwtIssuer,
     close: () =>
-      new Promise<void>((resolve, reject) =>
-        server.close((e) => (e ? reject(e) : resolve())),
-      ),
+      new Promise<void>((resolve, reject) => server.close((e) => (e ? reject(e) : resolve()))),
   };
 }
 
@@ -119,7 +117,10 @@ test("POST /api/v1/auth/token — response includes X-RateLimit headers", async 
   });
 
   assert.ok(headers.get("x-ratelimit-limit") !== null, "X-RateLimit-Limit should be present");
-  assert.ok(headers.get("x-ratelimit-remaining") !== null, "X-RateLimit-Remaining should be present");
+  assert.ok(
+    headers.get("x-ratelimit-remaining") !== null,
+    "X-RateLimit-Remaining should be present",
+  );
   assert.ok(headers.get("x-ratelimit-reset") !== null, "X-RateLimit-Reset should be present");
 });
 
@@ -188,5 +189,9 @@ test("POST /api/v1/auth/token — JWT can be used as Bearer on protected route",
   const appsRes = await fetch(`${h.baseUrl}/api/v1/applications`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  assert.equal(appsRes.status, 200, `expected 200 from JWT-authenticated request, got ${appsRes.status}`);
+  assert.equal(
+    appsRes.status,
+    200,
+    `expected 200 from JWT-authenticated request, got ${appsRes.status}`,
+  );
 });

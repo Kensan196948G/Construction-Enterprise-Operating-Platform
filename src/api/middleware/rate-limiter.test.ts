@@ -71,7 +71,7 @@ test("rate-limiter: allows requests once window expires", () => {
 test("rate-limiter: old timestamps are pruned from window", () => {
   const rl = createRateLimiter({ maxRequests: 2, windowMs: 500 });
   const now = 6_000_000;
-  rl.check("ip-f", now);       // timestamp at now
+  rl.check("ip-f", now); // timestamp at now
   rl.check("ip-f", now + 200); // timestamp at now+200
 
   // Advance so only the second timestamp is still in the window.

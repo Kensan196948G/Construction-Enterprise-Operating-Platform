@@ -53,9 +53,7 @@ async function buildHarness(): Promise<Harness> {
     adminCred: `${adminKV.key}:${adminKV.secret}`,
     auditLog,
     close: () =>
-      new Promise<void>((resolve, reject) =>
-        server.close((e) => (e ? reject(e) : resolve())),
-      ),
+      new Promise<void>((resolve, reject) => server.close((e) => (e ? reject(e) : resolve()))),
   };
 }
 

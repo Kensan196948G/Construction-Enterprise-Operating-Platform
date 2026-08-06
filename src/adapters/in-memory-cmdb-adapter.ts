@@ -14,11 +14,16 @@ export class InMemoryCmdbAdapter implements CmdbPort {
   getItem(id: string): Promise<ConfigurationItem | null> {
     const item = this.#items.get(id);
     // Return a shallow clone so callers cannot mutate internal store state.
-    return Promise.resolve(item !== undefined ? { ...item, attributes: { ...item.attributes } } : null);
+    return Promise.resolve(
+      item !== undefined ? { ...item, attributes: { ...item.attributes } } : null,
+    );
   }
 
   listItems(type?: string): Promise<readonly ConfigurationItem[]> {
-    const all = [...this.#items.values()].map((ci) => ({ ...ci, attributes: { ...ci.attributes } }));
+    const all = [...this.#items.values()].map((ci) => ({
+      ...ci,
+      attributes: { ...ci.attributes },
+    }));
     const result = type === undefined ? all : all.filter((ci) => ci.type === type);
     return Promise.resolve(result);
   }

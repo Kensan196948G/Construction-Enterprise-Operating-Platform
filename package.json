@@ -24,7 +24,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.ts\" \"examples/**/*.ts\" \"*.json\" \"*.md\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"examples/**/*.ts\" \"*.json\" \"*.md\"",
-    "verify": "pnpm run typecheck && pnpm run lint && pnpm run test",
+    "verify": "pnpm run format:check && pnpm run typecheck && pnpm run lint && pnpm run test",
     "demo": "node --experimental-strip-types examples/quickstart.ts",
     "openapi:gen": "node --experimental-strip-types scripts/generate-openapi.ts"
   },
