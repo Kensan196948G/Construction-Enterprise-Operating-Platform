@@ -1,0 +1,91 @@
+/**
+ * Repository port interfaces for the persistence layer.
+ *
+ * Each interface defines the contract that an adapter must fulfil.
+ * Mutation semantics (create / update / patch) live in domain services;
+ * repositories are responsible for storage and retrieval only.
+ */
+
+import type { Application, ApplicationId } from "../domain/application.ts";
+import type { Device, DeviceId } from "../domain/device.ts";
+import type { Organization, OrganizationId } from "../domain/organization.ts";
+import type { Policy, PolicyId } from "../domain/policy.ts";
+import type { Role, RoleId } from "../domain/role.ts";
+import type { User, UserId } from "../domain/user.ts";
+import type { Workflow, WorkflowId, WorkflowType, WorkflowStatus } from "../domain/workflow.ts";
+
+// ---------------------------------------------------------------------------
+// Generic repository contract
+// ---------------------------------------------------------------------------
+
+/**
+ * Minimal CRUD contract shared by all domain repositories.
+ * `save` performs an upsert: insert if absent, replace if present.
+ */
+export interface Repository<T, Id> {
+  findById(id: Id): Promise<T | null>;
+  findAll(): Promise<readonly T[]>;
+  save(entity: T): Promise<void>;
+  delete(id: Id): Promise<void>;
+}
+
+// ---------------------------------------------------------------------------
+// Domain-specific ports
+// ---------------------------------------------------------------------------
+
+export interface UserRepository extends Repository<User, UserId> {
+  /** Exact match on the `email` field (case-sensitive). */
+  findByEmail(email: string): Promise<User | null>;
+  /** All users whose `organizationId` equals `orgId`. */
+  findByOrganization(orgId: OrganizationId): Promise<readonly User[]>;
+}
+
+export interface OrganizationRepository extends Repository<Organization, OrganizationId> {
+  /** All organizations whose `type` equals `"headquarters"`. */
+  findHeadquarters(): Promise<readonly Organization[]>;
+  /** All organizations that are direct children of `parentId`. */
+  findByParent(parentId: OrganizationId): Promise<readonly Organization[]>;
+}
+
+export interface RoleRepository extends Repository<Role, RoleId> {
+  /** Look up a role by its human-readable name (case-sensitive). */
+  findByName(name: string): Promise<Role | null>;
+}
+
+export interface DeviceRepository extends Repository<Device, DeviceId> {
+  /** All devices registered under the given organization. */
+  findByOrganization(orgId: OrganizationId): Promise<readonly Device[]>;
+}
+
+export interface ApplicationRepository extends Repository<Application, ApplicationId> {
+  /** Look up an application by its stable machine key (e.g. `"cmdb"`). */
+  findByKey(key: string): Promise<Application | null>;
+  /** All applications owned by the given organization. */
+  findByOwner(orgId: OrganizationId): Promise<readonly Application[]>;
+}
+
+export interface PolicyRepository extends Repository<Policy, PolicyId> {
+  /** All policies whose `effect` equals the given value. */
+  findByEffect(effect: "allow" | "deny"): Promise<readonly Policy[]>;
+}
+
+export interface WorkflowRepository extends Repository<Workflow, WorkflowId> {
+  /** All workflows whose `type` equals the given value. */
+  findByType(type: WorkflowType): Promise<readonly Workflow[]>;
+  /** All workflows whose `status` equals the given value. */
+  findByStatus(status: WorkflowStatus): Promise<readonly Workflow[]>;
+}
+
+// ---------------------------------------------------------------------------
+// Aggregate: all repositories grouped for DI / factory use
+// ---------------------------------------------------------------------------
+
+export interface Repositories {
+  readonly users: UserRepository;
+  readonly organizations: OrganizationRepository;
+  readonly roles: RoleRepository;
+  readonly devices: DeviceRepository;
+  readonly applications: ApplicationRepository;
+  readonly policies: PolicyRepository;
+  readonly workflows: WorkflowRepository;
+}

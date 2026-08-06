@@ -1,0 +1,29 @@
+version: "3.9"
+
+services:
+  ceop-platform:
+    build:
+      context: .
+      target: runtime
+    container_name: ceop-platform
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      # Use a throw-away dev key here; never commit real secrets.
+      API_KEY: dev-api-key
+      API_KEY_ADMIN: dev-admin-key
+      LOG_LEVEL: debug
+      PLATFORM_NAME: Construction Enterprise Operating Platform
+    # Hot-reload: mount source so Node picks up changes without rebuilding the image.
+    volumes:
+      - ./src:/app/src:ro
+      - ./scripts:/app/scripts:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped

@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>建設企業オペレーティングプラットフォーム — ガバナンス</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #1a1a2e;
+      --surface:      #16213e;
+      --surface-2:    #0d1b35;
+      --primary:      #0f3460;
+      --primary-light:#1a4a80;
+      --accent:       #e94560;
+      --accent-hover: #c73650;
+      --text:         #e2e8f0;
+      --text-muted:   #94a3b8;
+      --text-dim:     #64748b;
+      --border:       #1e3a5f;
+      --border-light: #2a4a6e;
+
+      --green:        #22c55e;
+      --green-bg:     rgba(34,197,94,.12);
+      --yellow:       #f59e0b;
+      --yellow-bg:    rgba(245,158,11,.12);
+      --red:          #ef4444;
+      --red-bg:       rgba(239,68,68,.12);
+      --blue:         #3b82f6;
+      --blue-bg:      rgba(59,130,246,.12);
+
+      --sidebar-w:    240px;
+      --header-h:     60px;
+      --radius:       8px;
+      --radius-lg:    12px;
+      --shadow:       0 2px 8px rgba(0,0,0,.4);
+      --transition:   .2s ease;
+    }
+
+    html { font-size: 14px; }
+
+    body {
+      font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN",
+                   "Noto Sans JP", "Yu Gothic UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--surface); }
+    ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+
+    /* =========================================================
+       ヘッダー
+    ========================================================= */
+    .header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--header-h);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      z-index: 100;
+      box-shadow: var(--shadow);
+    }
+
+    .header__logo {
+      display: flex; align-items: center; gap: 10px;
+      font-weight: 700; font-size: 1rem;
+      color: var(--text); text-decoration: none;
+    }
+
+    .header__logo-icon {
+      width: 32px; height: 32px;
+      background: var(--accent);
+      border-radius: var(--radius);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      box-shadow: 0 0 12px rgba(233,69,96,.3);
+    }
+
+    .header__title    { font-size: .9rem; }
+    .header__subtitle { font-size: .7rem; color: var(--text-muted); font-weight: 400; }
+    .header__spacer   { flex: 1; }
+    .header__version  { font-size: .75rem; color: var(--text-dim); }
+
+    /* =========================================================
+       レイアウト
+    ========================================================= */
+    .layout {
+      display: flex;
+      padding-top: var(--header-h);
+      flex: 1;
+    }
+
+    /* =========================================================
+       サイドバー
+    ========================================================= */
+    .sidebar {
+      position: fixed;
+      top: var(--header-h); left: 0; bottom: 0;
+      width: var(--sidebar-w);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      z-index: 50;
+      padding: 20px 0;
+    }
+
+    .sidebar__section-label {
+      padding: 8px 20px 4px;
+      font-size: .68rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 20px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: .85rem;
+      transition: var(--transition);
+      border-left: 3px solid transparent;
+    }
+
+    .nav-item:hover { background: rgba(15,52,96,.4); color: var(--text); border-left-color: var(--primary-light); }
+    .nav-item.active { background: rgba(233,69,96,.1); color: var(--accent); border-left-color: var(--accent); }
+
+    .nav-icon { width: 18px; text-align: center; flex-shrink: 0; font-size: 1rem; }
+
+    .sidebar__divider { border: none; border-top: 1px solid var(--border); margin: 12px 20px; }
+
+    /* =========================================================
+       メインコンテンツ
+    ========================================================= */
+    .main { margin-left: var(--sidebar-w); flex: 1; padding: 24px; }
+
+    .page-header { margin-bottom: 24px; }
+    .page-title {
+      font-size: 1.4rem; font-weight: 700; color: var(--text);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .page-subtitle { font-size: .8rem; color: var(--text-muted); margin-top: 4px; }
+
+    /* =========================================================
+       セクション
+    ========================================================= */
+    .section { margin-bottom: 28px; }
+
+    .section-title {
+      font-size: .9rem; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: .06em;
+      margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-title::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+    }
+
+    /* =========================================================
+       ポリシーテーブル
+    ========================================================= */
+    .table-wrapper { overflow-x: auto; }
+
+    table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+
+    thead th {
+      padding: 10px 14px; text-align: left;
+      color: var(--text-dim); font-size: .72rem;
+      text-transform: uppercase; letter-spacing: .06em;
+      border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+
+    tbody tr { border-bottom: 1px solid var(--border); transition: var(--transition); }
+    tbody tr:hover { background: rgba(15,52,96,.2); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody td { padding: 10px 14px; color: var(--text); }
+
+    .badge {
+      display: inline-flex; align-items: center;
+      padding: 2px 8px; border-radius: 20px;
+      font-size: .7rem; font-weight: 600;
+    }
+
+    .badge-green  { background: var(--green-bg);  color: var(--green);  border: 1px solid rgba(34,197,94,.3); }
+    .badge-red    { background: var(--red-bg);    color: var(--red);    border: 1px solid rgba(239,68,68,.3); }
+    .badge-blue   { background: var(--blue-bg);   color: var(--blue);   border: 1px solid rgba(59,130,246,.3); }
+    .badge-yellow { background: var(--yellow-bg); color: var(--yellow); border: 1px solid rgba(245,158,11,.3); }
+    .badge-muted  { background: rgba(100,116,139,.12); color: var(--text-dim); border: 1px solid rgba(100,116,139,.2); }
+
+    .tag {
+      display: inline-block; padding: 1px 6px;
+      background: var(--primary); border-radius: 4px;
+      font-size: .72rem; color: var(--text-muted);
+      margin: 1px;
+    }
+
+    /* =========================================================
+       アクセス評価フォーム
+    ========================================================= */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+    .form-label {
+      font-size: .78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .form-input {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 9px 12px;
+      color: var(--text);
+      font-size: .88rem;
+      font-family: inherit;
+      transition: var(--transition);
+      outline: none;
+    }
+
+    .form-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(233,69,96,.15);
+    }
+
+    .form-input::placeholder { color: var(--text-dim); }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 9px 18px;
+      border-radius: var(--radius);
+      font-size: .88rem; font-weight: 600;
+      cursor: pointer; border: none;
+      transition: var(--transition);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+
+    .btn-secondary {
+      background: var(--primary);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { background: var(--primary-light); color: var(--text); }
+
+    /* =========================================================
+       評価結果
+    ========================================================= */
+    .result-panel {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      min-height: 80px;
+      display: none;
+    }
+
+    .result-panel.visible { display: block; }
+
+    .result-header {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .result-decision {
+      font-size: 1.1rem; font-weight: 700;
+    }
+
+    .result-decision.allow { color: var(--green); }
+    .result-decision.deny  { color: var(--red); }
+
+    .result-body { font-size: .84rem; color: var(--text-muted); }
+    .result-row  { margin-bottom: 6px; }
+    .result-key  { color: var(--text-dim); font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; }
+    .result-val  { color: var(--text); }
+
+    .policy-tag {
+      display: inline-block;
+      background: var(--primary);
+      border-radius: 4px;
+      padding: 1px 7px;
+      font-size: .72rem;
+      color: var(--text-muted);
+      margin: 2px;
+      border: 1px solid var(--border);
+    }
+
+    /* =========================================================
+       スピナー
+    ========================================================= */
+    .spinner-inline {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,.2);
+      border-top-color: currentColor;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      vertical-align: middle;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* =========================================================
+       フッター
+    ========================================================= */
+    .footer {
+      margin-left: var(--sidebar-w);
+      padding: 14px 24px;
+      border-top: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: .72rem; color: var(--text-dim);
+      background: var(--surface);
+    }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <a class="header__logo" href="/dashboard">
+    <div class="header__logo-icon">🏗</div>
+    <div>
+      <div class="header__title">建設企業プラットフォーム</div>
+      <div class="header__subtitle">Construction Enterprise Operating Platform</div>
+    </div>
+  </a>
+  <div class="header__spacer"></div>
+  <span class="header__version">v{{VERSION}}</span>
+</header>
+
+<div class="layout">
+
+  <nav class="sidebar">
+    <div class="sidebar__section-label">メインメニュー</div>
+    <a class="nav-item" href="/dashboard">
+      <span class="nav-icon">📊</span> ダッシュボード
+    </a>
+    <a class="nav-item active" href="/governance">
+      <span class="nav-icon">🛡</span> ガバナンス
+    </a>
+    <hr class="sidebar__divider">
+    <div class="sidebar__section-label">リソース</div>
+    <a class="nav-item" href="/dashboard#users">
+      <span class="nav-icon">👥</span> ユーザー
+    </a>
+    <a class="nav-item" href="/dashboard#devices">
+      <span class="nav-icon">📱</span> デバイス
+    </a>
+    <a class="nav-item" href="/dashboard#applications">
+      <span class="nav-icon">🔧</span> アプリケーション
+    </a>
+    <hr class="sidebar__divider">
+    <div class="sidebar__section-label">コンプライアンス</div>
+    <a class="nav-item" href="/dashboard#audit">
+      <span class="nav-icon">📋</span> 監査ログ
+    </a>
+    <a class="nav-item" href="/dashboard#approvals">
+      <span class="nav-icon">✅</span> 承認キュー
+    </a>
+    <hr class="sidebar__divider">
+    <div class="sidebar__section-label">API</div>
+    <a class="nav-item" href="/api/v1/dashboard" target="_blank">
+      <span class="nav-icon">🔌</span> REST API
+    </a>
+    <a class="nav-item" href="/api/v1/governance/audit" target="_blank">
+      <span class="nav-icon">📑</span> 監査API
+    </a>
+  </nav>
+
+  <main class="main">
+
+    <div class="page-header">
+      <h1 class="page-title">🛡 ガバナンス管理</h1>
+      <p class="page-subtitle">ポリシー一覧とアクセス評価エンジン</p>
+    </div>
+
+    <!-- ポリシー一覧 -->
+    <section class="section">
+      <div class="section-title">登録済みポリシー</div>
+      <div class="card">
+        <div class="table-wrapper">
+          <table id="policyTable">
+            <thead>
+              <tr>
+                <th>ポリシーID</th>
+                <th>名前</th>
+                <th>効果</th>
+                <th>対象アクション</th>
+                <th>対象リソース</th>
+                <th>条件</th>
+              </tr>
+            </thead>
+            <tbody id="policyTableBody">
+              {{POLICY_ROWS}}
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:12px;text-align:right">
+          <button class="btn btn-secondary" onclick="loadPolicies()">⟳ 更新</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- アクセス評価フォーム -->
+    <section class="section">
+      <div class="section-title">アクセス評価</div>
+      <div class="card">
+        <p style="font-size:.84rem;color:var(--text-muted);margin-bottom:16px">
+          指定したサブジェクトがリソースに対してアクションを実行できるかをリアルタイムで評価します。
+        </p>
+
+        <div class="form-group" style="margin-bottom:16px">
+          <label class="form-label" for="inputApiKey">🔑 API キー（Bearer トークン）</label>
+          <input class="form-input" id="inputApiKey" type="password"
+                 placeholder="例: admin-key:secret-value" style="font-family:monospace" />
+          <div style="font-size:.75rem;color:var(--text-dim);margin-top:4px">
+            API 認証が必要です。起動時のコンソールに表示されるデモキー（keyId:secret）を入力してください。
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="inputSubject">サブジェクト（ユーザーID）</label>
+            <input class="form-input" id="inputSubject" type="text"
+                   placeholder="例: user-admin" value="user-admin" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="inputResource">リソース</label>
+            <input class="form-input" id="inputResource" type="text"
+                   placeholder="例: application" value="application" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="inputAction">アクション</label>
+            <input class="form-input" id="inputAction" type="text"
+                   placeholder="例: read" value="read" />
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+          <button class="btn btn-primary" id="evaluateBtn" onclick="runEvaluate()">
+            🔍 評価する
+          </button>
+          <button class="btn btn-secondary" onclick="clearResult()">✕ クリア</button>
+        </div>
+
+        <!-- クイック例 -->
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px">
+          <span style="font-size:.75rem;color:var(--text-dim);align-self:center">例:</span>
+          <button class="btn btn-secondary" style="padding:3px 10px;font-size:.75rem"
+            onclick="setExample('user-admin','application','read')">管理者 → アプリ読取</button>
+          <button class="btn btn-secondary" style="padding:3px 10px;font-size:.75rem"
+            onclick="setExample('user-field-worker','governance','write')">現場員 → ガバナンス書込</button>
+          <button class="btn btn-secondary" style="padding:3px 10px;font-size:.75rem"
+            onclick="setExample('guest','sensitive','read')">ゲスト → センシティブ読取</button>
+          <button class="btn btn-secondary" style="padding:3px 10px;font-size:.75rem"
+            onclick="setExample('user-site-manager','device','read')">現場所長 → デバイス読取</button>
+        </div>
+
+        <!-- 評価結果 -->
+        <div class="result-panel" id="resultPanel">
+          <div class="result-header">
+            <div class="result-decision" id="resultDecision">—</div>
+            <div id="resultSummary" style="font-size:.84rem;color:var(--text-muted)"></div>
+          </div>
+          <div class="result-body">
+            <div class="result-row">
+              <div class="result-key">理由</div>
+              <div class="result-val" id="resultReason">—</div>
+            </div>
+            <div class="result-row" id="resultPoliciesRow" style="display:none">
+              <div class="result-key">適用ポリシー</div>
+              <div class="result-val" id="resultPolicies"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 監査ログ -->
+    <section class="section">
+      <div class="section-title">監査ログ（直近20件）</div>
+      <div class="card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>日時</th>
+                <th>アクター</th>
+                <th>アクション</th>
+                <th>リソース</th>
+                <th>結果</th>
+              </tr>
+            </thead>
+            <tbody id="auditTableBody">
+              <tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:20px">読込中...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:12px;text-align:right">
+          <button class="btn btn-secondary" onclick="loadAuditLog()">⟳ 更新</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer class="footer">
+  <span>建設企業オペレーティングプラットフォーム v{{VERSION}}</span>
+  <span>ガバナンス管理画面</span>
+</footer>
+
+<script>
+  function escapeHtml(str) {
+    return String(str || '')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function formatTime(iso) {
+    try {
+      return new Date(iso).toLocaleString('ja-JP', {
+        year:'numeric', month:'2-digit', day:'2-digit',
+        hour:'2-digit', minute:'2-digit', second:'2-digit'
+      });
+    } catch (_) { return iso; }
+  }
+
+  const EFFECT_LABELS = { allow: '許可', deny: '拒否' };
+
+  /* =========================================================
+     ポリシー読込
+  ========================================================= */
+  async function loadPolicies() {
+    const tbody = document.getElementById('policyTableBody');
+    const apiKey = document.getElementById('inputApiKey').value.trim();
+    if (!apiKey) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:16px">API キーを入力すると最新ポリシーを表示できます</td></tr>';
+      return;
+    }
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:16px">読込中...</td></tr>';
+    try {
+      const res = await fetch('/api/v1/governance/policies?limit=200', {
+        headers: { 'Authorization': 'Bearer ' + apiKey }
+      });
+      if (res.status === 403) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--yellow);padding:16px">policy:read 権限がありません</td></tr>';
+        return;
+      }
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const policies = data.policies ?? [];
+      if (policies.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:16px">登録済みポリシーはありません</td></tr>';
+        return;
+      }
+      tbody.innerHTML = policies.map(p => {
+        const conditions = (p.conditions && p.conditions.length > 0)
+          ? p.conditions.map(c => `${escapeHtml(c.attribute)}=${escapeHtml(String(c.equals))}`).join(', ')
+          : '—';
+        return `<tr>
+          <td>${escapeHtml(p.id)}</td>
+          <td>${escapeHtml(p.name)}</td>
+          <td><span class="badge ${p.effect === 'allow' ? 'badge-green' : 'badge-red'}">${escapeHtml(EFFECT_LABELS[p.effect] ?? p.effect)}</span></td>
+          <td>${escapeHtml((p.actions ?? []).join(', '))}</td>
+          <td>${escapeHtml((p.resources ?? []).join(', '))}</td>
+          <td>${conditions}</td>
+        </tr>`;
+      }).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--red);padding:16px">取得に失敗しました: ${escapeHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  /* =========================================================
+     アクセス評価
+  ========================================================= */
+  function setExample(subject, resource, action) {
+    document.getElementById('inputSubject').value  = subject;
+    document.getElementById('inputResource').value = resource;
+    document.getElementById('inputAction').value   = action;
+    clearResult();
+  }
+
+  function clearResult() {
+    const panel = document.getElementById('resultPanel');
+    panel.classList.remove('visible');
+  }
+
+  async function runEvaluate() {
+    const subject  = document.getElementById('inputSubject').value.trim();
+    const resource = document.getElementById('inputResource').value.trim();
+    const action   = document.getElementById('inputAction').value.trim();
+    const apiKey   = document.getElementById('inputApiKey').value.trim();
+
+    if (!subject || !resource || !action) {
+      alert('サブジェクト・リソース・アクションをすべて入力してください。');
+      return;
+    }
+    if (!apiKey) {
+      alert('API キーを入力してください。起動時のコンソールログに表示されるデモキーを使用してください。');
+      return;
+    }
+
+    const btn = document.getElementById('evaluateBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-inline"></span> 評価中...';
+
+    try {
+      const res = await fetch('/api/v1/governance/evaluate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + apiKey
+        },
+        body: JSON.stringify({ subject, resource, action, roleIds: [] })
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error('HTTP ' + res.status + (errData.message ? ': ' + errData.message : ''));
+      }
+      const data = await res.json();
+
+      const decEl    = document.getElementById('resultDecision');
+      const sumEl    = document.getElementById('resultSummary');
+      const reasonEl = document.getElementById('resultReason');
+      const polRow   = document.getElementById('resultPoliciesRow');
+      const polEl    = document.getElementById('resultPolicies');
+      const panel    = document.getElementById('resultPanel');
+
+      const isAllow = data.decision === 'allow';
+      decEl.textContent  = isAllow ? '✅ アクセス許可' : '🚫 アクセス拒否';
+      decEl.className    = 'result-decision ' + (isAllow ? 'allow' : 'deny');
+      sumEl.textContent  = `${escapeHtml(subject)} → ${escapeHtml(resource)}:${escapeHtml(action)}`;
+      reasonEl.textContent = data.reason || '—';
+
+      if (data.matchedPolicyIds && data.matchedPolicyIds.length > 0) {
+        polRow.style.display = 'block';
+        polEl.innerHTML = data.matchedPolicyIds.map(id =>
+          `<span class="policy-tag">${escapeHtml(id)}</span>`
+        ).join('');
+      } else {
+        polRow.style.display = 'none';
+      }
+
+      panel.classList.add('visible');
+
+    } catch (err) {
+      alert('評価に失敗しました: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '🔍 評価する';
+    }
+  }
+
+  /* =========================================================
+     監査ログ読込
+  ========================================================= */
+  async function loadAuditLog() {
+    const tbody = document.getElementById('auditTableBody');
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:20px">読込中...</td></tr>';
+    const apiKey = document.getElementById('inputApiKey').value.trim();
+    if (!apiKey) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:20px">API キーを入力すると監査ログが表示されます</td></tr>';
+      return;
+    }
+    try {
+      const res = await fetch('/api/v1/governance/audit?limit=20', {
+        headers: { 'Authorization': 'Bearer ' + apiKey }
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const entries = (data.entries || []).slice().reverse();
+
+      if (entries.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:20px">監査ログはまだありません</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = entries.map(e => {
+        const ev = e.event || e;
+        const outcome = ev.outcome || 'unknown';
+        const badgeClass = outcome === 'success' ? 'badge-green' : outcome === 'denied' ? 'badge-red' : 'badge-yellow';
+        const outcomeLabel = outcome === 'success' ? '許可' : outcome === 'denied' ? '拒否' : outcome;
+        return `
+          <tr>
+            <td style="color:var(--text-dim);font-size:.72rem">${escapeHtml(String(e.sequence ?? '—'))}</td>
+            <td style="color:var(--text-muted);font-size:.78rem;white-space:nowrap">${formatTime(ev.at)}</td>
+            <td style="font-weight:600">${escapeHtml(ev.actor || '—')}</td>
+            <td style="color:var(--text-muted)">${escapeHtml(ev.action || '—')}</td>
+            <td><code style="font-size:.78rem;color:var(--text-muted)">${escapeHtml(ev.resource || '—')}</code></td>
+            <td><span class="badge ${badgeClass}">${escapeHtml(outcomeLabel)}</span></td>
+          </tr>`;
+      }).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--red);padding:20px">取得に失敗しました: ${escapeHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  /* =========================================================
+     初期化
+  ========================================================= */
+  document.addEventListener('DOMContentLoaded', () => {
+    loadAuditLog();
+    // Enterキーで評価実行
+    ['inputSubject','inputResource','inputAction'].forEach(id => {
+      document.getElementById(id).addEventListener('keydown', e => {
+        if (e.key === 'Enter') runEvaluate();
+      });
+    });
+  });
+</script>
+</body>
+</html>

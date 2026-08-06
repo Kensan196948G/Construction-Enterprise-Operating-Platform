@@ -1,0 +1,73 @@
+# Production Docker Compose configuration for CEOP.
+#
+# Usage:
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# Required environment variables (set in a .env file or via shell):
+#   CEOP_JWT_SECRET    — at least 32 random bytes (hex), e.g.:
+#                        openssl rand -hex 32
+#   CEOP_SQLITE_FILE   — path inside the container to the SQLite DB
+#                        (default: /data/ceop.db, mounted via ceop-data volume)
+#
+# Optional:
+#   PORT               — TCP port (default: 3000)
+#   CEOP_SEED_DEMO     — set to "true" to seed demo organisations / users on first start
+#   CEOP_LOG_DEMO_CREDS— set to "true" to print demo API key credentials (never in real prod)
+
+version: "3.9"
+
+services:
+  ceop-platform:
+    build:
+      context: .
+      target: runtime
+    image: ceop-platform:latest
+    container_name: ceop-platform-prod
+    restart: unless-stopped
+
+    ports:
+      - "${PORT:-3000}:3000"
+
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      # Mandatory in production — app will refuse to start without this.
+      CEOP_JWT_SECRET: "${CEOP_JWT_SECRET}"
+      # SQLite DB path inside the container — backed by the named volume below.
+      CEOP_SQLITE_FILE: /data/ceop.db
+      # Set to "true" only when provisioning a fresh database.
+      CEOP_SEED_DEMO: "${CEOP_SEED_DEMO:-false}"
+      # Never enable in production; kept here as an explicit no-op.
+      CEOP_LOG_DEMO_CREDS: "false"
+      # Optional: exact origin for browser-based clients (off when unset).
+      CEOP_CORS_ORIGIN: "${CEOP_CORS_ORIGIN:-}"
+
+    volumes:
+      # Named volume keeps the SQLite file across container restarts.
+      - ceop-data:/data
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+    # Minimal resource limits — tune for your host.
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 256M
+        reservations:
+          memory: 64M
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  ceop-data:
+    driver: local

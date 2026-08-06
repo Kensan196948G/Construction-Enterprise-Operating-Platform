@@ -1,0 +1,46 @@
+{
+  "name": "construction-eop",
+  "version": "0.6.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "description": "Construction Enterprise Operating Platform - governance, portal, field OS, and AI governance coordination layer",
+  "type": "module",
+  "engines": {
+    "node": ">=22.6.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@10.26.2",
+  "exports": {
+    ".": "./src/index.ts",
+    "./domain": "./src/domain/index.ts",
+    "./governance": "./src/governance/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json",
+    "test": "node --test --experimental-strip-types \"src/**/*.test.ts\"",
+    "test:watch": "node --test --watch --experimental-strip-types \"src/**/*.test.ts\"",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"examples/**/*.ts\" \"*.json\" \"*.md\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"examples/**/*.ts\" \"*.json\" \"*.md\"",
+    "verify": "pnpm run typecheck && pnpm run lint && pnpm run test",
+    "demo": "node --experimental-strip-types examples/quickstart.ts",
+    "openapi:gen": "node --experimental-strip-types scripts/generate-openapi.ts"
+  },
+  "pnpm": {
+    "overrides": {
+      "brace-expansion@<1.1.18": "1.1.18",
+      "brace-expansion@>=4.0.0 <5.0.9": "5.0.9",
+      "js-yaml@<4.3.0": "4.3.0"
+    }
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@types/node": "^22.0.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.3.0",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.0.0"
+  }
+}

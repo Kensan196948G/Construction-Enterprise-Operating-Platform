@@ -1,0 +1,16 @@
+flowchart TB
+    subgraph Client["Authenticated client"]
+        C[API key / JWT]
+    end
+    subgraph Edge["CEOP edge"]
+        A[Authn: principal org]
+        R[Router]
+    end
+    subgraph Tenants["Per-tenant app/DB units"]
+        T1[Org A app + store]
+        T2[Org B app + store]
+    end
+    C --> A --> R
+    R -->|org A traffic| T1
+    R -->|org B traffic| T2
+    style R fill:#dfd,stroke:#080

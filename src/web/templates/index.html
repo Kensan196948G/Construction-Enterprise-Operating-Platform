@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>建設企業オペレーティングプラットフォーム — ダッシュボード</title>
+  <style>
+    /* =========================================================
+       CSS リセット & ベース
+    ========================================================= */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg:           #1a1a2e;
+      --surface:      #16213e;
+      --surface-2:    #0d1b35;
+      --primary:      #0f3460;
+      --primary-light:#1a4a80;
+      --accent:       #e94560;
+      --accent-hover: #c73650;
+      --text:         #e2e8f0;
+      --text-muted:   #94a3b8;
+      --text-dim:     #64748b;
+      --border:       #1e3a5f;
+      --border-light: #2a4a6e;
+
+      --green:        #22c55e;
+      --green-bg:     rgba(34,197,94,.12);
+      --yellow:       #f59e0b;
+      --yellow-bg:    rgba(245,158,11,.12);
+      --red:          #ef4444;
+      --red-bg:       rgba(239,68,68,.12);
+      --blue:         #3b82f6;
+      --blue-bg:      rgba(59,130,246,.12);
+
+      --sidebar-w:    240px;
+      --header-h:     60px;
+      --radius:       8px;
+      --radius-lg:    12px;
+      --shadow:       0 2px 8px rgba(0,0,0,.4);
+      --shadow-lg:    0 8px 32px rgba(0,0,0,.5);
+
+      --transition:   .2s ease;
+    }
+
+    html { font-size: 14px; }
+
+    body {
+      font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN",
+                   "Noto Sans JP", "Yu Gothic UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* =========================================================
+       スクロールバー
+    ========================================================= */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--surface); }
+    ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--primary-light); }
+
+    /* =========================================================
+       ヘッダー
+    ========================================================= */
+    .header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--header-h);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      z-index: 100;
+      box-shadow: var(--shadow);
+    }
+
+    .header__logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text);
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+
+    .header__logo-icon {
+      width: 32px; height: 32px;
+      background: var(--accent);
+      border-radius: var(--radius);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      box-shadow: 0 0 12px rgba(233,69,96,.3);
+    }
+
+    .header__title { font-size: .9rem; }
+    .header__subtitle { font-size: .7rem; color: var(--text-muted); font-weight: 400; }
+
+    .header__spacer { flex: 1; }
+
+    .header__version {
+      font-size: .75rem;
+      color: var(--text-dim);
+      margin-right: 16px;
+    }
+
+    .health-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .8rem;
+      color: var(--text-muted);
+    }
+
+    .health-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+      animation: pulse 2s infinite;
+    }
+
+    .health-dot.degraded { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); }
+    .health-dot.down     { background: var(--red);    box-shadow: 0 0 6px var(--red); }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: .5; }
+    }
+
+    .header__refresh-btn {
+      margin-left: 12px;
+      padding: 4px 10px;
+      background: var(--primary);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius);
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: .75rem;
+      transition: var(--transition);
+    }
+    .header__refresh-btn:hover {
+      background: var(--primary-light);
+      color: var(--text);
+      border-color: var(--accent);
+    }
+
+    /* =========================================================
+       レイアウト
+    ========================================================= */
+    .layout {
+      display: flex;
+      padding-top: var(--header-h);
+      flex: 1;
+    }
+
+    /* =========================================================
+       サイドバー
+    ========================================================= */
+    .sidebar {
+      position: fixed;
+      top: var(--header-h);
+      left: 0;
+      bottom: 0;
+      width: var(--sidebar-w);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      z-index: 50;
+      padding: 20px 0;
+    }
+
+    .sidebar__section-label {
+      padding: 8px 20px 4px;
+      font-size: .68rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 20px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: .85rem;
+      transition: var(--transition);
+      border-left: 3px solid transparent;
+      cursor: pointer;
+    }
+
+    .nav-item:hover {
+      background: rgba(15,52,96,.4);
+      color: var(--text);
+      border-left-color: var(--primary-light);
+    }
+
+    .nav-item.active {
+      background: rgba(233,69,96,.1);
+      color: var(--accent);
+      border-left-color: var(--accent);
+    }
+
+    .nav-icon {
+      width: 18px;
+      text-align: center;
+      flex-shrink: 0;
+      font-size: 1rem;
+    }
+
+    .sidebar__divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 12px 20px;
+    }
+
+    /* =========================================================
+       メインコンテンツ
+    ========================================================= */
+    .main {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      padding: 24px;
+      overflow: auto;
+      min-width: 0;
+    }
+
+    .page-header {
+      margin-bottom: 24px;
+    }
+
+    .page-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .page-subtitle {
+      font-size: .8rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: .7rem;
+      font-weight: 600;
+    }
+
+    .badge-blue   { background: var(--blue-bg);   color: var(--blue);   border: 1px solid rgba(59,130,246,.3); }
+    .badge-green  { background: var(--green-bg);  color: var(--green);  border: 1px solid rgba(34,197,94,.3); }
+    .badge-yellow { background: var(--yellow-bg); color: var(--yellow); border: 1px solid rgba(245,158,11,.3); }
+    .badge-red    { background: var(--red-bg);    color: var(--red);    border: 1px solid rgba(239,68,68,.3); }
+    .badge-muted  { background: rgba(100,116,139,.12); color: var(--text-dim); border: 1px solid rgba(100,116,139,.2); }
+
+    /* =========================================================
+       セクション共通
+    ========================================================= */
+    .section { margin-bottom: 28px; }
+
+    .section-title {
+      font-size: .9rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* =========================================================
+       ガバナンス統計カード
+    ========================================================= */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 14px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
+      position: relative;
+      overflow: hidden;
+      transition: var(--transition);
+      cursor: default;
+    }
+
+    .stat-card:hover {
+      border-color: var(--border-light);
+      box-shadow: var(--shadow);
+      transform: translateY(-1px);
+    }
+
+    .stat-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--card-accent, var(--primary));
+    }
+
+    .stat-card.accent-blue   { --card-accent: var(--blue); }
+    .stat-card.accent-green  { --card-accent: var(--green); }
+    .stat-card.accent-yellow { --card-accent: var(--yellow); }
+    .stat-card.accent-red    { --card-accent: var(--red); }
+    .stat-card.accent-accent { --card-accent: var(--accent); }
+
+    .stat-label {
+      font-size: .72rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--text);
+    }
+
+    .stat-sub {
+      font-size: .72rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .stat-icon {
+      position: absolute;
+      top: 16px; right: 16px;
+      font-size: 1.4rem;
+      opacity: .25;
+    }
+
+    /* =========================================================
+       アプリケーション健全性グリッド
+    ========================================================= */
+    .app-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+
+    .app-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: var(--transition);
+    }
+
+    .app-card:hover {
+      border-color: var(--border-light);
+      box-shadow: var(--shadow);
+    }
+
+    .app-health-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .health-healthy  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .health-degraded { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); }
+    .health-down     { background: var(--red); box-shadow: 0 0 6px var(--red); animation: pulse 1.5s infinite; }
+    .health-unknown  { background: var(--text-dim); }
+
+    .app-info { min-width: 0; flex: 1; }
+
+    .app-name {
+      font-size: .88rem;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .app-meta {
+      font-size: .7rem;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    .app-health-label {
+      font-size: .7rem;
+      font-weight: 600;
+    }
+    .app-health-label.healthy  { color: var(--green); }
+    .app-health-label.degraded { color: var(--yellow); }
+    .app-health-label.down     { color: var(--red); }
+    .app-health-label.unknown  { color: var(--text-dim); }
+
+    /* =========================================================
+       デバイステーブル
+    ========================================================= */
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .84rem;
+    }
+
+    thead th {
+      padding: 10px 14px;
+      text-align: left;
+      color: var(--text-dim);
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: var(--transition);
+    }
+
+    tbody tr:hover { background: rgba(15,52,96,.2); }
+    tbody tr:last-child { border-bottom: none; }
+
+    tbody td {
+      padding: 10px 14px;
+      color: var(--text);
+    }
+
+    .device-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: .75rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+
+    .device-status.active      { background: var(--green-bg);  color: var(--green); }
+    .device-status.provisioned { background: var(--blue-bg);   color: var(--blue); }
+    .device-status.lost        { background: var(--red-bg);    color: var(--red); }
+    .device-status.retired     { background: rgba(100,116,139,.1); color: var(--text-dim); }
+
+    .device-kind {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: .78rem;
+      color: var(--text-muted);
+    }
+
+    /* =========================================================
+       承認リスト
+    ========================================================= */
+    .approval-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .approval-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: var(--transition);
+    }
+
+    .approval-item:hover {
+      border-color: var(--accent);
+      border-left-color: var(--accent);
+      box-shadow: var(--shadow);
+    }
+
+    .approval-icon {
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+
+    .approval-info { flex: 1; min-width: 0; }
+
+    .approval-title {
+      font-size: .88rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .approval-meta {
+      font-size: .75rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .approval-time {
+      font-size: .72rem;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 32px 20px;
+      color: var(--text-dim);
+      font-size: .85rem;
+    }
+
+    .empty-state-icon { font-size: 2rem; margin-bottom: 8px; }
+
+    /* =========================================================
+       監査ログ
+    ========================================================= */
+    .audit-list { display: flex; flex-direction: column; gap: 6px; }
+
+    .audit-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: .82rem;
+      transition: var(--transition);
+    }
+
+    .audit-item:hover { background: rgba(15,52,96,.3); }
+
+    .audit-outcome {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .audit-outcome.success { background: var(--green); }
+    .audit-outcome.denied  { background: var(--red); }
+    .audit-outcome.error   { background: var(--yellow); }
+
+    .audit-actor  { font-weight: 600; color: var(--text); min-width: 110px; }
+    .audit-action { color: var(--text-muted); flex: 1; }
+    .audit-time   { color: var(--text-dim); font-size: .72rem; white-space: nowrap; }
+
+    .audit-result {
+      font-size: .7rem;
+      font-weight: 700;
+      padding: 1px 7px;
+      border-radius: 10px;
+    }
+
+    .audit-result.success { background: var(--green-bg); color: var(--green); }
+    .audit-result.denied  { background: var(--red-bg);   color: var(--red); }
+    .audit-result.error   { background: var(--yellow-bg); color: var(--yellow); }
+
+    /* =========================================================
+       通知バー
+    ========================================================= */
+    .toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 200;
+    }
+
+    .toast {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 16px;
+      font-size: .8rem;
+      color: var(--text-muted);
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      max-width: 280px;
+      animation: slideIn .25s ease;
+    }
+
+    .toast.error { border-color: var(--red); color: var(--red); }
+    .toast.success { border-color: var(--green); color: var(--green); }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to   { transform: translateX(0);   opacity: 1; }
+    }
+
+    /* =========================================================
+       フッター
+    ========================================================= */
+    .footer {
+      margin-left: var(--sidebar-w);
+      padding: 14px 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: .72rem;
+      color: var(--text-dim);
+      background: var(--surface);
+    }
+
+    .footer__left { display: flex; gap: 16px; }
+    .footer__right { display: flex; align-items: center; gap: 8px; }
+
+    /* =========================================================
+       ローディング
+    ========================================================= */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(26,26,46,.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 300;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s;
+    }
+
+    .loading-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* =========================================================
+       レスポンシブ
+    ========================================================= */
+    .hamburger {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 1.4rem;
+      cursor: pointer;
+      padding: 6px 10px;
+      margin-right: 8px;
+      line-height: 1;
+    }
+
+    @media (max-width: 768px) {
+      :root { --sidebar-w: 0px; }
+      .sidebar { transform: translateX(-240px); transition: transform .3s; position: fixed; z-index: 200; height: 100%; }
+      .sidebar.open { transform: translateX(0); width: 240px; }
+      .main { margin-left: 0; padding: 16px; }
+      .footer { margin-left: 0; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .hamburger { display: block; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ========= ヘッダー ========= -->
+<header class="header">
+  <button class="hamburger" id="hamburgerBtn" aria-label="メニューを開閉" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+  <a class="header__logo" href="/dashboard">
+    <div class="header__logo-icon">🏗</div>
+    <div>
+      <div class="header__title">建設企業プラットフォーム</div>
+      <div class="header__subtitle">Construction Enterprise Operating Platform</div>
+    </div>
+  </a>
+  <div class="header__spacer"></div>
+  <span class="header__version">v{{VERSION}}</span>
+  <div class="health-indicator">
+    <div class="health-dot" id="healthDot"></div>
+    <span id="healthText">システム正常</span>
+  </div>
+  <button class="header__refresh-btn" onclick="refreshDashboard()">⟳ 更新</button>
+</header>
+
+<!-- ========= レイアウト ========= -->
+<div class="layout">
+
+  <!-- サイドバー -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar__section-label">メインメニュー</div>
+    <a class="nav-item active" href="/dashboard">
+      <span class="nav-icon">📊</span> ダッシュボード
+    </a>
+    <a class="nav-item" href="/governance">
+      <span class="nav-icon">🛡</span> ガバナンス
+    </a>
+    <hr class="sidebar__divider">
+    <div class="sidebar__section-label">リソース</div>
+    <a class="nav-item" href="/dashboard#users">
+      <span class="nav-icon">👥</span> ユーザー
+    </a>
+    <a class="nav-item" href="/dashboard#devices">
+      <span class="nav-icon">📱</span> デバイス
+    </a>
+    <a class="nav-item" href="/dashboard#applications">
+      <span class="nav-icon">🔧</span> アプリケーション
+    </a>
+    <hr class="sidebar__divider">
+    <div class="sidebar__section-label">コンプライアンス</div>
+    <a class="nav-item" href="/dashboard#audit">
+      <span class="nav-icon">📋</span> 監査ログ
+    </a>
+    <a class="nav-item" href="/dashboard#approvals">
+      <span class="nav-icon">✅</span> 承認キュー
+    </a>
+    <hr class="sidebar__divider">
+    <div class="sidebar__section-label">API</div>
+    <a class="nav-item" href="/api/v1/dashboard" target="_blank">
+      <span class="nav-icon">🔌</span> REST API
+    </a>
+    <a class="nav-item" href="/api/v1/governance/audit" target="_blank">
+      <span class="nav-icon">📑</span> 監査API
+    </a>
+  </nav>
+
+  <!-- メインコンテンツ -->
+  <main class="main" id="mainContent">
+
+    <!-- ページヘッダー -->
+    <div class="page-header">
+      <h1 class="page-title">
+        📊 ガバナンス ダッシュボード
+        <span class="badge badge-blue" id="viewerBadge">{{VIEWER}}</span>
+      </h1>
+      <p class="page-subtitle">
+        最終更新: <span id="generatedAt">{{GENERATED_AT}}</span>
+        &nbsp;|&nbsp; 30秒ごとに自動更新
+      </p>
+    </div>
+
+    <!-- ガバナンス統計 -->
+    <section class="section">
+      <div class="section-title">ガバナンス統計</div>
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card accent-blue">
+          <div class="stat-label">総ユーザー数</div>
+          <div class="stat-value" id="statTotalUsers">{{TOTAL_USERS}}</div>
+          <div class="stat-sub">アクティブ: <span id="statActiveUsers">{{ACTIVE_USERS}}</span></div>
+          <div class="stat-icon">👥</div>
+        </div>
+        <div class="stat-card accent-green">
+          <div class="stat-label">アプリケーション</div>
+          <div class="stat-value" id="statApps">{{VISIBLE_APPS}}</div>
+          <div class="stat-sub">障害: <span id="statUnhealthyApps">{{UNHEALTHY_APPS}}</span> 件</div>
+          <div class="stat-icon">🔧</div>
+        </div>
+        <div class="stat-card accent-blue">
+          <div class="stat-label">デバイス</div>
+          <div class="stat-value" id="statDevices">{{VISIBLE_DEVICES}}</div>
+          <div class="stat-sub">管理対象端末数</div>
+          <div class="stat-icon">📱</div>
+        </div>
+        <div class="stat-card accent-yellow">
+          <div class="stat-label">未処理承認</div>
+          <div class="stat-value" id="statApprovals">{{OPEN_APPROVALS}}</div>
+          <div class="stat-sub">対応待ちリクエスト</div>
+          <div class="stat-icon">⏳</div>
+        </div>
+        <div class="stat-card accent-accent">
+          <div class="stat-label">監査イベント</div>
+          <div class="stat-value" id="statAuditEvents">{{AUDIT_EVENTS}}</div>
+          <div class="stat-sub">拒否: <span id="statDenied">{{DENIED_EVENTS}}</span> 件</div>
+          <div class="stat-icon">📋</div>
+        </div>
+        <div class="stat-card accent-red">
+          <div class="stat-label">アクセス拒否</div>
+          <div class="stat-value" id="statDeniedBig">{{DENIED_EVENTS}}</div>
+          <div class="stat-sub">ポリシー違反検出</div>
+          <div class="stat-icon">🚫</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- アプリケーション健全性 -->
+    <section class="section" id="applications">
+      <div class="section-title">アプリケーション健全性</div>
+      <div class="app-grid" id="appGrid">
+        {{APP_CARDS}}
+      </div>
+    </section>
+
+    <!-- デバイス状態 -->
+    <section class="section" id="devices">
+      <div class="section-title">フィールドデバイス状態</div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>デバイスID</th>
+              <th>種別</th>
+              <th>ステータス</th>
+              <th>担当ユーザー</th>
+            </tr>
+          </thead>
+          <tbody id="deviceTableBody">
+            {{DEVICE_ROWS}}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 承認キュー -->
+    <section class="section" id="approvals">
+      <div class="section-title">未処理承認リクエスト</div>
+      <div class="approval-list" id="approvalList">
+        {{APPROVAL_ITEMS}}
+      </div>
+    </section>
+
+    <!-- 監査ログ -->
+    <section class="section" id="audit">
+      <div class="section-title">最新監査イベント（直近10件）</div>
+      <div class="audit-list" id="auditList">
+        {{AUDIT_ITEMS}}
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- フッター -->
+<footer class="footer">
+  <div class="footer__left">
+    <span>建設企業オペレーティングプラットフォーム</span>
+    <span>v{{VERSION}}</span>
+  </div>
+  <div class="footer__right">
+    <span>生成: {{GENERATED_AT}}</span>
+  </div>
+</footer>
+
+<!-- ローディングオーバーレイ -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+</div>
+
+<!-- トースト通知コンテナ -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+  /* =========================================================
+     ユーティリティ
+  ========================================================= */
+  function formatTime(iso) {
+    try {
+      return new Date(iso).toLocaleString('ja-JP', {
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+      });
+    } catch (_) { return iso; }
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function showToast(msg, type = 'info') {
+    const c = document.getElementById('toastContainer');
+    const t = document.createElement('div');
+    t.className = 'toast ' + (type === 'error' ? 'error' : type === 'success' ? 'success' : '');
+    t.textContent = msg;
+    c.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; }, 2800);
+    setTimeout(() => { t.remove(); }, 3200);
+  }
+
+  /* =========================================================
+     健全性カテゴリ → 表示ラベル
+  ========================================================= */
+  const APP_CATEGORY_LABELS = {
+    portal: 'ポータル', governance: 'ガバナンス',
+    field: 'フィールド', workflow: 'ワークフロー', document: 'ドキュメント'
+  };
+  const HEALTH_LABELS = {
+    healthy: '正常', degraded: '劣化', down: '停止', unknown: '不明'
+  };
+  const DEVICE_KIND_LABELS = {
+    tablet: 'タブレット', phone: 'スマートフォン', kiosk: 'キオスク',
+    sensor: 'センサー', laptop: 'ノートPC'
+  };
+  const DEVICE_STATUS_LABELS = {
+    active: 'アクティブ', provisioned: 'プロビジョン済み',
+    lost: '紛失', retired: '廃止'
+  };
+  const DEVICE_KIND_ICONS = {
+    tablet: '📱', phone: '📲', kiosk: '🖥', sensor: '📡', laptop: '💻'
+  };
+
+  /* =========================================================
+     レンダリング関数
+  ========================================================= */
+  function renderAppCards(applications) {
+    if (!applications || applications.length === 0) {
+      return '<div class="empty-state"><div class="empty-state-icon">🔧</div>アプリケーションが見つかりません</div>';
+    }
+    return applications.map(app => {
+      const VALID_HEALTH = ['healthy', 'degraded', 'down', 'unknown'];
+      const healthClass = VALID_HEALTH.includes(app.health) ? app.health : 'unknown';
+      const healthLabel = HEALTH_LABELS[healthClass] || healthClass;
+      const catLabel = APP_CATEGORY_LABELS[app.category] || app.category;
+      return `
+        <div class="app-card">
+          <div class="app-health-dot health-${healthClass}"></div>
+          <div class="app-info">
+            <div class="app-name">${escapeHtml(app.name)}</div>
+            <div class="app-meta">${escapeHtml(catLabel)} · ${escapeHtml(app.key)}</div>
+          </div>
+          <div class="app-health-label ${healthClass}">${escapeHtml(healthLabel)}</div>
+        </div>`;
+    }).join('');
+  }
+
+  function renderDeviceRows(devices) {
+    if (!devices || devices.length === 0) {
+      return '<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:20px">デバイスが見つかりません</td></tr>';
+    }
+    return devices.map(d => {
+      const kindIcon = DEVICE_KIND_ICONS[d.kind] || '📦';
+      const kindLabel = DEVICE_KIND_LABELS[d.kind] || d.kind;
+      const statusLabel = DEVICE_STATUS_LABELS[d.status] || d.status;
+      return `
+        <tr>
+          <td><code style="font-size:.8rem;color:var(--text-muted)">${escapeHtml(d.id)}</code></td>
+          <td><span class="device-kind">${kindIcon} ${escapeHtml(kindLabel)}</span></td>
+          <td><span class="device-status ${escapeHtml(d.status)}">${escapeHtml(statusLabel)}</span></td>
+          <td style="color:var(--text-muted)">${d.assignedUserId ? escapeHtml(d.assignedUserId) : '<span style="color:var(--text-dim)">—</span>'}</td>
+        </tr>`;
+    }).join('');
+  }
+
+  function renderApprovals(approvals) {
+    if (!approvals || approvals.length === 0) {
+      return '<div class="empty-state"><div class="empty-state-icon">✅</div>未処理の承認リクエストはありません</div>';
+    }
+    return approvals.map(a => `
+      <div class="approval-item">
+        <div class="approval-icon">⏳</div>
+        <div class="approval-info">
+          <div class="approval-title">ワークフロー: ${escapeHtml(a.workflowId)} — ${escapeHtml(a.stepKey)}</div>
+          <div class="approval-meta">リクエスト者: ${escapeHtml(a.requestedBy)} &nbsp;·&nbsp; ID: ${escapeHtml(a.id)}</div>
+        </div>
+        <div class="approval-time">${formatTime(a.requestedAt)}</div>
+      </div>`).join('');
+  }
+
+  function renderAuditItems(entries) {
+    if (!entries || entries.length === 0) {
+      return '<div class="empty-state"><div class="empty-state-icon">📋</div>監査イベントはまだありません</div>';
+    }
+    return entries.slice(-10).reverse().map(e => {
+      const ev = e.event || e;
+      const outcome = ['success', 'denied', 'error'].includes(ev.outcome) ? ev.outcome : 'error';
+      const resultLabel = outcome === 'success' ? '許可' : outcome === 'denied' ? '拒否' : outcome;
+      return `
+        <div class="audit-item">
+          <div class="audit-outcome ${outcome}"></div>
+          <div class="audit-actor">${escapeHtml(ev.actor || '—')}</div>
+          <div class="audit-action">${escapeHtml(ev.action || '—')}</div>
+          <div class="audit-result ${outcome}">${escapeHtml(resultLabel)}</div>
+          <div class="audit-time">${formatTime(ev.at || '')}</div>
+        </div>`;
+    }).join('');
+  }
+
+  /* =========================================================
+     ダッシュボード更新
+  ========================================================= */
+  let refreshTimer = null;
+
+  async function refreshDashboard() {
+    const overlay = document.getElementById('loadingOverlay');
+    overlay.classList.add('active');
+    try {
+      const res = await fetch('/api/v1/dashboard');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+
+      // 統計更新
+      document.getElementById('statTotalUsers').textContent   = data.governance?.totalUsers ?? '—';
+      document.getElementById('statActiveUsers').textContent  = data.governance?.activeUsers ?? '—';
+      document.getElementById('statApps').textContent         = data.governance?.visibleApplications ?? '—';
+      document.getElementById('statUnhealthyApps').textContent= data.governance?.unhealthyApplications ?? '—';
+      document.getElementById('statDevices').textContent      = data.governance?.visibleDevices ?? '—';
+      document.getElementById('statApprovals').textContent    = data.governance?.openApprovals ?? '—';
+      document.getElementById('statAuditEvents').textContent  = data.governance?.auditEvents ?? '—';
+      document.getElementById('statDenied').textContent       = data.governance?.deniedAccessEvents ?? '—';
+      document.getElementById('statDeniedBig').textContent    = data.governance?.deniedAccessEvents ?? '—';
+
+      // アプリカード
+      document.getElementById('appGrid').innerHTML = renderAppCards(data.applications);
+
+      // デバイステーブル
+      document.getElementById('deviceTableBody').innerHTML = renderDeviceRows(data.devices);
+
+      // 承認
+      document.getElementById('approvalList').innerHTML = renderApprovals(data.pendingApprovals);
+
+      // 監査ログ（APIから別途取得）
+      try {
+        const auditRes = await fetch('/api/v1/governance/audit?limit=10');
+        if (auditRes.ok) {
+          const auditData = await auditRes.json();
+          document.getElementById('auditList').innerHTML = renderAuditItems(auditData.entries || []);
+        }
+      } catch (_) { /* 監査ログ取得は非必須 */ }
+
+      // 健全性インジケーター
+      const unhealthy = data.governance?.unhealthyApplications ?? 0;
+      const dot  = document.getElementById('healthDot');
+      const text = document.getElementById('healthText');
+      if (unhealthy === 0) {
+        dot.className = 'health-dot';
+        text.textContent = 'システム正常';
+      } else {
+        dot.className = 'health-dot degraded';
+        text.textContent = `障害: ${unhealthy} 件`;
+      }
+
+      // タイムスタンプ
+      const ga = document.getElementById('generatedAt');
+      if (ga) ga.textContent = formatTime(data.generatedAt);
+      document.querySelector('.footer__right').textContent = '生成: ' + formatTime(data.generatedAt);
+
+      showToast('データを更新しました', 'success');
+    } catch (err) {
+      showToast('更新に失敗しました: ' + err.message, 'error');
+    } finally {
+      overlay.classList.remove('active');
+    }
+  }
+
+  /* =========================================================
+     初期化
+  ========================================================= */
+  document.addEventListener('DOMContentLoaded', () => {
+    // 生成済みHTMLの日時を整形
+    const gaEl = document.getElementById('generatedAt');
+    if (gaEl && gaEl.textContent.includes('T')) {
+      gaEl.textContent = formatTime(gaEl.textContent.trim());
+    }
+
+    // 30秒ごとに自動更新
+    refreshTimer = setInterval(refreshDashboard, 30000);
+
+    // ページ離脱時にタイマー解除
+    window.addEventListener('beforeunload', () => {
+      if (refreshTimer) clearInterval(refreshTimer);
+    });
+  });
+</script>
+</body>
+</html>

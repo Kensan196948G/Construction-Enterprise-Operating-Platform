@@ -1,0 +1,470 @@
+{
+  "documentType": "codex-security.findings",
+  "findings": [
+    {
+      "attackPath": {
+        "dataflow": {
+          "evidenceRefs": [
+            "ctx-no-org",
+            "has-perm-string-only",
+            "devices-list",
+            "repo-findall"
+          ],
+          "outcome": "cross-organization read and mutation of users, devices, workflows, applications, policies, and audit records",
+          "sink": "repository-wide find/save/delete without tenant predicate",
+          "source": "authenticated API key/JWT with a resource permission (e.g. device:write)",
+          "summary": "Bearer credential -> hasPermission(resource:action) -> repository findAll/findById/save/delete -> cross-tenant response or state change"
+        },
+        "evidenceRefs": [
+          "has-perm-string-only",
+          "devices-list",
+          "repo-findall"
+        ],
+        "impact": {
+          "level": "high",
+          "why": "Cross-tenant read and mutation of sensitive records with clear HTTP reproduction; tenant boundary is the intended security boundary."
+        },
+        "likelihood": {
+          "level": "high",
+          "why": "Org-scoped roles are the documented deployment model and the seed data ships one with write permissions."
+        },
+        "limitations": [
+          "Requires an authenticated credential; no unauthenticated path exists."
+        ],
+        "reachability": {
+          "attacker": "authenticated org/site-scoped user",
+          "entrypoint": "GET/POST/PUT/DELETE /api/v1/devices, /users, /workflows, /applications; GET /api/v1/governance/audit",
+          "evidenceRefs": [
+            "devices-list",
+            "repo-findall"
+          ],
+          "outcome": "sensitive cross-tenant data exposure and state tampering",
+          "summary": "The product models org/site-scoped roles and seeds an org-scoped site manager with device:write/workflow:write/audit:read; any provisioned account of that shape can cross the boundary with trivial requests."
+        },
+        "summary": "An org-scoped manager authenticates with a credential carrying a resource permission, then uses ordinary API requests to read and mutate records of every organization."
+      },
+      "codeEvidence": [
+        {
+          "code": "export interface ApiKeyContext {\n  readonly keyId: string;\n  readonly subject: string;\n  readonly permissions: readonly Permission[];\n  /** How the caller authenticated \u2014 used for JWT-specific operations (e.g. revocation). */",
+          "endLine": 71,
+          "explanation": "The only identity facts carried into route handlers are keyId, subject, and permission strings. There is no organizationId or role scope, so no handler can scope by tenant even if it wanted to.",
+          "id": "ctx-no-org",
+          "label": "Authenticated context has no organization dimension",
+          "language": "typescript",
+          "path": "src/api/types.ts",
+          "role": "root_control",
+          "startLine": 67
+        },
+        {
+          "code": " */\nexport function hasPermission(\n  ctx: { readonly permissions: readonly Permission[] } | null,\n  resource: string,\n  action: string,\n): boolean {\n  return (\n    ctx?.permissions.some(\n      (p) =>\n        p === `${resource}:${action}` ||\n        p === `${resource}:*` ||\n        p === `*:${action}` ||\n        p === \"*:*\",\n    ) ?? false\n  );",
+          "endLine": 47,
+          "explanation": "This is the closest authorization control for every protected route. It returns true whenever the permission string matches, regardless of Role.scope (global/organization/site).",
+          "id": "has-perm-string-only",
+          "label": "hasPermission compares only permission tokens",
+          "language": "typescript",
+          "path": "src/api/routes/governance.ts",
+          "role": "root_control",
+          "startLine": 33
+        },
+        {
+          "code": "  router.get(\"/api/v1/devices\", async (req, ctx, res) => {\n    if (!hasPermission(ctx, \"device\", \"read\")) {\n      writeJson(res, 403, { error: \"Forbidden\", message: \"requires 'device:read' permission\" });\n      return;\n    }\n    const all = await container.repositories.devices.findAll();\n    const pg = paginate(all, parsePagination(req.query));\n    writeJson(res, 200, { devices: pg.items, count: pg.count, total: pg.total, limit: pg.limit, offset: pg.offset });\n  });",
+          "endLine": 89,
+          "explanation": "After the permission check, findAll() returns every device in the store with no organization predicate. The same pattern repeats for users, applications, organizations, workflows, policies, and audit.",
+          "id": "devices-list",
+          "label": "Device list handler returns repository-wide rows",
+          "language": "typescript",
+          "path": "src/api/routes/dashboard.ts",
+          "role": "entrypoint",
+          "startLine": 81
+        },
+        {
+          "code": "export interface Repository<T, Id> {\n  findById(id: Id): Promise<T | null>;\n  findAll(): Promise<readonly T[]>;\n  save(entity: T): Promise<void>;\n  delete(id: Id): Promise<void>;\n}",
+          "endLine": 30,
+          "explanation": "The generic repository contract has findById/findAll/save/delete with no tenant parameter; concrete routes call these directly.",
+          "id": "repo-findall",
+          "label": "Repository port exposes unscoped findAll",
+          "language": "typescript",
+          "path": "src/persistence/ports.ts",
+          "role": "sink",
+          "startLine": 25
+        },
+        {
+          "code": "/** Governs how widely a role's permissions apply. */\nexport const ROLE_SCOPES = [\"global\", \"organization\", \"site\"] as const;\nexport type RoleScope = (typeof ROLE_SCOPES)[number];",
+          "endLine": 24,
+          "explanation": "The domain explicitly models global/organization/site scopes and the seed data uses an organization-scoped site manager with device:write/workflow:write/audit:read, showing tenant boundaries are intended \u2014 but no enforcement point reads this field.",
+          "id": "role-scope-declared",
+          "label": "Role scope is declared but never consulted",
+          "language": "typescript",
+          "path": "src/domain/role.ts",
+          "role": "expected_control",
+          "startLine": 22
+        }
+      ],
+      "confidence": {
+        "level": "high",
+        "rationale": "Live HTTP reproduction against the real router and repositories plus a full route/repository inventory; no material counterevidence."
+      },
+      "extensions": {
+        "candidateId": "authz-tenant-scoping",
+        "ledgerRowId": "R03"
+      },
+      "findingId": "csf_e01c3977eaebd980700b1d6c",
+      "fingerprints": {
+        "algorithm": "codex-security/v1",
+        "primary": "codex-security/v1:sha256:7a5053a3eb851e0cc39e55b4dab0ef5195e56e9cfbbf08e66bec4c31fcc819d1"
+      },
+      "identity": {
+        "anchor": "tenant-scope-not-enforced"
+      },
+      "locations": [
+        {
+          "endLine": 47,
+          "path": "src/api/routes/governance.ts",
+          "role": "root_control",
+          "startLine": 33
+        },
+        {
+          "endLine": 71,
+          "path": "src/api/types.ts",
+          "role": "root_control",
+          "startLine": 67
+        },
+        {
+          "endLine": 89,
+          "path": "src/api/routes/dashboard.ts",
+          "role": "entrypoint",
+          "startLine": 81
+        },
+        {
+          "endLine": 347,
+          "path": "src/api/routes/entity-crud.ts",
+          "role": "entrypoint",
+          "startLine": 342
+        },
+        {
+          "endLine": 387,
+          "path": "src/api/routes/entity-crud.ts",
+          "role": "entrypoint",
+          "startLine": 349
+        },
+        {
+          "endLine": 115,
+          "path": "src/api/routes/workflows.ts",
+          "role": "entrypoint",
+          "startLine": 92
+        },
+        {
+          "endLine": 30,
+          "path": "src/persistence/ports.ts",
+          "role": "sink",
+          "startLine": 25
+        }
+      ],
+      "occurrenceId": "occ_2951def0356184842c52acf6",
+      "preventiveControls": [
+        "Authorization service owns tenant predicates; routes must not call repository findAll/findById directly",
+        "Repository port requires a tenant-scoped query for list/read/mutation",
+        "CI lint rule bans unscoped repository calls in route handlers"
+      ],
+      "provenance": {
+        "source": "local_plugin"
+      },
+      "remediation": "Resolve the caller's organizationId and role scope into the authenticated context (ApiKeyContext/JwtContext), add tenant-bounded repository methods, and enforce the tenant predicate in every route before repository access. Add regression tests that use a scoped key against two organizations and assert 403 for cross-tenant list/read/create/update/delete on users, devices, workflows, applications, and audit.",
+      "remediationTests": [
+        "Org-scoped device:read key cannot list org-hq devices",
+        "Org-scoped device:write key cannot create/update org-hq devices (expect 403)",
+        "Org-scoped user:read key cannot list users outside its org",
+        "Audit endpoint returns only the caller's org events"
+      ],
+      "rootCause": {
+        "evidenceRefs": [
+          "ctx-no-org",
+          "has-perm-string-only",
+          "devices-list",
+          "repo-findall",
+          "role-scope-declared"
+        ],
+        "summary": "The violated invariant is that an organization/site-scoped subject may only read and mutate records in its own tenant. The implementation never carries the caller's organization into the request context and never applies a tenant predicate to repository calls, so role scope is decorative."
+      },
+      "ruleId": "authorization-bypass.tenant-scoping",
+      "severity": {
+        "changeConditions": "Would rise to critical with unauthenticated reachability or proof of credential/signing compromise; would fall to medium if a deployment proves single-tenant use only.",
+        "level": "high",
+        "rationale": "Cross-tenant read and mutation of sensitive records (users, devices, workflows, audit) was reproduced through the HTTP interface with a non-admin, org-scope-style key. The tenant boundary is the intended security boundary, and every authenticated scoped credential can cross it with trivial requests. Requires an authenticated scoped credential, so not critical.",
+        "score": 8.1,
+        "scoringSystem": "CVSS:3.1",
+        "vector": "AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:N"
+      },
+      "summary": "Role.scope declares organization/site boundaries, but hasPermission() checks only resource:action permission strings and ApiKeyContext carries no organizationId. Every entity route calls repository-wide findAll/findById/save/delete without a tenant predicate, so an org-scoped key with device:write (for example) can list, create, and update devices in every organization, and the same holds for users, workflows, applications, and audit records.",
+      "taxonomy": {
+        "category": "authorization-bypass",
+        "cwe": [
+          "CWE-284",
+          "CWE-862",
+          "CWE-639"
+        ]
+      },
+      "title": "Organization/site role scope is not enforced \u2014 scoped roles can read and mutate entities across all organizations",
+      "validation": {
+        "assertions": [
+          "GET /api/v1/devices returned records from org-site-01 to a key whose nominal context is not org-scoped by any enforceable mechanism.",
+          "POST /api/v1/devices with organizationId org-hq returned 201 and PUT on that device returned 200.",
+          "A user:read/user:write key created a user in org-site-01 and listed users of org-hq and org-site-01."
+        ],
+        "evidenceRefs": [
+          "ctx-no-org",
+          "has-perm-string-only",
+          "devices-list",
+          "repo-findall"
+        ],
+        "limitations": [
+          "Reproduction used in-memory repositories and a loopback server; deployment ingress is outside the repo, and the intended granularity of tenant boundaries is an operator policy question."
+        ],
+        "method": "realistic interface reproduction + code trace",
+        "summary": "Booted the real createApp/createServer stack, provisioned a key with only device:read/device:write/application:read/workflow:read/workflow:write/audit:read, and verified via HTTP that device list/create/update and user create/list cross organization boundaries."
+      },
+      "writeup": {
+        "reportPath": "findings/authz-tenant-scoping/authz-tenant-scoping.md"
+      }
+    },
+    {
+      "attackPath": {
+        "dataflow": {
+          "evidenceRefs": [
+            "user-create-roleids",
+            "user-update-roleids",
+            "role-create-perms",
+            "resolve-perms"
+          ],
+          "outcome": "governance model grants *:* to the target user",
+          "sink": "repositories.roles.save / repositories.users.save, then resolvePermissions",
+          "source": "authenticated API key/JWT with user:write and role:write (no admin)",
+          "summary": "Request body roleIds/permissions -> entity-crud route -> createRole/createUser/save -> role store -> resolvePermissions -> governance decision"
+        },
+        "evidenceRefs": [
+          "user-update-roleids",
+          "role-create-perms",
+          "resolve-perms"
+        ],
+        "impact": {
+          "level": "high",
+          "why": "Modification of security-critical authorization state (roles/permissions/user bindings) with privileged downstream effect in the governance model."
+        },
+        "likelihood": {
+          "level": "medium",
+          "why": "Requires delegation of user:write/role:write to a non-admin, which is plausible in multi-org administration but absent from the default two-key seed."
+        },
+        "limitations": [
+          "No direct escalation of HTTP route permissions; JWT/API-key permissions come from the credential record."
+        ],
+        "reachability": {
+          "attacker": "delegated user/role manager without admin permission",
+          "entrypoint": "POST /api/v1/roles, PUT /api/v1/users/:id (or POST /api/v1/users)",
+          "evidenceRefs": [
+            "role-create-perms",
+            "user-update-roleids",
+            "resolve-perms"
+          ],
+          "outcome": "arbitrary privilege grant inside the governance authorization model",
+          "summary": "Any authenticated subject with user:write and role:write can execute the sequence; this is the exact delegation shape the separate user:write/role:write permissions imply. Direct HTTP route auth is not escalated because route guards read API-key permissions, not user roleIds."
+        },
+        "summary": "A delegated user/role manager without admin permission creates an admin-capable role, assigns it to themselves or a target user, and governance consumers then treat that subject as fully privileged."
+      },
+      "codeEvidence": [
+        {
+          "code": "    if (email && (await repositories.users.findByEmail(email)) !== null) {\n      writeJson(res, 409, { error: \"Conflict\", message: \"email address already in use\" });\n      return;\n    }\n    const orgIdStr = str(req.body, \"organizationId\") ?? \"\";\n    const roleIdsArr = strArr(req.body, \"roleIds\") ?? [];\n    // Fix #3: Validate referenced IDs in parallel before persisting.\n    const [orgRecord, roleRecords] = await Promise.all([\n      orgIdStr",
+          "endLine": 197,
+          "explanation": "The new user's roleIds come straight from the request body after only an existence check on each referenced role. No comparison is made between those roles' permissions and the caller's own permissions.",
+          "id": "user-create-roleids",
+          "label": "User create persists caller-supplied roleIds",
+          "language": "typescript",
+          "path": "src/api/routes/entity-crud.ts",
+          "role": "root_control",
+          "startLine": 189
+        },
+        {
+          "code": "        writeJson(res, 409, { error: \"Conflict\", message: \"email address already in use\" });\n        return;\n      }\n      throw e;\n    }\n    audit(container, ctx, \"user:create\", result.value.id, {\n      status: result.value.status,\n      organizationId: result.value.organizationId,\n    });",
+          "endLine": 235,
+          "explanation": "PUT /api/v1/users/:id replaces the target user's roleIds with body values. With user:write, the attacker can assign themselves (or anyone) a role they created.",
+          "id": "user-update-roleids",
+          "label": "User update replaces any user's roleIds",
+          "language": "typescript",
+          "path": "src/api/routes/entity-crud.ts",
+          "role": "root_control",
+          "startLine": 227
+        },
+        {
+          "code": "      createdAt: existing.createdAt,\n    });\n    if (!result.ok) { badRequest(res, result.error); return; }\n    await repositories.users.save(result.value);\n    audit(container, ctx, \"user:deactivate\", existing.id, {\n      status: result.value.status,\n    });",
+          "endLine": 290,
+          "explanation": "createRole receives permissions from the body; the only validation is the domain factory's syntax check. A role with *:* is accepted.",
+          "id": "role-create-perms",
+          "label": "Role create persists caller-supplied permissions",
+          "language": "typescript",
+          "path": "src/api/routes/entity-crud.ts",
+          "role": "root_control",
+          "startLine": 284
+        },
+        {
+          "code": "  const permissions: Permission[] = [];\n  input.permissions.forEach((raw, index) => {\n    const parsed = toPermission(raw);\n    if (parsed.ok) {\n      permissions.push(parsed.value);\n    } else {\n      issues.push({ path: `permissions[${index}]`, message: `invalid permission: ${raw}` });\n    }\n  });",
+          "endLine": 62,
+          "explanation": "toPermission only enforces the resource:action pattern. Nothing in the factory or its callers receives the grantor's authority, so subset/scope checks are structurally impossible at this layer.",
+          "id": "domain-syntax-only",
+          "label": "Domain factory validates syntax, not grantor authority",
+          "language": "typescript",
+          "path": "src/domain/role.ts",
+          "role": "expected_control",
+          "startLine": 54
+        },
+        {
+          "code": "export function resolvePermissions(roles: readonly Role[]): Permission[] {\n  const seen = new Set<string>();\n  const result: Permission[] = [];\n  for (const role of roles) {\n    for (const permission of role.permissions) {\n      if (!seen.has(permission)) {\n        seen.add(permission);\n        result.push(permission);\n      }\n    }\n  }\n  return result;\n}",
+          "endLine": 44,
+          "explanation": "Governance consumers flatten the assigned role's permissions into an effective set. Once an attacker-planted *:* role is assigned, evaluateAccess returns allow for any resource/action (verified).",
+          "id": "resolve-perms",
+          "label": "Governance resolves roleIds into effective permissions",
+          "language": "typescript",
+          "path": "src/governance/policy-engine.ts",
+          "role": "sink",
+          "startLine": 32
+        }
+      ],
+      "confidence": {
+        "level": "high",
+        "rationale": "Live HTTP reproduction of the full create-assign-evaluate sequence plus full-file review of route, domain, and persistence layers."
+      },
+      "extensions": {
+        "candidateId": "authz-role-assignment",
+        "ledgerRowId": "R02"
+      },
+      "findingId": "csf_1b2b70cbb1a74f77083af774",
+      "fingerprints": {
+        "algorithm": "codex-security/v1",
+        "primary": "codex-security/v1:sha256:a6d01e31e0ededbd517d240446f9828d59356ca500c5254cf2661cb14bcd3787"
+      },
+      "identity": {
+        "anchor": "role-grant-without-authority"
+      },
+      "locations": [
+        {
+          "endLine": 197,
+          "path": "src/api/routes/entity-crud.ts",
+          "role": "root_control",
+          "startLine": 189
+        },
+        {
+          "endLine": 235,
+          "path": "src/api/routes/entity-crud.ts",
+          "role": "root_control",
+          "startLine": 233
+        },
+        {
+          "endLine": 290,
+          "path": "src/api/routes/entity-crud.ts",
+          "role": "root_control",
+          "startLine": 284
+        },
+        {
+          "endLine": 315,
+          "path": "src/api/routes/entity-crud.ts",
+          "role": "root_control",
+          "startLine": 314
+        },
+        {
+          "endLine": 210,
+          "path": "src/api/routes/entity-crud.ts",
+          "role": "entrypoint",
+          "startLine": 162
+        },
+        {
+          "endLine": 239,
+          "path": "src/api/routes/entity-crud.ts",
+          "role": "entrypoint",
+          "startLine": 212
+        },
+        {
+          "endLine": 303,
+          "path": "src/api/routes/entity-crud.ts",
+          "role": "entrypoint",
+          "startLine": 276
+        },
+        {
+          "endLine": 319,
+          "path": "src/api/routes/entity-crud.ts",
+          "role": "entrypoint",
+          "startLine": 305
+        },
+        {
+          "endLine": 44,
+          "path": "src/governance/policy-engine.ts",
+          "role": "sink",
+          "startLine": 32
+        }
+      ],
+      "occurrenceId": "occ_487c85e31d05fcad055332fb",
+      "preventiveControls": [
+        "Grantor-subset check in a shared authorization service used by all grant paths",
+        "Role scope compatibility check (org/site grantors cannot grant global)",
+        "Governance consumers reject roles created outside authorized grant paths"
+      ],
+      "provenance": {
+        "source": "local_plugin"
+      },
+      "remediation": "Before persisting role or user mutations, compare the granted roleIds/permissions/scope against the grantor's effective authority: every granted permission must be covered by a permission the grantor holds (including wildcard coverage), and granted roles must be within the grantor's scope. Enforce this in a shared service used by POST/PUT users and roles, and return 403 otherwise.",
+      "remediationTests": [
+        "Non-admin user:write/role:write key receives 403 creating a role with *:*",
+        "Non-admin key receives 403 assigning a global role it cannot grant",
+        "Admin wildcard holder can still create/assign any role",
+        "Org-scoped grantor cannot create or assign a global role"
+      ],
+      "rootCause": {
+        "evidenceRefs": [
+          "user-create-roleids",
+          "user-update-roleids",
+          "role-create-perms",
+          "domain-syntax-only",
+          "resolve-perms"
+        ],
+        "summary": "The violated invariant is that a grantor may only create or assign authority they themselves hold (or are explicitly delegated). The route layer checks only that the caller holds user:write/role:write and that referenced roles exist; the domain layer validates only syntax; nothing compares granted permissions/scope with grantor authority before persistence."
+      },
+      "ruleId": "authorization-bypass.role-assignment",
+      "severity": {
+        "changeConditions": "Would rise to high if a documented consumer (login, API-key provisioning, or downstream service) resolves user roleIds for route authorization, or if user:write delegation to non-admin personnel is the intended deployment model.",
+        "level": "medium",
+        "rationale": "Reproduced through HTTP: a non-admin user/role manager created a *:* role (201), assigned it (200), and governance evaluate returned allow with reason granted by role permission: *:*. Direct HTTP route auth uses API-key permissions rather than user roleIds, so direct API escalation is limited without an operator-provisioned key; the impact is corruption of the governance authorization model, which is the platform's core control. Medium rather than high because the escalation delta is constrained to governance consumers and requires delegated user:write/role:write.",
+        "score": 6.5,
+        "scoringSystem": "CVSS:3.1",
+        "vector": "AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N"
+      },
+      "summary": "POST/PUT user and role endpoints validate that referenced roles exist and permission strings are well-formed, but never compare granted roleIds/permissions/scope against the caller's own authority. A subject with user:write and role:write but no admin permission can create a role with *:* and assign it to any user; governance decisions then treat that user as fully privileged.",
+      "taxonomy": {
+        "category": "authorization-bypass",
+        "cwe": [
+          "CWE-269",
+          "CWE-862"
+        ]
+      },
+      "title": "Role and user mutation endpoints grant permissions without checking the grantor's authority",
+      "validation": {
+        "assertions": [
+          "POST /api/v1/roles with permissions [\"*:*\"] returned 201 for a non-admin grantor.",
+          "PUT /api/v1/users/<attacker> with roleIds [\"role-hax\"] returned 200.",
+          "POST /api/v1/governance/evaluate returned decision allow, reason granted by role permission: *:*."
+        ],
+        "evidenceRefs": [
+          "user-update-roleids",
+          "role-create-perms",
+          "resolve-perms"
+        ],
+        "limitations": [
+          "The governance evaluate endpoint accepts roleIds directly, which is by design for an evaluation oracle; the finding is the ability of a non-admin to create/persist such a grant, which downstream consumers will trust."
+        ],
+        "method": "realistic interface reproduction + code trace",
+        "summary": "Booted the real stack, provisioned a key with user:read/user:write/role:read/role:write/governance:evaluate (no admin permission), and verified via HTTP that a *:* role is created (201), assigned (200), and that governance evaluate returns allow for arbitrary privileged actions."
+      },
+      "writeup": {
+        "reportPath": "findings/authz-role-assignment/authz-role-assignment.md"
+      }
+    }
+  ],
+  "scanId": "scan_ceop_87fb6102_20260806-204905",
+  "schemaVersion": "1.0"
+}

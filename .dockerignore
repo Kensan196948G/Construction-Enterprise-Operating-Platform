@@ -1,0 +1,39 @@
+# Version control
+.git
+.gitignore
+
+# Dependencies (installed inside image, not copied from host)
+node_modules
+
+# Build output (re-created inside image by tsc)
+dist
+
+# Test coverage
+coverage
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Editor / OS artefacts
+.DS_Store
+*.swp
+*.swo
+Thumbs.db
+
+# Legacy source material (not part of the deployed platform)
+legacy-projects
+
+# Claude / dev-only tooling
+.claude
+CLAUDE.md
+
+# Large markdown files that are not needed in the image
+# (README.md is kept so labels / HEALTHCHECK documentation survives)
+CHANGELOG.md

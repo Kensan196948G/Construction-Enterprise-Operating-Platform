@@ -1,0 +1,197 @@
+{
+  "completeness": "complete",
+  "deferred": [],
+  "documentType": "codex-security.coverage",
+  "excludePaths": [],
+  "explicitExclusions": [
+    {
+      "pattern": "legacy-projects/**",
+      "reason": "Reference/design trees, not runtime or build inputs; covered separately by sibling agent (legacy_gap_analysis)"
+    },
+    {
+      "pattern": "node_modules/**, dist/**, .git/**",
+      "reason": "Vendored/build artifacts; lockfile reviewed, dist is generated"
+    },
+    {
+      "pattern": "**/*.test.ts",
+      "reason": "Test-only; verified not imported by runtime entrypoints; no hardcoded secrets"
+    },
+    {
+      "pattern": "examples/**, .claude/**",
+      "reason": "Dev/demo examples and agent config, not deployed"
+    },
+    {
+      "pattern": "README.md, CHANGELOG.md",
+      "reason": "Documentation; reviewed for claims, not runtime code"
+    }
+  ],
+  "includePaths": [
+    "."
+  ],
+  "inventoryStrategy": "repository",
+  "mode": "repository",
+  "openQuestions": [
+    {
+      "followUpPrompt": "Review role provisioning policy and, if yes, re-rate authz-role-assignment as high and prioritize the grantor-subset fix.",
+      "question": "Does deployment policy grant user:write/role:write to non-admin personnel?"
+    },
+    {
+      "followUpPrompt": "Confirm tenancy model; if yes, treat authz-tenant-scoping as high priority. RoleScope and seed roles suggest multi-tenant intent.",
+      "question": "Is multi-organization tenancy on one instance the intended deployment?"
+    },
+    {
+      "followUpPrompt": "Fix scripts/generate-openapi.ts:325 to emit /health and regenerate docs/openapi.yaml.",
+      "question": "The OpenAPI generator emits /api/v1/health while the router serves /health (checked-in docs/openapi.yaml is correct)."
+    }
+  ],
+  "scanId": "scan_ceop_87fb6102_20260806-204905",
+  "schemaVersion": "1.0",
+  "surfaces": [
+    {
+      "disposition": "no_issue_found",
+      "id": "authn-api-key-jwt",
+      "label": "Authentication (API key + JWT)",
+      "notes": "HMAC timing-safe compare; HS256 header/claims validation; jti revocation; production secret guard",
+      "receiptRefs": [
+        "artifacts/02_discovery/work_ledger.jsonl",
+        "artifacts/03_coverage/repository_coverage_ledger.md"
+      ],
+      "riskArea": "authn"
+    },
+    {
+      "disposition": "reported",
+      "id": "authz-grant-boundary",
+      "label": "Authorization \u2014 role/user grant boundary",
+      "notes": "authz-role-assignment: grantor authority never checked on role/user mutations",
+      "receiptRefs": [
+        "artifacts/05_findings/authz-role-assignment/candidate_ledger.jsonl",
+        "artifacts/05_findings/authz-role-assignment/validation_report.md",
+        "artifacts/05_findings/authz-role-assignment/attack_path_analysis_report.md"
+      ],
+      "riskArea": "authz/privilege"
+    },
+    {
+      "disposition": "reported",
+      "id": "authz-tenant-isolation",
+      "label": "Authorization \u2014 tenant/object isolation",
+      "notes": "authz-tenant-scoping: role.scope decorative; endpoints org-blind",
+      "receiptRefs": [
+        "artifacts/05_findings/authz-tenant-scoping/candidate_ledger.jsonl",
+        "artifacts/05_findings/authz-tenant-scoping/validation_report.md",
+        "artifacts/05_findings/authz-tenant-scoping/attack_path_analysis_report.md"
+      ],
+      "riskArea": "authz/tenant"
+    },
+    {
+      "disposition": "no_issue_found",
+      "id": "sql-ddl-injection",
+      "label": "SQL/DDL injection",
+      "notes": "Prepared statements everywhere; identifiers allow-listed; static migrations",
+      "receiptRefs": [
+        "artifacts/02_discovery/work_ledger.jsonl",
+        "artifacts/03_coverage/repository_coverage_ledger.md"
+      ],
+      "riskArea": "injection"
+    },
+    {
+      "disposition": "not_applicable",
+      "id": "command-code-execution",
+      "label": "Command/code execution",
+      "notes": "No exec/eval/child_process sinks in runtime or scripts",
+      "receiptRefs": [
+        "artifacts/03_coverage/repository_coverage_ledger.md"
+      ],
+      "riskArea": "RCE"
+    },
+    {
+      "disposition": "not_applicable",
+      "id": "ssrf-outbound",
+      "label": "SSRF/outbound network",
+      "notes": "No outbound HTTP client in runtime code",
+      "receiptRefs": [
+        "artifacts/03_coverage/repository_coverage_ledger.md"
+      ],
+      "riskArea": "network"
+    },
+    {
+      "disposition": "no_issue_found",
+      "id": "path-traversal-file-io",
+      "label": "Path traversal/file I/O",
+      "notes": "No HTTP-controlled paths reach fs; fixed filenames under operator env dirs",
+      "receiptRefs": [
+        "artifacts/03_coverage/repository_coverage_ledger.md"
+      ],
+      "riskArea": "filesystem"
+    },
+    {
+      "disposition": "no_issue_found",
+      "id": "xss-template",
+      "label": "XSS/template injection",
+      "notes": "Server/client escaping covers HTML text+attr; CSP present (unsafe-inline noted)",
+      "receiptRefs": [
+        "artifacts/03_coverage/repository_coverage_ledger.md"
+      ],
+      "riskArea": "client"
+    },
+    {
+      "disposition": "no_issue_found",
+      "id": "audit-integrity",
+      "label": "Audit integrity",
+      "notes": "Hash chain + verify() cross-checks JSON and indexed columns; actor from authenticated subject",
+      "receiptRefs": [
+        "artifacts/03_coverage/repository_coverage_ledger.md"
+      ],
+      "riskArea": "audit"
+    },
+    {
+      "disposition": "no_issue_found",
+      "id": "rate-limit-dos",
+      "label": "Rate limiting/DoS",
+      "notes": "Sliding window per socket IP, 10k bucket cap, 1MiB body cap",
+      "receiptRefs": [
+        "artifacts/03_coverage/repository_coverage_ledger.md"
+      ],
+      "riskArea": "availability"
+    },
+    {
+      "disposition": "no_issue_found",
+      "id": "secrets-config",
+      "label": "Secrets/config",
+      "notes": "No hardcoded secrets; TTY guard; prod fail-fast; hashed API keys",
+      "receiptRefs": [
+        "artifacts/03_coverage/repository_coverage_ledger.md"
+      ],
+      "riskArea": "secrets"
+    },
+    {
+      "disposition": "no_issue_found",
+      "id": "cors-csrf-headers",
+      "label": "CORS/CSRF/headers",
+      "notes": "CORS opt-in; no cookie sessions; security headers + HSTS on SSR",
+      "receiptRefs": [
+        "artifacts/03_coverage/repository_coverage_ledger.md"
+      ],
+      "riskArea": "web"
+    },
+    {
+      "disposition": "no_issue_found",
+      "id": "supply-chain-ci",
+      "label": "Supply chain/CI",
+      "notes": "Frozen lockfile, zero runtime deps, pnpm audit gate, non-root container user",
+      "receiptRefs": [
+        "artifacts/03_coverage/repository_coverage_ledger.md"
+      ],
+      "riskArea": "build"
+    },
+    {
+      "disposition": "not_applicable",
+      "id": "legacy-reference-tree",
+      "label": "Legacy reference tree",
+      "notes": "Excluded: not imported/deployed; sibling agent covers gap analysis",
+      "receiptRefs": [
+        "artifacts/03_coverage/repository_coverage_ledger.md"
+      ],
+      "riskArea": "legacy"
+    }
+  ]
+}

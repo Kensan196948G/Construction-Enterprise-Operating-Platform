@@ -1,0 +1,17 @@
+flowchart TB
+    subgraph Client["Authenticated client"]
+        C[API key / JWT with permission strings]
+    end
+    subgraph App["CEOP HTTP app"]
+        R[Router + hasPermission]
+        G[Local route guards: grantor subset + org filter]
+        RE[Repositories findAll/save]
+        G2[Governance engine]
+        U[User/Role store]
+    end
+    C --> R
+    R --> G
+    G -->|tenant-bounded queries| RE
+    G -->|roleIds/permissions subset check| U
+    R --> G2
+    style G fill:#dfd,stroke:#080

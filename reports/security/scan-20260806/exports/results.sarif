@@ -1,0 +1,335 @@
+{
+  "$schema": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/os/schemas/sarif-schema-2.1.0.json",
+  "runs": [
+    {
+      "automationDetails": {
+        "id": "scan_ceop_87fb6102_20260806-204905"
+      },
+      "properties": {
+        "codexSecuritySchemaVersion": "1.0",
+        "codexSecurityTargetKind": "git_worktree"
+      },
+      "results": [
+        {
+          "level": "error",
+          "locations": [
+            {
+              "message": {
+                "text": "root_control"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/api/routes/governance.ts"
+                },
+                "region": {
+                  "endLine": 47,
+                  "startLine": 33
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Role.scope declares organization/site boundaries, but hasPermission() checks only resource:action permission strings and ApiKeyContext carries no organizationId. Every entity route calls repository-wide findAll/findById/save/delete without a tenant predicate, so an org-scoped key with device:write (for example) can list, create, and update devices in every organization, and the same holds for users, workflows, applications, and audit records."
+          },
+          "partialFingerprints": {
+            "codexSecurity/v1": "codex-security/v1:sha256:7a5053a3eb851e0cc39e55b4dab0ef5195e56e9cfbbf08e66bec4c31fcc819d1",
+            "primaryLocationLineHash": "26cdc037a08d1a7c:1"
+          },
+          "properties": {
+            "candidateId": "authz-tenant-scoping",
+            "category": "authorization-bypass",
+            "confidence": "high",
+            "findingId": "csf_e01c3977eaebd980700b1d6c",
+            "occurrenceId": "occ_2951def0356184842c52acf6",
+            "severity": "high"
+          },
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "root_control"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/api/types.ts"
+                },
+                "region": {
+                  "endLine": 71,
+                  "startLine": 67
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "entrypoint"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/api/routes/dashboard.ts"
+                },
+                "region": {
+                  "endLine": 89,
+                  "startLine": 81
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "entrypoint"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/api/routes/entity-crud.ts"
+                },
+                "region": {
+                  "endLine": 347,
+                  "startLine": 342
+                }
+              }
+            },
+            {
+              "id": 4,
+              "message": {
+                "text": "entrypoint"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/api/routes/entity-crud.ts"
+                },
+                "region": {
+                  "endLine": 387,
+                  "startLine": 349
+                }
+              }
+            },
+            {
+              "id": 5,
+              "message": {
+                "text": "entrypoint"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/api/routes/workflows.ts"
+                },
+                "region": {
+                  "endLine": 115,
+                  "startLine": 92
+                }
+              }
+            },
+            {
+              "id": 6,
+              "message": {
+                "text": "sink"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/persistence/ports.ts"
+                },
+                "region": {
+                  "endLine": 30,
+                  "startLine": 25
+                }
+              }
+            }
+          ],
+          "ruleId": "authorization-bypass.tenant-scoping",
+          "ruleIndex": 1
+        },
+        {
+          "level": "warning",
+          "locations": [
+            {
+              "message": {
+                "text": "root_control"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/api/routes/entity-crud.ts"
+                },
+                "region": {
+                  "endLine": 197,
+                  "startLine": 189
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "POST/PUT user and role endpoints validate that referenced roles exist and permission strings are well-formed, but never compare granted roleIds/permissions/scope against the caller's own authority. A subject with user:write and role:write but no admin permission can create a role with *:* and assign it to any user; governance decisions then treat that user as fully privileged."
+          },
+          "partialFingerprints": {
+            "codexSecurity/v1": "codex-security/v1:sha256:a6d01e31e0ededbd517d240446f9828d59356ca500c5254cf2661cb14bcd3787",
+            "primaryLocationLineHash": "a90d5ad7163482c2:1"
+          },
+          "properties": {
+            "candidateId": "authz-role-assignment",
+            "category": "authorization-bypass",
+            "confidence": "high",
+            "findingId": "csf_1b2b70cbb1a74f77083af774",
+            "occurrenceId": "occ_487c85e31d05fcad055332fb",
+            "severity": "medium"
+          },
+          "relatedLocations": [
+            {
+              "id": 1,
+              "message": {
+                "text": "root_control"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/api/routes/entity-crud.ts"
+                },
+                "region": {
+                  "endLine": 235,
+                  "startLine": 233
+                }
+              }
+            },
+            {
+              "id": 2,
+              "message": {
+                "text": "root_control"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/api/routes/entity-crud.ts"
+                },
+                "region": {
+                  "endLine": 290,
+                  "startLine": 284
+                }
+              }
+            },
+            {
+              "id": 3,
+              "message": {
+                "text": "root_control"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/api/routes/entity-crud.ts"
+                },
+                "region": {
+                  "endLine": 315,
+                  "startLine": 314
+                }
+              }
+            },
+            {
+              "id": 4,
+              "message": {
+                "text": "entrypoint"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/api/routes/entity-crud.ts"
+                },
+                "region": {
+                  "endLine": 210,
+                  "startLine": 162
+                }
+              }
+            },
+            {
+              "id": 5,
+              "message": {
+                "text": "entrypoint"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/api/routes/entity-crud.ts"
+                },
+                "region": {
+                  "endLine": 239,
+                  "startLine": 212
+                }
+              }
+            },
+            {
+              "id": 6,
+              "message": {
+                "text": "entrypoint"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/api/routes/entity-crud.ts"
+                },
+                "region": {
+                  "endLine": 303,
+                  "startLine": 276
+                }
+              }
+            },
+            {
+              "id": 7,
+              "message": {
+                "text": "entrypoint"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/api/routes/entity-crud.ts"
+                },
+                "region": {
+                  "endLine": 319,
+                  "startLine": 305
+                }
+              }
+            },
+            {
+              "id": 8,
+              "message": {
+                "text": "sink"
+              },
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/governance/policy-engine.ts"
+                },
+                "region": {
+                  "endLine": 44,
+                  "startLine": 32
+                }
+              }
+            }
+          ],
+          "ruleId": "authorization-bypass.role-assignment",
+          "ruleIndex": 0
+        }
+      ],
+      "tool": {
+        "driver": {
+          "name": "Codex Security",
+          "rules": [
+            {
+              "id": "authorization-bypass.role-assignment",
+              "name": "authorization-bypass.role-assignment",
+              "properties": {
+                "tags": [
+                  "security"
+                ]
+              },
+              "shortDescription": {
+                "text": "authorization-bypass.role-assignment"
+              }
+            },
+            {
+              "id": "authorization-bypass.tenant-scoping",
+              "name": "authorization-bypass.tenant-scoping",
+              "properties": {
+                "tags": [
+                  "security"
+                ]
+              },
+              "shortDescription": {
+                "text": "authorization-bypass.tenant-scoping"
+              }
+            }
+          ],
+          "version": "0.1.0"
+        }
+      }
+    }
+  ],
+  "version": "2.1.0"
+}
