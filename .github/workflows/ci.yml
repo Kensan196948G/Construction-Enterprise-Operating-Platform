@@ -8,6 +8,12 @@ on:
   pull_request:
     branches:
       - main
+  # Dependency advisories are published independently of our commits, so a
+  # push-only trigger detects them late. Run the security job daily at
+  # 21:00 UTC (06:00 JST); the other jobs are skipped on this trigger.
+  schedule:
+    - cron: "0 21 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -20,6 +26,8 @@ jobs:
   test:
     name: Typecheck / Lint / Test
     runs-on: ubuntu-latest
+    # Scheduled runs only exercise the dependency audit; source has not changed.
+    if: github.event_name != 'schedule'
 
     steps:
       - name: Checkout
