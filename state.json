@@ -22,7 +22,7 @@
     "success_rate_target": 0.9,
     "ci_success_rate": 0.0,
     "test_pass_rate": 1.0,
-    "test_count": 224,
+    "test_count": 226,
     "security_critical": 0,
     "security_high_resolved": 17,
     "blocker_count": 0
@@ -157,7 +157,7 @@
       "初期安定化監視と運用台帳の開始"
     ],
     "v060_verify": {
-      "all_tests": "224/224 pass",
+      "all_tests": "226/226 pass",
       "typecheck": "clean",
       "lint": "clean",
       "build": "clean",

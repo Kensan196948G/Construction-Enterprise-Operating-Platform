@@ -10,7 +10,7 @@
 |---|---|
 | 実装本体 | `feat/platform-foundation`（M1〜M16）→ 本作業ブランチ `feat/production-hardening` で v0.6.0 化 |
 | main | 初期化コミットのみ（統合は PR 経由で実施予定） |
-| テスト | 224/224 pass（ローカル検証済み） |
+| テスト | 226/226 pass（ローカル検証済み） |
 | typecheck / lint / build | 全パス |
 | 依存監査 | `pnpm audit --audit-level=high` → 0 vulnerabilities（override で解消） |
 | CI | 過去グリーン。本ブランチ push 後に再実行 |
