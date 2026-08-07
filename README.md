@@ -24,7 +24,7 @@
 | HTTP サーバ  | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                                                                                                                                        |
 | 依存方針     | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）                                                                                                                |
 | パッケージ   | pnpm 10.26.2                                                                                                                                                                                    |
-| テスト       | 356 tests pass（node:test ビルトインランナー）                                                                                                                                                  |
+| テスト       | 361 tests pass（node:test ビルトインランナー）                                                                                                                                                  |
 | コンテナ     | Docker multi-stage build（non-root・HEALTHCHECK 付き）                                                                                                                                          |
 | セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限                                                                                                               |
 
@@ -656,7 +656,7 @@ node --experimental-strip-types scripts/sqlite-backup.ts /data/ceop.db /backup/c
 | --------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | typecheck | ✅ pass        | strict・`noUncheckedIndexedAccess`・0 error                                                                                                                                                                                                                                                                                                                                                                |
 | lint      | ✅ pass        | ESLint flat config + typescript-eslint・0 warning                                                                                                                                                                                                                                                                                                                                                          |
-| test      | ✅ 356/356     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud + governance-crud + sqlite-audit-log + workflow-crud + workflow-instance + audit-coverage + migrate + rate-limit（CF-IP 分離含む）+ tenant-scope + audit-tenant-scope + jwt-org + webui + client-ip + backup-retention + auth-keys + api-key-repository + web-assets + favicon + ai-actions + device-ingest |
+| test      | ✅ 361/361     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud + governance-crud + sqlite-audit-log + workflow-crud + workflow-instance + audit-coverage + migrate + rate-limit（CF-IP 分離含む）+ tenant-scope + audit-tenant-scope + jwt-org + webui + client-ip + backup-retention + auth-keys + api-key-repository + web-assets + favicon + ai-actions + device-ingest |
 | build     | ✅ pass        | `dist/` に型定義付き出力                                                                                                                                                                                                                                                                                                                                                                                   |
 | CI        | ✅ 設定済み    | `.github/workflows/ci.yml`（push / PR トリガー）                                                                                                                                                                                                                                                                                                                                                           |
 | Docker    | ✅ multi-stage | non-root ユーザー・HEALTHCHECK 付き                                                                                                                                                                                                                                                                                                                                                                        |
@@ -1066,6 +1066,52 @@ migration `008`（`projects` テーブル）を追加。
 | `POST /api/v1/daily-reports/{id}/transition`      | `daily-report:write` | 状態遷移（draft→submitted→approved） |
 
 migration `009`（`daily_reports` テーブル）を追加。
+
+---
+
+## 📸 Photo/Document API（P3 / S-03）
+
+写真・資料メタデータを案件配下で登録・検索します（オブジェクトストレージ本体は外部連携）。
+
+| エンドポイント                             | 権限                         | 説明                                                 |
+| ------------------------------------------ | ---------------------------- | ---------------------------------------------------- |
+| `GET /api/v1/projects/{projectId}/photos`  | `photo:read`                 | 案件配下の写真一覧                                   |
+| `POST /api/v1/projects/{projectId}/photos` | `photo:write`                | メタデータ登録（objectKey 未指定時は `photos/<id>`） |
+| `GET/DELETE /api/v1/photos/{id}`           | `photo:read` / `photo:write` | 詳細・削除（監査）                                   |
+
+## 🦺 Safety / Quality API（P3 / S-04）
+
+安全巡視・KY・品質検査を案件配下で記録します。
+
+| エンドポイント                                              | 権限                             | 説明                             |
+| ----------------------------------------------------------- | -------------------------------- | -------------------------------- |
+| `GET/POST /api/v1/projects/{projectId}/safety-checks`       | `safety:read` / `safety:write`   | 安全点検（項目数・OK/NG・結果）  |
+| `GET/DELETE /api/v1/safety-checks/{id}`                     | `safety:read` / `safety:write`   | 詳細・削除                       |
+| `GET/POST /api/v1/projects/{projectId}/quality-inspections` | `quality:read` / `quality:write` | 品質検査（基準値・実測値・合否） |
+| `GET/DELETE /api/v1/quality-inspections/{id}`               | `quality:read` / `quality:write` | 詳細・削除                       |
+
+## 💰 Cost / Work Hour API（P3 / S-05）
+
+予算 vs 実績・工数を案件配下で管理します。
+
+| エンドポイント                                       | 権限                       | 説明                              |
+| ---------------------------------------------------- | -------------------------- | --------------------------------- |
+| `GET/POST /api/v1/projects/{projectId}/cost-records` | `cost:read` / `cost:write` | 原価記録（予算/実績/業者/請求書） |
+| `GET/DELETE /api/v1/cost-records/{id}`               | `cost:read` / `cost:write` | 詳細・削除                        |
+| `GET/POST /api/v1/projects/{projectId}/work-hours`   | `cost:read` / `cost:write` | 工数（作業者・日付・時間）        |
+| `GET /api/v1/work-hours/{id}`                        | `cost:read`                | 詳細                              |
+
+## 🔔 Notification API（P3 / S-09）
+
+通知配信の意図（pending）を記録します。実送信はディスパッチャー（別途）が担当。
+
+| エンドポイント                   | 権限                 | 説明                            |
+| -------------------------------- | -------------------- | ------------------------------- |
+| `GET /api/v1/notifications`      | `notification:read`  | 配信一覧（`?status=`）          |
+| `POST /api/v1/notifications`     | `notification:write` | 通知作成（email/slack/webhook） |
+| `GET /api/v1/notifications/{id}` | `notification:read`  | 詳細                            |
+
+migration `010`（photos）・`011/012`（safety/quality）・`013/014`（cost/work-hours）・`015`（notifications）を追加。
 
 ---
 

@@ -41,6 +41,14 @@ import type {
   DailyReportRepository,
 } from "../ports.ts";
 import { BaseFileRepository, ensureDataDir } from "./base-file-repository.ts";
+import {
+  FilePhotoRepository,
+  FileSafetyCheckRepository,
+  FileQualityInspectionRepository,
+  FileCostRecordRepository,
+  FileWorkHourRepository,
+  FileNotificationDeliveryRepository,
+} from "./business-repositories.ts";
 
 // ---------------------------------------------------------------------------
 // Concrete file repositories
@@ -261,5 +269,14 @@ export async function createFileRepositories(dataDir: string): Promise<Repositor
     aiActions: new FileAiActionRepository(dataDir, "ai-actions.json"),
     projects: new FileProjectRepository(dataDir, "projects.json"),
     dailyReports: new FileDailyReportRepository(dataDir, "daily-reports.json"),
+    photos: new FilePhotoRepository(dataDir, "photos.json"),
+    safetyChecks: new FileSafetyCheckRepository(dataDir, "safety-checks.json"),
+    qualityInspections: new FileQualityInspectionRepository(dataDir, "quality-inspections.json"),
+    costRecords: new FileCostRecordRepository(dataDir, "cost-records.json"),
+    workHours: new FileWorkHourRepository(dataDir, "work-hours.json"),
+    notificationDeliveries: new FileNotificationDeliveryRepository(
+      dataDir,
+      "notification-deliveries.json",
+    ),
   };
 }
