@@ -309,17 +309,46 @@ function readJsonBody(req: IncomingMessage): Promise<unknown> {
   });
 }
 
+/** Baseline hardening applied to every API response, including public endpoints. */
+const BASELINE_SECURITY_HEADERS = {
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "DENY",
+  "Referrer-Policy": "no-referrer",
+  "Cache-Control": "no-store",
+} as const;
+
 /** Write a JSON response with the given status and `application/json` content type. */
 export function writeJson(res: ServerResponse, status: number, data: unknown): void {
   const body = JSON.stringify(data);
   res.writeHead(status, {
     "Content-Type": "application/json; charset=utf-8",
     "Content-Length": Buffer.byteLength(body),
-    // Baseline hardening for every JSON response (including public endpoints).
-    "X-Content-Type-Options": "nosniff",
-    "X-Frame-Options": "DENY",
-    "Referrer-Policy": "no-referrer",
-    "Cache-Control": "no-store",
+    ...BASELINE_SECURITY_HEADERS,
+  });
+  res.end(body);
+}
+
+/**
+ * Write a downloadable file response.
+ *
+ * `X-Content-Type-Options: nosniff` matters more here than on JSON endpoints:
+ * without it a browser may sniff an exported CSV whose first cell looks like
+ * markup and render it as HTML in the site's origin. The filename is quoted and
+ * callers must supply a fixed, server-generated name — a user-controlled one
+ * would let a header-injecting value escape the `Content-Disposition` value.
+ */
+export function writeAttachment(
+  res: ServerResponse,
+  status: number,
+  contentType: string,
+  filename: string,
+  body: string,
+): void {
+  res.writeHead(status, {
+    "Content-Type": contentType,
+    "Content-Length": Buffer.byteLength(body),
+    "Content-Disposition": `attachment; filename="${filename}"`,
+    ...BASELINE_SECURITY_HEADERS,
   });
   res.end(body);
 }

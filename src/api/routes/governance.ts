@@ -18,14 +18,74 @@ import { createPolicy, policyId } from "../../domain/policy.ts";
 import type { PolicyEffect, PolicyCondition } from "../../domain/policy.ts";
 import type { Permission } from "../../domain/role.ts";
 import { evaluateAccess, resolvePermissions } from "../../governance/policy-engine.ts";
+import type { AuditLogEntry } from "../../governance/audit-log.ts";
 import { recordAudit } from "../audit.ts";
+import { toCsv } from "../csv.ts";
 import type { Router } from "../router.ts";
-import { writeJson } from "../router.ts";
+import { writeAttachment, writeJson } from "../router.ts";
 import { parsePagination, paginate } from "../pagination.ts";
 import type { AppContainer } from "../types.ts";
 
 const AUDIT_LIMIT_DEFAULT = 50;
 const AUDIT_LIMIT_MAX = 200;
+
+/**
+ * Export ranges are far larger than the paged read's, because the point of an
+ * export is to hand a regulator a whole period at once. The ceiling still
+ * exists: the log is held in memory, so an unbounded range is a trivial way to
+ * turn one request into a heap spike.
+ */
+const AUDIT_EXPORT_LIMIT_DEFAULT = 1000;
+const AUDIT_EXPORT_LIMIT_MAX = 10_000;
+
+/** Resource identifier recorded against export attempts. */
+const AUDIT_EXPORT_RESOURCE = "governance:audit-log";
+
+/**
+ * Fixed column order for CSV exports.
+ *
+ * `sequence`, `previousHash` and `hash` are included deliberately: they are what
+ * let a recipient re-verify the chain offline. Without them the export is a list
+ * of claims rather than tamper-evident evidence.
+ */
+const AUDIT_EXPORT_COLUMNS = [
+  "sequence",
+  "id",
+  "at",
+  "actor",
+  "action",
+  "resource",
+  "outcome",
+  "metadata",
+  "previousHash",
+  "hash",
+] as const;
+
+/** Flatten one chain entry into the CSV column set. */
+function auditEntryToRow(entry: AuditLogEntry): Record<string, string> {
+  return {
+    sequence: String(entry.sequence),
+    id: String(entry.event.id),
+    at: String(entry.event.at),
+    actor: entry.event.actor,
+    action: entry.event.action,
+    resource: entry.event.resource,
+    outcome: entry.event.outcome,
+    // Metadata is an open map, so it cannot become columns without the schema
+    // drifting per export. JSON keeps it lossless and machine-readable inside
+    // one cell; escapeCsvField handles the quotes it contains.
+    metadata: JSON.stringify(entry.event.metadata),
+    previousHash: entry.previousHash,
+    hash: entry.hash,
+  };
+}
+
+/** Parse a non-negative integer query parameter, falling back on anything invalid. */
+function parsePositiveInt(raw: string | undefined, fallback: number, min = 1): number {
+  if (raw === undefined) return fallback;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isNaN(parsed) || parsed < min ? fallback : parsed;
+}
 
 /**
  * Check whether a context's permissions include a specific resource:action grant.
@@ -325,6 +385,81 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
       limit,
       offset,
     });
+  });
+
+  // GET /api/v1/governance/audit/export?format=csv|json&limit=&offset=
+  //   (requires audit:export — deliberately separate from audit:read)
+  router.get("/api/v1/governance/audit/export", async (req, ctx, res) => {
+    const rawFormat = req.query["format"] ?? "csv";
+
+    if (!hasPermission(ctx, "audit", "export")) {
+      // A refused bulk extraction of the evidence trail is itself evidence, so
+      // unlike the paged read endpoint this denial is recorded. It is written
+      // before the response so a client that hangs up cannot suppress it.
+      recordAudit(container.auditLog, ctx, "audit:export", AUDIT_EXPORT_RESOURCE, "denied", {
+        format: String(rawFormat),
+      });
+      writeJson(res, 403, { error: "Forbidden", message: "requires 'audit:export' permission" });
+      return;
+    }
+
+    if (rawFormat !== "csv" && rawFormat !== "json") {
+      writeJson(res, 400, {
+        error: "Bad Request",
+        message: "format must be 'csv' or 'json'",
+      });
+      return;
+    }
+    const format = rawFormat;
+
+    const parsedLimit = parsePositiveInt(req.query["limit"], AUDIT_EXPORT_LIMIT_DEFAULT);
+    const limit = Math.min(parsedLimit, AUDIT_EXPORT_LIMIT_MAX);
+    const offset = parsePositiveInt(req.query["offset"], 0, 0);
+
+    // Snapshot before recording, so the export's own audit event is not part of
+    // the payload it describes — it did not exist when the range was taken.
+    const scoped = scopeAuditEntries(container.auditLog.entries, ctx);
+    const entries = scoped.slice(offset, offset + limit);
+    const exportedAt = new Date().toISOString();
+
+    recordAudit(container.auditLog, ctx, "audit:export", AUDIT_EXPORT_RESOURCE, "success", {
+      format,
+      count: String(entries.length),
+      total: String(scoped.length),
+      offset: String(offset),
+      limit: String(limit),
+    });
+
+    // Colons are legal in a quoted filename but confuse some download managers,
+    // and the name is server-generated precisely so no caller value reaches the
+    // Content-Disposition header.
+    const stamp = exportedAt.replace(/[:.]/g, "-");
+
+    if (format === "json") {
+      writeAttachment(
+        res,
+        200,
+        "application/json; charset=utf-8",
+        `audit-export-${stamp}.json`,
+        JSON.stringify({
+          exportedAt,
+          count: entries.length,
+          total: scoped.length,
+          limit,
+          offset,
+          entries,
+        }),
+      );
+      return;
+    }
+
+    writeAttachment(
+      res,
+      200,
+      "text/csv; charset=utf-8",
+      `audit-export-${stamp}.csv`,
+      toCsv(AUDIT_EXPORT_COLUMNS, entries.map(auditEntryToRow)),
+    );
   });
 
   // ── Policy CRUD ───────────────────────────────────────────────────────────
