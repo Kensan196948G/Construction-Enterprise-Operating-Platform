@@ -8,6 +8,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 ### Fixed
 
+- **HEAD メソッドが全ルートで 404（G-27 / P2）** — `Router.#match` がメソッドを
+  厳密一致で照合していたため、`/health` を含む全ルートが HEAD に 404 を返していた。
+  多くの死活監視・ロードバランサは既定で HEAD をプローブに使うため、
+  正常稼働中のサービスが停止と誤判定されうる状態だった（GET 200 / HEAD 404 を実測）。
+  `#match` に HEAD→GET フォールバックを追加。`node:http` は HEAD 応答の本文だけを
+  抑止しヘッダ（`Content-Length` 含む）は保持するため、ハンドラ側の変更は不要で
+  RFC 9110 の定義どおりの意味論になる。認証も GET と同一に継承されるため、
+  保護ルートへの HEAD は 401 のまま。POST 専用ルートへはフォールバックしない。
+  併せて監査エクスポートの記録に `method` を追加した。HEAD はルートに到達するが
+  本文は破棄されるため、これが無いと実際には配信されていない持ち出しを
+  「成功した配信」として証跡に残してしまう
 - `docker-compose.prod.yml` を実運用トポロジ（bind mount / `container_name: ceop-platform` /
   loopback bind / `CEOP_IMAGE` 必須）へ整合。従来の named volume・`latest`・`0.0.0.0` 公開は、
   compose 操作が実機に効かない、あるいは空 DB の 2 台目を LAN 公開で起動させる乖離だった

@@ -18,12 +18,12 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "build": "tsc -p tsconfig.build.json",
-    "test": "node --test --experimental-strip-types \"src/**/*.test.ts\"",
-    "test:watch": "node --test --watch --experimental-strip-types \"src/**/*.test.ts\"",
+    "test": "node --test --experimental-strip-types \"src/**/*.test.ts\" \"scripts/**/*.test.ts\"",
+    "test:watch": "node --test --watch --experimental-strip-types \"src/**/*.test.ts\" \"scripts/**/*.test.ts\"",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "format": "prettier --write \"src/**/*.ts\" \"examples/**/*.ts\" \"*.json\" \"*.md\"",
-    "format:check": "prettier --check \"src/**/*.ts\" \"examples/**/*.ts\" \"*.json\" \"*.md\"",
+    "format": "prettier --write \"src/**/*.ts\" \"scripts/**/*.test.ts\" \"examples/**/*.ts\" \"*.json\" \"*.md\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"scripts/**/*.test.ts\" \"examples/**/*.ts\" \"*.json\" \"*.md\"",
     "verify": "pnpm run format:check && pnpm run typecheck && pnpm run lint && pnpm run test",
     "demo": "node --experimental-strip-types examples/quickstart.ts",
     "openapi:gen": "node --experimental-strip-types scripts/generate-openapi.ts"
