@@ -80,10 +80,18 @@ jobs:
         id: changelog
         run: |
           TAG="${GITHUB_REF_NAME}"
-          # Extract the block between this tag heading and the next heading.
-          NOTES=$(awk "/^## \[?${TAG}\]?/{flag=1; next} flag && /^## /{exit} flag{print}" CHANGELOG.md)
-          if [ -z "$NOTES" ]; then
-            NOTES="See CHANGELOG.md for full history."
+          # Tags are `vX.Y.Z`; CHANGELOG headings are `## [X.Y.Z]` — strip the prefix.
+          VERSION="${TAG#v}"
+          # Match with index() rather than a regex: the version contains dots, which
+          # would otherwise be treated as metacharacters and match the wrong section.
+          NOTES=$(awk -v h="## [${VERSION}]" '
+            index($0, h) == 1 { flag = 1; next }
+            flag && /^## / { exit }
+            flag { print }
+          ' CHANGELOG.md)
+          if [ -z "$(printf %s "$NOTES" | tr -d '[:space:]')" ]; then
+            echo "::error::No CHANGELOG section found for ${VERSION}. Add a '## [${VERSION}]' heading before tagging."
+            exit 1
           fi
           # Write to a temp file to avoid quoting issues with multiline strings.
           echo "$NOTES" > /tmp/release-notes.md

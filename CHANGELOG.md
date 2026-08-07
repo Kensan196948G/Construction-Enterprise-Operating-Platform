@@ -6,6 +6,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 ## [Unreleased]
 
+## [0.6.2] - 2026-08-07
+
+Audit log tenant isolation release.
+
 ### Security
 
 - **監査ログのテナント分離（G-18 / P1）** — 監査ログはプラットフォーム全体で
@@ -26,6 +30,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 - 監査テナント分離の回帰テスト 5 件を追加（231/231 pass）。修正を戻すと
   該当 3 件が fail することを確認済み（vacuous test でないことの実証）。
+- `PLATFORM_VERSION` と Dockerfile の `org.opencontainers.image.version` ラベルの
+  一致を検証する回帰テストを追加。バージョンの実体は `src/version.ts` /
+  `package.json` / `Dockerfile` の 3 箇所にあるが、これまでテストは前 2 者しか
+  照合しておらず、イメージラベルだけが古いまま出荷されうる状態だった（232/232 pass）。
 
 ## [0.6.1] - 2026-08-06
 
@@ -477,9 +485,7 @@ CodeRabbit, Codex, and internal review).
 - **Audit actor spoofing (High)** — `POST /api/v1/governance/evaluate` uses `ctx.subject`
   (authenticated API key) as the audit actor rather than the request body's `subject` field.
 
----
-
-## [0.2.0] - 2026-06-27
+### 初版リリース内容
 
 Second milestone release: HTTP API Gateway, Server-Side Rendered frontend, persistence layer,
 and Docker production packaging.

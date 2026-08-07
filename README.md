@@ -4,7 +4,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-22.13+-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Zero Runtime Deps](https://img.shields.io/badge/runtime%20deps-zero-brightgreen)](package.json)
 [![CI](https://img.shields.io/github/actions/workflow/status/Kensan196948G/Construction-Enterprise-Operating-Platform/ci.yml?label=CI&logo=github)](/.github/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-231%20pass-brightgreen)](src/)
+[![Tests](https://img.shields.io/badge/tests-232%20pass-brightgreen)](src/)
 [![Security](https://img.shields.io/badge/security-hardened-blue)](src/api/middleware/auth.ts)
 [![License](https://img.shields.io/badge/license-proprietary-lightgrey)](LICENSE.md)
 
@@ -15,18 +15,18 @@
 
 ## 📌 概要
 
-| 項目         | 内容                                                                                                                                         |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| 役割         | 統制・ガバナンス・共通ワークフローの調整基盤                                                                                                 |
-| バージョン   | v0.6.1（本番対応リリース: SQLite 永続化・JWT 認証・監査証跡・CRUD/Workflow/Policy API・Claude 系デザイン WebUI・本番デプロイ準備・運用文書） |
-| 言語         | TypeScript 5.7（strict / `noUncheckedIndexedAccess` / 例外を投げない設計）                                                                   |
-| ランタイム   | Node.js v22.13+（ネイティブ TS 実行・ビルトインテストランナー）                                                                              |
-| HTTP サーバ  | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                                                                                     |
-| 依存方針     | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）                                                             |
-| パッケージ   | pnpm 10.26.2                                                                                                                                 |
-| テスト       | 231 tests pass（node:test ビルトインランナー）                                                                                               |
-| コンテナ     | Docker multi-stage build（non-root・HEALTHCHECK 付き）                                                                                       |
-| セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限                                                            |
+| 項目         | 内容                                                                                                                                     |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| 役割         | 統制・ガバナンス・共通ワークフローの調整基盤                                                                                             |
+| バージョン   | v0.6.2（本番対応リリース: SQLite 永続化・JWT 認証・監査証跡のテナント分離・CRUD/Workflow/Policy API・Claude 系デザイン WebUI・運用文書） |
+| 言語         | TypeScript 5.7（strict / `noUncheckedIndexedAccess` / 例外を投げない設計）                                                               |
+| ランタイム   | Node.js v22.13+（ネイティブ TS 実行・ビルトインテストランナー）                                                                          |
+| HTTP サーバ  | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                                                                                 |
+| 依存方針     | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）                                                         |
+| パッケージ   | pnpm 10.26.2                                                                                                                             |
+| テスト       | 232 tests pass（node:test ビルトインランナー）                                                                                           |
+| コンテナ     | Docker multi-stage build（non-root・HEALTHCHECK 付き）                                                                                   |
+| セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限                                                        |
 
 ---
 
@@ -44,7 +44,7 @@ flowchart TD
             APIGateway["🔀 Router\nrouter.ts\n1MiB body limit\nremoteAddress"]
             AuthMW["🔐 Auth Middleware\nAPI Key: HMAC-SHA256\nJWT: HS256 timingSafeEqual"]
             JwtMW["🎫 JWT Issuer\njwt.ts\n1h expiry・jti replay guard"]
-            RateLimiter["⏱ Rate Limiter\nsliding-window\n10 req/min per socket IP"]
+            RateLimiter["⏱ Rate Limiter\nsliding-window per socket IP\nauth: 10 req/min・API 全体: 300 req/min"]
             WebSSR["🖥️ SSR Renderer\nweb/renderer.ts\nCSP Headers"]
             APIGateway --> AuthMW
             APIGateway --> RateLimiter
@@ -133,7 +133,7 @@ src/
 │   ├── middleware/
 │   │   ├── auth.ts         … API key 検証（HMAC-SHA256 + timingSafeEqual）
 │   │   ├── jwt.ts          … HS256 JWT 発行・検証（createJwtIssuer・1h 有効期限）
-│   │   ├── rate-limiter.ts … スライディングウィンドウ（10 req/min per socket IP）
+│   │   ├── rate-limiter.ts … スライディングウィンドウ（auth 10 / API 全体 300 req/min・per socket IP）
 │   │   └── request-logger.ts
 │   ├── routes/    … health / auth / governance / dashboard / entity-crud / web
 │   └── types.ts   … AppContainer・ApiKeyContext・ApiRequest（remoteAddress）型
@@ -562,7 +562,7 @@ curl -H "Authorization: Bearer <keyId>:<secret>" http://localhost:3000/api/v1/da
 ## 🧪 テスト実行
 
 ```bash
-# 全テスト実行（231 tests）
+# 全テスト実行（232 tests）
 pnpm run test
 
 # typecheck + lint + test 一括
@@ -604,7 +604,7 @@ node --experimental-strip-types scripts/sqlite-backup.ts /data/ceop.db /backup/c
 | --------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | typecheck | ✅ pass        | strict・`noUncheckedIndexedAccess`・0 error                                                                                                                                                                                                                                          |
 | lint      | ✅ pass        | ESLint flat config + typescript-eslint・0 warning                                                                                                                                                                                                                                    |
-| test      | ✅ 231/231     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud (34) + governance-crud (26) + sqlite-audit-log (9) + workflow-crud (26) + audit-coverage (3) + migrate (2) + rate-limit (1) + tenant-scope (3) + audit-tenant-scope (5) + jwt-org (2) |
+| test      | ✅ 232/232     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud (34) + governance-crud (26) + sqlite-audit-log (9) + workflow-crud (26) + audit-coverage (3) + migrate (2) + rate-limit (1) + tenant-scope (3) + audit-tenant-scope (5) + jwt-org (2) |
 | build     | ✅ pass        | `dist/` に型定義付き出力                                                                                                                                                                                                                                                             |
 | CI        | ✅ 設定済み    | `.github/workflows/ci.yml`（push / PR トリガー）                                                                                                                                                                                                                                     |
 | Docker    | ✅ multi-stage | non-root ユーザー・HEALTHCHECK 付き                                                                                                                                                                                                                                                  |
