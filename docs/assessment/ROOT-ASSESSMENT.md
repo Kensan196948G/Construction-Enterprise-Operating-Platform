@@ -10,7 +10,7 @@
 |---|---|
 | 実装本体 | `feat/platform-foundation`（M1〜M16）→ 本作業ブランチ `feat/production-hardening` で v0.6.0 化 |
 | main | v0.6.2 統合済み（PR #2〜#9）・タグ v0.6.2・GHCR イメージ・GitHub Release 作成済み |
-| テスト | 232/232 pass（ローカル + GitHub Actions 検証済み） |
+| テスト | 252/252 pass（ローカル + GitHub Actions 検証済み） |
 | typecheck / lint / build | 全パス |
 | 依存監査 | `pnpm audit --audit-level=high` → 0 vulnerabilities（override で解消） |
 | CI | グリーン（main: typecheck/lint/test/build/security/Docker 全成功） |
@@ -57,10 +57,11 @@
 | G-23 | P2 | 本番 `docker run` に `read_only` / `cap_drop` / `no-new-privileges` / リソース制限 / ログローテーションが未適用 | 受容中（compose 切替まで）。差分は RUNBOOK §6「既知の差分」に列挙。ハードニング構成は v0.6.2 イメージで実機起動検証済み |
 | G-24 | P3 | バックアップの世代自動削除が未実装・オフサイトコピー無し | 運用台帳で手動管理（BACKUP_RESTORE.md）。ホスト障害時はバックアップも同時消失 |
 | G-25 | P3 | 全トラフィックが Tunnel 経由で loopback から届くため、per-IP レート制限が実質単一バケット | バックログ（`CF-Connecting-IP` を信頼境界付きで採用する設計が必要） |
+| G-26 | P2 | 監査証跡を監査人へ引き渡す手段が無く、ハッシュ連鎖のオフライン再検証ができなかった（legacy-gap-analysis L-01） | ✅ 解消（2026-08-07）。`GET /api/v1/governance/audit/export` を追加。`audit:export` 権限分離・拒否の監査記録・スナップショット順序・チェーン列同梱・CSV 数式インジェクション対策を 20 テスト（変異検証済み）で固定 |
 
 ## 4. リリース可否判断の根拠
 
-- コード品質: typecheck / lint / build / 232 tests / audit 0 / OpenAPI 生成一致
+- コード品質: typecheck / lint / build / 252 tests / audit 0 / OpenAPI 生成一致
 - セキュリティ: 認証・認可・監査・レート制限・ヘッダ・FK・依存監査を確認
 - 運用: バックアップ・復元手順・監視・Runbook・運用台帳を整備
 - 判定: **GO（v0.6.2 を本番デプロイ済み・2026-08-07）**。公開 URL 経由で `/health`・`/health/ready`（storage: sqlite）・`/api/v1/info`（version 0.6.2）と、認証込みスモーク（トークン交換 → 主要 9 API 200 → SSR 2 画面 200）・ネガティブ制御（無効資格情報 / 資格情報なし → 401）を確認
@@ -90,3 +91,16 @@
   `ceop-platform:current`（cron などの自動処理が参照）の 2 本立てとする。自動処理にバージョン固定タグを
   直接書くと、リリースのたびに更新漏れで静かに失敗する（G-21 の実際の発生形態）
 - OpenAPI ライセンスは MIT → Proprietary に修正（private リポジトリの実態に整合）
+- 監査証跡の一括出力は `audit:read` ではなく新権限 `audit:export` を要求する。ページ単位の閲覧と
+  全件の持ち出しは能力として別物であり、後者だけを個別に付与・剥奪できる必要がある。
+  ただし `hasPermission` の wildcard 設計により `audit:*` 保持者は自動的に両方を満たす。
+  これは既存 wildcard ロールの意味を変えない選択であり、「新権限は既定で誰も持たない」とは言えない
+  事実として README / OpenAPI に明記した
+- 一括出力は**拒否された場合も監査記録する**（ページ読み取り API は成功時のみ）。拒否された持ち出しの
+  試行そのものが証跡価値を持つため。応答書き込みの前に記録し、クライアント切断で記録が消えないようにする
+- 出力範囲は出力イベントの記録より**前**にスナップショットする。自分自身の出力イベントを payload に
+  含めると、範囲確定時点で存在しなかったエントリを「その出力に含まれていた」と主張することになる
+- CSV は RFC 4180 引用符処理と数式インジェクション中和を**両方**適用する。前者はファイルの解析可能性、
+  後者は表計算ソフトでの実行可否という別の問題を解く。引用符だけでは生きた数式が残り、接頭辞だけでは
+  カンマを含む値でレコードが壊れる。中和は値の除去ではなく先頭アポストロフィの付与とする
+  （証拠を黙って書き換えないため。マーカーは表示時に消費される）

@@ -32,7 +32,7 @@
 
 | ID | 優先度 | 項目 | 根拠 | 受入条件 |
 |---|---|---|---|---|
-| L-01 | P2 | 監査ログ CSV/JSON エクスポート API | Synapse-OS Sprint 9（G6 監査 Export） | `GET /api/v1/governance/audit/export?format=csv\|json` で全件/範囲エクスポート + 権限 `audit:export` |
+| ~~L-01~~ | P2 | ~~監査ログ CSV/JSON エクスポート API~~ **✅ 実装済み（2026-08-07 / ROOT-ASSESSMENT G-26）** | Synapse-OS Sprint 9（G6 監査 Export） | 受入条件達成: `GET /api/v1/governance/audit/export?format=csv\|json&limit&offset` + 権限 `audit:export`。加えてテナントスコープ継承・チェーン列同梱によるオフライン再検証・CSV 数式インジェクション対策・拒否の監査記録を実装（20 テスト・変異検証済み） |
 | L-02 | P2 | 承認ワークフローインスタンス（申請→承認→監査） | Synapse Issue/Approval + Enterprise-OS 承認 UI | Workflow テンプレートからインスタンス生成、承認/却下、監査記録 |
 | L-03 | P2 | PostgreSQL アダプタ（マルチノード運用） | Synapse-OS G3 DB Migration / Postgres | `Repositories` ポートの Postgres 実装 + migration 互換 |
 | L-04 | P3 | 監査ログの知識グラフ/DLP 連携 | Synapse Knowledge/DLP モデル | 任意（設計後） |

@@ -1641,6 +1641,106 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/governance/audit/export:
+    get:
+      operationId: exportAuditLog
+      summary: "Export the audit chain as a downloadable file (requires audit:export)"
+      description: "Bulk extraction of the evidence trail. `audit:export` is deliberately distinct from `audit:read`: paging through the log and walking out with all of it are different capabilities. Note that a credential holding the wildcard `audit:*` satisfies both. Denied attempts are themselves recorded in the chain.
+
+Tenant scoping matches `GET /api/v1/governance/audit`. Each row carries `sequence`, `previousHash` and `hash` so a recipient can re-verify the chain offline. CSV cells beginning with a spreadsheet formula trigger (`=`, `+`, `-`, `@`, TAB, CR) are prefixed with an apostrophe so the file is inert when opened; the original value is preserved after the marker. The export's own audit event is recorded after the range is snapshotted and therefore does not appear in its own payload."
+      tags:
+        - Governance
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          name: format
+          in: query
+          schema:
+            type: string
+            enum:
+              - csv
+              - json
+            default: csv
+          description: Output format
+        - 
+          name: limit
+          in: query
+          schema:
+            type: integer
+            default: 1000
+            minimum: 1
+            maximum: 10000
+          description: Maximum number of entries to export
+        - 
+          name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          description: Number of entries to skip
+      responses:
+        200:
+          description: Attachment download. `Content-Disposition` carries a server-generated filename; no caller-supplied value reaches the header.
+          headers:
+            Content-Disposition:
+              description: e.g. attachment; filename="audit-export-2026-08-07T00-00-00-000Z.csv"
+              schema:
+                type: string
+          content:
+            text/csv:
+              schema:
+                type: string
+              example: "sequence,id,at,actor,action,resource,outcome,metadata,previousHash,hash
+"
+            application/json:
+              schema:
+                type: object
+                required:
+                  - exportedAt
+                  - count
+                  - total
+                  - limit
+                  - offset
+                  - entries
+                properties:
+                  exportedAt:
+                    type: string
+                    format: date-time
+                  count:
+                    type: integer
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+                  entries:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AuditEntry"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /api/v1/governance/policies:
     get:
       operationId: listPolicies
