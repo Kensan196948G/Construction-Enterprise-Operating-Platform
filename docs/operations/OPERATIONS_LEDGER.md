@@ -46,3 +46,11 @@
 | 18:41 | 本番 migration 001〜024 適用・9 業務テーブル確認 | ✅ |
 | 18:42 | コンテナ差し替え v0.10.0（旧 v0.9.0 保持）・スモーク全 PASS（/metrics・/portal 含む） | ✅ |
 | 18:45 | Prometheus(19090)/Grafana(13001) 導入（host network・loopback・read-only）・target up | ✅ |
+
+## 実行記録（2026-08-07・P6 削除）
+
+| 日時 (JST) | 内容 | 結果 |
+| --- | --- | --- |
+| 19:0x | 旧5リポジトリの完全ミラー退避（/var/backups/ceop-repo-absorption-20260807・root 700・fsck OK） | ✅ |
+| 19:0x | `gh repo delete` で5リポジトリ削除（ユーザー Y 承認）・GraphQL 不存在確認 | ✅ |
+| 19:0x | WORKING_LOG / OPERATIONS_LEDGER へ記録・PR #39 | ✅ |
