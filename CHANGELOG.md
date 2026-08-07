@@ -16,20 +16,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
   旧ブラウザ向けに実体 `favicon.ico`（16/32/48px の PNG 入り ICO）を
   `scripts/generate-favicon.ts` で生成し、API・WebUI 双方で配信
 
-## [0.8.2] - 2026-08-07
+## [Unreleased]
+
+## [0.9.0] - 2026-08-07
 
 ### Added
-
-- **AI Action Governance（統合 Y-09 / L-07）** — AI アクション要求の統制・承認・監査。
-  `GET/POST /api/v1/ai-actions` と `POST /:id/decision` を追加（`ai:read` / `ai:write` /
-  `ai:approve`・テナントスコープ・監査記録）。プロンプト本文は保存せず SHA-256 ハッシュのみ記録。
-  migration `007`（`ai_actions` テーブル）を追加。
-- **Device Agent Ingest（統合 D-01〜D-03 / L-05）** — 端末登録・ハートビート・インベントリ受信。
-  `POST /api/v1/devices/register` / `/:id/heartbeat` / `/:id/inventory` を追加
-  （`device:write`・監査記録・`metadata` は string 値のみ・スキーマ変更不要）。
-- **端末ドメイン拡張** — `metadata`（インベントリ）・`touchDevice()`（heartbeat）・
-  `withDeviceMetadata()`（マージ）を追加。
-- テスト 11 件追加（346/346 pass）。
 
 - **Integration Gateway（P1）** — 統合サービス向けリバースプロキシと統一認証。
   `CEOP_GATEWAY_SERVICES` で登録したサービスを `/api/v1/integrations/<service>/*`
@@ -38,11 +29,23 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
   （`X-CEOP-Subject` 等）はクライアント入力値を破棄して CEOP が設定し、
   上流トークンは環境変数経由（非コミット）。パストラバーサル拒否・タイムアウト
   504・到達不能 502。ルータにワイルドカードセグメント（`*`）と `all()` を追加。
-  テスト 16 件追加（334/334 pass）。
+  テスト 16 件追加。
+- **AI Action Governance（統合 Y-09 / L-07）** — AI アクション要求の統制・承認・監査。
+  `GET/POST /api/v1/ai-actions` と `POST /:id/decision` を追加（`ai:read` / `ai:write` /
+  `ai:approve`・テナントスコープ・監査記録）。プロンプト本文は保存せず SHA-256 ハッシュのみ記録。
+  migration `007`（`ai_actions` テーブル）を追加。
+- **Device Agent Ingest（統合 D-01〜D-03 / L-05）** — 端末登録・ハートビート・インベントリ受信。
+  `POST /api/v1/devices/register` / `/:id/heartbeat` / `/:id/inventory` を追加
+  （`device:write`・監査記録・`metadata` は string 値のみ・スキーマ変更不要）。
+- テスト 346/346 pass・verify/build/audit 0。
+
+## [0.8.2] - 2026-08-07
+
+### Added
 
 - **ブラウザタブ favicon** — SSR ページ（`/dashboard`・`/governance`）と WebUI 配信に
-  タワークレーンアイコンを追加し、API 側 `/api/assets/favicon.svg|ico`・
-  `/assets/favicon.svg|ico`、WebUI 側 `/favicon.svg`・`/favicon.ico` で配信
+  `favicon.svg`（タワークレーンアイコン）を追加。`/api/assets/favicon.svg`・
+  `/assets/favicon.svg`・WebUI の `/favicon.svg`（`/favicon.ico` は 302 リダイレクト）で配信
 
 - **Workflow Instance API（統合 L-02 / Synapse Issue→Approval→Audit）** —
   ワークフローテンプレートからテナント単位の実行インスタンスを生成・承認・却下・取消できる
@@ -51,6 +54,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
   migration `006`（`workflow_instances` テーブル）を追加。テスト 13 件追加（315/315 pass）
 
 ## [0.8.1] - 2026-08-07
+
+- 2026-08-07
 
 ### Fixed
 
