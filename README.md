@@ -4,7 +4,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-22.13+-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Zero Runtime Deps](https://img.shields.io/badge/runtime%20deps-zero-brightgreen)](package.json)
 [![CI](https://img.shields.io/github/actions/workflow/status/Kensan196948G/Construction-Enterprise-Operating-Platform/ci.yml?label=CI&logo=github)](/.github/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-263%20pass-brightgreen)](src/)
+[![Tests](https://img.shields.io/badge/tests-277%20pass-brightgreen)](src/)
 [![Security](https://img.shields.io/badge/security-hardened-blue)](src/api/middleware/auth.ts)
 [![License](https://img.shields.io/badge/license-proprietary-lightgrey)](LICENSE.md)
 
@@ -15,18 +15,18 @@
 
 ## 📌 概要
 
-| 項目         | 内容                                                                                                                                     |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| 役割         | 統制・ガバナンス・共通ワークフローの調整基盤                                                                                             |
-| バージョン   | v0.6.2（本番対応リリース: SQLite 永続化・JWT 認証・監査証跡のテナント分離・CRUD/Workflow/Policy API・Claude 系デザイン WebUI・運用文書） |
-| 言語         | TypeScript 5.7（strict / `noUncheckedIndexedAccess` / 例外を投げない設計）                                                               |
-| ランタイム   | Node.js v22.13+（ネイティブ TS 実行・ビルトインテストランナー）                                                                          |
-| HTTP サーバ  | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                                                                                 |
-| 依存方針     | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）                                                         |
-| パッケージ   | pnpm 10.26.2                                                                                                                             |
-| テスト       | 263 tests pass（node:test ビルトインランナー）                                                                                           |
-| コンテナ     | Docker multi-stage build（non-root・HEALTHCHECK 付き）                                                                                   |
-| セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限                                                        |
+| 項目         | 内容                                                                                                                                                                           |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 役割         | 統制・ガバナンス・共通ワークフローの調整基盤                                                                                                                                   |
+| バージョン   | v0.7.0（WebUI ホスティング: デザインバンドル 100% 適用配信・systemd 常駐・Neon アクセスログ。基盤: SQLite 永続化・JWT 認証・監査証跡のテナント分離・CRUD/Workflow/Policy API） |
+| 言語         | TypeScript 5.7（strict / `noUncheckedIndexedAccess` / 例外を投げない設計）                                                                                                     |
+| ランタイム   | Node.js v22.13+（ネイティブ TS 実行・ビルトインテストランナー）                                                                                                                |
+| HTTP サーバ  | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                                                                                                                       |
+| 依存方針     | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）                                                                                               |
+| パッケージ   | pnpm 10.26.2                                                                                                                                                                   |
+| テスト       | 277 tests pass（node:test ビルトインランナー）                                                                                                                                 |
+| コンテナ     | Docker multi-stage build（non-root・HEALTHCHECK 付き）                                                                                                                         |
+| セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限                                                                                              |
 
 ---
 
@@ -566,10 +566,49 @@ curl -H "Authorization: Bearer <keyId>:<secret>" http://localhost:3000/api/v1/da
 
 ---
 
+## 🖥️ WebUI（デザインバンドル・ホスティング / v0.7.0）
+
+ユーザー提供のデザイン成果物 `webui/CEOP Platform.html`（自己完結型 SPA、8.7MB）を
+**改変なし（100% 適用）** で配信する専用の静的サーバーです。本体 API（port 3120）とは
+別プロセス・別ポートで動作します。
+
+| 項目            | 値                                                            |
+| --------------- | ------------------------------------------------------------- |
+| 🌐 LAN URL      | `http://192.168.0.185:3130/`                                  |
+| ❤️ ヘルス       | `GET /healthz` → `{"status":"ok","service":"ceop-webui",...}` |
+| ⚙️ systemd      | `ceop-webui.service`（`deploy/systemd/` に定義）              |
+| 🔧 環境変数     | `/home/kensan/.ceop/webui.env`（chmod 600、git 管理外）       |
+| 🗄️ アクセスログ | Neon PostgreSQL `ceop-production` / `webui_access_log`        |
+| 📦 デザイン正本 | `webui/CEOP Platform.html`（`__bundler` 自己展開形式）        |
+
+```bash
+# デザインバンドルを webui/dist/ に展開（gitignore 済）
+pnpm run webui:unpack
+
+# ローカル起動（CEOP_WEBUI_ROOT=webui/dist CEOP_WEBUI_PORT=3130）
+pnpm run webui:serve
+
+# 本番反映（verify → rsync → 展開 → systemd 再起動 → /healthz 確認）
+bash scripts/webui-deploy.sh
+```
+
+- `scripts/webui-unpack.ts` が gzip+base64 マニフェスト（510 アセット）を展開し、
+  UUID 参照を `assets/<uuid>.<ext>` へ書き換えます
+- `src/webui/server.ts` は依存ゼロ（node:http）。パストラバーサル防御、GET/HEAD 限定、
+  UUID アセットの immutable キャッシュ、セキュリティヘッダ一式を実装
+- CSP は `script-src 'self' 'unsafe-eval'`（デザインランタイムが `text/x-dc` ソースを
+  `new Function` でコンパイルするため。本体 API の CSP には影響しません）
+- アクセスログは Neon の SQL-over-HTTP へ fire-and-forget でバッチ送信（Neon 障害時も
+  配信は継続、アセットヒットは記録対象外）
+- `https://ceop.mirai-dx-platform.com` 配下への公開（Tunnel ingress パス分割）は
+  production route 変更のため **Approval PR** で別途承認後に実施
+
+---
+
 ## 🧪 テスト実行
 
 ```bash
-# 全テスト実行（263 tests）
+# 全テスト実行（277 tests）
 pnpm run test
 
 # typecheck + lint + test 一括
@@ -607,15 +646,15 @@ node --experimental-strip-types scripts/sqlite-backup.ts /data/ceop.db /backup/c
 
 ### 📊 現在の品質状態
 
-| ゲート    | 状態           | 備考                                                                                                                                                                                                                                                                                 |
-| --------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| typecheck | ✅ pass        | strict・`noUncheckedIndexedAccess`・0 error                                                                                                                                                                                                                                          |
-| lint      | ✅ pass        | ESLint flat config + typescript-eslint・0 warning                                                                                                                                                                                                                                    |
-| test      | ✅ 263/263     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud (34) + governance-crud (26) + sqlite-audit-log (9) + workflow-crud (26) + audit-coverage (3) + migrate (2) + rate-limit (1) + tenant-scope (3) + audit-tenant-scope (5) + jwt-org (2) |
-| build     | ✅ pass        | `dist/` に型定義付き出力                                                                                                                                                                                                                                                             |
-| CI        | ✅ 設定済み    | `.github/workflows/ci.yml`（push / PR トリガー）                                                                                                                                                                                                                                     |
-| Docker    | ✅ multi-stage | non-root ユーザー・HEALTHCHECK 付き                                                                                                                                                                                                                                                  |
-| security  | ✅ hardened    | timingSafeEqual・ボディ制限・権限ゲート・CSP・API セキュリティヘッダ・監査網羅                                                                                                                                                                                                       |
+| ゲート    | 状態           | 備考                                                                                                                                                                                                                                                                                              |
+| --------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| typecheck | ✅ pass        | strict・`noUncheckedIndexedAccess`・0 error                                                                                                                                                                                                                                                       |
+| lint      | ✅ pass        | ESLint flat config + typescript-eslint・0 warning                                                                                                                                                                                                                                                 |
+| test      | ✅ 277/277     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud (34) + governance-crud (26) + sqlite-audit-log (9) + workflow-crud (26) + audit-coverage (3) + migrate (2) + rate-limit (1) + tenant-scope (3) + audit-tenant-scope (5) + jwt-org (2) + webui (14) |
+| build     | ✅ pass        | `dist/` に型定義付き出力                                                                                                                                                                                                                                                                          |
+| CI        | ✅ 設定済み    | `.github/workflows/ci.yml`（push / PR トリガー）                                                                                                                                                                                                                                                  |
+| Docker    | ✅ multi-stage | non-root ユーザー・HEALTHCHECK 付き                                                                                                                                                                                                                                                               |
+| security  | ✅ hardened    | timingSafeEqual・ボディ制限・権限ゲート・CSP・API セキュリティヘッダ・監査網羅                                                                                                                                                                                                                    |
 
 ---
 

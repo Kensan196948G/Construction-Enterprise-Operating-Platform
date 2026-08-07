@@ -6,6 +6,7 @@ export default tseslint.config(
   {
     ignores: [
       "dist/**",
+      "webui/dist/**",
       "node_modules/**",
       "legacy-projects/**",
       "coverage/**",

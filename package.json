@@ -1,6 +1,6 @@
 {
   "name": "construction-eop",
-  "version": "0.6.2",
+  "version": "0.7.0",
   "private": true,
   "license": "UNLICENSED",
   "description": "Construction Enterprise Operating Platform - governance, portal, field OS, and AI governance coordination layer",
@@ -26,7 +26,9 @@
     "format:check": "prettier --check \"src/**/*.ts\" \"scripts/**/*.test.ts\" \"examples/**/*.ts\" \"*.json\" \"*.md\"",
     "verify": "pnpm run format:check && pnpm run typecheck && pnpm run lint && pnpm run test",
     "demo": "node --experimental-strip-types examples/quickstart.ts",
-    "openapi:gen": "node --experimental-strip-types scripts/generate-openapi.ts"
+    "openapi:gen": "node --experimental-strip-types scripts/generate-openapi.ts",
+    "webui:unpack": "node --experimental-strip-types scripts/webui-unpack.ts",
+    "webui:serve": "node --experimental-strip-types scripts/webui-serve.ts"
   },
   "pnpm": {
     "overrides": {

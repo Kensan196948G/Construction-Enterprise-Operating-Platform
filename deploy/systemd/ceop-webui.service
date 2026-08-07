@@ -1,0 +1,39 @@
+# CEOP WebUI static server (design bundle host).
+#
+# Install (see scripts/webui-deploy.sh):
+#   sudo cp deploy/systemd/ceop-webui.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now ceop-webui
+#
+# Environment lives in /home/kensan/.ceop/webui.env (chmod 600, not in git):
+#   CEOP_WEBUI_HOST / CEOP_WEBUI_PORT / CEOP_WEBUI_ROOT / CEOP_WEBUI_NEON_URL
+#
+# NOTE: ExecStart pins the nvm-managed node binary; update the path when the
+# host default node version changes (documented in docs/RUNBOOK.md).
+
+[Unit]
+Description=CEOP WebUI static server (port 3130)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=kensan
+Group=kensan
+EnvironmentFile=/home/kensan/.ceop/webui.env
+WorkingDirectory=/home/kensan/.ceop/webui/current/app
+ExecStart=/home/kensan/.nvm/versions/node/v25.2.1/bin/node --experimental-strip-types scripts/webui-serve.ts
+Restart=on-failure
+RestartSec=3
+
+# Hardening: the process only reads static files and posts access logs out.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=multi-user.target
