@@ -24,7 +24,7 @@
 | HTTP サーバ  | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                                                                                                                                        |
 | 依存方針     | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）                                                                                                                |
 | パッケージ   | pnpm 10.26.2                                                                                                                                                                                    |
-| テスト       | 365 tests pass（node:test ビルトインランナー）                                                                                                                                                  |
+| テスト       | 367 tests pass（node:test ビルトインランナー）                                                                                                                                                  |
 | コンテナ     | Docker multi-stage build（non-root・HEALTHCHECK 付き）                                                                                                                                          |
 | セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限                                                                                                               |
 
@@ -656,7 +656,7 @@ node --experimental-strip-types scripts/sqlite-backup.ts /data/ceop.db /backup/c
 | --------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | typecheck | ✅ pass        | strict・`noUncheckedIndexedAccess`・0 error                                                                                                                                                                                                                                                                                                                                                                |
 | lint      | ✅ pass        | ESLint flat config + typescript-eslint・0 warning                                                                                                                                                                                                                                                                                                                                                          |
-| test      | ✅ 365/365     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud + governance-crud + sqlite-audit-log + workflow-crud + workflow-instance + audit-coverage + migrate + rate-limit（CF-IP 分離含む）+ tenant-scope + audit-tenant-scope + jwt-org + webui + client-ip + backup-retention + auth-keys + api-key-repository + web-assets + favicon + ai-actions + device-ingest |
+| test      | ✅ 367/367     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud + governance-crud + sqlite-audit-log + workflow-crud + workflow-instance + audit-coverage + migrate + rate-limit（CF-IP 分離含む）+ tenant-scope + audit-tenant-scope + jwt-org + webui + client-ip + backup-retention + auth-keys + api-key-repository + web-assets + favicon + ai-actions + device-ingest |
 | build     | ✅ pass        | `dist/` に型定義付き出力                                                                                                                                                                                                                                                                                                                                                                                   |
 | CI        | ✅ 設定済み    | `.github/workflows/ci.yml`（push / PR トリガー）                                                                                                                                                                                                                                                                                                                                                           |
 | Docker    | ✅ multi-stage | non-root ユーザー・HEALTHCHECK 付き                                                                                                                                                                                                                                                                                                                                                                        |
@@ -1153,6 +1153,44 @@ ITSM ポート（`ItsmPort`）を CEOP 認証・監査の背後で公開しま�
 `daily-report:workflow-approved` が記録されます。
 
 migration `016`（knowledge_articles）・`017`（legal_contracts）を追加。
+
+---
+
+## 📄 Document API（P3 / E-03）
+
+図面・文書（版管理・状態: draft→review→approved→issued→archived）を管理します。
+
+| エンドポイント                      | 権限                               | 説明                   |
+| ----------------------------------- | ---------------------------------- | ---------------------- |
+| `GET/POST /api/v1/documents`        | `document:read` / `document:write` | 一覧（`?type=`）・作成 |
+| `GET/DELETE /api/v1/documents/{id}` | `document:read` / `document:write` | 詳細・削除             |
+
+## 📅 Work Schedule API（P3 / E-02）
+
+現場の作業予定（日付・担当・状態）を案件配下で管理します。
+
+| エンドポイント                                         | 権限                                         | 説明       |
+| ------------------------------------------------------ | -------------------------------------------- | ---------- |
+| `GET/POST /api/v1/projects/{projectId}/work-schedules` | `work-schedule:read` / `work-schedule:write` | 一覧・作成 |
+| `GET /api/v1/work-schedules/{id}`                      | `work-schedule:read`                         | 詳細       |
+
+## 🧾 Purchase Order API（P3 / E-05 / ERP）
+
+発注（番号一意・数量×単価=金額・状態）を案件配下で管理します。
+
+| エンドポイント                                          | 権限                                           | 説明       |
+| ------------------------------------------------------- | ---------------------------------------------- | ---------- |
+| `GET/POST /api/v1/projects/{projectId}/purchase-orders` | `purchase-order:read` / `purchase-order:write` | 一覧・作成 |
+| `GET /api/v1/purchase-orders/{id}`                      | `purchase-order:read`                          | 詳細       |
+
+## 🔔 Notification Preference / Dispatcher（P3 / E-11・S-09）
+
+- `GET/PUT /api/v1/notification-preferences/{userId}` — ユーザー別の通知購読設定（email/slack/events）
+- `scripts/run-notification-dispatcher.ts` — pending/retry 配信を Webhook/Slack へ実送信
+  （`CEOP_NOTIFICATION_WEBHOOK_URL` / `CEOP_NOTIFICATION_SLACK_WEBHOOK_URL`。未設定チャネルは
+  `not-configured` として失敗記録・email は SMTP 未実装のため同様）
+
+migration `018`（documents）・`019`（work_schedules）・`020`（purchase_orders）・`021`（notification_preferences）を追加。
 
 ---
 

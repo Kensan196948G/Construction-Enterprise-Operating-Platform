@@ -327,3 +327,6 @@ DNS・証明書・Tunnel 自体（UUID / credentials）には一切触れない�
 
 > マイグレーション 016/017: S-06 knowledge_articles / S-07 legal_contracts。
 > 本番適用は `scripts/migrate.ts`（既存 DB は 016/017 のみ追加実行）。
+
+> マイグレーション 018〜021: E-03 documents / E-02 work_schedules / E-05 purchase_orders / E-11 notification_preferences。
+> 通知ディスパッチャー: `node --experimental-strip-types scripts/run-notification-dispatcher.ts`（cron 登録推奨・5分間隔目安）。

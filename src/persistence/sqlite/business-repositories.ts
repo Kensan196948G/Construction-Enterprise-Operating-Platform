@@ -13,8 +13,16 @@ import type {
 } from "../../domain/notification.ts";
 
 import type { ProjectId } from "../../domain/project.ts";
-import type { KnowledgeArticle, KnowledgeId } from "../../domain/knowledge.ts";
 import type { Contract, ContractId } from "../../domain/contract.ts";
+import type { KnowledgeArticle, KnowledgeId } from "../../domain/knowledge.ts";
+
+import type { Document, DocumentId } from "../../domain/document.ts";
+import type { WorkSchedule, WorkScheduleId } from "../../domain/work-schedule.ts";
+import type { PurchaseOrder, PurchaseOrderId } from "../../domain/purchase-order.ts";
+import type {
+  NotificationPreference,
+  NotificationPreferenceId,
+} from "../../domain/notification-preference.ts";
 
 import type {
   PhotoRepository,
@@ -25,6 +33,10 @@ import type {
   NotificationDeliveryRepository,
   KnowledgeRepository,
   ContractRepository,
+  DocumentRepository,
+  WorkScheduleRepository,
+  PurchaseOrderRepository,
+  NotificationPreferenceRepository,
 } from "../ports.ts";
 import { BaseSqliteRepository } from "./base-sqlite-repository.ts";
 
@@ -338,5 +350,171 @@ export class SqliteContractRepository
     );
     const row = stmt.get(contractNumber) as { data: string } | undefined;
     return row !== undefined ? (JSON.parse(row.data) as Contract) : null;
+  }
+}
+
+export class SqliteDocumentRepository
+  extends BaseSqliteRepository<Document>
+  implements DocumentRepository
+{
+  constructor(db: unknown) {
+    super(
+      db,
+      "documents",
+      [
+        "org_id TEXT NOT NULL",
+        "project_id TEXT",
+        "document_type TEXT NOT NULL",
+        "status TEXT NOT NULL",
+      ],
+      [
+        { name: "idx_documents_org", columns: ["org_id"] },
+        { name: "idx_documents_project", columns: ["project_id"] },
+        { name: "idx_documents_type", columns: ["document_type"] },
+      ],
+      ["org_id", "project_id", "document_type", "status"],
+    );
+  }
+  protected override extraValues(d: Document): readonly unknown[] {
+    return [d.organizationId, d.projectId ?? null, d.documentType, d.status];
+  }
+  override async findById(id: DocumentId): Promise<Document | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: DocumentId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByOrganization(orgId: string): Promise<readonly Document[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM documents WHERE org_id = ?");
+    const rows = stmt.all(orgId) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as Document);
+  }
+  async findByProject(projectId: ProjectId): Promise<readonly Document[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM documents WHERE project_id = ?");
+    const rows = stmt.all(projectId as string) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as Document);
+  }
+}
+
+export class SqliteWorkScheduleRepository
+  extends BaseSqliteRepository<WorkSchedule>
+  implements WorkScheduleRepository
+{
+  constructor(db: unknown) {
+    super(
+      db,
+      "work_schedules",
+      [
+        "org_id TEXT NOT NULL",
+        "project_id TEXT NOT NULL REFERENCES projects(id)",
+        "work_date TEXT NOT NULL",
+        "status TEXT NOT NULL",
+      ],
+      [
+        { name: "idx_work_schedules_org", columns: ["org_id"] },
+        { name: "idx_work_schedules_project", columns: ["project_id"] },
+        { name: "idx_work_schedules_date", columns: ["work_date"] },
+      ],
+      ["org_id", "project_id", "work_date", "status"],
+    );
+  }
+  protected override extraValues(s: WorkSchedule): readonly unknown[] {
+    return [s.organizationId, s.projectId as string, s.workDate, s.status];
+  }
+  override async findById(id: WorkScheduleId): Promise<WorkSchedule | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: WorkScheduleId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByProject(projectId: ProjectId): Promise<readonly WorkSchedule[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM work_schedules WHERE project_id = ?");
+    const rows = stmt.all(projectId as string) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as WorkSchedule);
+  }
+}
+
+export class SqlitePurchaseOrderRepository
+  extends BaseSqliteRepository<PurchaseOrder>
+  implements PurchaseOrderRepository
+{
+  constructor(db: unknown) {
+    super(
+      db,
+      "purchase_orders",
+      [
+        "org_id TEXT NOT NULL",
+        "project_id TEXT NOT NULL REFERENCES projects(id)",
+        "order_number TEXT NOT NULL",
+        "status TEXT NOT NULL",
+      ],
+      [
+        { name: "idx_purchase_orders_org", columns: ["org_id"] },
+        { name: "idx_purchase_orders_project", columns: ["project_id"] },
+        { name: "idx_purchase_orders_number", columns: ["order_number"], unique: true },
+      ],
+      ["org_id", "project_id", "order_number", "status"],
+    );
+  }
+  protected override extraValues(o: PurchaseOrder): readonly unknown[] {
+    return [o.organizationId, o.projectId as string, o.orderNumber, o.status];
+  }
+  override async findById(id: PurchaseOrderId): Promise<PurchaseOrder | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: PurchaseOrderId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByProject(projectId: ProjectId): Promise<readonly PurchaseOrder[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM purchase_orders WHERE project_id = ?");
+    const rows = stmt.all(projectId as string) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as PurchaseOrder);
+  }
+  async findByNumber(orderNumber: string): Promise<PurchaseOrder | null> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare(
+      "SELECT data FROM purchase_orders WHERE order_number = ?",
+    );
+    const row = stmt.get(orderNumber) as { data: string } | undefined;
+    return row !== undefined ? (JSON.parse(row.data) as PurchaseOrder) : null;
+  }
+}
+
+export class SqliteNotificationPreferenceRepository
+  extends BaseSqliteRepository<NotificationPreference>
+  implements NotificationPreferenceRepository
+{
+  constructor(db: unknown) {
+    super(
+      db,
+      "notification_preferences",
+      ["org_id TEXT", "user_id TEXT NOT NULL"],
+      [
+        { name: "idx_notification_prefs_org", columns: ["org_id"] },
+        { name: "idx_notification_prefs_user", columns: ["user_id"], unique: true },
+      ],
+      ["org_id", "user_id"],
+    );
+  }
+  protected override extraValues(p: NotificationPreference): readonly unknown[] {
+    return [p.organizationId ?? null, p.userId];
+  }
+  override async findById(id: NotificationPreferenceId): Promise<NotificationPreference | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: NotificationPreferenceId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByUserId(userId: string): Promise<NotificationPreference | null> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare(
+      "SELECT data FROM notification_preferences WHERE user_id = ?",
+    );
+    const row = stmt.get(userId) as { data: string } | undefined;
+    return row !== undefined ? (JSON.parse(row.data) as NotificationPreference) : null;
   }
 }

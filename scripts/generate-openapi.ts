@@ -413,6 +413,49 @@ const schemas: { [k: string]: YamlValue } = {
       createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
     },
   },
+
+  Document: {
+    type: "object",
+    required: ["id", "organizationId", "title", "documentType", "revision", "status", "tags", "createdAt", "updatedAt"],
+    properties: {
+      id: { type: "string" }, organizationId: { type: "string" }, projectId: { type: "string" }, title: { type: "string" },
+      documentType: { type: "string", enum: ["drawing", "contract", "safety", "quality", "other"] },
+      revision: { type: "integer" }, status: { type: "string", enum: ["draft", "review", "approved", "issued", "archived"] },
+      fileUrl: { type: "string" }, fileSize: { type: "integer" }, tags: { type: "array", items: { type: "string" } },
+      createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
+    },
+  },
+  WorkSchedule: {
+    type: "object",
+    required: ["id", "organizationId", "projectId", "workDate", "title", "status", "createdAt", "updatedAt"],
+    properties: {
+      id: { type: "string" }, organizationId: { type: "string" }, projectId: { type: "string" },
+      workDate: { type: "string", format: "date" }, title: { type: "string" }, assignee: { type: "string" },
+      status: { type: "string", enum: ["planned", "in_progress", "completed", "cancelled"] }, notes: { type: "string" },
+      createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
+    },
+  },
+  PurchaseOrder: {
+    type: "object",
+    required: ["id", "organizationId", "projectId", "orderNumber", "supplier", "item", "quantity", "unitPrice", "amount", "status", "createdAt", "updatedAt"],
+    properties: {
+      id: { type: "string" }, organizationId: { type: "string" }, projectId: { type: "string" },
+      orderNumber: { type: "string" }, supplier: { type: "string" }, item: { type: "string" },
+      quantity: { type: "number" }, unitPrice: { type: "number" }, amount: { type: "number" },
+      status: { type: "string", enum: ["draft", "issued", "approved", "received", "cancelled"] }, notes: { type: "string" },
+      createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
+    },
+  },
+  NotificationPreference: {
+    type: "object",
+    required: ["id", "userId", "emailEnabled", "slackEnabled", "events", "createdAt", "updatedAt"],
+    properties: {
+      id: { type: "string" }, organizationId: { type: "string" }, userId: { type: "string" },
+      emailEnabled: { type: "boolean" }, slackEnabled: { type: "boolean" }, slackWebhookUrl: { type: "string" },
+      events: { type: "object", additionalProperties: { type: "boolean" } },
+      createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
+    },
+  },
   AuditEntry: {
     type: "object",
     required: ["id", "at", "actor", "action", "resource", "outcome", "hash"],
@@ -2412,6 +2455,94 @@ const paths: { [k: string]: YamlValue } = {
       responses: { ...jsonResponse(200, { type: "object", properties: { incident: { type: "object" } } }), ...errorResponses(401, 403, 404) },
     },
   },
+
+  "/api/v1/documents": {
+    get: {
+      operationId: "listDocuments", summary: "Paginated documents (optional ?type=)", tags: ["Documents"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/limitParam" }, { "$ref": "#/components/parameters/offsetParam" }, { name: "type", in: "query", schema: { type: "string", enum: ["drawing", "contract", "safety", "quality", "other"] } }],
+      responses: { ...jsonResponse(200, paginatedList("documents", "Document")), ...errorResponses(400, 401, 403) },
+    },
+    post: {
+      operationId: "createDocument", summary: "Create a drawing/document (E-03)", tags: ["Documents"], security: authSecurity,
+      requestBody: {
+        required: true,
+        content: { "application/json": { schema: { type: "object", required: ["title"], properties: { organizationId: { type: "string" }, projectId: { type: "string" }, title: { type: "string" }, documentType: { type: "string", enum: ["drawing", "contract", "safety", "quality", "other"] }, revision: { type: "integer" }, status: { type: "string", enum: ["draft", "review", "approved", "issued", "archived"] }, fileUrl: { type: "string" }, fileSize: { type: "integer" } } } } },
+      },
+      responses: { ...jsonResponse(201, { type: "object", required: ["document"], properties: { document: { $ref: "#/components/schemas/Document" } } }), ...errorResponses(400, 401, 403) },
+    },
+  },
+  "/api/v1/documents/{id}": {
+    get: {
+      operationId: "getDocument", summary: "Document detail", tags: ["Documents"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      responses: { ...jsonResponse(200, { type: "object", required: ["document"], properties: { document: { $ref: "#/components/schemas/Document" } } }), ...errorResponses(401, 403, 404) },
+    },
+    delete: {
+      operationId: "deleteDocument", summary: "Delete a document (audited)", tags: ["Documents"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      responses: { ...jsonResponse(200, { type: "object", properties: { deleted: { type: "boolean" } } }), ...errorResponses(401, 403, 404) },
+    },
+  },
+  "/api/v1/projects/{projectId}/work-schedules": {
+    get: {
+      operationId: "listWorkSchedules", summary: "Paginated work schedules for a project (E-02)", tags: ["WorkSchedules"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/limitParam" }, { "$ref": "#/components/parameters/offsetParam" }],
+      responses: { ...jsonResponse(200, paginatedList("workSchedules", "WorkSchedule")), ...errorResponses(401, 403, 404) },
+    },
+    post: {
+      operationId: "createWorkSchedule", summary: "Create a work schedule (E-02)", tags: ["WorkSchedules"], security: authSecurity,
+      requestBody: {
+        required: true,
+        content: { "application/json": { schema: { type: "object", required: ["workDate", "title"], properties: { workDate: { type: "string", format: "date" }, title: { type: "string" }, assignee: { type: "string" }, status: { type: "string", enum: ["planned", "in_progress", "completed", "cancelled"] }, notes: { type: "string" } } } } },
+      },
+      responses: { ...jsonResponse(201, { type: "object", required: ["workSchedule"], properties: { workSchedule: { $ref: "#/components/schemas/WorkSchedule" } } }), ...errorResponses(400, 401, 403, 404) },
+    },
+  },
+  "/api/v1/work-schedules/{id}": {
+    get: {
+      operationId: "getWorkSchedule", summary: "Work schedule detail", tags: ["WorkSchedules"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      responses: { ...jsonResponse(200, { type: "object", required: ["workSchedule"], properties: { workSchedule: { $ref: "#/components/schemas/WorkSchedule" } } }), ...errorResponses(401, 403, 404) },
+    },
+  },
+  "/api/v1/projects/{projectId}/purchase-orders": {
+    get: {
+      operationId: "listPurchaseOrders", summary: "Paginated purchase orders for a project (E-05)", tags: ["PurchaseOrders"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/limitParam" }, { "$ref": "#/components/parameters/offsetParam" }],
+      responses: { ...jsonResponse(200, paginatedList("purchaseOrders", "PurchaseOrder")), ...errorResponses(401, 403, 404) },
+    },
+    post: {
+      operationId: "createPurchaseOrder", summary: "Create a purchase order (E-05)", tags: ["PurchaseOrders"], security: authSecurity,
+      requestBody: {
+        required: true,
+        content: { "application/json": { schema: { type: "object", required: ["orderNumber", "supplier", "item", "quantity", "unitPrice"], properties: { orderNumber: { type: "string" }, supplier: { type: "string" }, item: { type: "string" }, quantity: { type: "number" }, unitPrice: { type: "number" }, status: { type: "string", enum: ["draft", "issued", "approved", "received", "cancelled"] }, notes: { type: "string" } } } } },
+      },
+      responses: { ...jsonResponse(201, { type: "object", required: ["purchaseOrder"], properties: { purchaseOrder: { $ref: "#/components/schemas/PurchaseOrder" } } }), ...errorResponses(400, 401, 403, 404) },
+    },
+  },
+  "/api/v1/purchase-orders/{id}": {
+    get: {
+      operationId: "getPurchaseOrder", summary: "Purchase order detail", tags: ["PurchaseOrders"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      responses: { ...jsonResponse(200, { type: "object", required: ["purchaseOrder"], properties: { purchaseOrder: { $ref: "#/components/schemas/PurchaseOrder" } } }), ...errorResponses(401, 403, 404) },
+    },
+  },
+  "/api/v1/notification-preferences/{userId}": {
+    get: {
+      operationId: "getNotificationPreference", summary: "Notification preference for a user (E-11)", tags: ["Notifications"], security: authSecurity,
+      parameters: [{ name: "userId", in: "path", required: true, schema: { type: "string" } }],
+      responses: { ...jsonResponse(200, { type: "object", required: ["notificationPreference"], properties: { notificationPreference: { $ref: "#/components/schemas/NotificationPreference" } } }), ...errorResponses(401, 403, 404) },
+    },
+    put: {
+      operationId: "upsertNotificationPreference", summary: "Create or update a notification preference", tags: ["Notifications"], security: authSecurity,
+      parameters: [{ name: "userId", in: "path", required: true, schema: { type: "string" } }],
+      requestBody: {
+        required: true,
+        content: { "application/json": { schema: { type: "object", properties: { emailEnabled: { type: "boolean" }, slackEnabled: { type: "boolean" }, slackWebhookUrl: { type: "string" }, events: { type: "object", additionalProperties: { type: "boolean" } } } } } },
+      },
+      responses: { ...jsonResponse(200, { type: "object", required: ["notificationPreference"], properties: { notificationPreference: { $ref: "#/components/schemas/NotificationPreference" } } }), ...errorResponses(400, 401, 403, 404) },
+    },
+  },
   "/api/v1/integrations/{service}/{proxyPath}": {
     get: gatewayOperation("get"),
     post: gatewayOperation("post"),
@@ -2461,6 +2592,9 @@ const spec: { [k: string]: YamlValue } = {
     { name: "Knowledge", description: "Knowledge articles (ServiceHub S-06)" },
     { name: "Contracts", description: "Legal contracts (ServiceHub S-07)" },
     { name: "Itsm", description: "ITSM adapter (ServiceHub S-08)" },
+    { name: "Documents", description: "Drawings/documents (Enterprise-OS E-03)" },
+    { name: "WorkSchedules", description: "Site work schedules (Enterprise-OS E-02)" },
+    { name: "PurchaseOrders", description: "Purchase orders / ERP (Enterprise-OS E-05)" },
     { name: "Projects", description: "Construction project management (ServiceHub S-01)" },
     { name: "DailyReports", description: "Site daily reports (ServiceHub S-02)" },
     { name: "IntegrationGateway", description: "CEOP gateway reverse proxy for integration services (P1)" },

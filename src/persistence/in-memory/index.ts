@@ -38,6 +38,10 @@ import {
   InMemoryNotificationDeliveryRepository,
   InMemoryKnowledgeRepository,
   InMemoryContractRepository,
+  InMemoryDocumentRepository,
+  InMemoryWorkScheduleRepository,
+  InMemoryPurchaseOrderRepository,
+  InMemoryNotificationPreferenceRepository,
 } from "./business-repositories.ts";
 
 /**
@@ -66,5 +70,9 @@ export function createInMemoryRepositories(): Repositories {
     notificationDeliveries: new InMemoryNotificationDeliveryRepository(),
     knowledgeArticles: new InMemoryKnowledgeRepository(),
     contracts: new InMemoryContractRepository(),
+    documents: new InMemoryDocumentRepository(),
+    workSchedules: new InMemoryWorkScheduleRepository(),
+    purchaseOrders: new InMemoryPurchaseOrderRepository(),
+    notificationPreferences: new InMemoryNotificationPreferenceRepository(),
   };
 }
