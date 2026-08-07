@@ -21,7 +21,11 @@ import type {
 import type { AiAction, AiActionId, AiActionStatus } from "../domain/ai-action.ts";
 
 import type { Project, ProjectId, ProjectStatus } from "../domain/project.ts";
+
 import type { Photo, PhotoId } from "../domain/photo.ts";
+import type { KnowledgeArticle, KnowledgeId } from "../domain/knowledge.ts";
+import type { Contract, ContractId } from "../domain/contract.ts";
+
 import type {
   SafetyCheck,
   SafetyCheckId,
@@ -141,6 +145,15 @@ export interface NotificationDeliveryRepository extends Repository<
   findByStatus(status: NotificationStatus): Promise<readonly NotificationDelivery[]>;
 }
 
+export interface KnowledgeRepository extends Repository<KnowledgeArticle, KnowledgeId> {
+  findByOrganization(orgId: string): Promise<readonly KnowledgeArticle[]>;
+  findByCategory(category: string): Promise<readonly KnowledgeArticle[]>;
+}
+export interface ContractRepository extends Repository<Contract, ContractId> {
+  findByProject(projectId: ProjectId): Promise<readonly Contract[]>;
+  findByNumber(contractNumber: string): Promise<Contract | null>;
+}
+
 export interface ProjectRepository extends Repository<Project, ProjectId> {
   /** All projects belonging to one organization. */
   findByOrganization(orgId: string): Promise<readonly Project[]>;
@@ -179,4 +192,6 @@ export interface Repositories {
   readonly costRecords: CostRecordRepository;
   readonly workHours: WorkHourRepository;
   readonly notificationDeliveries: NotificationDeliveryRepository;
+  readonly knowledgeArticles: KnowledgeRepository;
+  readonly contracts: ContractRepository;
 }

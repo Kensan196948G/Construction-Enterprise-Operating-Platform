@@ -191,7 +191,7 @@
 - `src/api/routes/device-ingest.ts`: register / heartbeat / inventory（device:write・監査・クロステナント拒否）
 - 永続化: in-memory / file / SQLite（migration 007 `ai_actions`）・ports に `aiActions` を追加
 - OpenAPI・README・CHANGELOG・FEATURE_INVENTORY（Y-09 / D-01〜D-03 ✅）・RUNBOOK 更新
-- テスト 11 件追加 → **361/361 pass**・verify/build/audit 0
+- テスト 11 件追加 → **365/365 pass**・verify/build/audit 0
 - PR #26（feat/p2-ai-device）
 
 ### v0.9.0 リリース・本番デプロイ（2026-08-07・ユーザー Y 承認）
@@ -217,7 +217,7 @@
   `/api/v1/daily-reports/:id` + `/transition`（project:read|write / daily-report:read|write・テナント・監査）
 - 永続化: in-memory / file / SQLite（migration 008 projects / 009 daily_reports）
 - OpenAPI・README・CHANGELOG・FEATURE_INVENTORY（S-01/S-02 ✅）・RUNBOOK 更新
-- テスト 10 件追加 → **361/361 pass**・verify/build/audit 0
+- テスト 10 件追加 → **365/365 pass**・verify/build/audit 0
 - PR #30（feat/p3-servicehub-projects）
 
 ### P3 継続: S-03〜S-05・S-09 スライス実装（2026-08-07 本セッション追記）
@@ -228,8 +228,18 @@
   notifications（各 read/write 権限・テナント・監査）
 - persistence: in-memory/file/SQLite + migration 010〜015
 - OpenAPI・README・CHANGELOG・FEATURE_INVENTORY（S-03/S-04/S-05/S-09 ✅）・RUNBOOK 更新
-- テスト 5 件追加 → **361/361 pass**・verify/build/audit 0
+- テスト 5 件追加 → **365/365 pass**・verify/build/audit 0
 - PR #31（feat/p3-s03-s09）
+
+### P3 継続: S-06〜S-08 + 日報承認ワークフロー連携（2026-08-07 本セッション追記）
+
+- `src/domain/knowledge.ts`（S-06: AI生成は承認済み aiActionId 必須）・`contract.ts`（S-07）
+- API: knowledge / contracts / itsm（adapter 公開・`itsm:read|write`）
+- 日報 submitted → workflow-instance（resourceType=daily-report）自動作成 → approve で approved 自動遷移
+- persistence: in-memory/file/SQLite + migration 016（knowledge_articles）・017（legal_contracts）
+- OpenAPI・README・CHANGELOG・FEATURE_INVENTORY（S-06/S-07/S-08 ✅）・RUNBOOK 更新
+- テスト 4 件追加 → **365/365 pass**・verify/build/audit 0
+- PR #32（feat/p3-s06-s08-wf）
 
 ### 次フェーズ
 

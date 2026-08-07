@@ -52,6 +52,8 @@ import {
   SqliteCostRecordRepository,
   SqliteWorkHourRepository,
   SqliteNotificationDeliveryRepository,
+  SqliteKnowledgeRepository,
+  SqliteContractRepository,
 } from "./business-repositories.ts";
 
 // ---------------------------------------------------------------------------
@@ -561,6 +563,8 @@ export function createSqliteRepositories(dbPath: string): Repositories {
     costRecords: new SqliteCostRecordRepository(db),
     workHours: new SqliteWorkHourRepository(db),
     notificationDeliveries: new SqliteNotificationDeliveryRepository(db),
+    knowledgeArticles: new SqliteKnowledgeRepository(db),
+    contracts: new SqliteContractRepository(db),
   };
 }
 

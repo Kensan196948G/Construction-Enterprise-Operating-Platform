@@ -48,6 +48,8 @@ import {
   FileCostRecordRepository,
   FileWorkHourRepository,
   FileNotificationDeliveryRepository,
+  FileKnowledgeRepository,
+  FileContractRepository,
 } from "./business-repositories.ts";
 
 // ---------------------------------------------------------------------------
@@ -278,5 +280,7 @@ export async function createFileRepositories(dataDir: string): Promise<Repositor
       dataDir,
       "notification-deliveries.json",
     ),
+    knowledgeArticles: new FileKnowledgeRepository(dataDir, "knowledge-articles.json"),
+    contracts: new FileContractRepository(dataDir, "contracts.json"),
   };
 }
