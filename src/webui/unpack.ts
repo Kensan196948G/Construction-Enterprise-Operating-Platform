@@ -34,6 +34,9 @@ export interface UnpackedAsset {
 /** Root-level script that defines `window.__resources` (see below). */
 export const EXT_RESOURCES_PATH = "ext-resources.js";
 
+/** Browser-tab icon shared with the SSR pages; served by the WebUI server. */
+export const FAVICON_TAG = `<link rel="icon" href="/favicon.svg" type="image/svg+xml" />`;
+
 /** Full decode result: rewritten entry HTML plus all referenced assets. */
 export interface UnpackedBundle {
   readonly indexHtml: string;
@@ -144,6 +147,7 @@ export function unpackBundle(html: string): Result<UnpackedBundle, string> {
     template = template.split(uuid).join(path);
   }
 
+  template = injectFavicon(template);
   const withResources = injectResourceMap(html, template, pathByUuid);
   if (!withResources.ok) return withResources;
   if (withResources.value.mapScript !== undefined) {
@@ -155,6 +159,15 @@ export function unpackBundle(html: string): Result<UnpackedBundle, string> {
   }
 
   return ok({ indexHtml: withResources.value.indexHtml, assets });
+}
+
+/** Insert the browser-tab favicon link right after `<head>` (idempotent). */
+function injectFavicon(html: string): string {
+  if (html.includes(FAVICON_TAG)) return html;
+  const headOpen = /<head(\s[^>]*)?>/i.exec(html);
+  if (!headOpen || headOpen.index === undefined) return html;
+  const insertAt = headOpen.index + headOpen[0].length;
+  return html.slice(0, insertAt) + FAVICON_TAG + html.slice(insertAt);
 }
 
 /**
@@ -208,7 +221,11 @@ function injectResourceMap(
   if (!headOpen || headOpen.index === undefined) {
     return err("template has no <head> to inject window.__resources into");
   }
-  const insertAt = headOpen.index + headOpen[0].length;
+  let insertAt = headOpen.index + headOpen[0].length;
+  // Keep the favicon link first when it was already injected by injectFavicon.
+  if (template.startsWith(FAVICON_TAG, insertAt)) {
+    insertAt += FAVICON_TAG.length;
+  }
   const tag = `<script src="${EXT_RESOURCES_PATH}"></` + `script>`;
   return ok({
     indexHtml: template.slice(0, insertAt) + tag + template.slice(insertAt),

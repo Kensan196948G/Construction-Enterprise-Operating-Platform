@@ -191,7 +191,7 @@
 - `src/api/routes/device-ingest.ts`: register / heartbeat / inventory（device:write・監査・クロステナント拒否）
 - 永続化: in-memory / file / SQLite（migration 007 `ai_actions`）・ports に `aiActions` を追加
 - OpenAPI・README・CHANGELOG・FEATURE_INVENTORY（Y-09 / D-01〜D-03 ✅）・RUNBOOK 更新
-- テスト 11 件追加 → **345/345 pass**・verify/build/audit 0
+- テスト 11 件追加 → **346/346 pass**・verify/build/audit 0
 - PR #26（feat/p2-ai-device）
 
 ### 次フェーズ
