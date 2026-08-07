@@ -107,11 +107,14 @@ test("favicon.svg is served with SVG MIME and caching", async () => {
   assert.match(body, /d97757/);
 });
 
-test("favicon.ico redirects to the SVG icon", async () => {
+test("favicon.ico is served as a multi-size ICO", async () => {
   const res = await fetch(`${baseUrl}/favicon.ico`, { redirect: "manual" });
-  assert.equal(res.status, 302);
-  assert.equal(res.headers.get("location"), "/favicon.svg");
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get("content-type"), "image/x-icon");
   assert.equal(res.headers.get("x-content-type-options"), "nosniff");
+  const buf = Buffer.from(await res.arrayBuffer());
+  // ICO magic: reserved(0) + type(1)
+  assert.deepEqual([...buf.subarray(0, 4)], [0, 0, 1, 0]);
 });
 
 test("HEAD returns headers with empty body; non-GET methods get 405", async () => {

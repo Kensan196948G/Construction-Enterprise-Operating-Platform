@@ -76,6 +76,18 @@ test("SSR assets: /api/assets/favicon.svg is served with SVG MIME and security h
   assert.match(await res.text(), /<svg/);
 });
 
+test("SSR assets: /api/assets/favicon.ico is served as image/x-icon", async (t) => {
+  const h = await buildHarness();
+  t.after(() => h.close());
+
+  const res = await fetch(`${h.baseUrl}/api/assets/favicon.ico`);
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get("content-type"), "image/x-icon");
+  assert.equal(res.headers.get("strict-transport-security"), "max-age=63072000; includeSubDomains");
+  const buf = Buffer.from(await res.arrayBuffer());
+  assert.deepEqual([...buf.subarray(0, 4)], [0, 0, 1, 0]);
+});
+
 test("SSR assets: legacy /assets/* routes still work for direct deployments", async (t) => {
   const h = await buildHarness();
   t.after(() => h.close());
