@@ -4,6 +4,8 @@
 凡例: ✅ 統合済み / 🔄 統合サービスとして接続予定 / 📦 CEOP コアへ移植予定 /
 ⬜ 未着手・対象外検討中
 
+> 2026-08-07: 旧5リポジトリは Y 承認により削除済み（ミラー: `/var/backups/ceop-repo-absorption-20260807`・参照ソース: `integrations/`）。
+
 ## 1. ServiceHub-Construction-Platform
 
 | #    | 機能                 | 内容                                 | CEOP 対応                                           | 状態 |

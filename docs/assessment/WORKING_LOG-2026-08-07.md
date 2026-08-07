@@ -293,6 +293,15 @@
   cap-drop ALL。target up・ceop_http_requests_total 収集確認・Grafana ログイン 200
 - 次期バックログ: O-04/O-06/O-08/O-09/D-04/D-07/D-09 + STARTTLS/OAuth SMTP・通知テンプレート変数
 
+### P6: 旧5リポジトリ削除（2026-08-07・ユーザー Y 承認）
+
+- 完全ミラー退避: `/var/backups/ceop-repo-absorption-20260807/`（root 700・fsck OK）
+  - ServiceHub-Construction-Platform（626 commits）/ Construction-Enterprise-OS（158）/
+    Construction-DX-OnePlatform（148）/ Construction-DX-OS（367）/ Synapse-OS（127）
+- `gh repo delete` で5リポジトリを削除・GraphQL で不存在確認
+- 参照ソースは CEOP `integrations/` スナップショット + ミラーで保全
+- 復元: ミラーから `git clone --mirror` → リポジトリ再作成 → push（人間操作）
+
 ### 次フェーズ
 
 - P1: CEOP ゲートウェイ（統合サービス向けリバースプロキシ/アダプタ）

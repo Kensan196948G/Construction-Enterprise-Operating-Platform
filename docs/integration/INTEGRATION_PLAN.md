@@ -73,7 +73,7 @@ CEOP API Gateway (認証・認可・監査・レート制限・テナント境�
 | P3 業務モジュール移植 | ServiceHub の案件・日報・写真・安全・原価・契約・ITSM と Enterprise-OS/OnePlatform の業務領域を CEOP ドメインへ移植      | 各機能の CRUD+監査+UI+テスト                                     | ✅ P3 主要完了（S-01〜S-09 + E-02/E-03/E-05/E-11 実装済み・日報承認WF連携・通知ディスパッチャー/email・PR #30〜#34） |
 | P4 ポータル・監視統合 | OnePlatform/Enterprise-OS の WebUI を CEOP Portal のモジュールとして統合し、監視（Prometheus/Grafana）を CEOP 運用へ接続 | 全画面が CEOP 配下で閲覧可能                                     | 🔨 実装済み（/portal・/metrics・監視資産・PR #35） |
 | P5 検証・切替         | 全機能のパリティ検証・本番切替・旧データ移行・運用引継ぎ                                                                 | FEATURE_INVENTORY 全項目が統合済み                               | 未着手          |
-| P6 削除判断           | ユーザーに Y/N を提示し、Y の場合のみ旧 5 リポジトリを GitHub から削除                                                   | ユーザー承認・削除後の参照は integrations/ と Git 履歴で可能     | 未着手          |
+| P6 削除判断           | ユーザーに Y/N を提示し、Y の場合のみ旧 5 リポジトリを GitHub から削除                                                   | ユーザー承認・削除後の参照は integrations/ と Git 履歴で可能     | ✅ 実施済み（2026-08-07 Y 承認・ミラー退避済み） |
 
 ## 5. 優先順位と判断
 
