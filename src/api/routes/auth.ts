@@ -18,6 +18,7 @@ import { createRateLimiter } from "../middleware/rate-limiter.ts";
 import type { Router } from "../router.ts";
 import { writeJson } from "../router.ts";
 import type { ApiKeyStore, ApiRequest } from "../types.ts";
+import type { ApiKeyInfo, ApiKeyRepository } from "../../persistence/sqlite/api-key-repository.ts";
 import { hasPermission } from "./governance.ts";
 
 /**
@@ -42,6 +43,7 @@ export function registerAuthRoutes(
   apiKeyStore: ApiKeyStore,
   jwtIssuer: JwtIssuer,
   auditLog: IAuditLog,
+  apiKeyRepository?: ApiKeyRepository,
 ): void {
   // 10 requests per minute per client IP — enough for interactive use, tight
   // enough to blunt credential-stuffing at scale.
@@ -108,6 +110,9 @@ export function registerAuthRoutes(
           subject,
           permissions,
           authKind: "apikey",
+          ...(result.value.organizationId !== undefined
+            ? { organizationId: result.value.organizationId }
+            : {}),
         },
         "auth:token",
         "jwt",
@@ -115,9 +120,6 @@ export function registerAuthRoutes(
         {
           subject,
           keyId: result.value.keyId,
-          ...(result.value.organizationId !== undefined
-            ? { organizationId: result.value.organizationId }
-            : {}),
         },
       );
       writeJson(res, 200, { token, expiresIn, subject });
@@ -142,5 +144,64 @@ export function registerAuthRoutes(
     jwtIssuer.revoke(jti);
     recordAudit(auditLog, ctx, "auth:revoke", jti, "success");
     writeJson(res, 200, { revoked: true });
+  });
+
+  // GET /api/v1/auth/keys — list API keys (metadata only, never the secret hash).
+  // Key management is a platform-level capability: an org-scoped credential
+  // must not be able to enumerate or revoke credentials outside its tenant.
+  router.get("/api/v1/auth/keys", async (_req, ctx, res) => {
+    if (!hasPermission(ctx, "auth", "write")) {
+      writeJson(res, 403, { error: "Forbidden", message: "requires 'auth:write' permission" });
+      return;
+    }
+    if (ctx?.organizationId !== undefined) {
+      writeJson(res, 403, {
+        error: "Forbidden",
+        message: "API key management requires a platform-level credential",
+      });
+      return;
+    }
+    const keys: readonly ApiKeyInfo[] =
+      apiKeyRepository !== undefined
+        ? apiKeyRepository.list()
+        : [...apiKeyStore.values()].map((record) => ({
+            keyId: record.keyId,
+            subject: record.subject,
+            permissions: record.permissions,
+            ...(record.organizationId !== undefined
+              ? { organizationId: record.organizationId }
+              : {}),
+          }));
+    writeJson(res, 200, { keys });
+  });
+
+  // DELETE /api/v1/auth/keys/:keyId — revoke an API key (SEC-013).
+  router.delete("/api/v1/auth/keys/:keyId", async (req, ctx, res) => {
+    if (!hasPermission(ctx, "auth", "write")) {
+      writeJson(res, 403, { error: "Forbidden", message: "requires 'auth:write' permission" });
+      return;
+    }
+    if (ctx?.organizationId !== undefined) {
+      writeJson(res, 403, {
+        error: "Forbidden",
+        message: "API key management requires a platform-level credential",
+      });
+      return;
+    }
+    const keyId = req.params["keyId"] ?? "";
+    if (keyId.length === 0) {
+      writeJson(res, 400, { error: "Bad Request", message: "keyId is required" });
+      return;
+    }
+    const deleted =
+      apiKeyRepository !== undefined ? apiKeyRepository.delete(keyId) : apiKeyStore.delete(keyId);
+    // Keep the runtime store consistent when the row was deleted via SQLite.
+    apiKeyStore.delete(keyId);
+    if (!deleted) {
+      writeJson(res, 404, { error: "Not Found", message: "API key not found" });
+      return;
+    }
+    recordAudit(auditLog, ctx, "auth:key:delete", keyId, "success");
+    writeJson(res, 200, { revoked: true, keyId });
   });
 }

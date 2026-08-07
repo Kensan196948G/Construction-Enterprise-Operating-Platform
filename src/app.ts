@@ -18,6 +18,7 @@ import { SqliteAuditLog } from "./governance/sqlite-audit-log.ts";
 import { createInMemoryRepositories } from "./persistence/in-memory/index.ts";
 import { createFileRepositories } from "./persistence/file/index.ts";
 import { createSqliteRepositories, loadApiKeysFromSqlite } from "./persistence/sqlite/index.ts";
+import { createSqliteApiKeyRepository } from "./persistence/sqlite/api-key-repository.ts";
 import {
   createSqliteRevocationStore,
   openRevocationDatabase,
@@ -80,6 +81,7 @@ export async function createApp(): Promise<AppContainer> {
       "CEOP_SQLITE_FILE must be set in production: SQLite is required for persistent API key management",
     );
   }
+  const apiKeyRepository = sqliteFile ? createSqliteApiKeyRepository(sqliteFile) : undefined;
 
   // JWT issuer: generate a fresh ephemeral secret per process (suitable for single-node).
   // For multi-node deployments, set CEOP_JWT_SECRET in the environment.
@@ -296,6 +298,7 @@ export async function createApp(): Promise<AppContainer> {
     repositories,
     auditLog,
     apiKeyStore,
+    ...(apiKeyRepository !== undefined ? { apiKeyRepository } : {}),
     storageTier: sqliteFile ? "sqlite" : dataDir ? "file" : "in-memory",
     jwtIssuer,
   };

@@ -43,7 +43,13 @@ interface AuditListBody {
   readonly total: number;
 }
 
-const AUDIT_PERMS = ["audit:read", "user:read", "user:write", "organization:read"] as Permission[];
+const AUDIT_PERMS = [
+  "audit:read",
+  "user:read",
+  "user:write",
+  "organization:read",
+  "governance:evaluate",
+] as Permission[];
 
 interface Harness {
   baseUrl: string;
@@ -246,4 +252,52 @@ test("audit-scope: dashboard counters are tenant-scoped", async (t) => {
     `scoped viewer must not see the platform-wide count (scoped=${govA.auditEvents}, global=${govAdmin.auditEvents})`,
   );
   assert.equal(govAdmin.auditEvents, h.auditLog.size);
+});
+
+test("audit-scope: token issuance is attributed to the credential's tenant", async (t) => {
+  const h = await buildHarness();
+  t.after(() => h.close());
+
+  const res = await fetch(`${h.baseUrl}/api/v1/auth/token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ credential: h.orgACred }),
+  });
+  assert.equal(res.status, 200);
+
+  const tokenEvent = h.auditLog.entries.find((e) => e.event.action === "auth:token");
+  assert.ok(tokenEvent, "token issuance must be audited");
+  assert.equal(tokenEvent.event.metadata["organizationId"], "org-a");
+
+  const asA = await req("GET", h.baseUrl, "/api/v1/governance/audit", h.orgACred);
+  const bodyA = asA.body as AuditListBody;
+  assert.ok(
+    bodyA.entries.some((e) => e.event.action === "auth:token"),
+    "org-scoped viewer must see its own token issuance",
+  );
+});
+
+test("audit-scope: governance evaluate is attributed to the caller's tenant", async (t) => {
+  const h = await buildHarness();
+  t.after(() => h.close());
+
+  const res = await req("POST", h.baseUrl, "/api/v1/governance/evaluate", h.orgACred, {
+    subject: "user-a",
+    resource: "application",
+    action: "read",
+    roleIds: [],
+    attributes: {},
+  });
+  assert.equal(res.status, 200);
+
+  const evaluateEvent = h.auditLog.entries.find((e) => e.event.action === "governance:evaluate");
+  assert.ok(evaluateEvent, "evaluate must be audited");
+  assert.equal(evaluateEvent.event.metadata["organizationId"], "org-a");
+
+  const asA = await req("GET", h.baseUrl, "/api/v1/governance/audit", h.orgACred);
+  const bodyA = asA.body as AuditListBody;
+  assert.ok(
+    bodyA.entries.some((e) => e.event.action === "governance:evaluate"),
+    "org-scoped viewer must see its own evaluation events",
+  );
 });

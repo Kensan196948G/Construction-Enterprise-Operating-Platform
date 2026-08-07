@@ -41,3 +41,32 @@ test("rate-limit: /api/v1/* is limited per socket IP while /health stays open", 
   const health = await fetch(`${base}/health`);
   assert.equal(health.status, 200);
 });
+
+test("rate-limit: trusts CF-Connecting-IP from the loopback proxy (G-25)", async (t) => {
+  const container: AppContainer = {
+    repositories: createInMemoryRepositories(),
+    auditLog: new AuditLog(),
+    apiKeyStore: new Map(),
+  };
+  const server = createServer(
+    { port: 0, rateLimit: { maxRequests: 2, windowMs: 60_000 } },
+    container,
+  );
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.after(
+    () => new Promise<void>((resolve, reject) => server.close((e) => (e ? reject(e) : resolve()))),
+  );
+  const { port } = server.address() as AddressInfo;
+  const base = `http://127.0.0.1:${port}`;
+
+  const clientA = { "CF-Connecting-IP": "203.0.113.10" };
+  const clientB = { "CF-Connecting-IP": "203.0.113.20" };
+
+  assert.equal((await fetch(`${base}/api/v1/info`, { headers: clientA })).status, 200);
+  assert.equal((await fetch(`${base}/api/v1/info`, { headers: clientA })).status, 200);
+  assert.equal((await fetch(`${base}/api/v1/info`, { headers: clientA })).status, 429);
+
+  // A different visitor IP must get its own bucket instead of sharing the
+  // single loopback bucket created by the Cloudflare Tunnel.
+  assert.equal((await fetch(`${base}/api/v1/info`, { headers: clientB })).status, 200);
+});

@@ -34,6 +34,18 @@ legacy-projects
 .claude
 CLAUDE.md
 
+# Large / irrelevant source material — not copied into the image.
+# webui/CEOP Platform.html is 8.7 MB and webui/dist contains 500+ unpacked
+# assets; the design bundle is hosted by the systemd service, not the API image.
+webui
+docs
+reports
+examples
+deploy
+state.json
+.coderabbit.yaml
+SECURITY.md
+
 # Large markdown files that are not needed in the image
 # (README.md is kept so labels / HEALTHCHECK documentation survives)
 CHANGELOG.md

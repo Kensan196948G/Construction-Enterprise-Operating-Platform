@@ -1,7 +1,7 @@
 openapi: "3.1.0"
 info:
   title: Construction Enterprise Operating Platform API
-  version: "0.6.2"
+  version: "0.8.0"
   description: Unified enterprise operating platform for construction company governance, business portal, field OS, and AI governance.
   contact:
     name: Platform Team
@@ -14,6 +14,9 @@ servers:
   - 
     url: "http://localhost:8080"
     description: Docker compose
+  - 
+    url: "https://ceop.mirai-dx-platform.com"
+    description: Production
 tags:
   - 
     name: System
@@ -112,6 +115,9 @@ paths:
                     type: string
                   version:
                     type: string
+                  environment:
+                    type: string
+                    description: NODE_ENV at runtime
                   nodeVersion:
                     type: string
   /api/v1/auth/token:
@@ -199,6 +205,98 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/auth/keys:
+    get:
+      operationId: listApiKeys
+      summary: "List API key metadata (requires auth:write, platform-level credential)"
+      tags:
+        - Auth
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - keys
+                properties:
+                  keys:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AuthKey"
+                    description: Key metadata only — the secret hash is never exposed
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/auth/keys/{keyId}:
+    delete:
+      operationId: revokeApiKey
+      summary: "Revoke an API key (requires auth:write, platform-level credential)"
+      tags:
+        - Auth
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/keyIdPath"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - revoked
+                  - keyId
+                properties:
+                  revoked:
+                    type: boolean
+                    example: true
+                  keyId:
+                    type: string
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /api/v1/dashboard:
     get:
       operationId: getDashboard
@@ -253,13 +351,13 @@ paths:
               schema:
                 type: object
                 required:
-                  - items
+                  - organizations
                   - count
                   - total
                   - limit
                   - offset
                 properties:
-                  items:
+                  organizations:
                     type: array
                     items:
                       $ref: "#/components/schemas/Organization"
@@ -319,8 +417,8 @@ paths:
                   type: string
                   enum:
                     - active
-                    - inactive
                     - suspended
+                    - archived
       responses:
         201:
           description: Created
@@ -417,8 +515,8 @@ paths:
                   type: string
                   enum:
                     - active
-                    - inactive
                     - suspended
+                    - archived
       responses:
         200:
           description: OK
@@ -508,13 +606,13 @@ paths:
               schema:
                 type: object
                 required:
-                  - items
+                  - users
                   - count
                   - total
                   - limit
                   - offset
                 properties:
-                  items:
+                  users:
                     type: array
                     items:
                       $ref: "#/components/schemas/User"
@@ -569,9 +667,10 @@ paths:
                 status:
                   type: string
                   enum:
+                    - invited
                     - active
-                    - inactive
                     - suspended
+                    - deactivated
                 roleIds:
                   type: array
                   items:
@@ -671,9 +770,10 @@ paths:
                 status:
                   type: string
                   enum:
+                    - invited
                     - active
-                    - inactive
                     - suspended
+                    - deactivated
                 roleIds:
                   type: array
                   items:
@@ -767,13 +867,13 @@ paths:
               schema:
                 type: object
                 required:
-                  - items
+                  - roles
                   - count
                   - total
                   - limit
                   - offset
                 properties:
-                  items:
+                  roles:
                     type: array
                     items:
                       $ref: "#/components/schemas/Role"
@@ -1019,13 +1119,13 @@ paths:
               schema:
                 type: object
                 required:
-                  - items
+                  - devices
                   - count
                   - total
                   - limit
                   - offset
                 properties:
-                  items:
+                  devices:
                     type: array
                     items:
                       $ref: "#/components/schemas/Device"
@@ -1074,20 +1174,18 @@ paths:
                 kind:
                   type: string
                   enum:
-                    - phone
                     - tablet
-                    - laptop
+                    - phone
                     - kiosk
                     - sensor
-                    - camera
-                    - other
+                    - laptop
                 status:
                   type: string
                   enum:
+                    - provisioned
                     - active
-                    - inactive
-                    - maintenance
-                    - decommissioned
+                    - lost
+                    - retired
       responses:
         201:
           description: Created
@@ -1175,10 +1273,10 @@ paths:
                 status:
                   type: string
                   enum:
+                    - provisioned
                     - active
-                    - inactive
-                    - maintenance
-                    - decommissioned
+                    - lost
+                    - retired
       responses:
         200:
           description: OK
@@ -1268,13 +1366,13 @@ paths:
               schema:
                 type: object
                 required:
-                  - items
+                  - applications
                   - count
                   - total
                   - limit
                   - offset
                 properties:
-                  items:
+                  applications:
                     type: array
                     items:
                       $ref: "#/components/schemas/Application"
@@ -1328,18 +1426,18 @@ paths:
                 category:
                   type: string
                   enum:
+                    - portal
                     - governance
                     - field
-                    - portal
                     - workflow
                     - document
-                    - security
                 health:
                   type: string
                   enum:
                     - healthy
                     - degraded
-                    - unavailable
+                    - down
+                    - unknown
                 ownerOrganizationId:
                   type: string
       responses:
@@ -1439,7 +1537,8 @@ paths:
                   enum:
                     - healthy
                     - degraded
-                    - unavailable
+                    - down
+                    - unknown
       responses:
         200:
           description: OK
@@ -1765,13 +1864,13 @@ Tenant scoping matches `GET /api/v1/governance/audit`. Each row carries `sequenc
               schema:
                 type: object
                 required:
-                  - items
+                  - policies
                   - count
                   - total
                   - limit
                   - offset
                 properties:
-                  items:
+                  policies:
                     type: array
                     items:
                       $ref: "#/components/schemas/Policy"
@@ -2025,10 +2124,8 @@ Tenant scoping matches `GET /api/v1/governance/audit`. Each row carries `sequenc
             type: string
             enum:
               - approval
-              - onboarding
-              - procurement
-              - inspection
-              - incident
+              - notification
+              - task
           description: Filter by workflow type
         - 
           name: status
@@ -2039,7 +2136,7 @@ Tenant scoping matches `GET /api/v1/governance/audit`. Each row carries `sequenc
               - draft
               - active
               - suspended
-              - archived
+              - retired
           description: Filter by workflow status
       responses:
         200:
@@ -2049,13 +2146,13 @@ Tenant scoping matches `GET /api/v1/governance/audit`. Each row carries `sequenc
               schema:
                 type: object
                 required:
-                  - items
+                  - workflows
                   - count
                   - total
                   - limit
                   - offset
                 properties:
-                  items:
+                  workflows:
                     type: array
                     items:
                       $ref: "#/components/schemas/Workflow"
@@ -2106,17 +2203,15 @@ Tenant scoping matches `GET /api/v1/governance/audit`. Each row carries `sequenc
                   type: string
                   enum:
                     - approval
-                    - onboarding
-                    - procurement
-                    - inspection
-                    - incident
+                    - notification
+                    - task
                 status:
                   type: string
                   enum:
                     - draft
                     - active
                     - suspended
-                    - archived
+                    - retired
                 steps:
                   type: array
                   items:
@@ -2224,7 +2319,7 @@ Tenant scoping matches `GET /api/v1/governance/audit`. Each row carries `sequenc
                     - draft
                     - active
                     - suspended
-                    - archived
+                    - retired
                 steps:
                   type: array
                   items:
@@ -2359,8 +2454,8 @@ components:
           type: string
           enum:
             - active
-            - inactive
             - suspended
+            - archived
         parentId:
           type: string
         createdAt:
@@ -2389,8 +2484,8 @@ components:
         status:
           type: string
           enum:
+            - invited
             - active
-            - inactive
             - suspended
             - deactivated
         roleIds:
@@ -2439,20 +2534,18 @@ components:
         kind:
           type: string
           enum:
-            - phone
             - tablet
-            - laptop
+            - phone
             - kiosk
             - sensor
-            - camera
-            - other
+            - laptop
         status:
           type: string
           enum:
+            - provisioned
             - active
-            - inactive
-            - maintenance
-            - decommissioned
+            - lost
+            - retired
     Application:
       type: object
       required:
@@ -2472,18 +2565,18 @@ components:
         category:
           type: string
           enum:
+            - portal
             - governance
             - field
-            - portal
             - workflow
             - document
-            - security
         health:
           type: string
           enum:
             - healthy
             - degraded
-            - unavailable
+            - down
+            - unknown
         ownerOrganizationId:
           type: string
     Policy:
@@ -2520,8 +2613,6 @@ components:
         - type
         - status
         - steps
-        - createdAt
-        - updatedAt
       properties:
         id:
           type: string
@@ -2531,17 +2622,15 @@ components:
           type: string
           enum:
             - approval
-            - onboarding
-            - procurement
-            - inspection
-            - incident
+            - notification
+            - task
         status:
           type: string
           enum:
             - draft
             - active
             - suspended
-            - archived
+            - retired
         steps:
           type: array
           items:
@@ -2557,12 +2646,6 @@ components:
                 type: string
               requiredPermission:
                 type: string
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
     AuditEntry:
       type: object
       required:
@@ -2617,6 +2700,32 @@ components:
         organizationId:
           type: string
           description: Organization scope when the credential is org-scoped; absent for global credentials
+    AuthKey:
+      type: object
+      required:
+        - keyId
+        - subject
+        - permissions
+      properties:
+        keyId:
+          type: string
+          description: "Credential identifier used in `keyId:secret`"
+        subject:
+          type: string
+          description: Subject the key authenticates as
+        permissions:
+          type: array
+          items:
+            type: string
+          description: Granted permissions
+        organizationId:
+          type: string
+          description: Organization scope; absent for platform-level credentials
+        createdAt:
+          type: string
+          format: date-time
+          description: Provisioning time (SQLite mode)
+      description: API key metadata. The secret hash is never returned.
   parameters:
     limitParam:
       name: limit
@@ -2625,7 +2734,7 @@ components:
         type: integer
         default: 20
         minimum: 1
-        maximum: 100
+        maximum: 200
       description: Number of items per page
     offsetParam:
       name: offset
@@ -2642,6 +2751,13 @@ components:
       schema:
         type: string
       description: Resource ID
+    keyIdPath:
+      name: keyId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: API key ID
   securitySchemes:
     ApiKeyAuth:
       type: http

@@ -9,9 +9,11 @@
  */
 
 import type { IncomingMessage, ServerResponse } from "node:http";
+import { randomUUID } from "node:crypto";
 import { validateApiKey } from "./middleware/auth.ts";
 import type { JwtIssuer } from "./middleware/jwt.ts";
 import { logRequest } from "./middleware/request-logger.ts";
+import { clientIpFromRequest } from "./client-ip.ts";
 import type { ApiKeyContext, ApiKeyStore, ApiRequest } from "./types.ts";
 
 // ---------------------------------------------------------------------------
@@ -154,6 +156,8 @@ export class Router {
   /** Resolve a request end-to-end: match, auth, body-parse, dispatch, log. */
   async handle(req: IncomingMessage, res: ServerResponse): Promise<void> {
     const startMs = Date.now();
+    const requestId = randomUUID();
+    res.setHeader("X-Request-Id", requestId);
     const method = (req.method ?? "GET").toUpperCase();
     const rawUrl = req.url ?? "/";
 
@@ -163,7 +167,7 @@ export class Router {
     const query = parseQueryString(search);
 
     const finish = (status: number): void => {
-      logRequest(method, path, status, Date.now() - startMs);
+      logRequest(method, path, status, Date.now() - startMs, requestId);
     };
 
     let matched: { route: Route; params: Record<string, string> } | null;
@@ -257,14 +261,14 @@ export class Router {
       query,
       ...(body !== undefined ? { body } : {}),
       ...(req.socket?.remoteAddress !== undefined
-        ? { remoteAddress: req.socket.remoteAddress }
+        ? { remoteAddress: clientIpFromRequest(req) }
         : {}),
     };
 
     try {
       await matched.route.handler(apiRequest, ctx, res);
     } catch (e) {
-      console.error("[router] unhandled handler error:", e);
+      console.error(`[router] unhandled handler error (request=${requestId}):`, e);
       if (!res.headersSent) {
         writeJson(res, 500, { error: "Internal Server Error", message: "unexpected error" });
       } else if (!res.writableEnded) {
@@ -339,6 +343,9 @@ const BASELINE_SECURITY_HEADERS = {
   "X-Frame-Options": "DENY",
   "Referrer-Policy": "no-referrer",
   "Cache-Control": "no-store",
+  // Browsers should refuse plain HTTP for this host and its subdomains. It is
+  // safe to send on plain HTTP too — HSTS is only acted on over HTTPS.
+  "Strict-Transport-Security": "max-age=63072000; includeSubDomains",
 } as const;
 
 /** Write a JSON response with the given status and `application/json` content type. */

@@ -66,6 +66,14 @@ const EXTENSION_BY_MIME: Readonly<Record<string, string>> = {
   "application/json": ".json",
 };
 
+/**
+ * Asset identifiers come from the design bundle's manifest and are later used
+ * verbatim as relative output paths. Enforcing the UUID shape before path
+ * construction keeps a compromised or malformed bundle from writing outside
+ * the unpack directory (`../../evil` would otherwise be a plausible key).
+ */
+const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
 /** Extract the raw text of a `<script type="__bundler/<name>">` section. */
 function bundlerSection(html: string, name: string): Result<string, string> {
   const marker = `<script type="__bundler/${name}"`;
@@ -114,6 +122,9 @@ export function unpackBundle(html: string): Result<UnpackedBundle, string> {
   const assets: UnpackedAsset[] = [];
   const pathByUuid = new Map<string, string>();
   for (const [uuid, entry] of Object.entries(manifest)) {
+    if (!UUID_RE.test(uuid)) {
+      return err(`manifest entry has invalid asset uuid: ${uuid}`);
+    }
     if (typeof entry?.data !== "string") {
       return err(`manifest entry ${uuid} has no data`);
     }

@@ -28,11 +28,28 @@ LOG="${CEOP_HEALTH_LOG:-/home/kensan/.ceop/health.log}"
 STATE="${CEOP_HEALTH_STATE:-/home/kensan/.ceop/health-probe.state}"
 THRESHOLD="${CEOP_HEALTH_THRESHOLD:-3}"
 TIMEOUT="${CEOP_HEALTH_TIMEOUT:-10}"
+NOTIFY_URL="${CEOP_ALERT_WEBHOOK_URL:-}"
 
 now() { date -u +%Y-%m-%dT%H:%M:%SZ; }
 log() { printf '%s %s\n' "$(now)" "$1" >>"$LOG"; }
 
 mkdir -p "$(dirname "$LOG")" "$(dirname "$STATE")"
+
+# Optional alert delivery. The webhook URL lives in the environment (cron or
+# a service manager), never in the repository; when unset the probe is a
+# log/exit-code signal only, exactly as before. A webhook failure must not
+# change the probe's own outcome — the log records the delivery attempt.
+notify() {
+  # $1: event (ALERT|RECOVERED), $2: consecutive failures
+  [ -z "$NOTIFY_URL" ] && return 0
+  safe_url=$(printf '%s' "$URL" | sed 's/\\/\\\\/g; s/"/\\"/g')
+  payload=$(printf '{"event":"%s","target":"%s","consecutiveFailures":%s,"timestamp":"%s"}' "$1" "$safe_url" "$2" "$(now)")
+  if curl -fsS --max-time 10 -H 'Content-Type: application/json' -d "$payload" "$NOTIFY_URL" >>"$LOG" 2>&1; then
+    log "NOTIFY_OK ${URL} event=$1 failures=$2"
+  else
+    log "NOTIFY_FAILED ${URL} event=$1 failures=$2"
+  fi
+}
 
 # Previous consecutive-failure count; absent or corrupt state starts at 0
 # rather than failing, so a wiped disk cannot silence the probe.
@@ -43,6 +60,7 @@ case "$fails" in (*[!0-9]*|'') fails=0 ;; esac
 if body=$(curl -fsS --max-time "$TIMEOUT" "$URL" 2>&1); then
   if [ "$fails" -ge "$THRESHOLD" ]; then
     log "RECOVERED ${URL} after ${fails} consecutive failures"
+    notify RECOVERED "$fails"
   fi
   echo 0 >"$STATE"
   # Success is logged too: a log that only records failures is
@@ -61,6 +79,7 @@ detail=$(printf '%s' "$body" | head -c 200 | tr '\n' ' ')
 
 if [ "$fails" -eq "$THRESHOLD" ]; then
   log "ALERT ${URL} failed ${fails} consecutive probes — ${detail}"
+  notify ALERT "$fails"
   exit 1
 elif [ "$fails" -gt "$THRESHOLD" ]; then
   log "WARN ${URL} still failing (${fails} consecutive) — ${detail}"

@@ -8,6 +8,7 @@
 
 import type { Permission } from "../domain/role.ts";
 import type { Repositories } from "../persistence/ports.ts";
+import type { ApiKeyRepository } from "../persistence/sqlite/api-key-repository.ts";
 import type { IAuditLog } from "../governance/audit-log.ts";
 import type { JwtIssuer } from "./middleware/jwt.ts";
 
@@ -88,6 +89,8 @@ export interface AppContainer {
   readonly repositories: Repositories;
   readonly auditLog: IAuditLog;
   readonly apiKeyStore: ApiKeyStore;
+  /** Persistent API key management surface (SQLite mode); absent for in-memory/file tiers. */
+  readonly apiKeyRepository?: ApiKeyRepository;
   /** Persistence tier in use — used by the readiness probe. */
   readonly storageTier?: "in-memory" | "file" | "sqlite";
   /** Optional JWT issuer/verifier — when present, Bearer JWT tokens are accepted. */

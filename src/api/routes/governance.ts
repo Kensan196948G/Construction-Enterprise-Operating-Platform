@@ -339,6 +339,7 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
         requestedAction: action,
         decision: decision.decision,
         reason: decision.reason,
+        ...(ctx?.organizationId !== undefined ? { [AUDIT_ORG_KEY]: ctx.organizationId } : {}),
       },
     });
     if (auditEvent.ok) {
