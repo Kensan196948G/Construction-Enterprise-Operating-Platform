@@ -183,6 +183,17 @@
 - テスト 16 件追加 → **334/334 pass**・verify/build/audit 0
 - PR #24（feat/p1-gateway）
 
+### P2: AI 統制・端末受信の残りを実装（2026-08-07・本セッション追記）
+
+- `src/domain/ai-action.ts`: pending→approved/rejected の不変条件・promptHash 検証（SHA-256 hex）
+- `src/api/routes/ai-actions.ts`: GET 一覧 / POST 作成 / POST decision（ai:read|write|approve・テナント・監査）
+- `src/domain/device.ts`: `metadata`（インベントリ）・`touchDevice()`・`withDeviceMetadata()` を追加
+- `src/api/routes/device-ingest.ts`: register / heartbeat / inventory（device:write・監査・クロステナント拒否）
+- 永続化: in-memory / file / SQLite（migration 007 `ai_actions`）・ports に `aiActions` を追加
+- OpenAPI・README・CHANGELOG・FEATURE_INVENTORY（Y-09 / D-01〜D-03 ✅）・RUNBOOK 更新
+- テスト 11 件追加 → **346/346 pass**・verify/build/audit 0
+- PR #26（feat/p2-ai-device）
+
 ### 次フェーズ
 
 - P1: CEOP ゲートウェイ（統合サービス向けリバースプロキシ/アダプタ）

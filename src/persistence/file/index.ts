@@ -23,6 +23,7 @@ import type {
   WorkflowInstanceId,
   WorkflowInstanceStatus,
 } from "../../domain/workflow-instance.ts";
+import type { AiAction, AiActionId, AiActionStatus } from "../../domain/ai-action.ts";
 import type {
   ApplicationRepository,
   DeviceRepository,
@@ -33,6 +34,7 @@ import type {
   UserRepository,
   WorkflowRepository,
   WorkflowInstanceRepository,
+  AiActionRepository,
 } from "../ports.ts";
 import { BaseFileRepository, ensureDataDir } from "./base-file-repository.ts";
 
@@ -175,6 +177,23 @@ class FileWorkflowInstanceRepository
   }
 }
 
+class FileAiActionRepository extends BaseFileRepository<AiAction> implements AiActionRepository {
+  override async findById(id: AiActionId): Promise<AiAction | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: AiActionId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByOrganization(orgId: string): Promise<readonly AiAction[]> {
+    const all = await this.findAll();
+    return all.filter((a) => (a.organizationId ?? "") === orgId);
+  }
+  async findByStatus(status: AiActionStatus): Promise<readonly AiAction[]> {
+    const all = await this.findAll();
+    return all.filter((a) => a.status === status);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Factory
 // ---------------------------------------------------------------------------
@@ -194,5 +213,6 @@ export async function createFileRepositories(dataDir: string): Promise<Repositor
     policies: new FilePolicyRepository(dataDir, "policies.json"),
     workflows: new FileWorkflowRepository(dataDir, "workflows.json"),
     workflowInstances: new FileWorkflowInstanceRepository(dataDir, "workflow-instances.json"),
+    aiActions: new FileAiActionRepository(dataDir, "ai-actions.json"),
   };
 }

@@ -24,7 +24,7 @@
 | HTTP サーバ  | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                                                                                                                                        |
 | 依存方針     | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）                                                                                                                |
 | パッケージ   | pnpm 10.26.2                                                                                                                                                                                    |
-| テスト       | 335 tests pass（node:test ビルトインランナー）                                                                                                                                                  |
+| テスト       | 346 tests pass（node:test ビルトインランナー）                                                                                                                                                  |
 | コンテナ     | Docker multi-stage build（non-root・HEALTHCHECK 付き）                                                                                                                                          |
 | セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限                                                                                                               |
 
@@ -652,15 +652,15 @@ node --experimental-strip-types scripts/sqlite-backup.ts /data/ceop.db /backup/c
 
 ### 📊 現在の品質状態
 
-| ゲート    | 状態           | 備考                                                                                                                                                                                                                                                                                                                                                                          |
-| --------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| typecheck | ✅ pass        | strict・`noUncheckedIndexedAccess`・0 error                                                                                                                                                                                                                                                                                                                                   |
-| lint      | ✅ pass        | ESLint flat config + typescript-eslint・0 warning                                                                                                                                                                                                                                                                                                                             |
-| test      | ✅ 335/335     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud + governance-crud + sqlite-audit-log + workflow-crud + workflow-instance + audit-coverage + migrate + rate-limit（CF-IP 分離含む）+ tenant-scope + audit-tenant-scope + jwt-org + webui + client-ip + backup-retention + auth-keys + api-key-repository + web-assets + favicon |
-| build     | ✅ pass        | `dist/` に型定義付き出力                                                                                                                                                                                                                                                                                                                                                      |
-| CI        | ✅ 設定済み    | `.github/workflows/ci.yml`（push / PR トリガー）                                                                                                                                                                                                                                                                                                                              |
-| Docker    | ✅ multi-stage | non-root ユーザー・HEALTHCHECK 付き                                                                                                                                                                                                                                                                                                                                           |
-| security  | ✅ hardened    | timingSafeEqual・ボディ制限・権限ゲート・CSP・API セキュリティヘッダ・監査網羅                                                                                                                                                                                                                                                                                                |
+| ゲート    | 状態           | 備考                                                                                                                                                                                                                                                                                                                                                                                                       |
+| --------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| typecheck | ✅ pass        | strict・`noUncheckedIndexedAccess`・0 error                                                                                                                                                                                                                                                                                                                                                                |
+| lint      | ✅ pass        | ESLint flat config + typescript-eslint・0 warning                                                                                                                                                                                                                                                                                                                                                          |
+| test      | ✅ 346/346     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud + governance-crud + sqlite-audit-log + workflow-crud + workflow-instance + audit-coverage + migrate + rate-limit（CF-IP 分離含む）+ tenant-scope + audit-tenant-scope + jwt-org + webui + client-ip + backup-retention + auth-keys + api-key-repository + web-assets + favicon + ai-actions + device-ingest |
+| build     | ✅ pass        | `dist/` に型定義付き出力                                                                                                                                                                                                                                                                                                                                                                                   |
+| CI        | ✅ 設定済み    | `.github/workflows/ci.yml`（push / PR トリガー）                                                                                                                                                                                                                                                                                                                                                           |
+| Docker    | ✅ multi-stage | non-root ユーザー・HEALTHCHECK 付き                                                                                                                                                                                                                                                                                                                                                                        |
+| security  | ✅ hardened    | timingSafeEqual・ボディ制限・権限ゲート・CSP・API セキュリティヘッダ・監査網羅                                                                                                                                                                                                                                                                                                                             |
 
 ---
 
@@ -1002,6 +1002,38 @@ interface WorkflowStep {
   CEOP 内部ヘッダーのみ転送。`authorization` / `cookie` / `host` は転送しない
 - パスは `..` / `.` / 制御文字 / 二重エンコードを拒否
 - 上流トークンは環境変数経由で実行時に解決し、ログ・リポジトリへ出力しない
+
+---
+
+## 🤖 AI Action Governance API（P2 / Y-09）
+
+AI 利用の統制・承認・監査を CEOP で一元管理します。プロンプト本文は保存せず
+SHA-256 ハッシュ（`promptHash`）のみを記録し、承認ワークフロー
+（`pending → approved | rejected`）と監査ログを適用します。
+
+| エンドポイント                          | 権限         | 説明                                                       |
+| --------------------------------------- | ------------ | ---------------------------------------------------------- |
+| `GET /api/v1/ai-actions`                | `ai:read`    | テナント単位の AI アクション一覧（ページング・`?status=`） |
+| `POST /api/v1/ai-actions`               | `ai:write`   | AI アクション要求の作成（状態: pending）                   |
+| `POST /api/v1/ai-actions/{id}/decision` | `ai:approve` | 承認 / 却下（一度だけ遷移可・監査記録）                    |
+
+テナント境界は資格情報のスコープから決定し、リクエスト本文の `organizationId` は
+スコープと一致しない場合に拒否します（クロステナント防止）。
+
+## 📡 Device Agent Ingest API（P2 / D-01〜D-03）
+
+現場端末エージェント（DX-OS 等）からの登録・死活・インベントリ受信を CEOP で受け付け、
+`device:write` 権限と監査ログを適用します。
+
+| エンドポイント                        | 権限           | 説明                                                      |
+| ------------------------------------- | -------------- | --------------------------------------------------------- |
+| `POST /api/v1/devices/register`       | `device:write` | D-01: 端末登録（重複は 400）                              |
+| `POST /api/v1/devices/{id}/heartbeat` | `device:write` | D-02: 死活報告（`lastSeenAt` 更新・任意 status）          |
+| `POST /api/v1/devices/{id}/inventory` | `device:write` | D-03: インベントリ/テレメトリ（文字列メタデータをマージ） |
+
+インベントリは `metadata`（string 値のみ）として端末レコードへマージ保存され、
+SQLite では JSON 列として永続化されます（migration 007 は `ai_actions` のみ追加。
+端末メタデータはスキーマ変更不要のため migration 不要）。
 
 ---
 

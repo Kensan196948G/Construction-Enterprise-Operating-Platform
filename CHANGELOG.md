@@ -20,6 +20,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 ### Added
 
+- **AI Action Governance（統合 Y-09 / L-07）** — AI アクション要求の統制・承認・監査。
+  `GET/POST /api/v1/ai-actions` と `POST /:id/decision` を追加（`ai:read` / `ai:write` /
+  `ai:approve`・テナントスコープ・監査記録）。プロンプト本文は保存せず SHA-256 ハッシュのみ記録。
+  migration `007`（`ai_actions` テーブル）を追加。
+- **Device Agent Ingest（統合 D-01〜D-03 / L-05）** — 端末登録・ハートビート・インベントリ受信。
+  `POST /api/v1/devices/register` / `/:id/heartbeat` / `/:id/inventory` を追加
+  （`device:write`・監査記録・`metadata` は string 値のみ・スキーマ変更不要）。
+- **端末ドメイン拡張** — `metadata`（インベントリ）・`touchDevice()`（heartbeat）・
+  `withDeviceMetadata()`（マージ）を追加。
+- テスト 11 件追加（346/346 pass）。
+
 - **Integration Gateway（P1）** — 統合サービス向けリバースプロキシと統一認証。
   `CEOP_GATEWAY_SERVICES` で登録したサービスを `/api/v1/integrations/<service>/*`
   として公開し、CEOP の JWT/API キー認証・権限（`integration:read` /

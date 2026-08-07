@@ -18,6 +18,7 @@ import type {
   WorkflowInstanceId,
   WorkflowInstanceStatus,
 } from "../domain/workflow-instance.ts";
+import type { AiAction, AiActionId, AiActionStatus } from "../domain/ai-action.ts";
 
 // ---------------------------------------------------------------------------
 // Generic repository contract
@@ -91,6 +92,13 @@ export interface WorkflowInstanceRepository extends Repository<
   findByStatus(status: WorkflowInstanceStatus): Promise<readonly WorkflowInstance[]>;
 }
 
+export interface AiActionRepository extends Repository<AiAction, AiActionId> {
+  /** All AI actions belonging to one organization. */
+  findByOrganization(orgId: string): Promise<readonly AiAction[]>;
+  /** All AI actions in a given state. */
+  findByStatus(status: AiActionStatus): Promise<readonly AiAction[]>;
+}
+
 // ---------------------------------------------------------------------------
 // Aggregate: all repositories grouped for DI / factory use
 // ---------------------------------------------------------------------------
@@ -104,4 +112,5 @@ export interface Repositories {
   readonly policies: PolicyRepository;
   readonly workflows: WorkflowRepository;
   readonly workflowInstances: WorkflowInstanceRepository;
+  readonly aiActions: AiActionRepository;
 }
