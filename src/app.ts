@@ -26,6 +26,7 @@ import {
 import { createApiKey } from "./api/middleware/auth.ts";
 import { createJwtIssuer, generateJwtSecret } from "./api/middleware/jwt.ts";
 import { createServer } from "./api/server.ts";
+import { loadGatewayServices } from "./api/gateway/config.ts";
 import type { AppContainer } from "./api/types.ts";
 
 // ---------------------------------------------------------------------------
@@ -294,6 +295,13 @@ export async function createApp(): Promise<AppContainer> {
     }
   } // end demo seeding
 
+  const gatewayServicesResult = loadGatewayServices();
+  if (!gatewayServicesResult.ok) {
+    throw new Error(
+      `[app] invalid gateway configuration: ${JSON.stringify(gatewayServicesResult.error)}`,
+    );
+  }
+
   return {
     repositories,
     auditLog,
@@ -301,6 +309,7 @@ export async function createApp(): Promise<AppContainer> {
     ...(apiKeyRepository !== undefined ? { apiKeyRepository } : {}),
     storageTier: sqliteFile ? "sqlite" : dataDir ? "file" : "in-memory",
     jwtIssuer,
+    gatewayServices: gatewayServicesResult.value,
   };
 }
 
@@ -311,7 +320,10 @@ export async function createApp(): Promise<AppContainer> {
  */
 export async function start(port = 3000): Promise<void> {
   const container = await createApp();
-  const server = createServer({ port }, container);
+  const server = createServer(
+    { port, ...(container.gatewayServices ? { gatewayServices: container.gatewayServices } : {}) },
+    container,
+  );
 
   await new Promise<void>((resolve, reject) => {
     server.once("error", reject);
