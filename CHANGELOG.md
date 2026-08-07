@@ -6,6 +6,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 ## [Unreleased]
 
+## [0.8.3] - 2026-08-07
+
+### Fixed
+
+- **favicon がブラウザタブに表示されない問題** — WebUI（デザインバンドル）の HTML に
+  favicon リンクが無く、ブラウザが既定の地球アイコンを表示していた。`unpackBundle` が
+  `index.html` の `<head>` 直後に `<link rel="icon" href="/favicon.svg">` を注入するよう修正。
+  旧ブラウザ向けに実体 `favicon.ico`（16/32/48px の PNG 入り ICO）を
+  `scripts/generate-favicon.ts` で生成し、API・WebUI 双方で配信
+
 ## [0.8.2] - 2026-08-07
 
 ### Added
@@ -20,8 +30,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
   テスト 16 件追加（334/334 pass）。
 
 - **ブラウザタブ favicon** — SSR ページ（`/dashboard`・`/governance`）と WebUI 配信に
-  `favicon.svg`（タワークレーンアイコン）を追加。`/api/assets/favicon.svg`・
-  `/assets/favicon.svg`・WebUI の `/favicon.svg`（`/favicon.ico` は 302 リダイレクト）で配信
+  タワークレーンアイコンを追加し、API 側 `/api/assets/favicon.svg|ico`・
+  `/assets/favicon.svg|ico`、WebUI 側 `/favicon.svg`・`/favicon.ico` で配信
 
 - **Workflow Instance API（統合 L-02 / Synapse Issue→Approval→Audit）** —
   ワークフローテンプレートからテナント単位の実行インスタンスを生成・承認・却下・取消できる

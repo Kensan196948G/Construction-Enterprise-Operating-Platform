@@ -85,8 +85,10 @@ test("unpackBundle emits ext-resources.js and references it for ext_resources en
   // server's CSP, which has no 'unsafe-inline') referenced right after <head>,
   // pointing the CDN URL at the already-unpacked local asset so the runtime
   // never leaves script-src 'self'.
-  const tag = `<head><script src="ext-resources.js"></` + `script>`;
-  assert.ok(indexHtml.includes(tag), `expected ${tag} in:\n${indexHtml.slice(0, 300)}`);
+  const tag =
+    `<head><link rel="icon" href="/favicon.svg" type="image/svg+xml" /><script src="ext-resources.js"></` +
+    `script>`;
+  assert.ok(indexHtml.includes(tag), `expected favicon + ${tag} in:\n${indexHtml.slice(0, 300)}`);
 
   const map = assets.find((a) => a.path === "ext-resources.js");
   assert.ok(map, "ext-resources.js asset should be emitted");
@@ -101,6 +103,10 @@ test("unpackBundle omits window.__resources without ext_resources section", () =
   const result = unpackBundle(syntheticBundle());
   assert.ok(result.ok);
   assert.doesNotMatch(result.value.indexHtml, /ext-resources\.js/);
+  assert.ok(
+    result.value.indexHtml.includes('<link rel="icon" href="/favicon.svg" type="image/svg+xml" />'),
+    "favicon link should be injected even without ext_resources",
+  );
   assert.equal(
     result.value.assets.find((a) => a.path === "ext-resources.js"),
     undefined,

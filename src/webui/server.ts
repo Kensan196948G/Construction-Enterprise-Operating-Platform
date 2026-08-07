@@ -28,6 +28,7 @@ import { type AccessLogger, nullAccessLogger } from "./access-log.ts";
 
 /** Browser-tab icon shared with the SSR pages (kept outside the design bundle). */
 const FAVICON_PATH = new URL("../web/static/favicon.svg", import.meta.url);
+const FAVICON_ICO_PATH = new URL("../web/static/favicon.ico", import.meta.url);
 
 export interface WebuiServerConfig {
   /** Directory containing index.html and assets/ (the unpacked bundle). */
@@ -131,11 +132,19 @@ export function createWebuiServer(config: WebuiServerConfig): Server {
       return;
     }
 
-    // Browsers request /favicon.ico by default; serve the SVG icon instead.
+    // Browsers request /favicon.ico by default; serve a real multi-size ICO.
     if (pathname === "/favicon.ico") {
-      res.setHeader("Location", "/favicon.svg");
-      res.writeHead(302, { "Cache-Control": "no-store" });
-      res.end();
+      try {
+        const buf = readFileSync(FAVICON_ICO_PATH);
+        res.writeHead(200, {
+          "Content-Type": "image/x-icon",
+          "Content-Length": buf.byteLength,
+          "Cache-Control": "public, max-age=86400",
+        });
+        res.end(head ? undefined : buf);
+      } catch {
+        sendJson(res, 404, { error: "Not Found" }, head);
+      }
       return;
     }
     if (pathname === "/favicon.svg") {
