@@ -19,13 +19,7 @@ function indent(n: number): string {
   return " ".repeat(n * 2);
 }
 
-type YamlValue =
-  | string
-  | number
-  | boolean
-  | null
-  | YamlValue[]
-  | { [k: string]: YamlValue };
+type YamlValue = string | number | boolean | null | YamlValue[] | { [k: string]: YamlValue };
 
 function serializeYaml(value: YamlValue, depth = 0): string {
   if (value === null) return "null";
@@ -47,9 +41,7 @@ function serializeYaml(value: YamlValue, depth = 0): string {
   }
   if (Array.isArray(value)) {
     if (value.length === 0) return "[]";
-    return value
-      .map((v) => `\n${indent(depth)}- ${serializeYaml(v, depth + 1)}`)
-      .join("");
+    return value.map((v) => `\n${indent(depth)}- ${serializeYaml(v, depth + 1)}`).join("");
   }
   // object
   const entries = Object.entries(value).filter(([, v]) => v !== undefined);
@@ -57,12 +49,7 @@ function serializeYaml(value: YamlValue, depth = 0): string {
   return entries
     .map(([k, v]) => {
       const valStr = serializeYaml(v, depth + 1);
-      if (
-        typeof v === "object" &&
-        v !== null &&
-        !Array.isArray(v) &&
-        Object.keys(v).length > 0
-      ) {
+      if (typeof v === "object" && v !== null && !Array.isArray(v) && Object.keys(v).length > 0) {
         return `\n${indent(depth)}${k}:${valStr}`;
       }
       if (Array.isArray(v) && v.length > 0) {
@@ -257,15 +244,7 @@ const schemas: { [k: string]: YamlValue } = {
   },
   Project: {
     type: "object",
-    required: [
-      "id",
-      "organizationId",
-      "projectCode",
-      "name",
-      "status",
-      "createdAt",
-      "updatedAt",
-    ],
+    required: ["id", "organizationId", "projectCode", "name", "status", "createdAt", "updatedAt"],
     properties: {
       id: { type: "string" },
       organizationId: { type: "string" },
@@ -320,161 +299,384 @@ const schemas: { [k: string]: YamlValue } = {
 
   Photo: {
     type: "object",
-    required: ["id", "organizationId", "projectId", "fileName", "originalName", "contentType", "fileSize", "objectKey", "category", "createdAt", "updatedAt"],
+    required: [
+      "id",
+      "organizationId",
+      "projectId",
+      "fileName",
+      "originalName",
+      "contentType",
+      "fileSize",
+      "objectKey",
+      "category",
+      "createdAt",
+      "updatedAt",
+    ],
     properties: {
-      id: { type: "string" }, organizationId: { type: "string" }, projectId: { type: "string" },
-      fileName: { type: "string" }, originalName: { type: "string" }, contentType: { type: "string" },
-      fileSize: { type: "integer" }, objectKey: { type: "string" },
+      id: { type: "string" },
+      organizationId: { type: "string" },
+      projectId: { type: "string" },
+      fileName: { type: "string" },
+      originalName: { type: "string" },
+      contentType: { type: "string" },
+      fileSize: { type: "integer" },
+      objectKey: { type: "string" },
       category: { type: "string", enum: ["general", "progress", "safety", "quality", "handover"] },
-      caption: { type: "string" }, takenAt: { type: "string", format: "date-time" },
-      createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
+      caption: { type: "string" },
+      takenAt: { type: "string", format: "date-time" },
+      createdAt: { type: "string", format: "date-time" },
+      updatedAt: { type: "string", format: "date-time" },
     },
   },
   SafetyCheck: {
     type: "object",
-    required: ["id", "organizationId", "projectId", "checkDate", "checkType", "itemsTotal", "itemsOk", "itemsNg", "overallResult", "createdAt", "updatedAt"],
+    required: [
+      "id",
+      "organizationId",
+      "projectId",
+      "checkDate",
+      "checkType",
+      "itemsTotal",
+      "itemsOk",
+      "itemsNg",
+      "overallResult",
+      "createdAt",
+      "updatedAt",
+    ],
     properties: {
-      id: { type: "string" }, organizationId: { type: "string" }, projectId: { type: "string" },
+      id: { type: "string" },
+      organizationId: { type: "string" },
+      projectId: { type: "string" },
       checkDate: { type: "string", format: "date" },
       checkType: { type: "string", enum: ["daily", "patrol", "ky", "other"] },
-      itemsTotal: { type: "integer" }, itemsOk: { type: "integer" }, itemsNg: { type: "integer" },
+      itemsTotal: { type: "integer" },
+      itemsOk: { type: "integer" },
+      itemsNg: { type: "integer" },
       overallResult: { type: "string", enum: ["pending", "ok", "ng"] },
-      notes: { type: "string" }, inspectorId: { type: "string" },
-      createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
+      notes: { type: "string" },
+      inspectorId: { type: "string" },
+      createdAt: { type: "string", format: "date-time" },
+      updatedAt: { type: "string", format: "date-time" },
     },
   },
   QualityInspection: {
     type: "object",
-    required: ["id", "organizationId", "projectId", "inspectionDate", "inspectionType", "targetItem", "result", "createdAt", "updatedAt"],
+    required: [
+      "id",
+      "organizationId",
+      "projectId",
+      "inspectionDate",
+      "inspectionType",
+      "targetItem",
+      "result",
+      "createdAt",
+      "updatedAt",
+    ],
     properties: {
-      id: { type: "string" }, organizationId: { type: "string" }, projectId: { type: "string" },
-      inspectionDate: { type: "string", format: "date" }, inspectionType: { type: "string" },
-      targetItem: { type: "string" }, standardValue: { type: "string" }, measuredValue: { type: "string" },
+      id: { type: "string" },
+      organizationId: { type: "string" },
+      projectId: { type: "string" },
+      inspectionDate: { type: "string", format: "date" },
+      inspectionType: { type: "string" },
+      targetItem: { type: "string" },
+      standardValue: { type: "string" },
+      measuredValue: { type: "string" },
       result: { type: "string", enum: ["pending", "pass", "fail"] },
-      notes: { type: "string" }, inspectorId: { type: "string" },
-      createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
+      notes: { type: "string" },
+      inspectorId: { type: "string" },
+      createdAt: { type: "string", format: "date-time" },
+      updatedAt: { type: "string", format: "date-time" },
     },
   },
   CostRecord: {
     type: "object",
-    required: ["id", "organizationId", "projectId", "recordDate", "category", "description", "budgetedAmount", "actualAmount", "createdAt", "updatedAt"],
+    required: [
+      "id",
+      "organizationId",
+      "projectId",
+      "recordDate",
+      "category",
+      "description",
+      "budgetedAmount",
+      "actualAmount",
+      "createdAt",
+      "updatedAt",
+    ],
     properties: {
-      id: { type: "string" }, organizationId: { type: "string" }, projectId: { type: "string" },
-      recordDate: { type: "string", format: "date" }, category: { type: "string" }, description: { type: "string" },
-      budgetedAmount: { type: "number" }, actualAmount: { type: "number" },
-      vendorName: { type: "string" }, invoiceNumber: { type: "string" }, notes: { type: "string" },
-      createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
+      id: { type: "string" },
+      organizationId: { type: "string" },
+      projectId: { type: "string" },
+      recordDate: { type: "string", format: "date" },
+      category: { type: "string" },
+      description: { type: "string" },
+      budgetedAmount: { type: "number" },
+      actualAmount: { type: "number" },
+      vendorName: { type: "string" },
+      invoiceNumber: { type: "string" },
+      notes: { type: "string" },
+      createdAt: { type: "string", format: "date-time" },
+      updatedAt: { type: "string", format: "date-time" },
     },
   },
   WorkHour: {
     type: "object",
     required: ["id", "organizationId", "projectId", "workDate", "hours", "createdAt", "updatedAt"],
     properties: {
-      id: { type: "string" }, organizationId: { type: "string" }, projectId: { type: "string" },
-      workerId: { type: "string" }, workDate: { type: "string", format: "date" }, hours: { type: "number" },
-      workType: { type: "string" }, notes: { type: "string" },
-      createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
+      id: { type: "string" },
+      organizationId: { type: "string" },
+      projectId: { type: "string" },
+      workerId: { type: "string" },
+      workDate: { type: "string", format: "date" },
+      hours: { type: "number" },
+      workType: { type: "string" },
+      notes: { type: "string" },
+      createdAt: { type: "string", format: "date-time" },
+      updatedAt: { type: "string", format: "date-time" },
     },
   },
   NotificationDelivery: {
     type: "object",
-    required: ["id", "userId", "eventKey", "channel", "status", "attempts", "createdAt", "updatedAt"],
+    required: [
+      "id",
+      "userId",
+      "eventKey",
+      "channel",
+      "status",
+      "attempts",
+      "createdAt",
+      "updatedAt",
+    ],
     properties: {
-      id: { type: "string" }, organizationId: { type: "string" }, userId: { type: "string" },
-      eventKey: { type: "string" }, channel: { type: "string", enum: ["email", "slack", "webhook"] },
+      id: { type: "string" },
+      organizationId: { type: "string" },
+      userId: { type: "string" },
+      eventKey: { type: "string" },
+      channel: { type: "string", enum: ["email", "slack", "webhook"] },
       status: { type: "string", enum: ["pending", "sent", "failed", "retry"] },
-      subject: { type: "string" }, bodyPreview: { type: "string" }, errorDetail: { type: "string" },
-      failureKind: { type: "string" }, attempts: { type: "integer" }, sentAt: { type: "string", format: "date-time" },
-      createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
+      subject: { type: "string" },
+      bodyPreview: { type: "string" },
+      errorDetail: { type: "string" },
+      failureKind: { type: "string" },
+      attempts: { type: "integer" },
+      sentAt: { type: "string", format: "date-time" },
+      createdAt: { type: "string", format: "date-time" },
+      updatedAt: { type: "string", format: "date-time" },
     },
   },
 
   KnowledgeArticle: {
     type: "object",
-    required: ["id", "organizationId", "title", "content", "category", "tags", "isPublished", "viewCount", "aiGenerated", "createdAt", "updatedAt"],
+    required: [
+      "id",
+      "organizationId",
+      "title",
+      "content",
+      "category",
+      "tags",
+      "isPublished",
+      "viewCount",
+      "aiGenerated",
+      "createdAt",
+      "updatedAt",
+    ],
     properties: {
-      id: { type: "string" }, organizationId: { type: "string" }, title: { type: "string" }, content: { type: "string" },
+      id: { type: "string" },
+      organizationId: { type: "string" },
+      title: { type: "string" },
+      content: { type: "string" },
       category: { type: "string", enum: ["general", "faq", "incident", "contract", "safety"] },
-      tags: { type: "array", items: { type: "string" } }, isPublished: { type: "boolean" }, viewCount: { type: "integer" },
-      rating: { type: "number" }, aiGenerated: { type: "boolean" }, aiActionId: { type: "string" },
-      createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
+      tags: { type: "array", items: { type: "string" } },
+      isPublished: { type: "boolean" },
+      viewCount: { type: "integer" },
+      rating: { type: "number" },
+      aiGenerated: { type: "boolean" },
+      aiActionId: { type: "string" },
+      createdAt: { type: "string", format: "date-time" },
+      updatedAt: { type: "string", format: "date-time" },
     },
   },
   Contract: {
     type: "object",
-    required: ["id", "organizationId", "projectId", "contractType", "contractNumber", "title", "aiRiskScore", "status", "createdAt", "updatedAt"],
+    required: [
+      "id",
+      "organizationId",
+      "projectId",
+      "contractType",
+      "contractNumber",
+      "title",
+      "aiRiskScore",
+      "status",
+      "createdAt",
+      "updatedAt",
+    ],
     properties: {
-      id: { type: "string" }, organizationId: { type: "string" }, projectId: { type: "string" },
-      contractType: { type: "string", enum: ["prime", "subcontract", "other"] }, contractNumber: { type: "string" }, title: { type: "string" },
-      party: { type: "string" }, periodStart: { type: "string", format: "date" }, periodEnd: { type: "string", format: "date" },
-      amount: { type: "number" }, description: { type: "string" }, documentUrl: { type: "string" },
+      id: { type: "string" },
+      organizationId: { type: "string" },
+      projectId: { type: "string" },
+      contractType: { type: "string", enum: ["prime", "subcontract", "other"] },
+      contractNumber: { type: "string" },
+      title: { type: "string" },
+      party: { type: "string" },
+      periodStart: { type: "string", format: "date" },
+      periodEnd: { type: "string", format: "date" },
+      amount: { type: "number" },
+      description: { type: "string" },
+      documentUrl: { type: "string" },
       aiRiskScore: { type: "string", enum: ["pending", "low", "medium", "high"] },
       status: { type: "string", enum: ["draft", "active", "completed", "terminated"] },
-      createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
+      createdAt: { type: "string", format: "date-time" },
+      updatedAt: { type: "string", format: "date-time" },
     },
   },
 
   Document: {
     type: "object",
-    required: ["id", "organizationId", "title", "documentType", "revision", "status", "tags", "createdAt", "updatedAt"],
+    required: [
+      "id",
+      "organizationId",
+      "title",
+      "documentType",
+      "revision",
+      "status",
+      "tags",
+      "createdAt",
+      "updatedAt",
+    ],
     properties: {
-      id: { type: "string" }, organizationId: { type: "string" }, projectId: { type: "string" }, title: { type: "string" },
+      id: { type: "string" },
+      organizationId: { type: "string" },
+      projectId: { type: "string" },
+      title: { type: "string" },
       documentType: { type: "string", enum: ["drawing", "contract", "safety", "quality", "other"] },
-      revision: { type: "integer" }, status: { type: "string", enum: ["draft", "review", "approved", "issued", "archived"] },
-      fileUrl: { type: "string" }, fileSize: { type: "integer" }, tags: { type: "array", items: { type: "string" } },
-      createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
+      revision: { type: "integer" },
+      status: { type: "string", enum: ["draft", "review", "approved", "issued", "archived"] },
+      fileUrl: { type: "string" },
+      fileSize: { type: "integer" },
+      tags: { type: "array", items: { type: "string" } },
+      createdAt: { type: "string", format: "date-time" },
+      updatedAt: { type: "string", format: "date-time" },
     },
   },
   WorkSchedule: {
     type: "object",
-    required: ["id", "organizationId", "projectId", "workDate", "title", "status", "createdAt", "updatedAt"],
+    required: [
+      "id",
+      "organizationId",
+      "projectId",
+      "workDate",
+      "title",
+      "status",
+      "createdAt",
+      "updatedAt",
+    ],
     properties: {
-      id: { type: "string" }, organizationId: { type: "string" }, projectId: { type: "string" },
-      workDate: { type: "string", format: "date" }, title: { type: "string" }, assignee: { type: "string" },
-      status: { type: "string", enum: ["planned", "in_progress", "completed", "cancelled"] }, notes: { type: "string" },
-      createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
+      id: { type: "string" },
+      organizationId: { type: "string" },
+      projectId: { type: "string" },
+      workDate: { type: "string", format: "date" },
+      title: { type: "string" },
+      assignee: { type: "string" },
+      status: { type: "string", enum: ["planned", "in_progress", "completed", "cancelled"] },
+      notes: { type: "string" },
+      createdAt: { type: "string", format: "date-time" },
+      updatedAt: { type: "string", format: "date-time" },
     },
   },
   PurchaseOrder: {
     type: "object",
-    required: ["id", "organizationId", "projectId", "orderNumber", "supplier", "item", "quantity", "unitPrice", "amount", "status", "createdAt", "updatedAt"],
+    required: [
+      "id",
+      "organizationId",
+      "projectId",
+      "orderNumber",
+      "supplier",
+      "item",
+      "quantity",
+      "unitPrice",
+      "amount",
+      "status",
+      "createdAt",
+      "updatedAt",
+    ],
     properties: {
-      id: { type: "string" }, organizationId: { type: "string" }, projectId: { type: "string" },
-      orderNumber: { type: "string" }, supplier: { type: "string" }, item: { type: "string" },
-      quantity: { type: "number" }, unitPrice: { type: "number" }, amount: { type: "number" },
-      status: { type: "string", enum: ["draft", "issued", "approved", "received", "cancelled"] }, notes: { type: "string" },
-      createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
+      id: { type: "string" },
+      organizationId: { type: "string" },
+      projectId: { type: "string" },
+      orderNumber: { type: "string" },
+      supplier: { type: "string" },
+      item: { type: "string" },
+      quantity: { type: "number" },
+      unitPrice: { type: "number" },
+      amount: { type: "number" },
+      status: { type: "string", enum: ["draft", "issued", "approved", "received", "cancelled"] },
+      notes: { type: "string" },
+      createdAt: { type: "string", format: "date-time" },
+      updatedAt: { type: "string", format: "date-time" },
     },
   },
   NotificationPreference: {
     type: "object",
     required: ["id", "userId", "emailEnabled", "slackEnabled", "events", "createdAt", "updatedAt"],
     properties: {
-      id: { type: "string" }, organizationId: { type: "string" }, userId: { type: "string" },
-      emailEnabled: { type: "boolean" }, slackEnabled: { type: "boolean" }, slackWebhookUrl: { type: "string" },
+      id: { type: "string" },
+      organizationId: { type: "string" },
+      userId: { type: "string" },
+      emailEnabled: { type: "boolean" },
+      slackEnabled: { type: "boolean" },
+      slackWebhookUrl: { type: "string" },
       events: { type: "object", additionalProperties: { type: "boolean" } },
-      createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
+      createdAt: { type: "string", format: "date-time" },
+      updatedAt: { type: "string", format: "date-time" },
     },
   },
 
   ComplianceCheck: {
     type: "object",
-    required: ["id", "organizationId", "projectId", "standard", "item", "result", "createdAt", "updatedAt"],
+    required: [
+      "id",
+      "organizationId",
+      "projectId",
+      "standard",
+      "item",
+      "result",
+      "createdAt",
+      "updatedAt",
+    ],
     properties: {
-      id: { type: "string" }, organizationId: { type: "string" }, projectId: { type: "string" },
-      standard: { type: "string", enum: ["kensetsugyo-ho", "shitauke-ho", "iso-9001", "iso-14001", "iso-45001", "other"] },
-      item: { type: "string" }, result: { type: "string", enum: ["pass", "fail", "pending"] },
-      checkedAt: { type: "string", format: "date" }, notes: { type: "string" },
-      createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
+      id: { type: "string" },
+      organizationId: { type: "string" },
+      projectId: { type: "string" },
+      standard: {
+        type: "string",
+        enum: ["kensetsugyo-ho", "shitauke-ho", "iso-9001", "iso-14001", "iso-45001", "other"],
+      },
+      item: { type: "string" },
+      result: { type: "string", enum: ["pass", "fail", "pending"] },
+      checkedAt: { type: "string", format: "date" },
+      notes: { type: "string" },
+      createdAt: { type: "string", format: "date-time" },
+      updatedAt: { type: "string", format: "date-time" },
     },
   },
   LegalEvidence: {
     type: "object",
-    required: ["id", "organizationId", "contractId", "eventType", "description", "occurredAt", "createdAt"],
+    required: [
+      "id",
+      "organizationId",
+      "contractId",
+      "eventType",
+      "description",
+      "occurredAt",
+      "createdAt",
+    ],
     properties: {
-      id: { type: "string" }, organizationId: { type: "string" }, contractId: { type: "string" },
-      eventType: { type: "string" }, description: { type: "string" },
-      evidenceHash: { type: "string" }, occurredAt: { type: "string", format: "date-time" },
+      id: { type: "string" },
+      organizationId: { type: "string" },
+      contractId: { type: "string" },
+      eventType: { type: "string" },
+      description: { type: "string" },
+      evidenceHash: { type: "string" },
+      occurredAt: { type: "string", format: "date-time" },
       createdAt: { type: "string", format: "date-time" },
     },
   },
@@ -482,10 +684,14 @@ const schemas: { [k: string]: YamlValue } = {
     type: "object",
     required: ["id", "templateKey", "subject", "body", "channel", "createdAt", "updatedAt"],
     properties: {
-      id: { type: "string" }, organizationId: { type: "string" }, templateKey: { type: "string" },
-      subject: { type: "string" }, body: { type: "string" },
+      id: { type: "string" },
+      organizationId: { type: "string" },
+      templateKey: { type: "string" },
+      subject: { type: "string" },
+      body: { type: "string" },
       channel: { type: "string", enum: ["email", "slack", "webhook"] },
-      createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
+      createdAt: { type: "string", format: "date-time" },
+      updatedAt: { type: "string", format: "date-time" },
     },
   },
   AuditEntry: {
@@ -498,7 +704,10 @@ const schemas: { [k: string]: YamlValue } = {
       action: { type: "string" },
       resource: { type: "string" },
       outcome: { type: "string", enum: ["success", "failure", "denied"] },
-      hash: { type: "string", description: "SHA-256 of previous entry hash + this entry (tamper-evident chain)" },
+      hash: {
+        type: "string",
+        description: "SHA-256 of previous entry hash + this entry (tamper-evident chain)",
+      },
       metadata: { type: "object", additionalProperties: { type: "string" } },
     },
   },
@@ -511,7 +720,8 @@ const schemas: { [k: string]: YamlValue } = {
       subject: { type: "string", description: "Authenticated subject" },
       organizationId: {
         type: "string",
-        description: "Organization scope when the credential is org-scoped; absent for global credentials",
+        description:
+          "Organization scope when the credential is org-scoped; absent for global credentials",
       },
     },
   },
@@ -526,7 +736,11 @@ const schemas: { [k: string]: YamlValue } = {
         type: "string",
         description: "Organization scope; absent for platform-level credentials",
       },
-      createdAt: { type: "string", format: "date-time", description: "Provisioning time (SQLite mode)" },
+      createdAt: {
+        type: "string",
+        format: "date-time",
+        description: "Provisioning time (SQLite mode)",
+      },
     },
     description: "API key metadata. The secret hash is never returned.",
   },
@@ -540,7 +754,8 @@ const securitySchemes: { [k: string]: YamlValue } = {
   ApiKeyAuth: {
     type: "http",
     scheme: "bearer",
-    description: "API key in the format `keyId:rawSecret`. The server validates via HMAC-SHA256 and constant-time comparison.",
+    description:
+      "API key in the format `keyId:rawSecret`. The server validates via HMAC-SHA256 and constant-time comparison.",
     bearerFormat: "keyId:rawSecret",
   },
   BearerJwt: {
@@ -593,7 +808,7 @@ function paginatedList(listKey: string, schemaRef: string): YamlValue {
     type: "object",
     required: [listKey, "count", "total", "limit", "offset"],
     properties: {
-      [listKey]: { type: "array", items: { "$ref": `#/components/schemas/${schemaRef}` } },
+      [listKey]: { type: "array", items: { $ref: `#/components/schemas/${schemaRef}` } },
       count: { type: "integer" },
       total: { type: "integer" },
       limit: { type: "integer" },
@@ -623,7 +838,7 @@ function errorResponses(...codes: number[]): { [k: string]: YamlValue } {
   for (const c of codes) {
     out[String(c)] = {
       description: msgs[c] ?? "Error",
-      content: { "application/json": { schema: { "$ref": "#/components/schemas/ErrorResponse" } } },
+      content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } },
     };
   }
   return out;
@@ -675,7 +890,11 @@ const paths: { [k: string]: YamlValue } = {
       responses: {
         "200": {
           description: "Service is healthy",
-          content: { "application/json": { schema: { type: "object", properties: { status: { type: "string" } } } } },
+          content: {
+            "application/json": {
+              schema: { type: "object", properties: { status: { type: "string" } } },
+            },
+          },
         },
       },
     },
@@ -751,7 +970,7 @@ const paths: { [k: string]: YamlValue } = {
         },
       },
       responses: {
-        ...jsonResponse(200, { "$ref": "#/components/schemas/TokenResponse" }),
+        ...jsonResponse(200, { $ref: "#/components/schemas/TokenResponse" }),
         ...errorResponses(400, 401, 429),
       },
     },
@@ -787,7 +1006,7 @@ const paths: { [k: string]: YamlValue } = {
           properties: {
             keys: {
               type: "array",
-              items: { "$ref": "#/components/schemas/AuthKey" },
+              items: { $ref: "#/components/schemas/AuthKey" },
               description: "Key metadata only — the secret hash is never exposed",
             },
           },
@@ -803,7 +1022,7 @@ const paths: { [k: string]: YamlValue } = {
       summary: "Revoke an API key (requires auth:write, platform-level credential)",
       tags: ["Auth"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/keyIdPath" }],
+      parameters: [{ $ref: "#/components/parameters/keyIdPath" }],
       responses: {
         ...jsonResponse(200, {
           type: "object",
@@ -843,8 +1062,8 @@ const paths: { [k: string]: YamlValue } = {
       tags: ["Organizations"],
       security: authSecurity,
       parameters: [
-        { "$ref": "#/components/parameters/limitParam" },
-        { "$ref": "#/components/parameters/offsetParam" },
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
       ],
       responses: {
         ...jsonResponse(200, paginatedList("organizations", "Organization")),
@@ -874,7 +1093,7 @@ const paths: { [k: string]: YamlValue } = {
         },
       },
       responses: {
-        ...jsonResponse(201, { "$ref": "#/components/schemas/Organization" }),
+        ...jsonResponse(201, { $ref: "#/components/schemas/Organization" }),
         ...errorResponses(400, 401, 403, 409),
       },
     },
@@ -885,9 +1104,9 @@ const paths: { [k: string]: YamlValue } = {
       summary: "Get an organization by ID",
       tags: ["Organizations"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       responses: {
-        ...jsonResponse(200, { "$ref": "#/components/schemas/Organization" }),
+        ...jsonResponse(200, { $ref: "#/components/schemas/Organization" }),
         ...errorResponses(401, 403, 404),
       },
     },
@@ -896,7 +1115,7 @@ const paths: { [k: string]: YamlValue } = {
       summary: "Update an organization",
       tags: ["Organizations"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       requestBody: {
         required: true,
         content: {
@@ -912,7 +1131,7 @@ const paths: { [k: string]: YamlValue } = {
         },
       },
       responses: {
-        ...jsonResponse(200, { "$ref": "#/components/schemas/Organization" }),
+        ...jsonResponse(200, { $ref: "#/components/schemas/Organization" }),
         ...errorResponses(400, 401, 403, 404),
       },
     },
@@ -921,7 +1140,7 @@ const paths: { [k: string]: YamlValue } = {
       summary: "Delete an organization",
       tags: ["Organizations"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       responses: { "204": { description: "Deleted" }, ...errorResponses(401, 403, 404) },
     },
   },
@@ -934,8 +1153,8 @@ const paths: { [k: string]: YamlValue } = {
       tags: ["Users"],
       security: authSecurity,
       parameters: [
-        { "$ref": "#/components/parameters/limitParam" },
-        { "$ref": "#/components/parameters/offsetParam" },
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
       ],
       responses: {
         ...jsonResponse(200, paginatedList("users", "User")),
@@ -966,7 +1185,7 @@ const paths: { [k: string]: YamlValue } = {
         },
       },
       responses: {
-        ...jsonResponse(201, { "$ref": "#/components/schemas/User" }),
+        ...jsonResponse(201, { $ref: "#/components/schemas/User" }),
         ...errorResponses(400, 401, 403, 409),
       },
     },
@@ -977,9 +1196,9 @@ const paths: { [k: string]: YamlValue } = {
       summary: "Get a user by ID",
       tags: ["Users"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       responses: {
-        ...jsonResponse(200, { "$ref": "#/components/schemas/User" }),
+        ...jsonResponse(200, { $ref: "#/components/schemas/User" }),
         ...errorResponses(401, 403, 404),
       },
     },
@@ -988,7 +1207,7 @@ const paths: { [k: string]: YamlValue } = {
       summary: "Update a user",
       tags: ["Users"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       requestBody: {
         required: true,
         content: {
@@ -1005,7 +1224,7 @@ const paths: { [k: string]: YamlValue } = {
         },
       },
       responses: {
-        ...jsonResponse(200, { "$ref": "#/components/schemas/User" }),
+        ...jsonResponse(200, { $ref: "#/components/schemas/User" }),
         ...errorResponses(400, 401, 403, 404),
       },
     },
@@ -1014,7 +1233,7 @@ const paths: { [k: string]: YamlValue } = {
       summary: "Soft-delete a user (status → deactivated)",
       tags: ["Users"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       responses: { "204": { description: "Deactivated" }, ...errorResponses(401, 403, 404) },
     },
   },
@@ -1027,8 +1246,8 @@ const paths: { [k: string]: YamlValue } = {
       tags: ["Roles"],
       security: authSecurity,
       parameters: [
-        { "$ref": "#/components/parameters/limitParam" },
-        { "$ref": "#/components/parameters/offsetParam" },
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
       ],
       responses: {
         ...jsonResponse(200, paginatedList("roles", "Role")),
@@ -1058,7 +1277,7 @@ const paths: { [k: string]: YamlValue } = {
         },
       },
       responses: {
-        ...jsonResponse(201, { "$ref": "#/components/schemas/Role" }),
+        ...jsonResponse(201, { $ref: "#/components/schemas/Role" }),
         ...errorResponses(400, 401, 403, 409),
       },
     },
@@ -1069,9 +1288,9 @@ const paths: { [k: string]: YamlValue } = {
       summary: "Get a role by ID",
       tags: ["Roles"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       responses: {
-        ...jsonResponse(200, { "$ref": "#/components/schemas/Role" }),
+        ...jsonResponse(200, { $ref: "#/components/schemas/Role" }),
         ...errorResponses(401, 403, 404),
       },
     },
@@ -1080,7 +1299,7 @@ const paths: { [k: string]: YamlValue } = {
       summary: "Update a role",
       tags: ["Roles"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       requestBody: {
         required: true,
         content: {
@@ -1097,7 +1316,7 @@ const paths: { [k: string]: YamlValue } = {
         },
       },
       responses: {
-        ...jsonResponse(200, { "$ref": "#/components/schemas/Role" }),
+        ...jsonResponse(200, { $ref: "#/components/schemas/Role" }),
         ...errorResponses(400, 401, 403, 404),
       },
     },
@@ -1106,7 +1325,7 @@ const paths: { [k: string]: YamlValue } = {
       summary: "Delete a role",
       tags: ["Roles"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       responses: { "204": { description: "Deleted" }, ...errorResponses(401, 403, 404) },
     },
   },
@@ -1119,8 +1338,8 @@ const paths: { [k: string]: YamlValue } = {
       tags: ["Devices"],
       security: authSecurity,
       parameters: [
-        { "$ref": "#/components/parameters/limitParam" },
-        { "$ref": "#/components/parameters/offsetParam" },
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
       ],
       responses: {
         ...jsonResponse(200, paginatedList("devices", "Device")),
@@ -1149,7 +1368,7 @@ const paths: { [k: string]: YamlValue } = {
         },
       },
       responses: {
-        ...jsonResponse(201, { "$ref": "#/components/schemas/Device" }),
+        ...jsonResponse(201, { $ref: "#/components/schemas/Device" }),
         ...errorResponses(400, 401, 403),
       },
     },
@@ -1160,9 +1379,9 @@ const paths: { [k: string]: YamlValue } = {
       summary: "Get a device by ID",
       tags: ["Devices"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       responses: {
-        ...jsonResponse(200, { "$ref": "#/components/schemas/Device" }),
+        ...jsonResponse(200, { $ref: "#/components/schemas/Device" }),
         ...errorResponses(401, 403, 404),
       },
     },
@@ -1171,7 +1390,7 @@ const paths: { [k: string]: YamlValue } = {
       summary: "Update a device",
       tags: ["Devices"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       requestBody: {
         required: true,
         content: {
@@ -1186,7 +1405,7 @@ const paths: { [k: string]: YamlValue } = {
         },
       },
       responses: {
-        ...jsonResponse(200, { "$ref": "#/components/schemas/Device" }),
+        ...jsonResponse(200, { $ref: "#/components/schemas/Device" }),
         ...errorResponses(400, 401, 403, 404),
       },
     },
@@ -1195,7 +1414,7 @@ const paths: { [k: string]: YamlValue } = {
       summary: "Remove a device",
       tags: ["Devices"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       responses: { "204": { description: "Deleted" }, ...errorResponses(401, 403, 404) },
     },
   },
@@ -1208,8 +1427,8 @@ const paths: { [k: string]: YamlValue } = {
       tags: ["Applications"],
       security: authSecurity,
       parameters: [
-        { "$ref": "#/components/parameters/limitParam" },
-        { "$ref": "#/components/parameters/offsetParam" },
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
       ],
       responses: {
         ...jsonResponse(200, paginatedList("applications", "Application")),
@@ -1231,7 +1450,10 @@ const paths: { [k: string]: YamlValue } = {
               properties: {
                 key: { type: "string", description: "Unique slug for the application" },
                 name: { type: "string" },
-                category: { type: "string", enum: ["portal", "governance", "field", "workflow", "document"] },
+                category: {
+                  type: "string",
+                  enum: ["portal", "governance", "field", "workflow", "document"],
+                },
                 health: { type: "string", enum: ["healthy", "degraded", "down", "unknown"] },
                 ownerOrganizationId: { type: "string" },
               },
@@ -1240,7 +1462,7 @@ const paths: { [k: string]: YamlValue } = {
         },
       },
       responses: {
-        ...jsonResponse(201, { "$ref": "#/components/schemas/Application" }),
+        ...jsonResponse(201, { $ref: "#/components/schemas/Application" }),
         ...errorResponses(400, 401, 403, 409),
       },
     },
@@ -1251,9 +1473,9 @@ const paths: { [k: string]: YamlValue } = {
       summary: "Get an application by ID",
       tags: ["Applications"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       responses: {
-        ...jsonResponse(200, { "$ref": "#/components/schemas/Application" }),
+        ...jsonResponse(200, { $ref: "#/components/schemas/Application" }),
         ...errorResponses(401, 403, 404),
       },
     },
@@ -1262,7 +1484,7 @@ const paths: { [k: string]: YamlValue } = {
       summary: "Update an application",
       tags: ["Applications"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       requestBody: {
         required: true,
         content: {
@@ -1278,7 +1500,7 @@ const paths: { [k: string]: YamlValue } = {
         },
       },
       responses: {
-        ...jsonResponse(200, { "$ref": "#/components/schemas/Application" }),
+        ...jsonResponse(200, { $ref: "#/components/schemas/Application" }),
         ...errorResponses(400, 401, 403, 404),
       },
     },
@@ -1287,7 +1509,7 @@ const paths: { [k: string]: YamlValue } = {
       summary: "Remove an application",
       tags: ["Applications"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       responses: { "204": { description: "Deleted" }, ...errorResponses(401, 403, 404) },
     },
   },
@@ -1370,7 +1592,7 @@ const paths: { [k: string]: YamlValue } = {
                 type: "object",
                 required: ["entries", "count", "total", "limit", "offset"],
                 properties: {
-                  entries: { type: "array", items: { "$ref": "#/components/schemas/AuditEntry" } },
+                  entries: { type: "array", items: { $ref: "#/components/schemas/AuditEntry" } },
                   count: { type: "integer" },
                   total: { type: "integer" },
                   limit: { type: "integer" },
@@ -1449,7 +1671,7 @@ const paths: { [k: string]: YamlValue } = {
                   total: { type: "integer" },
                   limit: { type: "integer" },
                   offset: { type: "integer" },
-                  entries: { type: "array", items: { "$ref": "#/components/schemas/AuditEntry" } },
+                  entries: { type: "array", items: { $ref: "#/components/schemas/AuditEntry" } },
                 },
               },
             },
@@ -1466,8 +1688,8 @@ const paths: { [k: string]: YamlValue } = {
       tags: ["Governance"],
       security: authSecurity,
       parameters: [
-        { "$ref": "#/components/parameters/limitParam" },
-        { "$ref": "#/components/parameters/offsetParam" },
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
       ],
       responses: {
         ...jsonResponse(200, paginatedList("policies", "Policy")),
@@ -1497,7 +1719,7 @@ const paths: { [k: string]: YamlValue } = {
         },
       },
       responses: {
-        ...jsonResponse(201, { "$ref": "#/components/schemas/Policy" }),
+        ...jsonResponse(201, { $ref: "#/components/schemas/Policy" }),
         ...errorResponses(400, 401, 403, 409),
       },
     },
@@ -1508,9 +1730,9 @@ const paths: { [k: string]: YamlValue } = {
       summary: "Get a policy by ID",
       tags: ["Governance"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       responses: {
-        ...jsonResponse(200, { "$ref": "#/components/schemas/Policy" }),
+        ...jsonResponse(200, { $ref: "#/components/schemas/Policy" }),
         ...errorResponses(401, 403, 404),
       },
     },
@@ -1519,7 +1741,7 @@ const paths: { [k: string]: YamlValue } = {
       summary: "Update a policy",
       tags: ["Governance"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       requestBody: {
         required: true,
         content: {
@@ -1537,7 +1759,7 @@ const paths: { [k: string]: YamlValue } = {
         },
       },
       responses: {
-        ...jsonResponse(200, { "$ref": "#/components/schemas/Policy" }),
+        ...jsonResponse(200, { $ref: "#/components/schemas/Policy" }),
         ...errorResponses(400, 401, 403, 404),
       },
     },
@@ -1546,7 +1768,7 @@ const paths: { [k: string]: YamlValue } = {
       summary: "Delete a policy",
       tags: ["Governance"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       responses: { "204": { description: "Deleted" }, ...errorResponses(401, 403, 404) },
     },
   },
@@ -1559,8 +1781,8 @@ const paths: { [k: string]: YamlValue } = {
       tags: ["Workflows"],
       security: authSecurity,
       parameters: [
-        { "$ref": "#/components/parameters/limitParam" },
-        { "$ref": "#/components/parameters/offsetParam" },
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
         {
           name: "type",
           in: "query",
@@ -1613,7 +1835,7 @@ const paths: { [k: string]: YamlValue } = {
         },
       },
       responses: {
-        ...jsonResponse(201, { "$ref": "#/components/schemas/Workflow" }),
+        ...jsonResponse(201, { $ref: "#/components/schemas/Workflow" }),
         ...errorResponses(400, 401, 403),
       },
     },
@@ -1624,9 +1846,9 @@ const paths: { [k: string]: YamlValue } = {
       summary: "Get a workflow by ID",
       tags: ["Workflows"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       responses: {
-        ...jsonResponse(200, { "$ref": "#/components/schemas/Workflow" }),
+        ...jsonResponse(200, { $ref: "#/components/schemas/Workflow" }),
         ...errorResponses(401, 403, 404),
       },
     },
@@ -1635,7 +1857,7 @@ const paths: { [k: string]: YamlValue } = {
       summary: "Update a workflow",
       tags: ["Workflows"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       requestBody: {
         required: true,
         content: {
@@ -1663,7 +1885,7 @@ const paths: { [k: string]: YamlValue } = {
         },
       },
       responses: {
-        ...jsonResponse(200, { "$ref": "#/components/schemas/Workflow" }),
+        ...jsonResponse(200, { $ref: "#/components/schemas/Workflow" }),
         ...errorResponses(400, 401, 403, 404),
       },
     },
@@ -1672,7 +1894,7 @@ const paths: { [k: string]: YamlValue } = {
       summary: "Delete a workflow",
       tags: ["Workflows"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       responses: { "204": { description: "Deleted" }, ...errorResponses(401, 403, 404) },
     },
   },
@@ -1685,8 +1907,8 @@ const paths: { [k: string]: YamlValue } = {
       tags: ["WorkflowInstances"],
       security: authSecurity,
       parameters: [
-        { "$ref": "#/components/parameters/limitParam" },
-        { "$ref": "#/components/parameters/offsetParam" },
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
         {
           name: "status",
           in: "query",
@@ -1736,7 +1958,7 @@ const paths: { [k: string]: YamlValue } = {
       summary: "Approve or reject a pending workflow instance",
       tags: ["WorkflowInstances"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       requestBody: {
         required: true,
         content: {
@@ -1768,7 +1990,7 @@ const paths: { [k: string]: YamlValue } = {
       summary: "Cancel a pending workflow instance",
       tags: ["WorkflowInstances"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       responses: {
         ...jsonResponse(200, {
           type: "object",
@@ -1786,8 +2008,8 @@ const paths: { [k: string]: YamlValue } = {
       tags: ["AiGovernance"],
       security: authSecurity,
       parameters: [
-        { "$ref": "#/components/parameters/limitParam" },
-        { "$ref": "#/components/parameters/offsetParam" },
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
         {
           name: "status",
           in: "query",
@@ -1838,7 +2060,7 @@ const paths: { [k: string]: YamlValue } = {
       summary: "Approve or reject a pending AI action",
       tags: ["AiGovernance"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       requestBody: {
         required: true,
         content: {
@@ -1904,7 +2126,7 @@ const paths: { [k: string]: YamlValue } = {
       summary: "D-02: report device liveness",
       tags: ["Devices"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       requestBody: {
         required: false,
         content: {
@@ -1934,7 +2156,7 @@ const paths: { [k: string]: YamlValue } = {
       summary: "D-03: report device inventory/telemetry",
       tags: ["Devices"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       requestBody: {
         required: true,
         content: {
@@ -1942,7 +2164,9 @@ const paths: { [k: string]: YamlValue } = {
             schema: {
               type: "object",
               required: ["metadata"],
-              properties: { metadata: { type: "object", additionalProperties: { type: "string" } } },
+              properties: {
+                metadata: { type: "object", additionalProperties: { type: "string" } },
+              },
             },
           },
         },
@@ -1964,8 +2188,8 @@ const paths: { [k: string]: YamlValue } = {
       tags: ["Projects"],
       security: authSecurity,
       parameters: [
-        { "$ref": "#/components/parameters/limitParam" },
-        { "$ref": "#/components/parameters/offsetParam" },
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
         {
           name: "status",
           in: "query",
@@ -2028,7 +2252,7 @@ const paths: { [k: string]: YamlValue } = {
       summary: "Project detail",
       tags: ["Projects"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       responses: {
         ...jsonResponse(200, {
           type: "object",
@@ -2043,7 +2267,7 @@ const paths: { [k: string]: YamlValue } = {
       summary: "Update a project",
       tags: ["Projects"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       requestBody: {
         required: true,
         content: {
@@ -2082,7 +2306,7 @@ const paths: { [k: string]: YamlValue } = {
       summary: "Delete a project (audited)",
       tags: ["Projects"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       responses: {
         ...jsonResponse(200, {
           type: "object",
@@ -2100,8 +2324,8 @@ const paths: { [k: string]: YamlValue } = {
       tags: ["DailyReports"],
       security: authSecurity,
       parameters: [
-        { "$ref": "#/components/parameters/limitParam" },
-        { "$ref": "#/components/parameters/offsetParam" },
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
         {
           name: "status",
           in: "query",
@@ -2156,7 +2380,7 @@ const paths: { [k: string]: YamlValue } = {
       summary: "Daily report detail",
       tags: ["DailyReports"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       responses: {
         ...jsonResponse(200, {
           type: "object",
@@ -2171,7 +2395,7 @@ const paths: { [k: string]: YamlValue } = {
       summary: "Update a daily report",
       tags: ["DailyReports"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       requestBody: {
         required: true,
         content: {
@@ -2208,7 +2432,7 @@ const paths: { [k: string]: YamlValue } = {
       summary: "Transition a daily report (draft → submitted → approved)",
       tags: ["DailyReports"],
       security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
       requestBody: {
         required: true,
         content: {
@@ -2239,8 +2463,8 @@ const paths: { [k: string]: YamlValue } = {
       tags: ["Photos"],
       security: authSecurity,
       parameters: [
-        { "$ref": "#/components/parameters/limitParam" },
-        { "$ref": "#/components/parameters/offsetParam" },
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
       ],
       responses: {
         ...jsonResponse(200, paginatedList("photos", "Photo")),
@@ -2260,399 +2484,1171 @@ const paths: { [k: string]: YamlValue } = {
               type: "object",
               required: ["fileName", "originalName", "contentType", "fileSize"],
               properties: {
-                fileName: { type: "string" }, originalName: { type: "string" }, contentType: { type: "string" },
-                fileSize: { type: "integer" }, objectKey: { type: "string" },
-                category: { type: "string", enum: ["general", "progress", "safety", "quality", "handover"] },
-                caption: { type: "string" }, takenAt: { type: "string", format: "date-time" },
+                fileName: { type: "string" },
+                originalName: { type: "string" },
+                contentType: { type: "string" },
+                fileSize: { type: "integer" },
+                objectKey: { type: "string" },
+                category: {
+                  type: "string",
+                  enum: ["general", "progress", "safety", "quality", "handover"],
+                },
+                caption: { type: "string" },
+                takenAt: { type: "string", format: "date-time" },
               },
             },
           },
         },
       },
       responses: {
-        ...jsonResponse(201, { type: "object", required: ["photo"], properties: { photo: { $ref: "#/components/schemas/Photo" } } }),
+        ...jsonResponse(201, {
+          type: "object",
+          required: ["photo"],
+          properties: { photo: { $ref: "#/components/schemas/Photo" } },
+        }),
         ...errorResponses(400, 401, 403, 404),
       },
     },
   },
   "/api/v1/photos/{id}": {
     get: {
-      operationId: "getPhoto", summary: "Photo metadata detail", tags: ["Photos"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
-      responses: { ...jsonResponse(200, { type: "object", required: ["photo"], properties: { photo: { $ref: "#/components/schemas/Photo" } } }), ...errorResponses(401, 403, 404) },
+      operationId: "getPhoto",
+      summary: "Photo metadata detail",
+      tags: ["Photos"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["photo"],
+          properties: { photo: { $ref: "#/components/schemas/Photo" } },
+        }),
+        ...errorResponses(401, 403, 404),
+      },
     },
     delete: {
-      operationId: "deletePhoto", summary: "Delete photo metadata (audited)", tags: ["Photos"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
-      responses: { ...jsonResponse(200, { type: "object", properties: { deleted: { type: "boolean" } } }), ...errorResponses(401, 403, 404) },
+      operationId: "deletePhoto",
+      summary: "Delete photo metadata (audited)",
+      tags: ["Photos"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, { type: "object", properties: { deleted: { type: "boolean" } } }),
+        ...errorResponses(401, 403, 404),
+      },
     },
   },
   "/api/v1/projects/{projectId}/safety-checks": {
     get: {
-      operationId: "listSafetyChecks", summary: "Paginated list of safety checks for a project (S-04)", tags: ["SafetyChecks"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/limitParam" }, { "$ref": "#/components/parameters/offsetParam" }],
-      responses: { ...jsonResponse(200, paginatedList("safetyChecks", "SafetyCheck")), ...errorResponses(401, 403, 404) },
+      operationId: "listSafetyChecks",
+      summary: "Paginated list of safety checks for a project (S-04)",
+      tags: ["SafetyChecks"],
+      security: authSecurity,
+      parameters: [
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
+      ],
+      responses: {
+        ...jsonResponse(200, paginatedList("safetyChecks", "SafetyCheck")),
+        ...errorResponses(401, 403, 404),
+      },
     },
     post: {
-      operationId: "createSafetyCheck", summary: "Create a safety check (S-04)", tags: ["SafetyChecks"], security: authSecurity,
+      operationId: "createSafetyCheck",
+      summary: "Create a safety check (S-04)",
+      tags: ["SafetyChecks"],
+      security: authSecurity,
       requestBody: {
         required: true,
-        content: { "application/json": { schema: { type: "object", required: ["checkDate"], properties: { checkDate: { type: "string", format: "date" }, checkType: { type: "string", enum: ["daily", "patrol", "ky", "other"] }, itemsTotal: { type: "integer" }, itemsOk: { type: "integer" }, itemsNg: { type: "integer" }, overallResult: { type: "string", enum: ["pending", "ok", "ng"] }, notes: { type: "string" }, inspectorId: { type: "string" } } } } },
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["checkDate"],
+              properties: {
+                checkDate: { type: "string", format: "date" },
+                checkType: { type: "string", enum: ["daily", "patrol", "ky", "other"] },
+                itemsTotal: { type: "integer" },
+                itemsOk: { type: "integer" },
+                itemsNg: { type: "integer" },
+                overallResult: { type: "string", enum: ["pending", "ok", "ng"] },
+                notes: { type: "string" },
+                inspectorId: { type: "string" },
+              },
+            },
+          },
+        },
       },
-      responses: { ...jsonResponse(201, { type: "object", required: ["safetyCheck"], properties: { safetyCheck: { $ref: "#/components/schemas/SafetyCheck" } } }), ...errorResponses(400, 401, 403, 404) },
+      responses: {
+        ...jsonResponse(201, {
+          type: "object",
+          required: ["safetyCheck"],
+          properties: { safetyCheck: { $ref: "#/components/schemas/SafetyCheck" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
     },
   },
   "/api/v1/safety-checks/{id}": {
     get: {
-      operationId: "getSafetyCheck", summary: "Safety check detail", tags: ["SafetyChecks"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
-      responses: { ...jsonResponse(200, { type: "object", required: ["safetyCheck"], properties: { safetyCheck: { $ref: "#/components/schemas/SafetyCheck" } } }), ...errorResponses(401, 403, 404) },
+      operationId: "getSafetyCheck",
+      summary: "Safety check detail",
+      tags: ["SafetyChecks"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["safetyCheck"],
+          properties: { safetyCheck: { $ref: "#/components/schemas/SafetyCheck" } },
+        }),
+        ...errorResponses(401, 403, 404),
+      },
     },
     delete: {
-      operationId: "deleteSafetyCheck", summary: "Delete a safety check (audited)", tags: ["SafetyChecks"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
-      responses: { ...jsonResponse(200, { type: "object", properties: { deleted: { type: "boolean" } } }), ...errorResponses(401, 403, 404) },
+      operationId: "deleteSafetyCheck",
+      summary: "Delete a safety check (audited)",
+      tags: ["SafetyChecks"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, { type: "object", properties: { deleted: { type: "boolean" } } }),
+        ...errorResponses(401, 403, 404),
+      },
     },
   },
   "/api/v1/projects/{projectId}/quality-inspections": {
     get: {
-      operationId: "listQualityInspections", summary: "Paginated list of quality inspections for a project (S-04)", tags: ["QualityInspections"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/limitParam" }, { "$ref": "#/components/parameters/offsetParam" }],
-      responses: { ...jsonResponse(200, paginatedList("qualityInspections", "QualityInspection")), ...errorResponses(401, 403, 404) },
+      operationId: "listQualityInspections",
+      summary: "Paginated list of quality inspections for a project (S-04)",
+      tags: ["QualityInspections"],
+      security: authSecurity,
+      parameters: [
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
+      ],
+      responses: {
+        ...jsonResponse(200, paginatedList("qualityInspections", "QualityInspection")),
+        ...errorResponses(401, 403, 404),
+      },
     },
     post: {
-      operationId: "createQualityInspection", summary: "Create a quality inspection (S-04)", tags: ["QualityInspections"], security: authSecurity,
+      operationId: "createQualityInspection",
+      summary: "Create a quality inspection (S-04)",
+      tags: ["QualityInspections"],
+      security: authSecurity,
       requestBody: {
         required: true,
-        content: { "application/json": { schema: { type: "object", required: ["inspectionDate", "inspectionType", "targetItem"], properties: { inspectionDate: { type: "string", format: "date" }, inspectionType: { type: "string" }, targetItem: { type: "string" }, standardValue: { type: "string" }, measuredValue: { type: "string" }, result: { type: "string", enum: ["pending", "pass", "fail"] }, notes: { type: "string" }, inspectorId: { type: "string" } } } } },
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["inspectionDate", "inspectionType", "targetItem"],
+              properties: {
+                inspectionDate: { type: "string", format: "date" },
+                inspectionType: { type: "string" },
+                targetItem: { type: "string" },
+                standardValue: { type: "string" },
+                measuredValue: { type: "string" },
+                result: { type: "string", enum: ["pending", "pass", "fail"] },
+                notes: { type: "string" },
+                inspectorId: { type: "string" },
+              },
+            },
+          },
+        },
       },
-      responses: { ...jsonResponse(201, { type: "object", required: ["qualityInspection"], properties: { qualityInspection: { $ref: "#/components/schemas/QualityInspection" } } }), ...errorResponses(400, 401, 403, 404) },
+      responses: {
+        ...jsonResponse(201, {
+          type: "object",
+          required: ["qualityInspection"],
+          properties: { qualityInspection: { $ref: "#/components/schemas/QualityInspection" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
     },
   },
   "/api/v1/quality-inspections/{id}": {
     get: {
-      operationId: "getQualityInspection", summary: "Quality inspection detail", tags: ["QualityInspections"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
-      responses: { ...jsonResponse(200, { type: "object", required: ["qualityInspection"], properties: { qualityInspection: { $ref: "#/components/schemas/QualityInspection" } } }), ...errorResponses(401, 403, 404) },
+      operationId: "getQualityInspection",
+      summary: "Quality inspection detail",
+      tags: ["QualityInspections"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["qualityInspection"],
+          properties: { qualityInspection: { $ref: "#/components/schemas/QualityInspection" } },
+        }),
+        ...errorResponses(401, 403, 404),
+      },
     },
     delete: {
-      operationId: "deleteQualityInspection", summary: "Delete a quality inspection (audited)", tags: ["QualityInspections"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
-      responses: { ...jsonResponse(200, { type: "object", properties: { deleted: { type: "boolean" } } }), ...errorResponses(401, 403, 404) },
+      operationId: "deleteQualityInspection",
+      summary: "Delete a quality inspection (audited)",
+      tags: ["QualityInspections"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, { type: "object", properties: { deleted: { type: "boolean" } } }),
+        ...errorResponses(401, 403, 404),
+      },
     },
   },
   "/api/v1/projects/{projectId}/cost-records": {
     get: {
-      operationId: "listCostRecords", summary: "Paginated list of cost records for a project (S-05)", tags: ["CostRecords"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/limitParam" }, { "$ref": "#/components/parameters/offsetParam" }],
-      responses: { ...jsonResponse(200, paginatedList("costRecords", "CostRecord")), ...errorResponses(401, 403, 404) },
+      operationId: "listCostRecords",
+      summary: "Paginated list of cost records for a project (S-05)",
+      tags: ["CostRecords"],
+      security: authSecurity,
+      parameters: [
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
+      ],
+      responses: {
+        ...jsonResponse(200, paginatedList("costRecords", "CostRecord")),
+        ...errorResponses(401, 403, 404),
+      },
     },
     post: {
-      operationId: "createCostRecord", summary: "Create a cost record (S-05)", tags: ["CostRecords"], security: authSecurity,
+      operationId: "createCostRecord",
+      summary: "Create a cost record (S-05)",
+      tags: ["CostRecords"],
+      security: authSecurity,
       requestBody: {
         required: true,
-        content: { "application/json": { schema: { type: "object", required: ["recordDate", "category", "description"], properties: { recordDate: { type: "string", format: "date" }, category: { type: "string" }, description: { type: "string" }, budgetedAmount: { type: "number" }, actualAmount: { type: "number" }, vendorName: { type: "string" }, invoiceNumber: { type: "string" }, notes: { type: "string" } } } } },
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["recordDate", "category", "description"],
+              properties: {
+                recordDate: { type: "string", format: "date" },
+                category: { type: "string" },
+                description: { type: "string" },
+                budgetedAmount: { type: "number" },
+                actualAmount: { type: "number" },
+                vendorName: { type: "string" },
+                invoiceNumber: { type: "string" },
+                notes: { type: "string" },
+              },
+            },
+          },
+        },
       },
-      responses: { ...jsonResponse(201, { type: "object", required: ["costRecord"], properties: { costRecord: { $ref: "#/components/schemas/CostRecord" } } }), ...errorResponses(400, 401, 403, 404) },
+      responses: {
+        ...jsonResponse(201, {
+          type: "object",
+          required: ["costRecord"],
+          properties: { costRecord: { $ref: "#/components/schemas/CostRecord" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
     },
   },
   "/api/v1/cost-records/{id}": {
     get: {
-      operationId: "getCostRecord", summary: "Cost record detail", tags: ["CostRecords"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
-      responses: { ...jsonResponse(200, { type: "object", required: ["costRecord"], properties: { costRecord: { $ref: "#/components/schemas/CostRecord" } } }), ...errorResponses(401, 403, 404) },
+      operationId: "getCostRecord",
+      summary: "Cost record detail",
+      tags: ["CostRecords"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["costRecord"],
+          properties: { costRecord: { $ref: "#/components/schemas/CostRecord" } },
+        }),
+        ...errorResponses(401, 403, 404),
+      },
     },
     delete: {
-      operationId: "deleteCostRecord", summary: "Delete a cost record (audited)", tags: ["CostRecords"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
-      responses: { ...jsonResponse(200, { type: "object", properties: { deleted: { type: "boolean" } } }), ...errorResponses(401, 403, 404) },
+      operationId: "deleteCostRecord",
+      summary: "Delete a cost record (audited)",
+      tags: ["CostRecords"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, { type: "object", properties: { deleted: { type: "boolean" } } }),
+        ...errorResponses(401, 403, 404),
+      },
     },
   },
   "/api/v1/projects/{projectId}/work-hours": {
     get: {
-      operationId: "listWorkHours", summary: "Paginated list of work hours for a project (S-05)", tags: ["CostRecords"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/limitParam" }, { "$ref": "#/components/parameters/offsetParam" }],
-      responses: { ...jsonResponse(200, paginatedList("workHours", "WorkHour")), ...errorResponses(401, 403, 404) },
+      operationId: "listWorkHours",
+      summary: "Paginated list of work hours for a project (S-05)",
+      tags: ["CostRecords"],
+      security: authSecurity,
+      parameters: [
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
+      ],
+      responses: {
+        ...jsonResponse(200, paginatedList("workHours", "WorkHour")),
+        ...errorResponses(401, 403, 404),
+      },
     },
     post: {
-      operationId: "createWorkHour", summary: "Create a work hour record (S-05)", tags: ["CostRecords"], security: authSecurity,
+      operationId: "createWorkHour",
+      summary: "Create a work hour record (S-05)",
+      tags: ["CostRecords"],
+      security: authSecurity,
       requestBody: {
         required: true,
-        content: { "application/json": { schema: { type: "object", required: ["workDate", "hours"], properties: { workerId: { type: "string" }, workDate: { type: "string", format: "date" }, hours: { type: "number" }, workType: { type: "string" }, notes: { type: "string" } } } } },
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["workDate", "hours"],
+              properties: {
+                workerId: { type: "string" },
+                workDate: { type: "string", format: "date" },
+                hours: { type: "number" },
+                workType: { type: "string" },
+                notes: { type: "string" },
+              },
+            },
+          },
+        },
       },
-      responses: { ...jsonResponse(201, { type: "object", required: ["workHour"], properties: { workHour: { $ref: "#/components/schemas/WorkHour" } } }), ...errorResponses(400, 401, 403, 404) },
+      responses: {
+        ...jsonResponse(201, {
+          type: "object",
+          required: ["workHour"],
+          properties: { workHour: { $ref: "#/components/schemas/WorkHour" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
     },
   },
   "/api/v1/work-hours/{id}": {
     get: {
-      operationId: "getWorkHour", summary: "Work hour detail", tags: ["CostRecords"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
-      responses: { ...jsonResponse(200, { type: "object", required: ["workHour"], properties: { workHour: { $ref: "#/components/schemas/WorkHour" } } }), ...errorResponses(401, 403, 404) },
+      operationId: "getWorkHour",
+      summary: "Work hour detail",
+      tags: ["CostRecords"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["workHour"],
+          properties: { workHour: { $ref: "#/components/schemas/WorkHour" } },
+        }),
+        ...errorResponses(401, 403, 404),
+      },
     },
   },
   "/api/v1/notifications": {
     get: {
-      operationId: "listNotifications", summary: "Paginated list of notification deliveries (optional ?status=)", tags: ["Notifications"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/limitParam" }, { "$ref": "#/components/parameters/offsetParam" }, { name: "status", in: "query", schema: { type: "string", enum: ["pending", "sent", "failed", "retry"] } }],
-      responses: { ...jsonResponse(200, paginatedList("notifications", "NotificationDelivery")), ...errorResponses(400, 401, 403) },
+      operationId: "listNotifications",
+      summary: "Paginated list of notification deliveries (optional ?status=)",
+      tags: ["Notifications"],
+      security: authSecurity,
+      parameters: [
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
+        {
+          name: "status",
+          in: "query",
+          schema: { type: "string", enum: ["pending", "sent", "failed", "retry"] },
+        },
+      ],
+      responses: {
+        ...jsonResponse(200, paginatedList("notifications", "NotificationDelivery")),
+        ...errorResponses(400, 401, 403),
+      },
     },
     post: {
-      operationId: "createNotification", summary: "Create a notification delivery intent (S-09)", tags: ["Notifications"], security: authSecurity,
+      operationId: "createNotification",
+      summary: "Create a notification delivery intent (S-09)",
+      tags: ["Notifications"],
+      security: authSecurity,
       requestBody: {
         required: true,
-        content: { "application/json": { schema: { type: "object", required: ["userId", "eventKey", "channel"], properties: { organizationId: { type: "string" }, userId: { type: "string" }, eventKey: { type: "string" }, channel: { type: "string", enum: ["email", "slack", "webhook"] }, subject: { type: "string" }, bodyPreview: { type: "string" } } } } },
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["userId", "eventKey", "channel"],
+              properties: {
+                organizationId: { type: "string" },
+                userId: { type: "string" },
+                eventKey: { type: "string" },
+                channel: { type: "string", enum: ["email", "slack", "webhook"] },
+                subject: { type: "string" },
+                bodyPreview: { type: "string" },
+              },
+            },
+          },
+        },
       },
-      responses: { ...jsonResponse(201, { type: "object", required: ["notification"], properties: { notification: { $ref: "#/components/schemas/NotificationDelivery" } } }), ...errorResponses(400, 401, 403) },
+      responses: {
+        ...jsonResponse(201, {
+          type: "object",
+          required: ["notification"],
+          properties: { notification: { $ref: "#/components/schemas/NotificationDelivery" } },
+        }),
+        ...errorResponses(400, 401, 403),
+      },
     },
   },
   "/api/v1/notifications/{id}": {
     get: {
-      operationId: "getNotification", summary: "Notification delivery detail", tags: ["Notifications"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
-      responses: { ...jsonResponse(200, { type: "object", required: ["notification"], properties: { notification: { $ref: "#/components/schemas/NotificationDelivery" } } }), ...errorResponses(401, 403, 404) },
+      operationId: "getNotification",
+      summary: "Notification delivery detail",
+      tags: ["Notifications"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["notification"],
+          properties: { notification: { $ref: "#/components/schemas/NotificationDelivery" } },
+        }),
+        ...errorResponses(401, 403, 404),
+      },
     },
   },
 
   "/api/v1/knowledge": {
     get: {
-      operationId: "listKnowledge", summary: "Paginated knowledge articles (optional ?category= & ?q=)", tags: ["Knowledge"], security: authSecurity,
+      operationId: "listKnowledge",
+      summary: "Paginated knowledge articles (optional ?category= & ?q=)",
+      tags: ["Knowledge"],
+      security: authSecurity,
       parameters: [
-        { "$ref": "#/components/parameters/limitParam" }, { "$ref": "#/components/parameters/offsetParam" },
-        { name: "category", in: "query", schema: { type: "string", enum: ["general", "faq", "incident", "contract", "safety"] } },
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
+        {
+          name: "category",
+          in: "query",
+          schema: { type: "string", enum: ["general", "faq", "incident", "contract", "safety"] },
+        },
         { name: "q", in: "query", schema: { type: "string" } },
       ],
-      responses: { ...jsonResponse(200, paginatedList("knowledgeArticles", "KnowledgeArticle")), ...errorResponses(400, 401, 403) },
+      responses: {
+        ...jsonResponse(200, paginatedList("knowledgeArticles", "KnowledgeArticle")),
+        ...errorResponses(400, 401, 403),
+      },
     },
     post: {
-      operationId: "createKnowledge", summary: "Create a knowledge article (S-06; AI-generated requires approved aiActionId)", tags: ["Knowledge"], security: authSecurity,
+      operationId: "createKnowledge",
+      summary: "Create a knowledge article (S-06; AI-generated requires approved aiActionId)",
+      tags: ["Knowledge"],
+      security: authSecurity,
       requestBody: {
         required: true,
-        content: { "application/json": { schema: { type: "object", required: ["title", "content"], properties: { organizationId: { type: "string" }, title: { type: "string" }, content: { type: "string" }, category: { type: "string", enum: ["general", "faq", "incident", "contract", "safety"] }, tags: { type: "array", items: { type: "string" } }, isPublished: { type: "boolean" }, aiGenerated: { type: "boolean" }, aiActionId: { type: "string" } } } } },
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["title", "content"],
+              properties: {
+                organizationId: { type: "string" },
+                title: { type: "string" },
+                content: { type: "string" },
+                category: {
+                  type: "string",
+                  enum: ["general", "faq", "incident", "contract", "safety"],
+                },
+                tags: { type: "array", items: { type: "string" } },
+                isPublished: { type: "boolean" },
+                aiGenerated: { type: "boolean" },
+                aiActionId: { type: "string" },
+              },
+            },
+          },
+        },
       },
-      responses: { ...jsonResponse(201, { type: "object", required: ["knowledgeArticle"], properties: { knowledgeArticle: { $ref: "#/components/schemas/KnowledgeArticle" } } }), ...errorResponses(400, 401, 403) },
+      responses: {
+        ...jsonResponse(201, {
+          type: "object",
+          required: ["knowledgeArticle"],
+          properties: { knowledgeArticle: { $ref: "#/components/schemas/KnowledgeArticle" } },
+        }),
+        ...errorResponses(400, 401, 403),
+      },
     },
   },
   "/api/v1/knowledge/{id}": {
     get: {
-      operationId: "getKnowledge", summary: "Knowledge article detail", tags: ["Knowledge"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
-      responses: { ...jsonResponse(200, { type: "object", required: ["knowledgeArticle"], properties: { knowledgeArticle: { $ref: "#/components/schemas/KnowledgeArticle" } } }), ...errorResponses(401, 403, 404) },
+      operationId: "getKnowledge",
+      summary: "Knowledge article detail",
+      tags: ["Knowledge"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["knowledgeArticle"],
+          properties: { knowledgeArticle: { $ref: "#/components/schemas/KnowledgeArticle" } },
+        }),
+        ...errorResponses(401, 403, 404),
+      },
     },
     delete: {
-      operationId: "deleteKnowledge", summary: "Delete a knowledge article (audited)", tags: ["Knowledge"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
-      responses: { ...jsonResponse(200, { type: "object", properties: { deleted: { type: "boolean" } } }), ...errorResponses(401, 403, 404) },
+      operationId: "deleteKnowledge",
+      summary: "Delete a knowledge article (audited)",
+      tags: ["Knowledge"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, { type: "object", properties: { deleted: { type: "boolean" } } }),
+        ...errorResponses(401, 403, 404),
+      },
     },
   },
   "/api/v1/projects/{projectId}/contracts": {
     get: {
-      operationId: "listContracts", summary: "Paginated list of contracts for a project (S-07)", tags: ["Contracts"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/limitParam" }, { "$ref": "#/components/parameters/offsetParam" }],
-      responses: { ...jsonResponse(200, paginatedList("contracts", "Contract")), ...errorResponses(401, 403, 404) },
+      operationId: "listContracts",
+      summary: "Paginated list of contracts for a project (S-07)",
+      tags: ["Contracts"],
+      security: authSecurity,
+      parameters: [
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
+      ],
+      responses: {
+        ...jsonResponse(200, paginatedList("contracts", "Contract")),
+        ...errorResponses(401, 403, 404),
+      },
     },
     post: {
-      operationId: "createContract", summary: "Create a legal contract (S-07)", tags: ["Contracts"], security: authSecurity,
+      operationId: "createContract",
+      summary: "Create a legal contract (S-07)",
+      tags: ["Contracts"],
+      security: authSecurity,
       requestBody: {
         required: true,
-        content: { "application/json": { schema: { type: "object", required: ["contractNumber", "title"], properties: { contractType: { type: "string", enum: ["prime", "subcontract", "other"] }, contractNumber: { type: "string" }, title: { type: "string" }, party: { type: "string" }, periodStart: { type: "string", format: "date" }, periodEnd: { type: "string", format: "date" }, amount: { type: "number" }, description: { type: "string" }, documentUrl: { type: "string" }, aiRiskScore: { type: "string", enum: ["pending", "low", "medium", "high"] }, status: { type: "string", enum: ["draft", "active", "completed", "terminated"] } } } } },
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["contractNumber", "title"],
+              properties: {
+                contractType: { type: "string", enum: ["prime", "subcontract", "other"] },
+                contractNumber: { type: "string" },
+                title: { type: "string" },
+                party: { type: "string" },
+                periodStart: { type: "string", format: "date" },
+                periodEnd: { type: "string", format: "date" },
+                amount: { type: "number" },
+                description: { type: "string" },
+                documentUrl: { type: "string" },
+                aiRiskScore: { type: "string", enum: ["pending", "low", "medium", "high"] },
+                status: { type: "string", enum: ["draft", "active", "completed", "terminated"] },
+              },
+            },
+          },
+        },
       },
-      responses: { ...jsonResponse(201, { type: "object", required: ["contract"], properties: { contract: { $ref: "#/components/schemas/Contract" } } }), ...errorResponses(400, 401, 403, 404) },
+      responses: {
+        ...jsonResponse(201, {
+          type: "object",
+          required: ["contract"],
+          properties: { contract: { $ref: "#/components/schemas/Contract" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
     },
   },
   "/api/v1/contracts/{id}": {
     get: {
-      operationId: "getContract", summary: "Contract detail", tags: ["Contracts"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
-      responses: { ...jsonResponse(200, { type: "object", required: ["contract"], properties: { contract: { $ref: "#/components/schemas/Contract" } } }), ...errorResponses(401, 403, 404) },
+      operationId: "getContract",
+      summary: "Contract detail",
+      tags: ["Contracts"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["contract"],
+          properties: { contract: { $ref: "#/components/schemas/Contract" } },
+        }),
+        ...errorResponses(401, 403, 404),
+      },
     },
   },
   "/api/v1/itsm/incidents": {
     get: {
-      operationId: "listItsmIncidents", summary: "List ITSM incidents through the adapter (S-08)", tags: ["Itsm"], security: authSecurity,
-      responses: { ...jsonResponse(200, { type: "object", properties: { incidents: { type: "array", items: { type: "object" } } } }), ...errorResponses(401, 403) },
+      operationId: "listItsmIncidents",
+      summary: "List ITSM incidents through the adapter (S-08)",
+      tags: ["Itsm"],
+      security: authSecurity,
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          properties: { incidents: { type: "array", items: { type: "object" } } },
+        }),
+        ...errorResponses(401, 403),
+      },
     },
     post: {
-      operationId: "createItsmIncident", summary: "Create an ITSM incident through the adapter (S-08)", tags: ["Itsm"], security: authSecurity,
+      operationId: "createItsmIncident",
+      summary: "Create an ITSM incident through the adapter (S-08)",
+      tags: ["Itsm"],
+      security: authSecurity,
       requestBody: {
         required: true,
-        content: { "application/json": { schema: { type: "object", required: ["title", "severity"], properties: { title: { type: "string" }, severity: { type: "string", enum: ["low", "medium", "high", "critical"] } } } } },
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["title", "severity"],
+              properties: {
+                title: { type: "string" },
+                severity: { type: "string", enum: ["low", "medium", "high", "critical"] },
+              },
+            },
+          },
+        },
       },
-      responses: { ...jsonResponse(201, { type: "object", properties: { incident: { type: "object" } } }), ...errorResponses(400, 401, 403) },
+      responses: {
+        ...jsonResponse(201, { type: "object", properties: { incident: { type: "object" } } }),
+        ...errorResponses(400, 401, 403),
+      },
     },
   },
   "/api/v1/itsm/incidents/{id}": {
     get: {
-      operationId: "getItsmIncident", summary: "ITSM incident detail", tags: ["Itsm"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
-      responses: { ...jsonResponse(200, { type: "object", properties: { incident: { type: "object" } } }), ...errorResponses(401, 403, 404) },
+      operationId: "getItsmIncident",
+      summary: "ITSM incident detail",
+      tags: ["Itsm"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, { type: "object", properties: { incident: { type: "object" } } }),
+        ...errorResponses(401, 403, 404),
+      },
     },
   },
 
   "/api/v1/documents": {
     get: {
-      operationId: "listDocuments", summary: "Paginated documents (optional ?type=)", tags: ["Documents"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/limitParam" }, { "$ref": "#/components/parameters/offsetParam" }, { name: "type", in: "query", schema: { type: "string", enum: ["drawing", "contract", "safety", "quality", "other"] } }],
-      responses: { ...jsonResponse(200, paginatedList("documents", "Document")), ...errorResponses(400, 401, 403) },
+      operationId: "listDocuments",
+      summary: "Paginated documents (optional ?type=)",
+      tags: ["Documents"],
+      security: authSecurity,
+      parameters: [
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
+        {
+          name: "type",
+          in: "query",
+          schema: { type: "string", enum: ["drawing", "contract", "safety", "quality", "other"] },
+        },
+      ],
+      responses: {
+        ...jsonResponse(200, paginatedList("documents", "Document")),
+        ...errorResponses(400, 401, 403),
+      },
     },
     post: {
-      operationId: "createDocument", summary: "Create a drawing/document (E-03)", tags: ["Documents"], security: authSecurity,
+      operationId: "createDocument",
+      summary: "Create a drawing/document (E-03)",
+      tags: ["Documents"],
+      security: authSecurity,
       requestBody: {
         required: true,
-        content: { "application/json": { schema: { type: "object", required: ["title"], properties: { organizationId: { type: "string" }, projectId: { type: "string" }, title: { type: "string" }, documentType: { type: "string", enum: ["drawing", "contract", "safety", "quality", "other"] }, revision: { type: "integer" }, status: { type: "string", enum: ["draft", "review", "approved", "issued", "archived"] }, fileUrl: { type: "string" }, fileSize: { type: "integer" } } } } },
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["title"],
+              properties: {
+                organizationId: { type: "string" },
+                projectId: { type: "string" },
+                title: { type: "string" },
+                documentType: {
+                  type: "string",
+                  enum: ["drawing", "contract", "safety", "quality", "other"],
+                },
+                revision: { type: "integer" },
+                status: {
+                  type: "string",
+                  enum: ["draft", "review", "approved", "issued", "archived"],
+                },
+                fileUrl: { type: "string" },
+                fileSize: { type: "integer" },
+              },
+            },
+          },
+        },
       },
-      responses: { ...jsonResponse(201, { type: "object", required: ["document"], properties: { document: { $ref: "#/components/schemas/Document" } } }), ...errorResponses(400, 401, 403) },
+      responses: {
+        ...jsonResponse(201, {
+          type: "object",
+          required: ["document"],
+          properties: { document: { $ref: "#/components/schemas/Document" } },
+        }),
+        ...errorResponses(400, 401, 403),
+      },
     },
   },
   "/api/v1/documents/{id}": {
     get: {
-      operationId: "getDocument", summary: "Document detail", tags: ["Documents"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
-      responses: { ...jsonResponse(200, { type: "object", required: ["document"], properties: { document: { $ref: "#/components/schemas/Document" } } }), ...errorResponses(401, 403, 404) },
+      operationId: "getDocument",
+      summary: "Document detail",
+      tags: ["Documents"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["document"],
+          properties: { document: { $ref: "#/components/schemas/Document" } },
+        }),
+        ...errorResponses(401, 403, 404),
+      },
     },
     delete: {
-      operationId: "deleteDocument", summary: "Delete a document (audited)", tags: ["Documents"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
-      responses: { ...jsonResponse(200, { type: "object", properties: { deleted: { type: "boolean" } } }), ...errorResponses(401, 403, 404) },
+      operationId: "deleteDocument",
+      summary: "Delete a document (audited)",
+      tags: ["Documents"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, { type: "object", properties: { deleted: { type: "boolean" } } }),
+        ...errorResponses(401, 403, 404),
+      },
     },
   },
   "/api/v1/projects/{projectId}/work-schedules": {
     get: {
-      operationId: "listWorkSchedules", summary: "Paginated work schedules for a project (E-02)", tags: ["WorkSchedules"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/limitParam" }, { "$ref": "#/components/parameters/offsetParam" }],
-      responses: { ...jsonResponse(200, paginatedList("workSchedules", "WorkSchedule")), ...errorResponses(401, 403, 404) },
+      operationId: "listWorkSchedules",
+      summary: "Paginated work schedules for a project (E-02)",
+      tags: ["WorkSchedules"],
+      security: authSecurity,
+      parameters: [
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
+      ],
+      responses: {
+        ...jsonResponse(200, paginatedList("workSchedules", "WorkSchedule")),
+        ...errorResponses(401, 403, 404),
+      },
     },
     post: {
-      operationId: "createWorkSchedule", summary: "Create a work schedule (E-02)", tags: ["WorkSchedules"], security: authSecurity,
+      operationId: "createWorkSchedule",
+      summary: "Create a work schedule (E-02)",
+      tags: ["WorkSchedules"],
+      security: authSecurity,
       requestBody: {
         required: true,
-        content: { "application/json": { schema: { type: "object", required: ["workDate", "title"], properties: { workDate: { type: "string", format: "date" }, title: { type: "string" }, assignee: { type: "string" }, status: { type: "string", enum: ["planned", "in_progress", "completed", "cancelled"] }, notes: { type: "string" } } } } },
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["workDate", "title"],
+              properties: {
+                workDate: { type: "string", format: "date" },
+                title: { type: "string" },
+                assignee: { type: "string" },
+                status: {
+                  type: "string",
+                  enum: ["planned", "in_progress", "completed", "cancelled"],
+                },
+                notes: { type: "string" },
+              },
+            },
+          },
+        },
       },
-      responses: { ...jsonResponse(201, { type: "object", required: ["workSchedule"], properties: { workSchedule: { $ref: "#/components/schemas/WorkSchedule" } } }), ...errorResponses(400, 401, 403, 404) },
+      responses: {
+        ...jsonResponse(201, {
+          type: "object",
+          required: ["workSchedule"],
+          properties: { workSchedule: { $ref: "#/components/schemas/WorkSchedule" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
     },
   },
   "/api/v1/work-schedules/{id}": {
     get: {
-      operationId: "getWorkSchedule", summary: "Work schedule detail", tags: ["WorkSchedules"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
-      responses: { ...jsonResponse(200, { type: "object", required: ["workSchedule"], properties: { workSchedule: { $ref: "#/components/schemas/WorkSchedule" } } }), ...errorResponses(401, 403, 404) },
+      operationId: "getWorkSchedule",
+      summary: "Work schedule detail",
+      tags: ["WorkSchedules"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["workSchedule"],
+          properties: { workSchedule: { $ref: "#/components/schemas/WorkSchedule" } },
+        }),
+        ...errorResponses(401, 403, 404),
+      },
     },
   },
   "/api/v1/projects/{projectId}/purchase-orders": {
     get: {
-      operationId: "listPurchaseOrders", summary: "Paginated purchase orders for a project (E-05)", tags: ["PurchaseOrders"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/limitParam" }, { "$ref": "#/components/parameters/offsetParam" }],
-      responses: { ...jsonResponse(200, paginatedList("purchaseOrders", "PurchaseOrder")), ...errorResponses(401, 403, 404) },
+      operationId: "listPurchaseOrders",
+      summary: "Paginated purchase orders for a project (E-05)",
+      tags: ["PurchaseOrders"],
+      security: authSecurity,
+      parameters: [
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
+      ],
+      responses: {
+        ...jsonResponse(200, paginatedList("purchaseOrders", "PurchaseOrder")),
+        ...errorResponses(401, 403, 404),
+      },
     },
     post: {
-      operationId: "createPurchaseOrder", summary: "Create a purchase order (E-05)", tags: ["PurchaseOrders"], security: authSecurity,
+      operationId: "createPurchaseOrder",
+      summary: "Create a purchase order (E-05)",
+      tags: ["PurchaseOrders"],
+      security: authSecurity,
       requestBody: {
         required: true,
-        content: { "application/json": { schema: { type: "object", required: ["orderNumber", "supplier", "item", "quantity", "unitPrice"], properties: { orderNumber: { type: "string" }, supplier: { type: "string" }, item: { type: "string" }, quantity: { type: "number" }, unitPrice: { type: "number" }, status: { type: "string", enum: ["draft", "issued", "approved", "received", "cancelled"] }, notes: { type: "string" } } } } },
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["orderNumber", "supplier", "item", "quantity", "unitPrice"],
+              properties: {
+                orderNumber: { type: "string" },
+                supplier: { type: "string" },
+                item: { type: "string" },
+                quantity: { type: "number" },
+                unitPrice: { type: "number" },
+                status: {
+                  type: "string",
+                  enum: ["draft", "issued", "approved", "received", "cancelled"],
+                },
+                notes: { type: "string" },
+              },
+            },
+          },
+        },
       },
-      responses: { ...jsonResponse(201, { type: "object", required: ["purchaseOrder"], properties: { purchaseOrder: { $ref: "#/components/schemas/PurchaseOrder" } } }), ...errorResponses(400, 401, 403, 404) },
+      responses: {
+        ...jsonResponse(201, {
+          type: "object",
+          required: ["purchaseOrder"],
+          properties: { purchaseOrder: { $ref: "#/components/schemas/PurchaseOrder" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
     },
   },
   "/api/v1/purchase-orders/{id}": {
     get: {
-      operationId: "getPurchaseOrder", summary: "Purchase order detail", tags: ["PurchaseOrders"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
-      responses: { ...jsonResponse(200, { type: "object", required: ["purchaseOrder"], properties: { purchaseOrder: { $ref: "#/components/schemas/PurchaseOrder" } } }), ...errorResponses(401, 403, 404) },
+      operationId: "getPurchaseOrder",
+      summary: "Purchase order detail",
+      tags: ["PurchaseOrders"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["purchaseOrder"],
+          properties: { purchaseOrder: { $ref: "#/components/schemas/PurchaseOrder" } },
+        }),
+        ...errorResponses(401, 403, 404),
+      },
     },
   },
   "/api/v1/notification-preferences/{userId}": {
     get: {
-      operationId: "getNotificationPreference", summary: "Notification preference for a user (E-11)", tags: ["Notifications"], security: authSecurity,
+      operationId: "getNotificationPreference",
+      summary: "Notification preference for a user (E-11)",
+      tags: ["Notifications"],
+      security: authSecurity,
       parameters: [{ name: "userId", in: "path", required: true, schema: { type: "string" } }],
-      responses: { ...jsonResponse(200, { type: "object", required: ["notificationPreference"], properties: { notificationPreference: { $ref: "#/components/schemas/NotificationPreference" } } }), ...errorResponses(401, 403, 404) },
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["notificationPreference"],
+          properties: {
+            notificationPreference: { $ref: "#/components/schemas/NotificationPreference" },
+          },
+        }),
+        ...errorResponses(401, 403, 404),
+      },
     },
     put: {
-      operationId: "upsertNotificationPreference", summary: "Create or update a notification preference", tags: ["Notifications"], security: authSecurity,
+      operationId: "upsertNotificationPreference",
+      summary: "Create or update a notification preference",
+      tags: ["Notifications"],
+      security: authSecurity,
       parameters: [{ name: "userId", in: "path", required: true, schema: { type: "string" } }],
       requestBody: {
         required: true,
-        content: { "application/json": { schema: { type: "object", properties: { emailEnabled: { type: "boolean" }, slackEnabled: { type: "boolean" }, slackWebhookUrl: { type: "string" }, events: { type: "object", additionalProperties: { type: "boolean" } } } } } },
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                emailEnabled: { type: "boolean" },
+                slackEnabled: { type: "boolean" },
+                slackWebhookUrl: { type: "string" },
+                events: { type: "object", additionalProperties: { type: "boolean" } },
+              },
+            },
+          },
+        },
       },
-      responses: { ...jsonResponse(200, { type: "object", required: ["notificationPreference"], properties: { notificationPreference: { $ref: "#/components/schemas/NotificationPreference" } } }), ...errorResponses(400, 401, 403, 404) },
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["notificationPreference"],
+          properties: {
+            notificationPreference: { $ref: "#/components/schemas/NotificationPreference" },
+          },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
     },
   },
 
   "/api/v1/projects/{projectId}/compliance-checks": {
     get: {
-      operationId: "listComplianceChecks", summary: "Paginated compliance checks for a project (S-07)", tags: ["Compliance"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/limitParam" }, { "$ref": "#/components/parameters/offsetParam" }],
-      responses: { ...jsonResponse(200, paginatedList("complianceChecks", "ComplianceCheck")), ...errorResponses(401, 403, 404) },
+      operationId: "listComplianceChecks",
+      summary: "Paginated compliance checks for a project (S-07)",
+      tags: ["Compliance"],
+      security: authSecurity,
+      parameters: [
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
+      ],
+      responses: {
+        ...jsonResponse(200, paginatedList("complianceChecks", "ComplianceCheck")),
+        ...errorResponses(401, 403, 404),
+      },
     },
     post: {
-      operationId: "createComplianceCheck", summary: "Create a compliance check (S-07)", tags: ["Compliance"], security: authSecurity,
+      operationId: "createComplianceCheck",
+      summary: "Create a compliance check (S-07)",
+      tags: ["Compliance"],
+      security: authSecurity,
       requestBody: {
         required: true,
-        content: { "application/json": { schema: { type: "object", required: ["item"], properties: { standard: { type: "string", enum: ["kensetsugyo-ho", "shitauke-ho", "iso-9001", "iso-14001", "iso-45001", "other"] }, item: { type: "string" }, result: { type: "string", enum: ["pass", "fail", "pending"] }, checkedAt: { type: "string", format: "date" }, notes: { type: "string" } } } } },
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["item"],
+              properties: {
+                standard: {
+                  type: "string",
+                  enum: [
+                    "kensetsugyo-ho",
+                    "shitauke-ho",
+                    "iso-9001",
+                    "iso-14001",
+                    "iso-45001",
+                    "other",
+                  ],
+                },
+                item: { type: "string" },
+                result: { type: "string", enum: ["pass", "fail", "pending"] },
+                checkedAt: { type: "string", format: "date" },
+                notes: { type: "string" },
+              },
+            },
+          },
+        },
       },
-      responses: { ...jsonResponse(201, { type: "object", required: ["complianceCheck"], properties: { complianceCheck: { $ref: "#/components/schemas/ComplianceCheck" } } }), ...errorResponses(400, 401, 403, 404) },
+      responses: {
+        ...jsonResponse(201, {
+          type: "object",
+          required: ["complianceCheck"],
+          properties: { complianceCheck: { $ref: "#/components/schemas/ComplianceCheck" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
     },
   },
   "/api/v1/compliance-checks/{id}": {
     get: {
-      operationId: "getComplianceCheck", summary: "Compliance check detail", tags: ["Compliance"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
-      responses: { ...jsonResponse(200, { type: "object", required: ["complianceCheck"], properties: { complianceCheck: { $ref: "#/components/schemas/ComplianceCheck" } } }), ...errorResponses(401, 403, 404) },
+      operationId: "getComplianceCheck",
+      summary: "Compliance check detail",
+      tags: ["Compliance"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["complianceCheck"],
+          properties: { complianceCheck: { $ref: "#/components/schemas/ComplianceCheck" } },
+        }),
+        ...errorResponses(401, 403, 404),
+      },
     },
   },
   "/api/v1/contracts/{contractId}/legal-evidence": {
     get: {
-      operationId: "listLegalEvidence", summary: "Paginated legal evidence for a contract (S-07)", tags: ["LegalEvidence"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/limitParam" }, { "$ref": "#/components/parameters/offsetParam" }],
-      responses: { ...jsonResponse(200, paginatedList("legalEvidence", "LegalEvidence")), ...errorResponses(401, 403, 404) },
+      operationId: "listLegalEvidence",
+      summary: "Paginated legal evidence for a contract (S-07)",
+      tags: ["LegalEvidence"],
+      security: authSecurity,
+      parameters: [
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
+      ],
+      responses: {
+        ...jsonResponse(200, paginatedList("legalEvidence", "LegalEvidence")),
+        ...errorResponses(401, 403, 404),
+      },
     },
     post: {
-      operationId: "createLegalEvidence", summary: "Create legal evidence (S-07)", tags: ["LegalEvidence"], security: authSecurity,
+      operationId: "createLegalEvidence",
+      summary: "Create legal evidence (S-07)",
+      tags: ["LegalEvidence"],
+      security: authSecurity,
       requestBody: {
         required: true,
-        content: { "application/json": { schema: { type: "object", required: ["eventType", "description"], properties: { eventType: { type: "string" }, description: { type: "string" }, evidenceHash: { type: "string" }, occurredAt: { type: "string", format: "date-time" } } } } },
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["eventType", "description"],
+              properties: {
+                eventType: { type: "string" },
+                description: { type: "string" },
+                evidenceHash: { type: "string" },
+                occurredAt: { type: "string", format: "date-time" },
+              },
+            },
+          },
+        },
       },
-      responses: { ...jsonResponse(201, { type: "object", required: ["legalEvidence"], properties: { legalEvidence: { $ref: "#/components/schemas/LegalEvidence" } } }), ...errorResponses(400, 401, 403, 404) },
+      responses: {
+        ...jsonResponse(201, {
+          type: "object",
+          required: ["legalEvidence"],
+          properties: { legalEvidence: { $ref: "#/components/schemas/LegalEvidence" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
     },
   },
   "/api/v1/legal-evidence/{id}": {
     get: {
-      operationId: "getLegalEvidence", summary: "Legal evidence detail", tags: ["LegalEvidence"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
-      responses: { ...jsonResponse(200, { type: "object", required: ["legalEvidence"], properties: { legalEvidence: { $ref: "#/components/schemas/LegalEvidence" } } }), ...errorResponses(401, 403, 404) },
+      operationId: "getLegalEvidence",
+      summary: "Legal evidence detail",
+      tags: ["LegalEvidence"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["legalEvidence"],
+          properties: { legalEvidence: { $ref: "#/components/schemas/LegalEvidence" } },
+        }),
+        ...errorResponses(401, 403, 404),
+      },
     },
   },
   "/api/v1/notification-templates": {
     get: {
-      operationId: "listNotificationTemplates", summary: "Paginated notification templates (optional ?channel=)", tags: ["Notifications"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/limitParam" }, { "$ref": "#/components/parameters/offsetParam" }, { name: "channel", in: "query", schema: { type: "string", enum: ["email", "slack", "webhook"] } }],
-      responses: { ...jsonResponse(200, paginatedList("notificationTemplates", "NotificationTemplate")), ...errorResponses(400, 401, 403) },
+      operationId: "listNotificationTemplates",
+      summary: "Paginated notification templates (optional ?channel=)",
+      tags: ["Notifications"],
+      security: authSecurity,
+      parameters: [
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
+        {
+          name: "channel",
+          in: "query",
+          schema: { type: "string", enum: ["email", "slack", "webhook"] },
+        },
+      ],
+      responses: {
+        ...jsonResponse(200, paginatedList("notificationTemplates", "NotificationTemplate")),
+        ...errorResponses(400, 401, 403),
+      },
     },
     post: {
-      operationId: "createNotificationTemplate", summary: "Create a notification template (E-11)", tags: ["Notifications"], security: authSecurity,
+      operationId: "createNotificationTemplate",
+      summary: "Create a notification template (E-11)",
+      tags: ["Notifications"],
+      security: authSecurity,
       requestBody: {
         required: true,
-        content: { "application/json": { schema: { type: "object", required: ["templateKey", "subject", "body"], properties: { templateKey: { type: "string" }, subject: { type: "string" }, body: { type: "string" }, channel: { type: "string", enum: ["email", "slack", "webhook"] } } } } },
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["templateKey", "subject", "body"],
+              properties: {
+                templateKey: { type: "string" },
+                subject: { type: "string" },
+                body: { type: "string" },
+                channel: { type: "string", enum: ["email", "slack", "webhook"] },
+              },
+            },
+          },
+        },
       },
-      responses: { ...jsonResponse(201, { type: "object", required: ["notificationTemplate"], properties: { notificationTemplate: { $ref: "#/components/schemas/NotificationTemplate" } } }), ...errorResponses(400, 401, 403) },
+      responses: {
+        ...jsonResponse(201, {
+          type: "object",
+          required: ["notificationTemplate"],
+          properties: {
+            notificationTemplate: { $ref: "#/components/schemas/NotificationTemplate" },
+          },
+        }),
+        ...errorResponses(400, 401, 403),
+      },
     },
   },
   "/api/v1/notification-templates/{id}": {
     get: {
-      operationId: "getNotificationTemplate", summary: "Notification template detail", tags: ["Notifications"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
-      responses: { ...jsonResponse(200, { type: "object", required: ["notificationTemplate"], properties: { notificationTemplate: { $ref: "#/components/schemas/NotificationTemplate" } } }), ...errorResponses(401, 403, 404) },
+      operationId: "getNotificationTemplate",
+      summary: "Notification template detail",
+      tags: ["Notifications"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["notificationTemplate"],
+          properties: {
+            notificationTemplate: { $ref: "#/components/schemas/NotificationTemplate" },
+          },
+        }),
+        ...errorResponses(401, 403, 404),
+      },
     },
   },
   "/api/v1/notifications/unread-count": {
     get: {
-      operationId: "getUnreadNotificationCount", summary: "Unread notification count (E-11)", tags: ["Notifications"], security: authSecurity,
-      responses: { ...jsonResponse(200, { type: "object", required: ["unreadCount"], properties: { unreadCount: { type: "integer" } } }), ...errorResponses(401, 403) },
+      operationId: "getUnreadNotificationCount",
+      summary: "Unread notification count (E-11)",
+      tags: ["Notifications"],
+      security: authSecurity,
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["unreadCount"],
+          properties: { unreadCount: { type: "integer" } },
+        }),
+        ...errorResponses(401, 403),
+      },
     },
   },
   "/api/v1/notifications/{id}/read": {
     patch: {
-      operationId: "markNotificationRead", summary: "Mark a notification as read", tags: ["Notifications"], security: authSecurity,
-      parameters: [{ "$ref": "#/components/parameters/idPath" }],
-      responses: { ...jsonResponse(200, { type: "object", required: ["notification"], properties: { notification: { $ref: "#/components/schemas/NotificationDelivery" } } }), ...errorResponses(401, 403, 404) },
+      operationId: "markNotificationRead",
+      summary: "Mark a notification as read",
+      tags: ["Notifications"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["notification"],
+          properties: { notification: { $ref: "#/components/schemas/NotificationDelivery" } },
+        }),
+        ...errorResponses(401, 403, 404),
+      },
     },
   },
   "/api/v1/integrations/{service}/{proxyPath}": {
@@ -2684,16 +3680,16 @@ const spec: { [k: string]: YamlValue } = {
     { url: "https://ceop.mirai-dx-platform.com", description: "Production" },
   ],
   tags: [
-    { name: "System",       description: "Health and metadata endpoints" },
-    { name: "Auth",         description: "JWT token issuance" },
-    { name: "Dashboard",    description: "Governance dashboard" },
-    { name: "Organizations",description: "Organization management" },
-    { name: "Users",        description: "User management" },
-    { name: "Roles",        description: "Role management" },
-    { name: "Devices",      description: "Field device management" },
+    { name: "System", description: "Health and metadata endpoints" },
+    { name: "Auth", description: "JWT token issuance" },
+    { name: "Dashboard", description: "Governance dashboard" },
+    { name: "Organizations", description: "Organization management" },
+    { name: "Users", description: "User management" },
+    { name: "Roles", description: "Role management" },
+    { name: "Devices", description: "Field device management" },
     { name: "Applications", description: "Application registry" },
-    { name: "Governance",   description: "Policy engine, audit log, ABAC evaluation" },
-    { name: "Workflows",    description: "Workflow templates and CRUD" },
+    { name: "Governance", description: "Policy engine, audit log, ABAC evaluation" },
+    { name: "Workflows", description: "Workflow templates and CRUD" },
     { name: "WorkflowInstances", description: "Workflow instance runs (Issue→Approval→Audit)" },
     { name: "AiGovernance", description: "AI action governance (integration Y-09)" },
     { name: "Photos", description: "Photo/document metadata (ServiceHub S-03)" },
@@ -2711,7 +3707,10 @@ const spec: { [k: string]: YamlValue } = {
     { name: "LegalEvidence", description: "Legal evidence timeline (ServiceHub S-07)" },
     { name: "Projects", description: "Construction project management (ServiceHub S-01)" },
     { name: "DailyReports", description: "Site daily reports (ServiceHub S-02)" },
-    { name: "IntegrationGateway", description: "CEOP gateway reverse proxy for integration services (P1)" },
+    {
+      name: "IntegrationGateway",
+      description: "CEOP gateway reverse proxy for integration services (P1)",
+    },
   ],
   paths,
   components: {
@@ -2730,7 +3729,9 @@ if (process.argv.includes("--check")) {
   if (existing === content) {
     console.log("✅ OpenAPI spec is up to date");
   } else {
-    console.error("❌ OpenAPI drift detected — run `pnpm run openapi:gen` and commit docs/openapi.yaml");
+    console.error(
+      "❌ OpenAPI drift detected — run `pnpm run openapi:gen` and commit docs/openapi.yaml",
+    );
     process.exitCode = 1;
   }
 } else {

@@ -6,17 +6,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 ## [Unreleased]
 
-## [0.8.3] - 2026-08-07
+## [0.10.0] - 2026-08-07
 
-### Fixed
+### Added
 
-- **favicon がブラウザタブに表示されない問題** — WebUI（デザインバンドル）の HTML に
-  favicon リンクが無く、ブラウザが既定の地球アイコンを表示していた。`unpackBundle` が
-  `index.html` の `<head>` 直後に `<link rel="icon" href="/favicon.svg">` を注入するよう修正。
-  旧ブラウザ向けに実体 `favicon.ico`（16/32/48px の PNG 入り ICO）を
-  `scripts/generate-favicon.ts` で生成し、API・WebUI 双方で配信
-
-## [Unreleased]
+- **P5 パリティ検証** — `scripts/verify-parity.ts`（FEATURE_INVENTORY 突合 + API プローブ 24 ルート）を
+  `pnpm run verify` に組込。Y-03/Y-07・O-02/O-03/O-05・D-08 を統合済みに更新し、
+  次期バックログ（O-04/O-06/O-08/O-09/D-04/D-07/D-09）を明示。テスト 2 件追加（381/381 pass）。
 
 ## [0.9.0] - 2026-08-07
 

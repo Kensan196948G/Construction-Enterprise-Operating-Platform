@@ -32,9 +32,7 @@ try {
 }
 
 const accessLogger =
-  neonUrl !== undefined && neonUrl !== ""
-    ? createNeonAccessLogger(neonUrl)
-    : nullAccessLogger;
+  neonUrl !== undefined && neonUrl !== "" ? createNeonAccessLogger(neonUrl) : nullAccessLogger;
 if (accessLogger === nullAccessLogger) {
   console.error("[webui] CEOP_WEBUI_NEON_URL not set — access logging disabled");
 }

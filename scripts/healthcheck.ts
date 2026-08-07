@@ -6,17 +6,14 @@ import { request } from "node:http";
 const port = parseInt(process.env["PORT"] ?? "3000", 10);
 const timeout = 5000;
 
-const req = request(
-  { host: "localhost", port, path: "/health", method: "GET", timeout },
-  (res) => {
-    if (res.statusCode !== undefined && res.statusCode >= 200 && res.statusCode < 300) {
-      process.exit(0);
-    } else {
-      console.error(`Health check failed: HTTP ${res.statusCode}`);
-      process.exit(1);
-    }
-  },
-);
+const req = request({ host: "localhost", port, path: "/health", method: "GET", timeout }, (res) => {
+  if (res.statusCode !== undefined && res.statusCode >= 200 && res.statusCode < 300) {
+    process.exit(0);
+  } else {
+    console.error(`Health check failed: HTTP ${res.statusCode}`);
+    process.exit(1);
+  }
+});
 
 req.on("error", (err) => {
   console.error(`Health check error: ${err.message}`);

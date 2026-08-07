@@ -66,7 +66,10 @@ function parseArgs(argv: string[]): {
     process.exit(1);
   }
 
-  const permissions = permissionsRaw.split(",").map((p) => p.trim()).filter(Boolean);
+  const permissions = permissionsRaw
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean);
   if (permissions.length === 0) {
     console.error(
       "[provision] Error: --permissions value resolved to an empty list after parsing.\n" +
@@ -91,7 +94,10 @@ function computeSecretHash(keyId: string, secret: string): string {
   return createHmac("sha256", keyId).update(secret).digest("hex");
 }
 
-function generateApiKey(subject: string, permissions: readonly string[]): {
+function generateApiKey(
+  subject: string,
+  permissions: readonly string[],
+): {
   keyId: string;
   secret: string;
   secretHash: string;
@@ -114,9 +120,9 @@ function generateApiKey(subject: string, permissions: readonly string[]): {
  * must not recreate it to avoid schema drift.
  */
 function assertApiKeyTableExists(db: DatabaseSync): void {
-  const row = db.prepare(
-    "SELECT name FROM sqlite_master WHERE type='table' AND name='api_keys'",
-  ).get() as { name: string } | undefined;
+  const row = db
+    .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='api_keys'")
+    .get() as { name: string } | undefined;
   if (!row) {
     console.error("[provision] Error: api_keys table not found.");
     console.error("[provision] Run migrations first:");

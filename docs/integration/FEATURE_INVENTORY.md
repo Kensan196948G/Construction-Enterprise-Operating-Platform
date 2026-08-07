@@ -41,14 +41,14 @@
 | #    | 機能             | 内容                                                    | CEOP 対応                                          | 状態 |
 | ---- | ---------------- | ------------------------------------------------------- | -------------------------------------------------- | ---- |
 | O-01 | 共通基盤         | portal・shared-auth・api-gateway・shared-db・shared-pdf | ✅ CEOP Gateway/認証で代替（portal は CEOP WebUI） | 🔄   |
-| O-02 | 施工本部         | 工程・日報・写真・出来高                                | 📦 現場モジュール（S-02/E-02 と統合）              | ⬜   |
-| O-03 | 安全品質環境本部 | ヒヤリハット・リスク・ISO                               | 📦 safety モジュール（S-04 と統合）                | ⬜   |
-| O-04 | 営業本部         | 入札・顧客・受注見込み                                  | 📦 sales モジュール                                | ⬜   |
-| O-05 | 技術本部         | BIM/CIM・技術ナレッジ                                   | 📦 knowledge（Synapse）と統合                      | ⬜   |
-| O-06 | 購買部           | 資材・発注・協力会社                                    | 📦 procurement モジュール                          | ⬜   |
+| O-02 | 施工本部         | 工程・日報・写真・出来高                                | 📦 現場モジュール（S-02/E-02 と統合）              | ✅   |
+| O-03 | 安全品質環境本部 | ヒヤリハット・リスク・ISO                               | 📦 safety モジュール（S-04 と統合）                | ✅   |
+| O-04 | 営業本部         | 入札・顧客・受注見込み                                  | 📦 sales モジュール（次期バックログ）              | ⬜   |
+| O-05 | 技術本部         | BIM/CIM・技術ナレッジ                                   | 📦 knowledge（Synapse）と統合                      | ✅   |
+| O-06 | 購買部           | 資材・発注・協力会社                                    | 📦 procurement モジュール（次期バックログ）        | ⬜   |
 | O-07 | 船舶             | 船団・運航・燃料・保守                                  | ⬜ 特殊業務（設計後）                              | ⬜   |
-| O-08 | 管理本部         | 人事・経理・承認                                        | 📦 workflow + hr/finance モジュール                | ⬜   |
-| O-09 | 経営企画         | KPI・AI 予測・ESG                                       | 📦 dashboard 拡張 + AI Gateway                     | ⬜   |
+| O-08 | 管理本部         | 人事・経理・承認                                        | 📦 workflow + hr/finance モジュール（次期バックログ） | ⬜ |
+| O-09 | 経営企画         | KPI・AI 予測・ESG                                       | 📦 dashboard 拡張 + AI Gateway（次期バックログ）   | ⬜   |
 | O-10 | 統合データ基盤   | データレイク・デジタルツイン                            | ⬜ 別基盤（adapter 検討）                          | ⬜   |
 | O-11 | IT-DX 部門       | システム稼働・セキュリティ                              | ✅ CEOP 運用/監視基盤                              | 🔄   |
 | O-12 | 監査             | 操作証跡・出力・検索                                    | ✅ CEOP 監査ログ + エクスポート                    | ✅   |
@@ -60,12 +60,12 @@
 | D-01 | 端末登録              | 登録トークン・署名付き本人確認 | 📦 device ドメイン拡張（telemetry 受信） | ✅   |
 | D-02 | ハートビート          | 稼働状況の定期報告             | 📦 device heartbeat API                  | ✅   |
 | D-03 | インベントリ          | 端末構成情報の収集             | 📦 device inventory API                  | ✅   |
-| D-04 | シリアルスキャン      | シリアル番号スキャン・照合     | 📦 device モジュール                     | ⬜   |
+| D-04 | シリアルスキャン      | シリアル番号スキャン・照合     | 📦 device モジュール（次期バックログ）   | ⬜   |
 | D-05 | ISO ビルド/配布       | イメージ作成・ダウンロード     | 🔄 統合サービス（外部ビルド基盤）        | ⬜   |
 | D-06 | PXE/リング更新        | 段階更新・PXE rollback         | 🔄 統合サービス                          | ⬜   |
-| D-07 | 管理 UI               | 端末一覧・状態・お知らせ       | 📦 CEOP WebUI に移植                     | ⬜   |
-| D-08 | 監視                  | Prometheus メトリクス          | 🔄 CEOP 監視と統合                       | ⬜   |
-| D-09 | オフライン spool/sync | 電波断時の一時保存・再送       | 📦 cdx-agent 連携（SDK 移植）            | ⬜   |
+| D-07 | 管理 UI               | 端末一覧・状態・お知らせ       | 📦 CEOP WebUI に移植（次期バックログ）   | ⬜   |
+| D-08 | 監視                  | Prometheus メトリクス          | 🔄 CEOP 監視と統合（/metrics + 監視スタック） | ✅ |
+| D-09 | オフライン spool/sync | 電波断時の一時保存・再送       | 📦 cdx-agent 連携（SDK 移植・次期バックログ） | ⬜ |
 
 ## 5. Synapse-OS
 
@@ -73,11 +73,11 @@
 | ---- | --------------- | -------------------------------- | --------------------------------------------------------------------------- | ---- |
 | Y-01 | Tenant/Identity | テナント・ID・認証               | ✅ CEOP organization/API key/JWT で代替                                     | ✅   |
 | Y-02 | Issue 管理      | Issue オブジェクト CRUD          | 🔄 workflow-instance の subject/comment で代替（専用 issue ドメインは次期） | 🔄   |
-| Y-03 | Document        | 文書オブジェクト CRUD            | 📦 document ドメイン                                                        | ⬜   |
+| Y-03 | Document        | 文書オブジェクト CRUD            | 📦 document ドメイン（E-03 実装）                                            | ✅   |
 | Y-04 | Approval        | 申請→承認→監査フロー             | ✅ workflow-instance API（L-02 実装）                                       | ✅   |
 | Y-05 | Audit           | 監査イベント・検索・エクスポート | ✅ CEOP 監査チェーン + export で代替                                        | ✅   |
 | Y-06 | Dashboard       | KPI・サービス健全性              | ✅ CEOP dashboard で代替                                                    | ✅   |
-| Y-07 | Knowledge       | ナレッジ項目 CRUD・検索          | 📦 knowledge ドメイン                                                       | ⬜   |
+| Y-07 | Knowledge       | ナレッジ項目 CRUD・検索          | 📦 knowledge ドメイン（S-06 実装）                                           | ✅   |
 | Y-08 | Federation      | 複数組織/会社間のイベント連携    | ⬜ federation ドメイン（設計後）                                            | ⬜   |
 | Y-09 | AI Gateway      | AI アクションの統制・承認・監査  | 📦 ai-action ドメイン（P2 で移植）                                          | ✅   |
 | Y-10 | フロントエンド  | Next.js 7 画面                   | 🔄 CEOP WebUI へ移植                                                        | ⬜   |
