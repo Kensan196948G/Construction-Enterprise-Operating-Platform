@@ -13,8 +13,12 @@
   function formatTime(iso) {
     try {
       return new Date(iso).toLocaleString("ja-JP", {
-        year: "numeric", month: "2-digit", day: "2-digit",
-        hour: "2-digit", minute: "2-digit", second: "2-digit",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
       });
     } catch (_) {
       return iso;
@@ -33,10 +37,14 @@
     const container = document.getElementById("toastContainer");
     if (!container) return;
     const toast = document.createElement("div");
-    toast.className = "toast" + (type === "error" ? " error" : type === "success" ? " success" : "");
+    toast.className =
+      "toast" + (type === "error" ? " error" : type === "success" ? " success" : "");
     toast.textContent = msg;
     container.appendChild(toast);
-    setTimeout(() => { toast.style.opacity = "0"; toast.style.transition = "opacity .3s"; }, 2800);
+    setTimeout(() => {
+      toast.style.opacity = "0";
+      toast.style.transition = "opacity .3s";
+    }, 2800);
     setTimeout(() => toast.remove(), 3200);
   }
 
@@ -48,17 +56,26 @@
 
   /* ── Shared labels ────────────────────────────────────────── */
   const APP_CATEGORY_LABELS = {
-    portal: "ポータル", governance: "ガバナンス", field: "フィールド",
-    workflow: "ワークフロー", document: "ドキュメント",
+    portal: "ポータル",
+    governance: "ガバナンス",
+    field: "フィールド",
+    workflow: "ワークフロー",
+    document: "ドキュメント",
   };
   const HEALTH_LABELS = { healthy: "正常", degraded: "劣化", down: "停止", unknown: "不明" };
   const DEVICE_KIND_LABELS = {
-    tablet: "タブレット", phone: "スマートフォン", kiosk: "キオスク",
-    sensor: "センサー", laptop: "ノートPC",
+    tablet: "タブレット",
+    phone: "スマートフォン",
+    kiosk: "キオスク",
+    sensor: "センサー",
+    laptop: "ノートPC",
   };
   const DEVICE_KIND_ICONS = { tablet: "📱", phone: "📲", kiosk: "🖥", sensor: "📡", laptop: "💻" };
   const DEVICE_STATUS_LABELS = {
-    active: "アクティブ", provisioned: "プロビジョン済み", lost: "紛失", retired: "廃止",
+    active: "アクティブ",
+    provisioned: "プロビジョン済み",
+    lost: "紛失",
+    retired: "廃止",
   };
   const EFFECT_LABELS = { allow: "許可", deny: "拒否" };
 
@@ -67,10 +84,13 @@
     if (!applications || applications.length === 0) {
       return '<div class="empty-state"><div class="empty-state-icon">🔧</div>アプリケーションが見つかりません</div>';
     }
-    return applications.map((app) => {
-      const health = ["healthy", "degraded", "down", "unknown"].includes(app.health) ? app.health : "unknown";
-      const catLabel = APP_CATEGORY_LABELS[app.category] || app.category;
-      return `
+    return applications
+      .map((app) => {
+        const health = ["healthy", "degraded", "down", "unknown"].includes(app.health)
+          ? app.health
+          : "unknown";
+        const catLabel = APP_CATEGORY_LABELS[app.category] || app.category;
+        return `
         <div class="app-card">
           <div class="app-health-dot health-${health}"></div>
           <div class="app-info">
@@ -79,32 +99,37 @@
           </div>
           <div class="app-health-label ${health}">${escapeHtml(HEALTH_LABELS[health] || health)}</div>
         </div>`;
-    }).join("");
+      })
+      .join("");
   }
 
   function renderDeviceRows(devices) {
     if (!devices || devices.length === 0) {
       return '<tr><td colspan="4" class="cell-muted empty-cell">デバイスが見つかりません</td></tr>';
     }
-    return devices.map((d) => {
-      const kindIcon = DEVICE_KIND_ICONS[d.kind] || "📦";
-      const kindLabel = DEVICE_KIND_LABELS[d.kind] || d.kind;
-      const statusLabel = DEVICE_STATUS_LABELS[d.status] || d.status;
-      return `
+    return devices
+      .map((d) => {
+        const kindIcon = DEVICE_KIND_ICONS[d.kind] || "📦";
+        const kindLabel = DEVICE_KIND_LABELS[d.kind] || d.kind;
+        const statusLabel = DEVICE_STATUS_LABELS[d.status] || d.status;
+        return `
         <tr>
           <td><code class="cell-muted">${escapeHtml(d.id)}</code></td>
           <td><span class="device-kind">${kindIcon} ${escapeHtml(kindLabel)}</span></td>
           <td><span class="device-status ${escapeHtml(d.status)}">${escapeHtml(statusLabel)}</span></td>
           <td class="cell-soft">${d.assignedUserId ? escapeHtml(d.assignedUserId) : '<span class="cell-muted">—</span>'}</td>
         </tr>`;
-    }).join("");
+      })
+      .join("");
   }
 
   function renderApprovals(approvals) {
     if (!approvals || approvals.length === 0) {
       return '<div class="empty-state"><div class="empty-state-icon">✅</div>未処理の承認リクエストはありません</div>';
     }
-    return approvals.map((a) => `
+    return approvals
+      .map(
+        (a) => `
       <div class="approval-item">
         <div class="approval-icon">⏳</div>
         <div class="approval-info">
@@ -112,18 +137,23 @@
           <div class="approval-meta">リクエスト者: ${escapeHtml(a.requestedBy)} · ID: ${escapeHtml(a.id)}</div>
         </div>
         <div class="approval-time">${formatTime(a.requestedAt)}</div>
-      </div>`).join("");
+      </div>`,
+      )
+      .join("");
   }
 
   function renderAuditItems(entries) {
     if (!entries || entries.length === 0) {
       return '<div class="empty-state"><div class="empty-state-icon">📋</div>監査イベントはまだありません</div>';
     }
-    return entries.slice(-10).reverse().map((e) => {
-      const ev = e.event || e;
-      const outcome = ["success", "denied", "error"].includes(ev.outcome) ? ev.outcome : "error";
-      const label = outcome === "success" ? "許可" : outcome === "denied" ? "拒否" : outcome;
-      return `
+    return entries
+      .slice(-10)
+      .reverse()
+      .map((e) => {
+        const ev = e.event || e;
+        const outcome = ["success", "denied", "error"].includes(ev.outcome) ? ev.outcome : "error";
+        const label = outcome === "success" ? "許可" : outcome === "denied" ? "拒否" : outcome;
+        return `
         <div class="audit-item">
           <div class="audit-outcome ${outcome}"></div>
           <div class="audit-actor">${escapeHtml(ev.actor || "—")}</div>
@@ -131,7 +161,8 @@
           <span class="audit-result ${outcome}">${escapeHtml(label)}</span>
           <div class="audit-time">${formatTime(ev.at || "")}</div>
         </div>`;
-    }).join("");
+      })
+      .join("");
   }
 
   /* ── Dashboard refresh ─────────────────────────────────────── */
@@ -168,13 +199,17 @@
       if (approvalList) approvalList.innerHTML = renderApprovals(data.pendingApprovals);
 
       try {
-        const auditRes = await fetch("/api/v1/governance/audit?limit=10", { headers: authHeaders() });
+        const auditRes = await fetch("/api/v1/governance/audit?limit=10", {
+          headers: authHeaders(),
+        });
         if (auditRes.ok) {
           const auditData = await auditRes.json();
           const auditList = document.getElementById("auditList");
           if (auditList) auditList.innerHTML = renderAuditItems(auditData.entries || []);
         }
-      } catch (_) { /* audit fetch is best-effort */ }
+      } catch (_) {
+        /* audit fetch is best-effort */
+      }
 
       const unhealthy = g.unhealthyApplications ?? 0;
       const dot = document.getElementById("healthDot");
@@ -201,7 +236,8 @@
     if (!tbody) return;
     const apiKey = (document.getElementById("inputApiKey")?.value || "").trim();
     if (!apiKey && !API_TOKEN) {
-      tbody.innerHTML = '<tr><td colspan="6" class="cell-muted empty-cell">API キーを入力すると最新ポリシーを表示できます</td></tr>';
+      tbody.innerHTML =
+        '<tr><td colspan="6" class="cell-muted empty-cell">API キーを入力すると最新ポリシーを表示できます</td></tr>';
       return;
     }
     tbody.innerHTML = '<tr><td colspan="6" class="cell-muted empty-cell">読込中...</td></tr>';
@@ -210,21 +246,27 @@
         headers: authHeaders({ "Content-Type": "application/json" }),
       });
       if (res.status === 403) {
-        tbody.innerHTML = '<tr><td colspan="6" class="cell-muted empty-cell">policy:read 権限がありません</td></tr>';
+        tbody.innerHTML =
+          '<tr><td colspan="6" class="cell-muted empty-cell">policy:read 権限がありません</td></tr>';
         return;
       }
       if (!res.ok) throw new Error("HTTP " + res.status);
       const data = await res.json();
       const policies = data.policies ?? [];
       if (policies.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="cell-muted empty-cell">登録済みポリシーはありません</td></tr>';
+        tbody.innerHTML =
+          '<tr><td colspan="6" class="cell-muted empty-cell">登録済みポリシーはありません</td></tr>';
         return;
       }
-      tbody.innerHTML = policies.map((p) => {
-        const conditions = (p.conditions && p.conditions.length > 0)
-          ? p.conditions.map((c) => `${escapeHtml(c.attribute)}=${escapeHtml(String(c.equals))}`).join(", ")
-          : "—";
-        return `<tr>
+      tbody.innerHTML = policies
+        .map((p) => {
+          const conditions =
+            p.conditions && p.conditions.length > 0
+              ? p.conditions
+                  .map((c) => `${escapeHtml(c.attribute)}=${escapeHtml(String(c.equals))}`)
+                  .join(", ")
+              : "—";
+          return `<tr>
           <td><code class="cell-muted">${escapeHtml(p.id)}</code></td>
           <td>${escapeHtml(p.name)}</td>
           <td><span class="badge ${p.effect === "allow" ? "badge-green" : "badge-red"}">${escapeHtml(EFFECT_LABELS[p.effect] || p.effect)}</span></td>
@@ -232,7 +274,8 @@
           <td class="cell-soft">${escapeHtml((p.resources || []).join(", "))}</td>
           <td class="cell-soft">${conditions}</td>
         </tr>`;
-      }).join("");
+        })
+        .join("");
     } catch (err) {
       tbody.innerHTML = `<tr><td colspan="6" class="cell-muted empty-cell">取得に失敗しました: ${escapeHtml(err.message)}</td></tr>`;
     }
@@ -300,7 +343,9 @@
       if (polRow && polEl) {
         if (data.matchedPolicyIds && data.matchedPolicyIds.length > 0) {
           polRow.classList.remove("hidden-row");
-          polEl.innerHTML = data.matchedPolicyIds.map((id) => `<span class="policy-tag">${escapeHtml(id)}</span>`).join("");
+          polEl.innerHTML = data.matchedPolicyIds
+            .map((id) => `<span class="policy-tag">${escapeHtml(id)}</span>`)
+            .join("");
         } else {
           polRow.classList.add("hidden-row");
         }
@@ -322,7 +367,8 @@
     const apiKey = (document.getElementById("inputApiKey")?.value || "").trim();
     tbody.innerHTML = '<tr><td colspan="6" class="cell-muted empty-cell">読込中...</td></tr>';
     if (!apiKey && !API_TOKEN) {
-      tbody.innerHTML = '<tr><td colspan="6" class="cell-muted empty-cell">API キーを入力すると監査ログが表示されます</td></tr>';
+      tbody.innerHTML =
+        '<tr><td colspan="6" class="cell-muted empty-cell">API キーを入力すると監査ログが表示されます</td></tr>';
       return;
     }
     try {
@@ -331,15 +377,22 @@
       const data = await res.json();
       const entries = (data.entries || []).slice().reverse();
       if (entries.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="cell-muted empty-cell">監査ログはまだありません</td></tr>';
+        tbody.innerHTML =
+          '<tr><td colspan="6" class="cell-muted empty-cell">監査ログはまだありません</td></tr>';
         return;
       }
-      tbody.innerHTML = entries.map((e) => {
-        const ev = e.event || e;
-        const outcome = ev.outcome || "unknown";
-        const badgeClass = outcome === "success" ? "badge-green" : outcome === "denied" ? "badge-red" : "badge-yellow";
-        const label = outcome === "success" ? "許可" : outcome === "denied" ? "拒否" : outcome;
-        return `
+      tbody.innerHTML = entries
+        .map((e) => {
+          const ev = e.event || e;
+          const outcome = ev.outcome || "unknown";
+          const badgeClass =
+            outcome === "success"
+              ? "badge-green"
+              : outcome === "denied"
+                ? "badge-red"
+                : "badge-yellow";
+          const label = outcome === "success" ? "許可" : outcome === "denied" ? "拒否" : outcome;
+          return `
           <tr>
             <td class="cell-muted">${escapeHtml(String(e.sequence ?? "—"))}</td>
             <td class="cell-muted">${formatTime(ev.at)}</td>
@@ -348,7 +401,8 @@
             <td><code class="cell-muted">${escapeHtml(ev.resource || "—")}</code></td>
             <td><span class="badge ${badgeClass}">${escapeHtml(label)}</span></td>
           </tr>`;
-      }).join("");
+        })
+        .join("");
     } catch (err) {
       tbody.innerHTML = `<tr><td colspan="6" class="cell-muted empty-cell">取得に失敗しました: ${escapeHtml(err.message)}</td></tr>`;
     }

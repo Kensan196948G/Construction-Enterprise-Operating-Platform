@@ -24,6 +24,8 @@ import type {
   WorkflowInstanceStatus,
 } from "../../domain/workflow-instance.ts";
 import type { AiAction, AiActionId, AiActionStatus } from "../../domain/ai-action.ts";
+import type { Project, ProjectId, ProjectStatus } from "../../domain/project.ts";
+import type { DailyReport, DailyReportId, DailyReportStatus } from "../../domain/daily-report.ts";
 import type {
   ApplicationRepository,
   DeviceRepository,
@@ -35,6 +37,8 @@ import type {
   WorkflowRepository,
   WorkflowInstanceRepository,
   AiActionRepository,
+  ProjectRepository,
+  DailyReportRepository,
 } from "../ports.ts";
 import { BaseFileRepository, ensureDataDir } from "./base-file-repository.ts";
 
@@ -194,6 +198,47 @@ class FileAiActionRepository extends BaseFileRepository<AiAction> implements AiA
   }
 }
 
+class FileProjectRepository extends BaseFileRepository<Project> implements ProjectRepository {
+  override async findById(id: ProjectId): Promise<Project | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: ProjectId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByOrganization(orgId: string): Promise<readonly Project[]> {
+    const all = await this.findAll();
+    return all.filter((p) => (p.organizationId ?? "") === orgId);
+  }
+  async findByStatus(status: ProjectStatus): Promise<readonly Project[]> {
+    const all = await this.findAll();
+    return all.filter((p) => p.status === status);
+  }
+  async findByCode(code: string): Promise<Project | null> {
+    const all = await this.findAll();
+    return all.find((p) => p.projectCode === code) ?? null;
+  }
+}
+
+class FileDailyReportRepository
+  extends BaseFileRepository<DailyReport>
+  implements DailyReportRepository
+{
+  override async findById(id: DailyReportId): Promise<DailyReport | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: DailyReportId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByProject(projectId: ProjectId): Promise<readonly DailyReport[]> {
+    const all = await this.findAll();
+    return all.filter((r) => (r.projectId as string) === (projectId as string));
+  }
+  async findByStatus(status: DailyReportStatus): Promise<readonly DailyReport[]> {
+    const all = await this.findAll();
+    return all.filter((r) => r.status === status);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Factory
 // ---------------------------------------------------------------------------
@@ -214,5 +259,7 @@ export async function createFileRepositories(dataDir: string): Promise<Repositor
     workflows: new FileWorkflowRepository(dataDir, "workflows.json"),
     workflowInstances: new FileWorkflowInstanceRepository(dataDir, "workflow-instances.json"),
     aiActions: new FileAiActionRepository(dataDir, "ai-actions.json"),
+    projects: new FileProjectRepository(dataDir, "projects.json"),
+    dailyReports: new FileDailyReportRepository(dataDir, "daily-reports.json"),
   };
 }

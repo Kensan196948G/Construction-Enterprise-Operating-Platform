@@ -14,6 +14,8 @@ export { InMemoryUserRepository } from "./user-repository.ts";
 export { InMemoryWorkflowRepository } from "./workflow-repository.ts";
 export { InMemoryWorkflowInstanceRepository } from "./workflow-instance-repository.ts";
 export { InMemoryAiActionRepository } from "./ai-action-repository.ts";
+export { InMemoryProjectRepository } from "./project-repository.ts";
+export { InMemoryDailyReportRepository } from "./daily-report-repository.ts";
 
 import type { Repositories } from "../ports.ts";
 import { InMemoryApplicationRepository } from "./application-repository.ts";
@@ -25,6 +27,8 @@ import { InMemoryUserRepository } from "./user-repository.ts";
 import { InMemoryWorkflowRepository } from "./workflow-repository.ts";
 import { InMemoryWorkflowInstanceRepository } from "./workflow-instance-repository.ts";
 import { InMemoryAiActionRepository } from "./ai-action-repository.ts";
+import { InMemoryProjectRepository } from "./project-repository.ts";
+import { InMemoryDailyReportRepository } from "./daily-report-repository.ts";
 
 /**
  * Construct a fresh set of empty in-memory repositories wired together as a
@@ -42,5 +46,7 @@ export function createInMemoryRepositories(): Repositories {
     workflows: new InMemoryWorkflowRepository(),
     workflowInstances: new InMemoryWorkflowInstanceRepository(),
     aiActions: new InMemoryAiActionRepository(),
+    projects: new InMemoryProjectRepository(),
+    dailyReports: new InMemoryDailyReportRepository(),
   };
 }

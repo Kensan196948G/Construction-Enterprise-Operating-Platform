@@ -19,6 +19,8 @@ import type {
   WorkflowInstanceStatus,
 } from "../domain/workflow-instance.ts";
 import type { AiAction, AiActionId, AiActionStatus } from "../domain/ai-action.ts";
+import type { Project, ProjectId, ProjectStatus } from "../domain/project.ts";
+import type { DailyReport, DailyReportId, DailyReportStatus } from "../domain/daily-report.ts";
 
 // ---------------------------------------------------------------------------
 // Generic repository contract
@@ -99,6 +101,22 @@ export interface AiActionRepository extends Repository<AiAction, AiActionId> {
   findByStatus(status: AiActionStatus): Promise<readonly AiAction[]>;
 }
 
+export interface ProjectRepository extends Repository<Project, ProjectId> {
+  /** All projects belonging to one organization. */
+  findByOrganization(orgId: string): Promise<readonly Project[]>;
+  /** All projects in a given status. */
+  findByStatus(status: ProjectStatus): Promise<readonly Project[]>;
+  /** Find by unique project code. */
+  findByCode(code: string): Promise<Project | null>;
+}
+
+export interface DailyReportRepository extends Repository<DailyReport, DailyReportId> {
+  /** All reports for a project (within one organization). */
+  findByProject(projectId: ProjectId): Promise<readonly DailyReport[]>;
+  /** All reports in a given status. */
+  findByStatus(status: DailyReportStatus): Promise<readonly DailyReport[]>;
+}
+
 // ---------------------------------------------------------------------------
 // Aggregate: all repositories grouped for DI / factory use
 // ---------------------------------------------------------------------------
@@ -113,4 +131,6 @@ export interface Repositories {
   readonly workflows: WorkflowRepository;
   readonly workflowInstances: WorkflowInstanceRepository;
   readonly aiActions: AiActionRepository;
+  readonly projects: ProjectRepository;
+  readonly dailyReports: DailyReportRepository;
 }

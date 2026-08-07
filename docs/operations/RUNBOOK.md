@@ -318,3 +318,6 @@ DNS・証明書・Tunnel 自体（UUID / credentials）には一切触れない�
 
 > マイグレーション 007（`ai_actions`）: AI ゲートウェイ統制（Y-09）で追加。
 > 本番 DB へは `node --experimental-strip-types scripts/migrate.ts --db <CEOP_SQLITE_FILE>` で適用（既存 006 まで適用済みの場合は 007 のみ実行）。
+
+> マイグレーション 008（projects）・009（daily_reports）: ServiceHub S-01/S-02 移植で追加。
+> 本番適用は `scripts/migrate.ts` で 007 と同様（既存 DB は 008/009 のみ追加実行）。

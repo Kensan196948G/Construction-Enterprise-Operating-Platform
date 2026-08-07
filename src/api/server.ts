@@ -24,6 +24,8 @@ import { registerWorkflowInstanceRoutes } from "./routes/workflow-instances.ts";
 import { registerGatewayRoutes } from "./routes/gateway.ts";
 import { registerAiActionRoutes } from "./routes/ai-actions.ts";
 import { registerDeviceIngestRoutes } from "./routes/device-ingest.ts";
+import { registerProjectRoutes } from "./routes/projects.ts";
+import { registerDailyReportRoutes } from "./routes/daily-reports.ts";
 import type { GatewayService } from "../domain/gateway-service.ts";
 import type { AppContainer } from "./types.ts";
 
@@ -80,6 +82,8 @@ export function createServer(config: ServerConfig, container: AppContainer): Ser
   }
   registerAiActionRoutes(router, container);
   registerDeviceIngestRoutes(router, container);
+  registerProjectRoutes(router, container);
+  registerDailyReportRoutes(router, container);
   registerWebRoutes(router, container);
 
   const server = httpCreateServer((req: IncomingMessage, res: ServerResponse): void => {

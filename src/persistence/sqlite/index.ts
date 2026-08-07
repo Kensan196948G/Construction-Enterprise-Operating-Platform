@@ -27,6 +27,8 @@ import type {
   WorkflowInstanceStatus,
 } from "../../domain/workflow-instance.ts";
 import type { AiAction, AiActionId, AiActionStatus } from "../../domain/ai-action.ts";
+import type { Project, ProjectId, ProjectStatus } from "../../domain/project.ts";
+import type { DailyReport, DailyReportId, DailyReportStatus } from "../../domain/daily-report.ts";
 import type {
   ApplicationRepository,
   DeviceRepository,
@@ -38,6 +40,8 @@ import type {
   WorkflowRepository,
   WorkflowInstanceRepository,
   AiActionRepository,
+  ProjectRepository,
+  DailyReportRepository,
 } from "../ports.ts";
 import type { ApiKeyStore } from "../../api/types.ts";
 import { BaseSqliteRepository, openDatabase } from "./base-sqlite-repository.ts";
@@ -417,6 +421,107 @@ class SqliteAiActionRepository
   }
 }
 
+class SqliteProjectRepository extends BaseSqliteRepository<Project> implements ProjectRepository {
+  constructor(db: unknown) {
+    super(
+      db,
+      "projects",
+      ["org_id TEXT NOT NULL", "project_code TEXT NOT NULL", "status TEXT NOT NULL"],
+      [
+        { name: "idx_projects_org", columns: ["org_id"] },
+        { name: "idx_projects_code", columns: ["project_code"], unique: true },
+        { name: "idx_projects_status", columns: ["status"] },
+      ],
+      ["org_id", "project_code", "status"],
+    );
+  }
+
+  protected override extraValues(project: Project): readonly unknown[] {
+    return [project.organizationId, project.projectCode, project.status];
+  }
+
+  override async findById(id: ProjectId): Promise<Project | null> {
+    return super.findById(id as string);
+  }
+
+  override async delete(id: ProjectId): Promise<void> {
+    return super.delete(id as string);
+  }
+
+  async findByOrganization(orgId: string): Promise<readonly Project[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM projects WHERE org_id = ?");
+    const rows = stmt.all(orgId) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as Project);
+  }
+
+  async findByStatus(status: ProjectStatus): Promise<readonly Project[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM projects WHERE status = ?");
+    const rows = stmt.all(status) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as Project);
+  }
+
+  async findByCode(code: string): Promise<Project | null> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM projects WHERE project_code = ?");
+    const row = stmt.get(code) as { data: string } | undefined;
+    return row !== undefined ? (JSON.parse(row.data) as Project) : null;
+  }
+}
+
+class SqliteDailyReportRepository
+  extends BaseSqliteRepository<DailyReport>
+  implements DailyReportRepository
+{
+  constructor(db: unknown) {
+    super(
+      db,
+      "daily_reports",
+      [
+        "org_id TEXT NOT NULL",
+        "project_id TEXT NOT NULL REFERENCES projects(id)",
+        "report_date TEXT NOT NULL",
+        "status TEXT NOT NULL",
+      ],
+      [
+        { name: "idx_daily_reports_org", columns: ["org_id"] },
+        { name: "idx_daily_reports_project", columns: ["project_id"] },
+        { name: "idx_daily_reports_date", columns: ["report_date"] },
+        { name: "idx_daily_reports_status", columns: ["status"] },
+      ],
+      ["org_id", "project_id", "report_date", "status"],
+    );
+  }
+
+  protected override extraValues(report: DailyReport): readonly unknown[] {
+    return [report.organizationId, report.projectId as string, report.reportDate, report.status];
+  }
+
+  override async findById(id: DailyReportId): Promise<DailyReport | null> {
+    return super.findById(id as string);
+  }
+
+  override async delete(id: DailyReportId): Promise<void> {
+    return super.delete(id as string);
+  }
+
+  async findByProject(projectId: ProjectId): Promise<readonly DailyReport[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM daily_reports WHERE project_id = ?");
+    const rows = stmt.all(projectId as string) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as DailyReport);
+  }
+
+  async findByStatus(status: DailyReportStatus): Promise<readonly DailyReport[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM daily_reports WHERE status = ?");
+    const rows = stmt.all(status) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as DailyReport);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
 // Factory
 // ---------------------------------------------------------------------------
@@ -440,6 +545,8 @@ export function createSqliteRepositories(dbPath: string): Repositories {
     workflows: new SqliteWorkflowRepository(db),
     workflowInstances: new SqliteWorkflowInstanceRepository(db),
     aiActions: new SqliteAiActionRepository(db),
+    projects: new SqliteProjectRepository(db),
+    dailyReports: new SqliteDailyReportRepository(db),
   };
 }
 

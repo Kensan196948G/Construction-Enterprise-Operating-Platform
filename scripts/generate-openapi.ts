@@ -255,6 +255,68 @@ const schemas: { [k: string]: YamlValue } = {
       decisionNote: { type: "string" },
     },
   },
+  Project: {
+    type: "object",
+    required: [
+      "id",
+      "organizationId",
+      "projectCode",
+      "name",
+      "status",
+      "createdAt",
+      "updatedAt",
+    ],
+    properties: {
+      id: { type: "string" },
+      organizationId: { type: "string" },
+      projectCode: { type: "string" },
+      name: { type: "string" },
+      description: { type: "string" },
+      clientName: { type: "string" },
+      siteAddress: { type: "string" },
+      status: {
+        type: "string",
+        enum: ["planning", "in_progress", "completed", "suspended", "cancelled"],
+      },
+      startDate: { type: "string", format: "date" },
+      endDate: { type: "string", format: "date" },
+      budget: { type: "number" },
+      managerId: { type: "string" },
+      createdAt: { type: "string", format: "date-time" },
+      updatedAt: { type: "string", format: "date-time" },
+    },
+  },
+  DailyReport: {
+    type: "object",
+    required: [
+      "id",
+      "organizationId",
+      "projectId",
+      "reportDate",
+      "workerCount",
+      "safetyCheck",
+      "status",
+      "createdAt",
+      "updatedAt",
+    ],
+    properties: {
+      id: { type: "string" },
+      organizationId: { type: "string" },
+      projectId: { type: "string" },
+      reportDate: { type: "string", format: "date" },
+      weather: { type: "string", enum: ["sunny", "cloudy", "rainy", "snowy"] },
+      temperature: { type: "integer" },
+      workerCount: { type: "integer" },
+      workContent: { type: "string" },
+      safetyCheck: { type: "boolean" },
+      safetyNotes: { type: "string" },
+      progressRate: { type: "integer" },
+      issues: { type: "string" },
+      status: { type: "string", enum: ["draft", "submitted", "approved"] },
+      createdAt: { type: "string", format: "date-time" },
+      updatedAt: { type: "string", format: "date-time" },
+    },
+  },
   AuditEntry: {
     type: "object",
     required: ["id", "at", "actor", "action", "resource", "outcome", "hash"],
@@ -1724,6 +1786,280 @@ const paths: { [k: string]: YamlValue } = {
       },
     },
   },
+  "/api/v1/projects": {
+    get: {
+      operationId: "listProjects",
+      summary: "Paginated list of construction projects (optional ?status= filter)",
+      tags: ["Projects"],
+      security: authSecurity,
+      parameters: [
+        { "$ref": "#/components/parameters/limitParam" },
+        { "$ref": "#/components/parameters/offsetParam" },
+        {
+          name: "status",
+          in: "query",
+          schema: {
+            type: "string",
+            enum: ["planning", "in_progress", "completed", "suspended", "cancelled"],
+          },
+        },
+      ],
+      responses: {
+        ...jsonResponse(200, paginatedList("projects", "Project")),
+        ...errorResponses(400, 401, 403),
+      },
+    },
+    post: {
+      operationId: "createProject",
+      summary: "Create a construction project (ServiceHub S-01)",
+      tags: ["Projects"],
+      security: authSecurity,
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["projectCode", "name"],
+              properties: {
+                organizationId: { type: "string" },
+                projectCode: { type: "string" },
+                name: { type: "string" },
+                description: { type: "string" },
+                clientName: { type: "string" },
+                siteAddress: { type: "string" },
+                status: {
+                  type: "string",
+                  enum: ["planning", "in_progress", "completed", "suspended", "cancelled"],
+                },
+                startDate: { type: "string", format: "date" },
+                endDate: { type: "string", format: "date" },
+                budget: { type: "number" },
+                managerId: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(201, {
+          type: "object",
+          required: ["project"],
+          properties: { project: { $ref: "#/components/schemas/Project" } },
+        }),
+        ...errorResponses(400, 401, 403),
+      },
+    },
+  },
+  "/api/v1/projects/{id}": {
+    get: {
+      operationId: "getProject",
+      summary: "Project detail",
+      tags: ["Projects"],
+      security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["project"],
+          properties: { project: { $ref: "#/components/schemas/Project" } },
+        }),
+        ...errorResponses(401, 403, 404),
+      },
+    },
+    patch: {
+      operationId: "updateProject",
+      summary: "Update a project",
+      tags: ["Projects"],
+      security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                description: { type: "string" },
+                clientName: { type: "string" },
+                siteAddress: { type: "string" },
+                status: {
+                  type: "string",
+                  enum: ["planning", "in_progress", "completed", "suspended", "cancelled"],
+                },
+                startDate: { type: "string", format: "date" },
+                endDate: { type: "string", format: "date" },
+                budget: { type: "number" },
+                managerId: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["project"],
+          properties: { project: { $ref: "#/components/schemas/Project" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+    delete: {
+      operationId: "deleteProject",
+      summary: "Delete a project (audited)",
+      tags: ["Projects"],
+      security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["deleted"],
+          properties: { deleted: { type: "boolean" } },
+        }),
+        ...errorResponses(401, 403, 404),
+      },
+    },
+  },
+  "/api/v1/projects/{projectId}/daily-reports": {
+    get: {
+      operationId: "listDailyReports",
+      summary: "Paginated list of daily reports for a project",
+      tags: ["DailyReports"],
+      security: authSecurity,
+      parameters: [
+        { "$ref": "#/components/parameters/limitParam" },
+        { "$ref": "#/components/parameters/offsetParam" },
+        {
+          name: "status",
+          in: "query",
+          schema: { type: "string", enum: ["draft", "submitted", "approved"] },
+        },
+      ],
+      responses: {
+        ...jsonResponse(200, paginatedList("dailyReports", "DailyReport")),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+    post: {
+      operationId: "createDailyReport",
+      summary: "Create a daily report (ServiceHub S-02)",
+      tags: ["DailyReports"],
+      security: authSecurity,
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["reportDate"],
+              properties: {
+                reportDate: { type: "string", format: "date" },
+                weather: { type: "string", enum: ["sunny", "cloudy", "rainy", "snowy"] },
+                temperature: { type: "integer" },
+                workerCount: { type: "integer" },
+                workContent: { type: "string" },
+                safetyCheck: { type: "boolean" },
+                safetyNotes: { type: "string" },
+                progressRate: { type: "integer" },
+                issues: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(201, {
+          type: "object",
+          required: ["dailyReport"],
+          properties: { dailyReport: { $ref: "#/components/schemas/DailyReport" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+  },
+  "/api/v1/daily-reports/{id}": {
+    get: {
+      operationId: "getDailyReport",
+      summary: "Daily report detail",
+      tags: ["DailyReports"],
+      security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["dailyReport"],
+          properties: { dailyReport: { $ref: "#/components/schemas/DailyReport" } },
+        }),
+        ...errorResponses(401, 403, 404),
+      },
+    },
+    patch: {
+      operationId: "updateDailyReport",
+      summary: "Update a daily report",
+      tags: ["DailyReports"],
+      security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                weather: { type: "string", enum: ["sunny", "cloudy", "rainy", "snowy"] },
+                temperature: { type: "integer" },
+                workerCount: { type: "integer" },
+                workContent: { type: "string" },
+                safetyCheck: { type: "boolean" },
+                safetyNotes: { type: "string" },
+                progressRate: { type: "integer" },
+                issues: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["dailyReport"],
+          properties: { dailyReport: { $ref: "#/components/schemas/DailyReport" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+  },
+  "/api/v1/daily-reports/{id}/transition": {
+    post: {
+      operationId: "transitionDailyReport",
+      summary: "Transition a daily report (draft → submitted → approved)",
+      tags: ["DailyReports"],
+      security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["status"],
+              properties: { status: { type: "string", enum: ["draft", "submitted", "approved"] } },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["dailyReport"],
+          properties: { dailyReport: { $ref: "#/components/schemas/DailyReport" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+  },
   "/api/v1/integrations/{service}/{proxyPath}": {
     get: gatewayOperation("get"),
     post: gatewayOperation("post"),
@@ -1765,6 +2101,8 @@ const spec: { [k: string]: YamlValue } = {
     { name: "Workflows",    description: "Workflow templates and CRUD" },
     { name: "WorkflowInstances", description: "Workflow instance runs (Issue→Approval→Audit)" },
     { name: "AiGovernance", description: "AI action governance (integration Y-09)" },
+    { name: "Projects", description: "Construction project management (ServiceHub S-01)" },
+    { name: "DailyReports", description: "Site daily reports (ServiceHub S-02)" },
     { name: "IntegrationGateway", description: "CEOP gateway reverse proxy for integration services (P1)" },
   ],
   paths,
