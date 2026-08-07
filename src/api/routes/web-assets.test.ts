@@ -1,0 +1,109 @@
+/**
+ * Integration tests for the SSR page assets.
+ *
+ * The public Cloudflare Tunnel ingress sends every /assets/* path to the WebUI
+ * static host, so the API's SSR templates must load their CSS/JS from
+ * /api/assets/* — otherwise the dashboard/governance pages are unstyled and
+ * non-interactive in production. These tests pin the /api/assets routes, the
+ * legacy /assets routes for direct/local deployments, and the security headers
+ * both variants carry.
+ */
+
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import type { AddressInfo } from "node:net";
+
+import { createServer } from "../server.ts";
+import { createInMemoryRepositories } from "../../persistence/in-memory/index.ts";
+import { AuditLog } from "../../governance/audit-log.ts";
+import type { AppContainer } from "../types.ts";
+
+interface Harness {
+  baseUrl: string;
+  close(): Promise<void>;
+}
+
+async function buildHarness(): Promise<Harness> {
+  const container: AppContainer = {
+    repositories: createInMemoryRepositories(),
+    auditLog: new AuditLog(),
+    apiKeyStore: new Map(),
+  };
+  const server = createServer({ port: 0 }, container);
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const { port } = server.address() as AddressInfo;
+  return {
+    baseUrl: `http://127.0.0.1:${port}`,
+    close: () =>
+      new Promise<void>((resolve, reject) => server.close((e) => (e ? reject(e) : resolve()))),
+  };
+}
+
+test("SSR assets: /api/assets/app.css is served publicly with security headers", async (t) => {
+  const h = await buildHarness();
+  t.after(() => h.close());
+
+  const res = await fetch(`${h.baseUrl}/api/assets/app.css`);
+  assert.equal(res.status, 200);
+  assert.match(res.headers.get("content-type") ?? "", /^text\/css/);
+  assert.equal(res.headers.get("strict-transport-security"), "max-age=63072000; includeSubDomains");
+  assert.equal(res.headers.get("x-content-type-options"), "nosniff");
+  assert.ok(res.headers.get("x-request-id"), "X-Request-Id should be present");
+  assert.ok((await res.text()).includes("--paper"));
+});
+
+test("SSR assets: /api/assets/app.js is served publicly with JS MIME type", async (t) => {
+  const h = await buildHarness();
+  t.after(() => h.close());
+
+  const res = await fetch(`${h.baseUrl}/api/assets/app.js`);
+  assert.equal(res.status, 200);
+  assert.match(res.headers.get("content-type") ?? "", /javascript/);
+  assert.equal(res.headers.get("strict-transport-security"), "max-age=63072000; includeSubDomains");
+  assert.ok((await res.text()).includes("refreshDashboard"));
+});
+
+test("SSR assets: legacy /assets/* routes still work for direct deployments", async (t) => {
+  const h = await buildHarness();
+  t.after(() => h.close());
+
+  const css = await fetch(`${h.baseUrl}/assets/app.css`);
+  assert.equal(css.status, 200);
+  assert.match(css.headers.get("content-type") ?? "", /^text\/css/);
+  const js = await fetch(`${h.baseUrl}/assets/app.js`);
+  assert.equal(js.status, 200);
+  assert.match(js.headers.get("content-type") ?? "", /javascript/);
+});
+
+test("SSR assets: HEAD mirrors GET on /api/assets without a body", async (t) => {
+  const h = await buildHarness();
+  t.after(() => h.close());
+
+  const get = await fetch(`${h.baseUrl}/api/assets/app.css`);
+  const head = await fetch(`${h.baseUrl}/api/assets/app.css`, { method: "HEAD" });
+  assert.equal(head.status, get.status);
+  assert.equal(head.headers.get("content-type"), get.headers.get("content-type"));
+  assert.equal(await head.text(), "");
+  assert.equal(
+    head.headers.get("strict-transport-security"),
+    "max-age=63072000; includeSubDomains",
+  );
+});
+
+test("SSR templates reference /api/assets so the Tunnel path-split cannot shadow them", async () => {
+  const [index, governance] = await Promise.all([
+    readFile(new URL("../../web/templates/index.html", import.meta.url), "utf-8"),
+    readFile(new URL("../../web/templates/governance.html", import.meta.url), "utf-8"),
+  ]);
+  assert.ok(index.includes('href="/api/assets/app.css"'), "index.html CSS must use /api/assets");
+  assert.ok(index.includes('src="/api/assets/app.js"'), "index.html JS must use /api/assets");
+  assert.ok(
+    governance.includes('href="/api/assets/app.css"'),
+    "governance.html CSS must use /api/assets",
+  );
+  assert.ok(
+    governance.includes('src="/api/assets/app.js"'),
+    "governance.html JS must use /api/assets",
+  );
+});

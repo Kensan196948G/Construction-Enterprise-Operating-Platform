@@ -9,8 +9,8 @@
 | 項目                     | 状態                                                                                                                     |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
 | 実装本体                 | `feat/platform-foundation`（M1〜M16）→ 本作業ブランチ `feat/production-hardening` で v0.6.0 化                           |
-| main                     | v0.7.1 統合済み（PR #2〜#16）。v0.8.0 は本 PR（feat/production-hardening-r3）でリリース予定・タグ/GHCR イメージは作成前    |
-| テスト                   | 297/297 pass（ローカル verify + PR #17 CI で確認済み）                                                                  |
+| main                     | v0.8.1 統合済み（PR #2〜#17 + v0.8.1 SSR アセット修正）。タグ v0.8.0/v0.8.1・GHCR イメージ作成済み                            |
+| テスト                   | 302/302 pass（ローカル verify + PR CI で確認済み）                                                                      |
 | typecheck / lint / build | 全パス                                                                                                                   |
 | 依存監査                 | `pnpm audit --audit-level=high` → 0 vulnerabilities（override で解消）                                                   |
 | CI                       | グリーン（main: typecheck/lint/test/build/security/Docker 全成功）                                                       |
@@ -70,7 +70,7 @@
 
 ## 4. リリース可否判断の根拠
 
-- コード品質: typecheck / lint / build / 297 tests / audit 0 / OpenAPI 生成一致
+- コード品質: typecheck / lint / build / 302 tests / audit 0 / OpenAPI 生成一致
 - セキュリティ: 認証・認可・監査・レート制限・ヘッダ・FK・依存監査を確認
 - 運用: バックアップ・復元手順・監視・Runbook・運用台帳を整備
 - 判定: **GO（v0.8.0 本番デプロイ・2026-08-07）**。公開 URL 経由で `/health`・`/health/ready`（storage: sqlite）・`/api/v1/info`（version 0.8.0・environment・nodeVersion）・HEAD `/health` 200・監査エクスポート 200・API キー管理 200/404・認証込みスモーク・ネガティブ制御（401）を確認

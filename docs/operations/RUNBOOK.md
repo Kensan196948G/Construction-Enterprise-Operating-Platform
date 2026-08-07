@@ -4,7 +4,7 @@
 
 - アプリ: Node.js 22+ / TypeScript（ランタイム依存ゼロ）
 - 永続化: SQLite（WAL、コンテナ内 `/data/ceop.db`）
-- 配布: Docker イメージ（GHCR `ghcr.io/kensan196948g/construction-eop:0.8.0` / ローカル `ceop-platform:v0.8.0`）
+- 配布: Docker イメージ（GHCR `ghcr.io/kensan196948g/construction-eop:0.8.1` / ローカル `ceop-platform:v0.8.1`）
 - ヘルス: `GET /health`（liveness）、`GET /health/ready`（readiness）
 - ログ: stdout/stderr（Docker 既定の json-file。**ホストにローテーション設定なし** — 下記「既知の差分」参照）
 
@@ -16,7 +16,7 @@
 | ホスト       | 192.168.0.185（LAN）                                                              |
 | 起動方式     | **`docker run`**（compose 管理下ではない。§6 参照）                               |
 | コンテナ     | `ceop-platform`（`--restart unless-stopped`、127.0.0.1:3120→3000）                |
-| イメージ     | `ceop-platform:v0.8.0`（可動エイリアス `ceop-platform:current` が同一 ID を指す） |
+| イメージ     | `ceop-platform:v0.8.1`（可動エイリアス `ceop-platform:current` が同一 ID を指す） |
 | トンネル     | Cloudflare Tunnel `ceop`（systemd: `cloudflared-ceop.service`）                   |
 | DB           | ホスト `/home/kensan/.ceop/data/ceop.db` を `/data` へ bind mount                 |
 | 環境変数     | `/home/kensan/.ceop/.env`（chmod 600、`--env-file` で読み込み）                   |
@@ -48,24 +48,24 @@ install -m 600 /dev/null /home/kensan/.ceop/.env
 mkdir -p /home/kensan/.ceop/data
 
 # 4. イメージ取得
-docker pull ghcr.io/kensan196948g/construction-eop:0.8.0
-docker tag  ghcr.io/kensan196948g/construction-eop:0.8.0 ceop-platform:v0.8.0
+docker pull ghcr.io/kensan196948g/construction-eop:0.8.1
+docker tag  ghcr.io/kensan196948g/construction-eop:0.8.1 ceop-platform:v0.8.1
 
 # 5. マイグレーション（bind mount に対して実行）
 docker run --rm -v /home/kensan/.ceop/data:/data \
   --env-file /home/kensan/.ceop/.env \
-  ceop-platform:v0.8.0 \
+  ceop-platform:v0.8.1 \
   node --experimental-strip-types scripts/migrate.ts
 
 # 6. API キー発行（出力は Secrets 管理へ。標準出力を残さない）
 docker run --rm -v /home/kensan/.ceop/data:/data \
   --env-file /home/kensan/.ceop/.env \
-  ceop-platform:v0.8.0 \
+  ceop-platform:v0.8.1 \
   node --experimental-strip-types scripts/provision-api-key.ts \
   --subject admin --permissions "*:*"
 
 # 7. 起動
-docker tag ceop-platform:v0.8.0 ceop-platform:current
+docker tag ceop-platform:v0.8.1 ceop-platform:current
 docker run -d \
   --name ceop-platform \
   --restart unless-stopped \
@@ -82,7 +82,7 @@ docker run -d \
   --log-opt max-file=3 \
   --env-file /home/kensan/.ceop/.env \
   -v /home/kensan/.ceop/data:/data \
-  ceop-platform:v0.8.0
+  ceop-platform:v0.8.1
 
 # 8. 確認（コンテナは loopback:3120 のみで listen。公開は Tunnel 経由）
 docker inspect ceop-platform --format '{{.State.Health.Status}}'
@@ -207,7 +207,7 @@ docker inspect ceop-platform --format '{{json .Config.Labels}}'
 docker stop ceop-platform && docker rename ceop-platform ceop-platform-prev
 # 3. compose で起動（必須変数は未設定ならエラー停止する）
 cd <repo>
-CEOP_IMAGE=ceop-platform:v0.8.0 CEOP_DATA_DIR=/home/kensan/.ceop/data \
+CEOP_IMAGE=ceop-platform:v0.8.1 CEOP_DATA_DIR=/home/kensan/.ceop/data \
   docker compose -f docker-compose.prod.yml --env-file /home/kensan/.ceop/.env up -d
 # 4. 検証後、labels に com.docker.compose.* が付いていることを確認
 docker inspect ceop-platform --format '{{index .Config.Labels "com.docker.compose.project"}}'

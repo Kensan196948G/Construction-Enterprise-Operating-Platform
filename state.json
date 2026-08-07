@@ -6,7 +6,7 @@
     "registered_at": "2026-06-25",
     "phase_mode": "maintenance"
   },
-  "goal": "v0.8.0 本番運用継続 — HSTS・リクエストID・CF-Connecting-IP 分離・監査テナント補完・OpenAPI 整合・バックアップ保持自動化・API キー管理・Webhook 通知を本線へ反映し、297 テスト pass・CI グリーン・本番 ceop.mirai-dx-platform.com を稼働維持",
+  "goal": "v0.8.1 本番運用継続 — SSR アセット経路（/api/assets/*）修正を本線へ反映し、302 テスト pass・CI グリーン・本番 ceop.mirai-dx-platform.com を稼働維持",
   "phase": "maintenance",
   "release": {
     "v0_1_0_foundation": "release_ready",
@@ -15,6 +15,7 @@
     "v0_4_0_security_hardening": "release_ready",
     "v0_5_0_m8_production_deploy": "release_ready",
     "v0_8_0_production_hardening": "release_ready",
+    "v0_8_1_ssr_assets_fix": "release_ready",
     "production_deploy": "completed",
     "judged_by": "CTO",
     "judged_at": "2026-08-06"
@@ -23,7 +24,7 @@
     "success_rate_target": 0.9,
     "ci_success_rate": 1,
     "test_pass_rate": 1,
-    "test_count": 297,
+    "test_count": 302,
     "security_critical": 0,
     "security_high_resolved": 19,
     "blocker_count": 0
@@ -57,7 +58,8 @@
     "M15_ci_pnpm_fix": "completed",
     "M16_coderabbit_all16_fixes": "completed",
     "v0_6_0_production_readiness": "completed",
-    "v0_8_0_production_hardening": "completed"
+    "v0_8_0_production_hardening": "completed",
+    "v0_8_1_ssr_assets_fix": "completed"
   },
   "completed_issues": [
     "v0.6.0: version unification (src/version.ts + guard test, package.json/info/OpenAPI/UI/Docker 0.6.0)",

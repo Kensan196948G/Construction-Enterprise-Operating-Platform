@@ -6,6 +6,27 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-08-07
+
+### Fixed
+
+- **SSR ページの静的アセットが公開 URL で 404（G-36 / P1）** — Cloudflare Tunnel の
+  ingress は `/assets/*` を WebUI 静的ホストへ振り分けるため、API が配信する
+  `/dashboard`・`/governance` が参照する `app.css` / `app.js` が 404 になり、
+  公開 URL ではスタイル・JavaScript が欠落していた。SSR テンプレートの参照を
+  `/api/assets/*` へ変更し、Tunnel 経路（`/api/*` → API）で確実に届くように修正。
+  旧 `/assets/*` ルートは直接/ローカルデプロイ互換として維持
+- API 静的アセット応答に HSTS ヘッダを明示（README の「全応答化」主張との整合）
+
+### Added
+
+- `/api/assets/app.css` / `/api/assets/app.js` の統合テスト 5 件追加
+  （ステータス・MIME・HSTS/X-Request-Id・HEAD・テンプレート参照先を固定）
+
+### Changed
+
+- テスト 302/302 pass（v0.8.0 の 297 から 5 件追加）
+
 ## [0.8.0] - 2026-08-07
 
 ### Added

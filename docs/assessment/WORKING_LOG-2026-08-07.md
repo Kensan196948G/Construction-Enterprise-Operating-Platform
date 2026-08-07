@@ -108,3 +108,33 @@
 - 本番: API/WebUI v0.8.0・ヘルス/スモーク/ネガティブ制御 実測済み・rollback 準備あり
 - 監視・運用: API/WebUI 外形プローブ 5 分間隔・バックアップ+保持 cron・Runbook/台帳更新済み
 - 残課題（管理可能）: Webhook 宛先設定、Cloudflare エッジ HSTS、オフサイトバックアップ、四半期復元試験、SLI 計測、CSP nonce、SSO/OIDC、AI ゲートウェイ
+
+## 9. v0.8.1 追加検証（主任エージェント実施・2026-08-07）
+
+並行セッションによる v0.8.0 実装・デプロイ完了後、主任として独立に再検証し、
+以下の本番障害を発見・修正した。
+
+### 発見: SSR アセット 404（G-36 / P1）
+
+- 公開 ingress は `/assets/*` を WebUI（3130）へ振り分ける
+- API の `/dashboard` / `/governance` は `/assets/app.css`・`/assets/app.js` を参照
+- 実測: `GET /dashboard` 200（HTML に `/assets/...` 参照）、`GET /assets/app.css` 404（WebUI 側）
+- 影響: 公開 URL で SSR 画面のスタイル/JS が欠落
+
+### 修正（PR #20 / branch fix/ssr-assets-public-path）
+
+- SSR テンプレートの参照を `/api/assets/app.css|js` へ変更（Tunnel は `/api/*` を API へ振り分け）
+- API ルーターに `/api/assets/*`（公開）を追加。旧 `/assets/*` はローカル互換で維持
+- API 静的アセット応答に HSTS を明示
+- 統合テスト 5 件追加（302/302 pass）
+- バージョン 0.8.1 へ統一（src/version.ts・package.json・Dockerfile・OpenAPI・README・
+  state.json・RUNBOOK・ROOT-ASSESSMENT・CHANGELOG）
+
+### 検証結果（2026-08-07 06:08 JST）
+
+| ゲート | 結果 |
+|---|---|
+| `pnpm run verify` | ✅ 302/302 pass（format / openapi:check / typecheck / lint / test） |
+| `pnpm run build` | ✅ pass |
+| `pnpm audit --audit-level=high` | ✅ 0 vulnerabilities |
+| 本番実測（v0.8.0 時点） | API 0.8.0・WebUI 0.8.0・HSTS/X-Request-Id 付与・コンテナ hardening 適用済み・cron 4 本稼働 |

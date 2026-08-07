@@ -99,6 +99,24 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
   };
 
   // Static assets — CSP allows only 'self', so styles/scripts are external files.
+  // The public ingress (Cloudflare Tunnel) routes every /assets/* path to the
+  // WebUI static host, so the API's SSR pages must reference their assets under
+  // /api/assets/* to reach this server. The legacy /assets/* routes stay for
+  // direct/local deployments where no path-split proxy is in front.
+  router.get(
+    "/api/assets/app.css",
+    async (_req, _ctx, res) => {
+      await sendFile(res, join(staticDir, "app.css"), "text/css; charset=utf-8");
+    },
+    false,
+  );
+  router.get(
+    "/api/assets/app.js",
+    async (_req, _ctx, res) => {
+      await sendFile(res, join(staticDir, "app.js"), "text/javascript; charset=utf-8");
+    },
+    false,
+  );
   router.get(
     "/assets/app.css",
     async (_req, _ctx, res) => {
