@@ -4,7 +4,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-22.13+-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Zero Runtime Deps](https://img.shields.io/badge/runtime%20deps-zero-brightgreen)](package.json)
 [![CI](https://img.shields.io/github/actions/workflow/status/Kensan196948G/Construction-Enterprise-Operating-Platform/ci.yml?label=CI&logo=github)](/.github/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-315%20pass-brightgreen)](src/)
+[![Tests](https://img.shields.io/badge/tests-318%20pass-brightgreen)](src/)
 [![Security](https://img.shields.io/badge/security-hardened-blue)](src/api/middleware/auth.ts)
 [![License](https://img.shields.io/badge/license-proprietary-lightgrey)](LICENSE.md)
 
@@ -15,18 +15,18 @@
 
 ## 📌 概要
 
-| 項目         | 内容                                                                                                                                                                           |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 役割         | 統制・ガバナンス・共通ワークフローの調整基盤                                                                                                                                   |
-| バージョン   | v0.8.1（WebUI ホスティング: デザインバンドル 100% 適用配信・systemd 常駐・Neon アクセスログ。基盤: SQLite 永続化・JWT 認証・監査証跡のテナント分離・CRUD/Workflow/Policy API） |
-| 言語         | TypeScript 5.7（strict / `noUncheckedIndexedAccess` / 例外を投げない設計）                                                                                                     |
-| ランタイム   | Node.js v22.13+（ネイティブ TS 実行・ビルトインテストランナー）                                                                                                                |
-| HTTP サーバ  | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                                                                                                                       |
-| 依存方針     | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）                                                                                               |
-| パッケージ   | pnpm 10.26.2                                                                                                                                                                   |
-| テスト       | 315 tests pass（node:test ビルトインランナー）                                                                                                                                 |
-| コンテナ     | Docker multi-stage build（non-root・HEALTHCHECK 付き）                                                                                                                         |
-| セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限                                                                                              |
+| 項目         | 内容                                                                                                                                                                                            |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 役割         | 統制・ガバナンス・共通ワークフローの調整基盤                                                                                                                                                    |
+| バージョン   | v0.8.2（WebUI ホスティング: デザインバンドル 100% 適用配信・systemd 常駐・Neon アクセスログ。基盤: SQLite 永続化・JWT 認証・監査証跡のテナント分離・CRUD/Workflow/WorkflowInstance/Policy API） |
+| 言語         | TypeScript 5.7（strict / `noUncheckedIndexedAccess` / 例外を投げない設計）                                                                                                                      |
+| ランタイム   | Node.js v22.13+（ネイティブ TS 実行・ビルトインテストランナー）                                                                                                                                 |
+| HTTP サーバ  | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                                                                                                                                        |
+| 依存方針     | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）                                                                                                                |
+| パッケージ   | pnpm 10.26.2                                                                                                                                                                                    |
+| テスト       | 318 tests pass（node:test ビルトインランナー）                                                                                                                                                  |
+| コンテナ     | Docker multi-stage build（non-root・HEALTHCHECK 付き）                                                                                                                                          |
+| セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限                                                                                                               |
 
 ---
 
@@ -192,7 +192,8 @@ CSS/JS は外部アセット（`/api/assets/app.css`・`/api/assets/app.js`）�
 SSR 時の CSP から `unsafe-inline` を撤廃しています。SSR 時に短命 JWT を
 ページへ埋め込み、自動更新 API 呼び出しにも認証が通るよう修正しています。
 `/api/assets/*` は公開 Tunnel のパス分割（`/api/*` → API）で確実に API へ届くため、
-`/assets/*` を WebUI が受ける本番構成でも 404 になりません（v0.8.1）。
+`/assets/*` を WebUI が受ける本番構成でも 404 になりません（v0.8.1）。favicon も
+`/api/assets/favicon.svg` 経由で配信します（v0.8.2）。
 
 > 📌 `*:*` または `*:read` ワイルドカード権限でも `policy:read` / `audit:read` ゲートを通過します。
 
@@ -455,13 +456,13 @@ curl -H "Authorization: Bearer <jwt>" http://localhost:3000/api/v1/dashboard
 
 ## 🚀 本番デプロイ（M8）
 
-### 🌐 本番環境（v0.8.1 稼働中）
+### 🌐 本番環境（v0.8.2 稼働中）
 
 | 項目           | 値                                                                                                           |
 | -------------- | ------------------------------------------------------------------------------------------------------------ |
 | 本番 URL       | https://ceop.mirai-dx-platform.com                                                                           |
 | 形態           | 本機 Docker コンテナ（`docker run`）+ Cloudflare Tunnel（cloudflared-ceop.service）                          |
-| イメージ       | `ceop-platform:v0.8.1`（GHCR: `ghcr.io/kensan196948g/construction-eop:0.8.1`）                               |
+| イメージ       | `ceop-platform:v0.8.2`（GHCR: `ghcr.io/kensan196948g/construction-eop:0.8.2`）                               |
 | 可動エイリアス | `ceop-platform:current`（稼働中バージョンを指す。バックアップ cron が参照）                                  |
 | ホスト         | 192.168.0.185（127.0.0.1:3120 → コンテナ 3000）                                                              |
 | DB             | `/home/kensan/.ceop/data/ceop.db`（SQLite WAL、migration 001〜005 適用済み）                                 |
@@ -613,7 +614,7 @@ bash scripts/webui-deploy.sh
 ## 🧪 テスト実行
 
 ```bash
-# 全テスト実行（315 tests）
+# 全テスト実行（318 tests）
 pnpm run test
 
 # typecheck + lint + test 一括
@@ -655,7 +656,7 @@ node --experimental-strip-types scripts/sqlite-backup.ts /data/ceop.db /backup/c
 | --------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | typecheck | ✅ pass        | strict・`noUncheckedIndexedAccess`・0 error                                                                                                                                                                                                                                                                                                                         |
 | lint      | ✅ pass        | ESLint flat config + typescript-eslint・0 warning                                                                                                                                                                                                                                                                                                                   |
-| test      | ✅ 315/315     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud + governance-crud + sqlite-audit-log + workflow-crud + workflow-instance + audit-coverage + migrate + rate-limit（CF-IP 分離含む）+ tenant-scope + audit-tenant-scope + jwt-org + webui + client-ip + backup-retention + auth-keys + api-key-repository + web-assets |
+| test      | ✅ 318/318     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud + governance-crud + sqlite-audit-log + workflow-crud + workflow-instance + audit-coverage + migrate + rate-limit（CF-IP 分離含む）+ tenant-scope + audit-tenant-scope + jwt-org + webui + client-ip + backup-retention + auth-keys + api-key-repository + web-assets |
 | build     | ✅ pass        | `dist/` に型定義付き出力                                                                                                                                                                                                                                                                                                                                            |
 | CI        | ✅ 設定済み    | `.github/workflows/ci.yml`（push / PR トリガー）                                                                                                                                                                                                                                                                                                                    |
 | Docker    | ✅ multi-stage | non-root ユーザー・HEALTHCHECK 付き                                                                                                                                                                                                                                                                                                                                 |

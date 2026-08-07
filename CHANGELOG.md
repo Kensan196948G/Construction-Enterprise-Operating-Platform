@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 ## [Unreleased]
 
+## [0.8.2] - 2026-08-07
+
 ### Added
 
 - **ブラウザタブ favicon** — SSR ページ（`/dashboard`・`/governance`）と WebUI 配信に
