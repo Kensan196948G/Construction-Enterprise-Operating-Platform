@@ -15,7 +15,7 @@ const UUID_JS = "11111111-1111-4111-8111-111111111111";
 const UUID_FONT = "22222222-2222-4222-8222-222222222222";
 const UUID_TEXT = "33333333-3333-4333-8333-333333333333";
 
-function syntheticBundle(): string {
+function syntheticBundle(extResources?: unknown): string {
   const jsSource = 'console.log("hello");';
   const fontBytes = Buffer.from([0x77, 0x4f, 0x46, 0x32, 0x00, 0x01]);
   const manifest = {
@@ -41,6 +41,9 @@ function syntheticBundle(): string {
     "<!doctype html><html><body>",
     `<script type="__bundler/manifest">${embed(manifest)}</script>`,
     `<script type="__bundler/template">${embed(template)}</script>`,
+    ...(extResources === undefined
+      ? []
+      : [`<script type="__bundler/ext_resources">${embed(extResources)}</script>`]),
     "</body></html>",
   ].join("\n");
 }
@@ -70,6 +73,32 @@ test("unpackBundle decodes gzip, base64 and plain-text assets", () => {
   assert.doesNotMatch(indexHtml, /["(][0-9a-f]{8}-/);
   assert.match(indexHtml, /src="assets\/11111111-1111-4111-8111-111111111111\.js"/);
   assert.match(indexHtml, /url\(assets\/22222222-2222-4222-8222-222222222222\.woff2\)/);
+});
+
+test("unpackBundle injects window.__resources for ext_resources entries", () => {
+  const cdnUrl = "https://unpkg.com/react@18.3.1/umd/react.production.min.js";
+  const result = unpackBundle(syntheticBundle([{ id: cdnUrl, uuid: UUID_JS }]));
+  assert.ok(result.ok, "unpack should succeed");
+  const { indexHtml } = result.value;
+
+  // The map must land immediately after <head> and point the CDN URL at the
+  // already-unpacked local asset so the runtime never leaves script-src 'self'.
+  const injected =
+    `<head><script>window.__resources = {"${cdnUrl}":"assets/${UUID_JS}.js"};</` + `script>`;
+  assert.ok(indexHtml.includes(injected), `expected injected map in:\n${indexHtml}`);
+});
+
+test("unpackBundle omits window.__resources without ext_resources section", () => {
+  const result = unpackBundle(syntheticBundle());
+  assert.ok(result.ok);
+  assert.doesNotMatch(result.value.indexHtml, /window\.__resources/);
+});
+
+test("unpackBundle rejects ext_resources referencing an unknown asset", () => {
+  const missing = "99999999-9999-4999-8999-999999999999";
+  const result = unpackBundle(syntheticBundle([{ id: "https://example.com/x.js", uuid: missing }]));
+  assert.ok(!result.ok);
+  assert.match(result.error, /unknown asset/);
 });
 
 test("unpackBundle rejects HTML without bundler sections", () => {
