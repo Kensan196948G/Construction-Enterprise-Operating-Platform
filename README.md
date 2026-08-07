@@ -4,7 +4,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-22.13+-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Zero Runtime Deps](https://img.shields.io/badge/runtime%20deps-zero-brightgreen)](package.json)
 [![CI](https://img.shields.io/github/actions/workflow/status/Kensan196948G/Construction-Enterprise-Operating-Platform/ci.yml?label=CI&logo=github)](/.github/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-319%20pass-brightgreen)](src/)
+[![Tests](https://img.shields.io/badge/tests-335%20pass-brightgreen)](src/)
 [![Security](https://img.shields.io/badge/security-hardened-blue)](src/api/middleware/auth.ts)
 [![License](https://img.shields.io/badge/license-proprietary-lightgrey)](LICENSE.md)
 
@@ -24,7 +24,7 @@
 | HTTP サーバ  | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                                                                                                                                        |
 | 依存方針     | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）                                                                                                                |
 | パッケージ   | pnpm 10.26.2                                                                                                                                                                                    |
-| テスト       | 319 tests pass（node:test ビルトインランナー）                                                                                                                                                  |
+| テスト       | 335 tests pass（node:test ビルトインランナー）                                                                                                                                                  |
 | コンテナ     | Docker multi-stage build（non-root・HEALTHCHECK 付き）                                                                                                                                          |
 | セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限                                                                                                               |
 
@@ -193,7 +193,7 @@ SSR 時の CSP から `unsafe-inline` を撤廃しています。SSR 時に短�
 ページへ埋め込み、自動更新 API 呼び出しにも認証が通るよう修正しています。
 `/api/assets/*` は公開 Tunnel のパス分割（`/api/*` → API）で確実に API へ届くため、
 `/assets/*` を WebUI が受ける本番構成でも 404 になりません（v0.8.1）。favicon も
-`/api/assets/favicon.svg|ico`・WebUI `/favicon.svg|ico` で配信します（v0.8.3）。
+`/api/assets/favicon.svg` 経由で配信します（v0.8.2）。
 
 > 📌 `*:*` または `*:read` ワイルドカード権限でも `policy:read` / `audit:read` ゲートを通過します。
 
@@ -614,7 +614,7 @@ bash scripts/webui-deploy.sh
 ## 🧪 テスト実行
 
 ```bash
-# 全テスト実行（319 tests）
+# 全テスト実行（335 tests）
 pnpm run test
 
 # typecheck + lint + test 一括
@@ -656,7 +656,7 @@ node --experimental-strip-types scripts/sqlite-backup.ts /data/ceop.db /backup/c
 | --------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | typecheck | ✅ pass        | strict・`noUncheckedIndexedAccess`・0 error                                                                                                                                                                                                                                                                                                                                   |
 | lint      | ✅ pass        | ESLint flat config + typescript-eslint・0 warning                                                                                                                                                                                                                                                                                                                             |
-| test      | ✅ 319/319     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud + governance-crud + sqlite-audit-log + workflow-crud + workflow-instance + audit-coverage + migrate + rate-limit（CF-IP 分離含む）+ tenant-scope + audit-tenant-scope + jwt-org + webui + client-ip + backup-retention + auth-keys + api-key-repository + web-assets + favicon |
+| test      | ✅ 335/335     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud + governance-crud + sqlite-audit-log + workflow-crud + workflow-instance + audit-coverage + migrate + rate-limit（CF-IP 分離含む）+ tenant-scope + audit-tenant-scope + jwt-org + webui + client-ip + backup-retention + auth-keys + api-key-repository + web-assets + favicon |
 | build     | ✅ pass        | `dist/` に型定義付き出力                                                                                                                                                                                                                                                                                                                                                      |
 | CI        | ✅ 設定済み    | `.github/workflows/ci.yml`（push / PR トリガー）                                                                                                                                                                                                                                                                                                                              |
 | Docker    | ✅ multi-stage | non-root ユーザー・HEALTHCHECK 付き                                                                                                                                                                                                                                                                                                                                           |
@@ -666,21 +666,23 @@ node --experimental-strip-types scripts/sqlite-backup.ts /data/ceop.db /backup/c
 
 ## ⚙️ 環境変数
 
-| 変数名                      | 既定値                                       | 説明                                                                                                                            |
-| --------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `PORT`                      | `3000`                                       | HTTP サーバがリッスンする TCP ポート                                                                                            |
-| `NODE_ENV`                  | —                                            | `production` に設定するとデモキーを出力しない                                                                                   |
-| `LOG_LEVEL`                 | `info`                                       | `debug` / `info` / `warn` / `error`                                                                                             |
-| `PLATFORM_NAME`             | `Construction Enterprise Operating Platform` | 起動ログ・UI に表示するプラットフォーム名                                                                                       |
-| `CEOP_JWT_SECRET`           | —（プロセス起動ごと自動生成）                | HS256 JWT 署名用 32 バイト秘密鍵（hex 形式）。`production` では**必須**（未設定で起動失敗）                                     |
-| `CEOP_SQLITE_FILE`          | —（未設定 = 上位モード選択）                 | SQLite DB ファイルパス（例: `/data/ceop.db`）。設定時は SQLite 永続化（最優先）                                                 |
-| `CEOP_DATA_DIR`             | —（未設定 = In-Memory モード）               | ファイル永続化の保存先ディレクトリ。設定時は POSIX-atomic ファイル repo が有効                                                  |
-| `CEOP_SEED_DEMO`            | `false`                                      | `true` のとき起動時にデモデータを投入（In-Memory モードでは常に投入）                                                           |
-| `CEOP_LOG_DEMO_CREDS`       | `false`                                      | `true` のときデモ API キーの認証情報を stderr に出力（**本番では絶対に `false`**）                                              |
-| `CEOP_RATE_LIMIT_MAX`       | `300`                                        | `/api/v1/*` のグローバルレート制限（1 分あたり・実クライアント IP 単位。loopback プロキシ経由時のみ `CF-Connecting-IP` を信頼） |
-| `CEOP_RATE_LIMIT_WINDOW_MS` | `60000`                                      | グローバルレート制限のウィンドウ長（ミリ秒）                                                                                    |
-| `CEOP_CORS_ORIGIN`          | —（未設定 = CORS 無効）                      | 明示した場合のみ `Access-Control-Allow-Origin` を出力（認証 API では `*` 禁止）                                                 |
-| `CEOP_ALERT_WEBHOOK_URL`    | —（未設定 = 通知なし）                       | `scripts/health-probe.sh` が ALERT/RECOVERED 時に JSON POST する Webhook URL（cron/サービス環境に設定・Git には置かない）       |
+| 変数名                         | 既定値                                       | 説明                                                                                                                            |
+| ------------------------------ | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `PORT`                         | `3000`                                       | HTTP サーバがリッスンする TCP ポート                                                                                            |
+| `NODE_ENV`                     | —                                            | `production` に設定するとデモキーを出力しない                                                                                   |
+| `LOG_LEVEL`                    | `info`                                       | `debug` / `info` / `warn` / `error`                                                                                             |
+| `PLATFORM_NAME`                | `Construction Enterprise Operating Platform` | 起動ログ・UI に表示するプラットフォーム名                                                                                       |
+| `CEOP_JWT_SECRET`              | —（プロセス起動ごと自動生成）                | HS256 JWT 署名用 32 バイト秘密鍵（hex 形式）。`production` では**必須**（未設定で起動失敗）                                     |
+| `CEOP_SQLITE_FILE`             | —（未設定 = 上位モード選択）                 | SQLite DB ファイルパス（例: `/data/ceop.db`）。設定時は SQLite 永続化（最優先）                                                 |
+| `CEOP_DATA_DIR`                | —（未設定 = In-Memory モード）               | ファイル永続化の保存先ディレクトリ。設定時は POSIX-atomic ファイル repo が有効                                                  |
+| `CEOP_SEED_DEMO`               | `false`                                      | `true` のとき起動時にデモデータを投入（In-Memory モードでは常に投入）                                                           |
+| `CEOP_LOG_DEMO_CREDS`          | `false`                                      | `true` のときデモ API キーの認証情報を stderr に出力（**本番では絶対に `false`**）                                              |
+| `CEOP_RATE_LIMIT_MAX`          | `300`                                        | `/api/v1/*` のグローバルレート制限（1 分あたり・実クライアント IP 単位。loopback プロキシ経由時のみ `CF-Connecting-IP` を信頼） |
+| `CEOP_RATE_LIMIT_WINDOW_MS`    | `60000`                                      | グローバルレート制限のウィンドウ長（ミリ秒）                                                                                    |
+| `CEOP_GATEWAY_SERVICES`        | —（未設定 = ゲートウェイ無効）               | 統合サービス登録の JSON 配列（P1）。不正な値は起動失敗（fail-closed）                                                           |
+| `CEOP_GATEWAY_<SERVICE>_TOKEN` | —                                            | 上流統合サービスへ渡す Bearer トークン（`upstreamTokenEnv` で指定。Git 非コミット）                                             |
+| `CEOP_CORS_ORIGIN`             | —（未設定 = CORS 無効）                      | 明示した場合のみ `Access-Control-Allow-Origin` を出力（認証 API では `*` 禁止）                                                 |
+| `CEOP_ALERT_WEBHOOK_URL`       | —（未設定 = 通知なし）                       | `scripts/health-probe.sh` が ALERT/RECOVERED 時に JSON POST する Webhook URL（cron/サービス環境に設定・Git には置かない）       |
 
 ### 🗄️ 永続化ティア選択
 
@@ -949,6 +951,57 @@ interface WorkflowStep {
   "offset": 0
 }
 ```
+
+---
+
+## 🔀 Integration Gateway API（P1）
+
+統合サービス（ServiceHub 等）を CEOP の認証・認可・監査の背後で公開する
+リバースプロキシ基盤です。ブラウザ/クライアントは CEOP の JWT または API キーで
+認証し、`/api/v1/integrations/<service>/<proxyPath>` を呼び出します。CEOP が
+権限（`integration:read` / `integration:write` 等）を検証し、内部識別ヘッダー
+（`X-CEOP-Subject` / `X-CEOP-Organization-Id` / `X-CEOP-Permissions` /
+`X-CEOP-Service-Id`）を付与して上流サービスへ転送します。クライアントが送った
+同一ヘッダーは常に破棄され、改ざんできません。
+
+### 設定（環境変数）
+
+- `CEOP_GATEWAY_SERVICES` — ゲートウェイ経由で公開するサービス定義の JSON 配列
+  （`id` / `name` / `baseUrl` / `pathPrefix` / `readPermissions` /
+  `writePermissions` / `timeoutMs` / `upstreamTokenEnv` / `enabled`）。
+  未設定または空配列の場合はゲートウェイ自体が無効（fail-closed）。
+- `CEOP_GATEWAY_<SERVICE>_TOKEN` — 上流サービスへ渡す service-to-service
+  Bearer トークン（`upstreamTokenEnv` で指定した環境変数名。Git 非コミット）。
+
+例:
+
+```json
+[
+  {
+    "id": "servicehub",
+    "name": "ServiceHub",
+    "baseUrl": "http://127.0.0.1:8100",
+    "pathPrefix": "/api/v1/integrations/servicehub",
+    "readPermissions": ["integration:read"],
+    "writePermissions": ["integration:write"],
+    "timeoutMs": 10000,
+    "enabled": true
+  }
+]
+```
+
+`GET /api/v1/integrations/servicehub/projects?page=2` は上流
+`http://127.0.0.1:8100/projects?page=2` へ転送されます。タイムアウトは 504、
+到達不能は 502、未認証/権限不足は 401/403、不正パス（トラバーサル等）は 400 を
+返し、すべての試行は監査ログ（`gateway:<service>`）に記録されます。
+
+### セキュリティ設計
+
+- 認証・認可・レート制限・監査は CEOP 側で一元的に実施（統合サービス側に二重実装させない）
+- 上流へは許可されたヘッダー（`content-type` / `accept` / `accept-encoding`）と
+  CEOP 内部ヘッダーのみ転送。`authorization` / `cookie` / `host` は転送しない
+- パスは `..` / `.` / 制御文字 / 二重エンコードを拒否
+- 上流トークンは環境変数経由で実行時に解決し、ログ・リポジトリへ出力しない
 
 ---
 

@@ -171,6 +171,18 @@
 - OpenAPI 生成・README・CHANGELOG・FEATURE_INVENTORY を更新
 - テスト 13 件追加 → **315/315 pass**・build・audit 0
 
+### P1: CEOP ゲートウェイ実装（2026-08-07・本セッション追記）
+
+- `src/domain/gateway-service.ts`: 統合サービス登録（baseUrl/pathPrefix/権限/timeout/upstreamTokenEnv）の検証
+- `src/api/gateway/config.ts`: `CEOP_GATEWAY_SERVICES`（JSON）読込・fail-closed
+- `src/api/gateway/proxy.ts`: リバースプロキシ（内部ヘッダー付与・クライアント同ヘッダー破棄・
+  パストラバーサル拒否・タイムアウト504・到達不能502・上流トークンは環境変数）
+- `src/api/routes/gateway.ts`: `/api/v1/integrations/<service>/*`（read/write 権限・監査記録）
+- Router: ワイルドカードセグメント（`*`）と `all()` を追加
+- OpenAPI・README・CHANGELOG・RUNBOOK・.env.example 更新
+- テスト 16 件追加 → **334/334 pass**・verify/build/audit 0
+- PR #24（feat/p1-gateway）
+
 ### 次フェーズ
 
 - P1: CEOP ゲートウェイ（統合サービス向けリバースプロキシ/アダプタ）

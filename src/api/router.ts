@@ -71,6 +71,13 @@ export class Router {
     const compiled = path
       .split("/")
       .map((segment) => {
+        if (segment === "*") {
+          // Wildcard segment — captures the remaining path (including slashes)
+          // for gateway-style proxying. Registered after static routes, so
+          // exact matches always win.
+          paramNames.push("*");
+          return "(.+)";
+        }
         if (segment.startsWith(":")) {
           paramNames.push(segment.slice(1));
           return "([^/]+)";
@@ -105,6 +112,16 @@ export class Router {
 
   delete(path: string, handler: RouteHandler, requiresAuth = true): this {
     return this.#add("DELETE", path, handler, requiresAuth);
+  }
+
+  /** Register the same handler for GET, POST, PUT, PATCH and DELETE. */
+  all(path: string, handler: RouteHandler, requiresAuth = true): this {
+    this.#add("GET", path, handler, requiresAuth);
+    this.#add("POST", path, handler, requiresAuth);
+    this.#add("PUT", path, handler, requiresAuth);
+    this.#add("PATCH", path, handler, requiresAuth);
+    this.#add("DELETE", path, handler, requiresAuth);
+    return this;
   }
 
   /**

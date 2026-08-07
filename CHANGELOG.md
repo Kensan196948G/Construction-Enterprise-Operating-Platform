@@ -20,6 +20,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 ### Added
 
+- **Integration Gateway（P1）** — 統合サービス向けリバースプロキシと統一認証。
+  `CEOP_GATEWAY_SERVICES` で登録したサービスを `/api/v1/integrations/<service>/*`
+  として公開し、CEOP の JWT/API キー認証・権限（`integration:read` /
+  `integration:write`）・監査・レート制限を一元的に適用。内部識別ヘッダー
+  （`X-CEOP-Subject` 等）はクライアント入力値を破棄して CEOP が設定し、
+  上流トークンは環境変数経由（非コミット）。パストラバーサル拒否・タイムアウト
+  504・到達不能 502。ルータにワイルドカードセグメント（`*`）と `all()` を追加。
+  テスト 16 件追加（334/334 pass）。
+
 - **ブラウザタブ favicon** — SSR ページ（`/dashboard`・`/governance`）と WebUI 配信に
   タワークレーンアイコンを追加し、API 側 `/api/assets/favicon.svg|ico`・
   `/assets/favicon.svg|ico`、WebUI 側 `/favicon.svg`・`/favicon.ico` で配信
