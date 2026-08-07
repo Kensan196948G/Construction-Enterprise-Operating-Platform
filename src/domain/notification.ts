@@ -36,6 +36,8 @@ export interface NotificationDelivery {
   readonly failureKind?: string | undefined;
   readonly attempts: number;
   readonly sentAt?: IsoTimestamp | undefined;
+  /** When the recipient acknowledged/read the notification (E-11 unread count). */
+  readonly readAt?: IsoTimestamp | undefined;
   readonly createdAt: IsoTimestamp;
   readonly updatedAt: IsoTimestamp;
 }

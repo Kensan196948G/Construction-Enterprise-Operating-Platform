@@ -58,6 +58,9 @@ import {
   SqliteWorkScheduleRepository,
   SqlitePurchaseOrderRepository,
   SqliteNotificationPreferenceRepository,
+  SqliteComplianceCheckRepository,
+  SqliteLegalEvidenceRepository,
+  SqliteNotificationTemplateRepository,
 } from "./business-repositories.ts";
 
 // ---------------------------------------------------------------------------
@@ -573,6 +576,9 @@ export function createSqliteRepositories(dbPath: string): Repositories {
     workSchedules: new SqliteWorkScheduleRepository(db),
     purchaseOrders: new SqlitePurchaseOrderRepository(db),
     notificationPreferences: new SqliteNotificationPreferenceRepository(db),
+    complianceChecks: new SqliteComplianceCheckRepository(db),
+    legalEvidences: new SqliteLegalEvidenceRepository(db),
+    notificationTemplates: new SqliteNotificationTemplateRepository(db),
   };
 }
 

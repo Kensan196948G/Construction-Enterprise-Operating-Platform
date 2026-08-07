@@ -37,6 +37,8 @@ import { registerDocumentRoutes } from "./routes/documents.ts";
 import { registerWorkScheduleRoutes } from "./routes/work-schedules.ts";
 import { registerPurchaseOrderRoutes } from "./routes/purchase-orders.ts";
 import { registerNotificationPreferenceRoutes } from "./routes/notification-preferences.ts";
+import { registerComplianceRoutes } from "./routes/compliance.ts";
+import { registerNotificationTemplateRoutes } from "./routes/notification-templates.ts";
 import type { GatewayService } from "../domain/gateway-service.ts";
 import type { AppContainer } from "./types.ts";
 
@@ -106,6 +108,8 @@ export function createServer(config: ServerConfig, container: AppContainer): Ser
   registerWorkScheduleRoutes(router, container);
   registerPurchaseOrderRoutes(router, container);
   registerNotificationPreferenceRoutes(router, container);
+  registerComplianceRoutes(router, container);
+  registerNotificationTemplateRoutes(router, container);
   registerWebRoutes(router, container);
 
   const server = httpCreateServer((req: IncomingMessage, res: ServerResponse): void => {
