@@ -75,23 +75,36 @@ test("unpackBundle decodes gzip, base64 and plain-text assets", () => {
   assert.match(indexHtml, /url\(assets\/22222222-2222-4222-8222-222222222222\.woff2\)/);
 });
 
-test("unpackBundle injects window.__resources for ext_resources entries", () => {
+test("unpackBundle emits ext-resources.js and references it for ext_resources entries", () => {
   const cdnUrl = "https://unpkg.com/react@18.3.1/umd/react.production.min.js";
   const result = unpackBundle(syntheticBundle([{ id: cdnUrl, uuid: UUID_JS }]));
   assert.ok(result.ok, "unpack should succeed");
-  const { indexHtml } = result.value;
+  const { indexHtml, assets } = result.value;
 
-  // The map must land immediately after <head> and point the CDN URL at the
-  // already-unpacked local asset so the runtime never leaves script-src 'self'.
-  const injected =
-    `<head><script>window.__resources = {"${cdnUrl}":"assets/${UUID_JS}.js"};</` + `script>`;
-  assert.ok(indexHtml.includes(injected), `expected injected map in:\n${indexHtml}`);
+  // The map must be an EXTERNAL script (an inline one would be blocked by the
+  // server's CSP, which has no 'unsafe-inline') referenced right after <head>,
+  // pointing the CDN URL at the already-unpacked local asset so the runtime
+  // never leaves script-src 'self'.
+  const tag = `<head><script src="ext-resources.js"></` + `script>`;
+  assert.ok(indexHtml.includes(tag), `expected ${tag} in:\n${indexHtml.slice(0, 300)}`);
+
+  const map = assets.find((a) => a.path === "ext-resources.js");
+  assert.ok(map, "ext-resources.js asset should be emitted");
+  assert.equal(map.mime, "text/javascript");
+  assert.equal(
+    Buffer.from(map.bytes).toString("utf-8"),
+    `window.__resources = {"${cdnUrl}":"assets/${UUID_JS}.js"};\n`,
+  );
 });
 
 test("unpackBundle omits window.__resources without ext_resources section", () => {
   const result = unpackBundle(syntheticBundle());
   assert.ok(result.ok);
-  assert.doesNotMatch(result.value.indexHtml, /window\.__resources/);
+  assert.doesNotMatch(result.value.indexHtml, /ext-resources\.js/);
+  assert.equal(
+    result.value.assets.find((a) => a.path === "ext-resources.js"),
+    undefined,
+  );
 });
 
 test("unpackBundle rejects ext_resources referencing an unknown asset", () => {

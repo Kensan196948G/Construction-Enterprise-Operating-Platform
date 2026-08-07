@@ -20,11 +20,19 @@ import { type Result, ok, err } from "../domain/common.ts";
 
 /** One decoded asset ready to be written under the output directory. */
 export interface UnpackedAsset {
-  /** Output-relative path, always `assets/<uuid>.<ext>`. */
+  /**
+   * Output-relative path: `assets/<uuid>.<ext>` for manifest assets, plus the
+   * root-level `ext-resources.js` map (kept out of `assets/` on purpose — the
+   * server immutable-caches that prefix, but this file's content changes
+   * whenever the design bundle's CDN dependencies do).
+   */
   readonly path: string;
   readonly mime: string;
   readonly bytes: Uint8Array;
 }
+
+/** Root-level script that defines `window.__resources` (see below). */
+export const EXT_RESOURCES_PATH = "ext-resources.js";
 
 /** Full decode result: rewritten entry HTML plus all referenced assets. */
 export interface UnpackedBundle {
@@ -127,8 +135,15 @@ export function unpackBundle(html: string): Result<UnpackedBundle, string> {
 
   const withResources = injectResourceMap(html, template, pathByUuid);
   if (!withResources.ok) return withResources;
+  if (withResources.value.mapScript !== undefined) {
+    assets.push({
+      path: EXT_RESOURCES_PATH,
+      mime: "text/javascript",
+      bytes: Buffer.from(withResources.value.mapScript, "utf-8"),
+    });
+  }
 
-  return ok({ indexHtml: withResources.value, assets });
+  return ok({ indexHtml: withResources.value.indexHtml, assets });
 }
 
 /**
@@ -138,14 +153,18 @@ export function unpackBundle(html: string): Result<UnpackedBundle, string> {
  * `__bundler/ext_resources` section (CDN URL → bundled asset UUID) using
  * blob: URLs; under our CSP (`script-src 'self'`, no CDN hosts) we must do
  * the same with the unpacked local asset paths, or the page boots blank.
+ *
+ * The map ships as an external `ext-resources.js` file referenced right after
+ * `<head>` — an inline `<script>` would itself be blocked by the same CSP
+ * (there is no 'unsafe-inline'), which is why it must stay a separate asset.
  */
 function injectResourceMap(
   html: string,
   template: string,
   pathByUuid: ReadonlyMap<string, string>,
-): Result<string, string> {
+): Result<{ indexHtml: string; mapScript?: string }, string> {
   const section = bundlerSection(html, "ext_resources");
-  if (!section.ok) return ok(template); // optional section: nothing to map
+  if (!section.ok) return ok({ indexHtml: template }); // optional section
 
   let entries: readonly ExtResourceEntry[];
   try {
@@ -169,22 +188,21 @@ function injectResourceMap(
     resources[entry.id] = path;
   }
   if (Object.keys(resources).length === 0) {
-    return ok(template);
+    return ok({ indexHtml: template });
   }
 
-  // Mirror the original loader: inject right after <head> (keeps the DOCTYPE
-  // first) and escape "</" so the JSON cannot terminate the script element.
+  // Inject right after <head> (keeps the DOCTYPE first) so the map is defined
+  // before the runtime script executes; plain sync scripts run in DOM order.
   const headOpen = /<head(\s[^>]*)?>/i.exec(template);
   if (!headOpen || headOpen.index === undefined) {
     return err("template has no <head> to inject window.__resources into");
   }
   const insertAt = headOpen.index + headOpen[0].length;
-  const script =
-    "<script>window.__resources = " +
-    JSON.stringify(resources).replace(/<\//g, "<\\/") +
-    ";</" +
-    "script>";
-  return ok(template.slice(0, insertAt) + script + template.slice(insertAt));
+  const tag = `<script src="${EXT_RESOURCES_PATH}"></` + `script>`;
+  return ok({
+    indexHtml: template.slice(0, insertAt) + tag + template.slice(insertAt),
+    mapScript: `window.__resources = ${JSON.stringify(resources)};\n`,
+  });
 }
 
 /** Materialise an unpacked bundle under `outDir` (index.html + assets/). */

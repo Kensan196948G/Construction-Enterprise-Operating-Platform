@@ -15,8 +15,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
   React / ReactDOM を読み込もうとし、CSP `script-src 'self'` にブロックされて
   ページが白画面のまま起動しなかった。`src/webui/unpack.ts` が
   `__bundler/ext_resources` セクション（CDN URL → 同梱アセット UUID）を解析し、
-  展開済みローカルアセットへのマッピングを `<head>` 直後に
-  `<script>window.__resources = {...}</script>` として注入するよう修正。
+  展開済みローカルアセットへのマッピング `window.__resources` を外部ファイル
+  `ext-resources.js` として出力し、`<head>` 直後に `<script src>` で参照するよう修正
+  （CSP に `'unsafe-inline'` が無いためインライン注入は自身がブロックされる。
+  `/assets/` は immutable キャッシュ対象のためルート直下・no-cache 配置）。
   CSP は緩和せず、デザイン HTML も無改変のまま（元の自己展開ローダーと同じ手法を
   blob: URL の代わりにローカルパスで再現）。ユニットテスト 3 件追加（注入・
   セクション欠落時の無変更・未知 UUID 参照の拒否）
