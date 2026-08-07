@@ -6,7 +6,7 @@
     "registered_at": "2026-06-25",
     "phase_mode": "maintenance"
   },
-  "goal": "v0.6.2 本番運用継続 — 監査ログのテナント分離（G-18）と Release ノート抽出（G-20）を解消し、232 テスト pass・CI グリーン・本番 ceop.mirai-dx-platform.com を v0.6.2 で稼働維持",
+  "goal": "v0.6.2 本番運用継続 — 監査証跡エクスポート API（L-01/G-26）を実装し、252 テスト pass・CI グリーン・本番 ceop.mirai-dx-platform.com を稼働維持",
   "phase": "maintenance",
   "release": {
     "v0_1_0_foundation": "release_ready",
@@ -22,7 +22,7 @@
     "success_rate_target": 0.9,
     "ci_success_rate": 1,
     "test_pass_rate": 1,
-    "test_count": 232,
+    "test_count": 252,
     "security_critical": 0,
     "security_high_resolved": 17,
     "blocker_count": 0
@@ -140,7 +140,8 @@
     "v0.6.2 本番デプロイ（2026-08-07）: 事前 VACUUM INTO バックアップ → docker run 差し替え（旧コンテナは rename 保持）→ 公開 URL でヘルス・認証込みスモーク 9 API・SSR 2 画面・ネガティブ制御 401 を確認",
     "G-21: バックアップ cron のイメージ参照をバージョン固定タグから可動エイリアス ceop-platform:current へ変更し、cron コマンドを実行して検証",
     "G-19: docker-compose.prod.yml を実運用トポロジへ整合（bind mount / container_name / loopback bind / CEOP_IMAGE 必須）+ ハードニング（read_only・cap_drop ALL・no-new-privileges・cpu/memory/pids 制限・ログローテーション）を実機起動検証",
-    "運用文書の実装整合: RUNBOOK（起動方式 docker run・イメージタグ運用・compose 切替手順と既知の差分）、BACKUP_RESTORE（実 cron・WAL サイドカー退避・所有権 1001・RPO/RTO・未実施項目の明示）"
+    "運用文書の実装整合: RUNBOOK（起動方式 docker run・イメージタグ運用・compose 切替手順と既知の差分）、BACKUP_RESTORE（実 cron・WAL サイドカー退避・所有権 1001・RPO/RTO・未実施項目の明示）",
+    "L-01 / G-26: 監査証跡エクスポート API（GET /api/v1/governance/audit/export）。audit:export 権限分離・拒否の監査記録・スナップショット順序・チェーン列同梱・CSV 数式インジェクション対策。20 テスト追加（252 件）、5 種の変異をすべて検出"
   ],
   "blocked_issues": [],
   "learning": {
@@ -158,14 +159,16 @@
       "レイヤ違反の早期検知: src/dashboard/ から src/api/ を import しそうになったら定数を src/domain/ へ移す。domain は両者の共通下位層",
       "文書だけを直して実機を直したことにしない。compose 定義を整合させても本番は docker run のままなので、ハードニング未適用を別 gap として残した",
       "自動処理（cron）がバージョン固定タグを直接参照すると、リリースのたびに更新漏れで静かに失敗する。可動エイリアスを 1 本挟む",
-      "新規テストが空振りでないことは mutation（意図的に修正を戻して fail するか）で証明する"
+      "新規テストが空振りでないことは mutation（意図的に修正を戻して fail するか）で証明する",
+      "新しいセキュリティ制御を入れたら、その制御を無効化する変異を実際に注入してテストが落ちることを確認する。落ちなければテストは制御を守っていない",
+      "監査系 API は「拒否も記録するか」を成功系とは別に決める。拒否された一括持ち出しの試行そのものが証跡になる",
+      "CSV エクスポートでは RFC 4180 引用符と数式インジェクション中和は別問題。片方だけでは防げない"
     ]
   },
   "notes": {
     "remote": "https://github.com/Kensan196948G/Construction-Enterprise-Operating-Platform (PRIVATE)",
     "branch": "feat/production-hardening (base: feat/platform-foundation)",
     "next_actions": [
-      "L-01 (P2): 監査ログ CSV/JSON エクスポート API。scopeAuditEntries 適用と CSV 数式インジェクション対策（=,+,-,@,TAB,CR）必須",
       "G-22 (P2): 本番応答に HSTS が無い。Cloudflare エッジ設定のため Approval PR 対象",
       "G-23 (P2): 本番 docker run に read_only/cap_drop/no-new-privileges/リソース制限/ログローテーションが未適用。compose 切替は停止を伴うため別 PR で計画",
       "G-24 (P3): バックアップ世代の自動削除が未実装・オフサイトコピー無し（運用台帳で手動管理中）",
