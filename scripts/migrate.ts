@@ -379,6 +379,150 @@ export const MIGRATIONS: readonly Migration[] = [
       CREATE INDEX IF NOT EXISTS idx_notifications_status ON notification_deliveries (status);
     `,
   },
+  {
+    version: "016",
+    description: "knowledge_articles table (ServiceHub S-06)",
+    up: `
+      CREATE TABLE IF NOT EXISTS knowledge_articles (
+        id       TEXT PRIMARY KEY,
+        data     TEXT NOT NULL,
+        org_id   TEXT NOT NULL,
+        category TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_knowledge_org      ON knowledge_articles (org_id);
+      CREATE INDEX IF NOT EXISTS idx_knowledge_category ON knowledge_articles (category);
+    `,
+  },
+  {
+    version: "017",
+    description: "legal_contracts table (ServiceHub S-07)",
+    up: `
+      CREATE TABLE IF NOT EXISTS legal_contracts (
+        id              TEXT PRIMARY KEY,
+        data            TEXT NOT NULL,
+        org_id          TEXT NOT NULL,
+        project_id      TEXT NOT NULL REFERENCES projects(id),
+        contract_number TEXT NOT NULL,
+        status          TEXT NOT NULL
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_contracts_number  ON legal_contracts (contract_number);
+      CREATE        INDEX IF NOT EXISTS idx_contracts_org     ON legal_contracts (org_id);
+      CREATE        INDEX IF NOT EXISTS idx_contracts_project ON legal_contracts (project_id);
+      CREATE        INDEX IF NOT EXISTS idx_contracts_status  ON legal_contracts (status);
+    `,
+  },
+  {
+    version: "018",
+    description: "documents table (Enterprise-OS E-03)",
+    up: `
+      CREATE TABLE IF NOT EXISTS documents (
+        id            TEXT PRIMARY KEY,
+        data          TEXT NOT NULL,
+        org_id        TEXT NOT NULL,
+        project_id    TEXT,
+        document_type TEXT NOT NULL,
+        status        TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_documents_org     ON documents (org_id);
+      CREATE INDEX IF NOT EXISTS idx_documents_project ON documents (project_id);
+      CREATE INDEX IF NOT EXISTS idx_documents_type    ON documents (document_type);
+    `,
+  },
+  {
+    version: "019",
+    description: "work_schedules table (Enterprise-OS E-02)",
+    up: `
+      CREATE TABLE IF NOT EXISTS work_schedules (
+        id         TEXT PRIMARY KEY,
+        data       TEXT NOT NULL,
+        org_id     TEXT NOT NULL,
+        project_id TEXT NOT NULL REFERENCES projects(id),
+        work_date  TEXT NOT NULL,
+        status     TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_work_schedules_org     ON work_schedules (org_id);
+      CREATE INDEX IF NOT EXISTS idx_work_schedules_project ON work_schedules (project_id);
+      CREATE INDEX IF NOT EXISTS idx_work_schedules_date    ON work_schedules (work_date);
+    `,
+  },
+  {
+    version: "020",
+    description: "purchase_orders table (Enterprise-OS E-05)",
+    up: `
+      CREATE TABLE IF NOT EXISTS purchase_orders (
+        id           TEXT PRIMARY KEY,
+        data         TEXT NOT NULL,
+        org_id       TEXT NOT NULL,
+        project_id   TEXT NOT NULL REFERENCES projects(id),
+        order_number TEXT NOT NULL,
+        status       TEXT NOT NULL
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_purchase_orders_number  ON purchase_orders (order_number);
+      CREATE        INDEX IF NOT EXISTS idx_purchase_orders_org     ON purchase_orders (org_id);
+      CREATE        INDEX IF NOT EXISTS idx_purchase_orders_project ON purchase_orders (project_id);
+    `,
+  },
+  {
+    version: "021",
+    description: "notification_preferences table (Enterprise-OS E-11)",
+    up: `
+      CREATE TABLE IF NOT EXISTS notification_preferences (
+        id      TEXT PRIMARY KEY,
+        data    TEXT NOT NULL,
+        org_id  TEXT,
+        user_id TEXT NOT NULL
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_notification_prefs_user ON notification_preferences (user_id);
+      CREATE        INDEX IF NOT EXISTS idx_notification_prefs_org  ON notification_preferences (org_id);
+    `,
+  },
+  {
+    version: "022",
+    description: "compliance_checks table (ServiceHub S-07)",
+    up: `
+      CREATE TABLE IF NOT EXISTS compliance_checks (
+        id         TEXT PRIMARY KEY,
+        data       TEXT NOT NULL,
+        org_id     TEXT NOT NULL,
+        project_id TEXT NOT NULL REFERENCES projects(id),
+        standard   TEXT NOT NULL,
+        result     TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_compliance_org      ON compliance_checks (org_id);
+      CREATE INDEX IF NOT EXISTS idx_compliance_project  ON compliance_checks (project_id);
+      CREATE INDEX IF NOT EXISTS idx_compliance_standard ON compliance_checks (standard);
+    `,
+  },
+  {
+    version: "023",
+    description: "legal_evidence table (ServiceHub S-07)",
+    up: `
+      CREATE TABLE IF NOT EXISTS legal_evidence (
+        id          TEXT PRIMARY KEY,
+        data        TEXT NOT NULL,
+        org_id      TEXT NOT NULL,
+        contract_id TEXT NOT NULL REFERENCES legal_contracts(id),
+        event_type  TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_legal_evidence_org      ON legal_evidence (org_id);
+      CREATE INDEX IF NOT EXISTS idx_legal_evidence_contract ON legal_evidence (contract_id);
+    `,
+  },
+  {
+    version: "024",
+    description: "notification_templates table (Enterprise-OS E-11)",
+    up: `
+      CREATE TABLE IF NOT EXISTS notification_templates (
+        id           TEXT PRIMARY KEY,
+        data         TEXT NOT NULL,
+        org_id       TEXT,
+        template_key TEXT NOT NULL,
+        channel      TEXT NOT NULL
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_notification_templates_key ON notification_templates (template_key);
+      CREATE        INDEX IF NOT EXISTS idx_notification_templates_org ON notification_templates (org_id);
+    `,
+  },
 ];
 // ---------------------------------------------------------------------------
 

@@ -6,6 +6,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 ## [Unreleased]
 
+## [Unreleased]
+
+### Fixed
+
+- **migration 016〜024 の欠落復元（P5 検証で発見）** — P3/P4 で追加された
+  knowledge/legal/contracts/documents/work-schedules/purchase-orders/notification-preferences/
+  compliance/legal-evidence/notification-templates のスキーマ定義がマージ過程で main から
+  欠落していたため復元。`scripts/verify-parity.ts` に migration カバレッジ検査（001〜024）を追加。
+
 ## [0.10.0] - 2026-08-07
 
 ### Added

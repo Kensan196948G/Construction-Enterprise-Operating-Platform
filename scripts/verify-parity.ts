@@ -15,6 +15,7 @@ import { AuditLog } from "../src/governance/audit-log.ts";
 import { resolvePermissions } from "../src/governance/policy-engine.ts";
 import { createRole } from "../src/domain/index.ts";
 import type { ApiKeyStore } from "../src/api/types.ts";
+import { MIGRATIONS } from "./migrate.ts";
 
 const ROOT = join(fileURLToPath(import.meta.url), "..", "..");
 const INVENTORY = join(ROOT, "docs", "integration", "FEATURE_INVENTORY.md");
@@ -83,6 +84,14 @@ export async function verifyParity(): Promise<{
   const missing = findMissingCoreDomains(rows);
   const done = rows.filter((r) => r.status === "✅").length;
   const pending = rows.length - done;
+
+  // ── Migration coverage (016-024 were once lost in merge; guard against it) ──
+  const migrationVersions = new Set(MIGRATIONS.map((m) => m.version));
+  const expectedMigrations = Array.from({ length: 24 }, (_, i) => String(i + 1).padStart(3, "0"));
+  const missingMigrations = expectedMigrations.filter((v) => !migrationVersions.has(v));
+  if (missingMigrations.length > 0) {
+    throw new Error(`parity failed: missing migrations ${missingMigrations.join(", ")}`);
+  }
 
   // ── API probe sweep ───────────────────────────────────────────────────────
   const apiKeyStore: ApiKeyStore = new Map();
