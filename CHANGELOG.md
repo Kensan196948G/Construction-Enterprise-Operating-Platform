@@ -4,6 +4,29 @@ All notable changes to the Construction Enterprise Operating Platform are docume
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Security
+
+- **監査ログのテナント分離（G-18 / P1）** — 監査ログはプラットフォーム全体で
+  1 本のハッシュ連鎖であるため、組織スコープ付き資格情報に `audit:read` を
+  付与すると他テナントの actor / resource / metadata が閲覧可能だった。
+  `recordAudit()` が解決済み context からテナントを `metadata` へ付与し、
+  `GET /api/v1/governance/audit` と dashboard の `auditEvents` /
+  `deniedAccessEvents` を自組織へ絞り込む。グローバル資格情報は全体可視の
+  ままで、プラットフォーム全体の完全性検証は維持される。
+  属性付与前の既存エントリはスコープ付き資格情報から不可視（fail-closed）。
+  ハッシュ定義は不変のため既存エントリの検証性に影響なし。migration 不要。
+
+### Changed
+
+- `GET /api/v1/governance/audit` の OpenAPI 記述にテナント絞込み挙動を追記。
+
+### Quality
+
+- 監査テナント分離の回帰テスト 5 件を追加（231/231 pass）。修正を戻すと
+  該当 3 件が fail することを確認済み（vacuous test でないことの実証）。
+
 ## [0.6.1] - 2026-08-06
 
 WebUI design refresh and hardening release.

@@ -10,7 +10,7 @@
 |---|---|
 | 実装本体 | `feat/platform-foundation`（M1〜M16）→ 本作業ブランチ `feat/production-hardening` で v0.6.0 化 |
 | main | v0.6.1 統合済み（PR #2〜#5）・タグ v0.6.1・GHCR イメージ・GitHub Release 作成済み |
-| テスト | 226/226 pass（ローカル + GitHub Actions 検証済み） |
+| テスト | 231/231 pass（ローカル + GitHub Actions 検証済み） |
 | typecheck / lint / build | 全パス |
 | 依存監査 | `pnpm audit --audit-level=high` → 0 vulnerabilities（override で解消） |
 | CI | グリーン（main: typecheck/lint/test/build/security/Docker 全成功） |
@@ -49,10 +49,11 @@
 | G-15 | P3 | リクエスト ID・相関 ID なし | バックログ |
 | G-16 | P3 | `node:sqlite` は実験的 API（Node 22） | 運用方針として許容・文書化 |
 | G-17 | P3 | 本番 TLS 終端の設定例（nginx）がプラットフォーム側にない | バックログ（プロキシ側で実施） |
+| G-18 | P1 | 監査ログにテナント境界がなく、組織スコープ資格情報 + `audit:read` で他テナントの actor/resource/metadata が閲覧可能。dashboard の監査カウンタも全テナント合算 | ✅ 解消（2026-08-07）。`AUDIT_ORG_KEY` を metadata に付与し、監査一覧と dashboard カウンタを自組織へ絞込み。回帰テスト 5 件（mutation 検証済み） |
 
 ## 4. リリース可否判断の根拠
 
-- コード品質: typecheck / lint / build / 221 tests / audit 0 / OpenAPI 生成一致
+- コード品質: typecheck / lint / build / 231 tests / audit 0 / OpenAPI 生成一致
 - セキュリティ: 認証・認可・監査・レート制限・ヘッダ・FK・依存監査を確認
 - 運用: バックアップ・復元手順・監視・Runbook・運用台帳を整備
 - 判定: **GO（v0.6.1 を本番デプロイ済み）**。残作業は初期安定化監視と四半期運用試験
@@ -64,6 +65,14 @@
 
 ## 6. 決定記録
 
+- 監査イベントのテナント識別子は `AuditEvent` のトップレベル項目ではなく `metadata` に置く。
+  `canonicalize()` は明示列挙フィールド + metadata 全体をハッシュ対象とするため、metadata なら
+  改竄検知の内側に入る。トップレベル化はハッシュ定義の変更を伴い、既存エントリを全て検証不能にする
+- テナント属性を持たない既存監査エントリは、組織スコープ資格情報から不可視とする（fail-closed）。
+  グローバル資格情報の全体可視性は、プラットフォーム全体の完全性検証のため維持する
+- `Workflow` / `Policy` に `organizationId` が無いのは設計境界であり欠落ではない。前者はテナント横断の
+  定義（テンプレート）、後者はプラットフォーム全体の認可規則。テナントに紐づく承認インスタンスは
+  legacy-gap-analysis の L-02 として未実装
 - 本番向け永続化は SQLite（単一ノード）を正とする。マルチノードは将来 PostgreSQL アダプタをバックログ化
 - バージョンは v0.6.0 に統一（M1〜M16 の成果を含む最初の main リリース）
 - OpenAPI ライセンスは MIT → Proprietary に修正（private リポジトリの実態に整合）
