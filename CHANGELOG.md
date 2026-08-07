@@ -6,6 +6,25 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 ## [Unreleased]
 
+### Fixed
+
+- `docker-compose.prod.yml` を実運用トポロジ（bind mount / `container_name: ceop-platform` /
+  loopback bind / `CEOP_IMAGE` 必須）へ整合。従来の named volume・`latest`・`0.0.0.0` 公開は、
+  compose 操作が実機に効かない、あるいは空 DB の 2 台目を LAN 公開で起動させる乖離だった
+- バックアップ cron のイメージ参照をバージョン固定タグから可動エイリアス
+  `ceop-platform:current` へ変更（旧イメージ prune で静かに失敗する問題）
+
+### Added
+
+- compose にコンテナハードニングを追加（read_only rootfs + tmpfs、`cap_drop: ALL`、
+  no-new-privileges、cpu/memory/pids 制限、ログローテーション）。v0.6.2 イメージで実機起動検証済み
+
+### Changed
+
+- RUNBOOK / BACKUP_RESTORE を実機の `docker run` 運用に合わせて全面改訂。
+  compose 未適用による既知の差分、保持世代の手動管理、復元試験未実施を明示
+- README・ROOT-ASSESSMENT を v0.6.2 本番稼働の実態へ更新し、新規ギャップ G-19〜G-25 を記録
+
 ## [0.6.2] - 2026-08-07
 
 Audit log tenant isolation release.
