@@ -78,3 +78,23 @@
 4. ⏳ PR 用ブランチ作成 → 論理 commit → push → CI → レビュー → main マージ
 5. ⏳ v0.8.0 タグ・Release・GHCR イメージ → RUNBOOK §3 で本番デプロイ → 実測スモーク
 6. ⏳ 本番 cron（保持ポリシー・WebUI 外形プローブ・Webhook 宛先設定）と運用引継ぎ、最終 GO 判定
+
+## 7. 本番デプロイ記録（2026-08-07）
+
+1. ✅ PR #17（feat/production-hardening-r3）マージ → main = e8b171b
+2. ✅ タグ v0.8.0 → Release workflow 成功（GHCR イメージ・GitHub Release 作成）
+3. ✅ 事前バックアップ: `/home/kensan/.ceop/backups/ceop-predeploy-v0.8.0-20260807T055524Z.db`
+   （※ GHCR pull はトークンに read:packages が無く不可。main e8b171b からローカル再現ビルドで
+    `ceop-platform:v0.8.0` を作成しデプロイ。Release の公開物はワークフロー成功を根拠に記録）
+4. ✅ migration 0 件適用（スキーマ変更なし・冪等確認）
+5. ✅ コンテナ差し替え: 旧 `ceop-platform` → `ceop-platform-prev`（停止・保持）、
+   新 `ceop-platform` = v0.8.0（read-only / cap-drop ALL / no-new-privileges / cpus=1 / mem=256m /
+   pids=128 / log rotate 10m×3 / loopback 3120）
+6. ✅ 実測: `/api/v1/info` = 0.8.0（environment/nodeVersion 含む）/ HEAD /health 200 /
+   token 200 / dashboard 200 / audit list 200 / audit export 200 / auth keys 200 /
+   delete missing 404 / 無資格・不正資格 401 / WebUI /healthz = 0.8.0 / LAN 直アクセス拒否
+7. ✅ WebUI 更新: webui.env `CEOP_WEBUI_HOST=127.0.0.1`（backup あり）、
+   `scripts/webui-deploy.sh` で v0.8.0 配信・systemd 再起動・/healthz 確認
+8. ✅ 本番 cron: 02:15 backup / 02:16 retention（14 日）/ 5 分間隔 API probe / 5 分間隔 WebUI probe。
+   retention 手動実行 0 件削除・WebUI probe 初回 OK を確認。crontab バックアップ保存済み
+9. ⏳ Webhook 宛先（CEOP_ALERT_WEBHOOK_URL）は未設定 — 通知先決定後に設定（残課題）

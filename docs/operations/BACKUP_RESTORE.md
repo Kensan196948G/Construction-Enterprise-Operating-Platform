@@ -20,7 +20,9 @@ docker run --rm \
 
 ```cron
 15 2 * * * docker run --rm -v /home/kensan/.ceop/data:/data -v /home/kensan/.ceop/backups:/backups ceop-platform:current node --experimental-strip-types scripts/sqlite-backup.ts /data/ceop.db /backups/ceop-$(date +\%Y\%m\%d).db >> /home/kensan/.ceop/backup.log 2>&1
-30 2 * * * curl -fsS -o /dev/null https://ceop.mirai-dx-platform.com/health/ready || echo "$(date) health/ready failed" >> /home/kensan/.ceop/health.log
+16 2 * * * docker run --rm -v /home/kensan/.ceop/backups:/backups ceop-platform:current node --experimental-strip-types scripts/backup-retention.ts /backups --keep-days 14 >> /home/kensan/.ceop/backup.log 2>&1
+*/5 * * * * /home/kensan/Projects/Mirai-DX-Project/Construction-Enterprise-Operating-Platform/scripts/health-probe.sh
+*/5 * * * * CEOP_HEALTH_URL=https://ceop.mirai-dx-platform.com/healthz CEOP_HEALTH_LOG=/home/kensan/.ceop/webui-health.log CEOP_HEALTH_STATE=/home/kensan/.ceop/webui-health-probe.state /home/kensan/Projects/Mirai-DX-Project/Construction-Enterprise-Operating-Platform/scripts/health-probe.sh
 ```
 
 イメージは可動エイリアス `ceop-platform:current` を参照する。バージョン固定タグを直接書くと、次のリリースで旧イメージを prune した瞬間にバックアップが静かに失敗する（`backup.log` にしか出ないため気づきにくい）。
