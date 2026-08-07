@@ -955,6 +955,11 @@ const paths: { [k: string]: YamlValue } = {
     get: {
       operationId: "getAuditLog",
       summary: "Retrieve recent audit log entries (requires audit:read)",
+      description:
+        "Organization-scoped credentials receive only entries attributed to their own " +
+        "organization; globally-scoped credentials receive the whole chain. Entries " +
+        "recorded before tenant attribution existed carry no organization and are " +
+        "withheld from scoped credentials.",
       tags: ["Governance"],
       security: authSecurity,
       parameters: [

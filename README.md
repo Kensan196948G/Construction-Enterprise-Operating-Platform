@@ -4,7 +4,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-22.13+-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Zero Runtime Deps](https://img.shields.io/badge/runtime%20deps-zero-brightgreen)](package.json)
 [![CI](https://img.shields.io/github/actions/workflow/status/Kensan196948G/Construction-Enterprise-Operating-Platform/ci.yml?label=CI&logo=github)](/.github/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-226%20pass-brightgreen)](src/)
+[![Tests](https://img.shields.io/badge/tests-231%20pass-brightgreen)](src/)
 [![Security](https://img.shields.io/badge/security-hardened-blue)](src/api/middleware/auth.ts)
 [![License](https://img.shields.io/badge/license-proprietary-lightgrey)](LICENSE.md)
 
@@ -24,7 +24,7 @@
 | HTTP サーバ  | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                                                                                     |
 | 依存方針     | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）                                                             |
 | パッケージ   | pnpm 10.26.2                                                                                                                                 |
-| テスト       | 213 tests pass（node:test ビルトインランナー）                                                                                               |
+| テスト       | 231 tests pass（node:test ビルトインランナー）                                                                                               |
 | コンテナ     | Docker multi-stage build（non-root・HEALTHCHECK 付き）                                                                                       |
 | セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限                                                            |
 
@@ -167,19 +167,19 @@ examples/
 
 ### 🔐 認証必須エンドポイント — ダッシュボード・統制（`Bearer keyId:secret`）
 
-| メソッド | パス                          | 必要権限            | 説明                                                                            |
-| -------- | ----------------------------- | ------------------- | ------------------------------------------------------------------------------- |
-| `GET`    | `/dashboard`                  | 認証のみ            | ダッシュボード HTML（SSR・ロールベース表示）                                    |
-| `GET`    | `/governance`                 | `policy:read`       | ガバナンス管理 HTML（SSR・ポリシー一覧）                                        |
-| `GET`    | `/api/v1/dashboard`           | 認証のみ            | ロールフィルタ済みダッシュボード JSON                                           |
-| `GET`    | `/api/v1/organizations`       | `organization:read` | 組織一覧（ページネーション）`{ organizations[], count, total, limit, offset }`  |
-| `GET`    | `/api/v1/users`               | `user:read`         | ユーザー一覧（ページネーション）`{ users[], count, total, limit, offset }`      |
-| `GET`    | `/api/v1/applications`        | `application:read`  | アプリ一覧（ページネーション）`{ applications[], count, total, limit, offset }` |
-| `GET`    | `/api/v1/devices`             | `device:read`       | デバイス一覧（ページネーション）`{ devices[], count, total, limit, offset }`    |
-| `GET`    | `/api/v1/governance/policies` | `policy:read`       | ポリシー一覧（ページネーション）`{ policies[], count, total, limit, offset }`   |
-| `GET`    | `/api/v1/governance/audit`    | `audit:read`        | 監査ログ取得（`?limit=50&offset=0`、limit 最大 200）                            |
-| `POST`   | `/api/v1/governance/evaluate` | 認証のみ            | アクセス評価。評価結果は監査ログへ自動記録                                      |
-| `POST`   | `/api/v1/auth/revoke`         | `auth:write`        | 現在の JWT を失効（ログアウト）。JWT Bearer 必須                                |
+| メソッド | パス                          | 必要権限            | 説明                                                                                                     |
+| -------- | ----------------------------- | ------------------- | -------------------------------------------------------------------------------------------------------- |
+| `GET`    | `/dashboard`                  | 認証のみ            | ダッシュボード HTML（SSR・ロールベース表示）                                                             |
+| `GET`    | `/governance`                 | `policy:read`       | ガバナンス管理 HTML（SSR・ポリシー一覧）                                                                 |
+| `GET`    | `/api/v1/dashboard`           | 認証のみ            | ロールフィルタ済みダッシュボード JSON                                                                    |
+| `GET`    | `/api/v1/organizations`       | `organization:read` | 組織一覧（ページネーション）`{ organizations[], count, total, limit, offset }`                           |
+| `GET`    | `/api/v1/users`               | `user:read`         | ユーザー一覧（ページネーション）`{ users[], count, total, limit, offset }`                               |
+| `GET`    | `/api/v1/applications`        | `application:read`  | アプリ一覧（ページネーション）`{ applications[], count, total, limit, offset }`                          |
+| `GET`    | `/api/v1/devices`             | `device:read`       | デバイス一覧（ページネーション）`{ devices[], count, total, limit, offset }`                             |
+| `GET`    | `/api/v1/governance/policies` | `policy:read`       | ポリシー一覧（ページネーション）`{ policies[], count, total, limit, offset }`                            |
+| `GET`    | `/api/v1/governance/audit`    | `audit:read`        | 監査ログ取得（`?limit=50&offset=0`、limit 最大 200）。**組織スコープ付き資格情報は自組織のエントリのみ** |
+| `POST`   | `/api/v1/governance/evaluate` | 認証のみ            | アクセス評価。評価結果は監査ログへ自動記録                                                               |
+| `POST`   | `/api/v1/auth/revoke`         | `auth:write`        | 現在の JWT を失効（ログアウト）。JWT Bearer 必須                                                         |
 
 ### 🎨 WebUI デザイン（v0.6.1）
 
@@ -562,7 +562,7 @@ curl -H "Authorization: Bearer <keyId>:<secret>" http://localhost:3000/api/v1/da
 ## 🧪 テスト実行
 
 ```bash
-# 全テスト実行（221 tests）
+# 全テスト実行（231 tests）
 pnpm run test
 
 # typecheck + lint + test 一括
@@ -600,15 +600,15 @@ node --experimental-strip-types scripts/sqlite-backup.ts /data/ceop.db /backup/c
 
 ### 📊 現在の品質状態
 
-| ゲート    | 状態           | 備考                                                                                                                                                                                                                                                        |
-| --------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| typecheck | ✅ pass        | strict・`noUncheckedIndexedAccess`・0 error                                                                                                                                                                                                                 |
-| lint      | ✅ pass        | ESLint flat config + typescript-eslint・0 warning                                                                                                                                                                                                           |
-| test      | ✅ 226/226     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud (34) + governance-crud (26) + sqlite-audit-log (9) + workflow-crud (26) + audit-coverage (3) + migrate (2) + rate-limit (1) + tenant-scope (3) + jwt-org (2) |
-| build     | ✅ pass        | `dist/` に型定義付き出力                                                                                                                                                                                                                                    |
-| CI        | ✅ 設定済み    | `.github/workflows/ci.yml`（push / PR トリガー）                                                                                                                                                                                                            |
-| Docker    | ✅ multi-stage | non-root ユーザー・HEALTHCHECK 付き                                                                                                                                                                                                                         |
-| security  | ✅ hardened    | timingSafeEqual・ボディ制限・権限ゲート・CSP・API セキュリティヘッダ・監査網羅                                                                                                                                                                              |
+| ゲート    | 状態           | 備考                                                                                                                                                                                                                                                                                 |
+| --------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| typecheck | ✅ pass        | strict・`noUncheckedIndexedAccess`・0 error                                                                                                                                                                                                                                          |
+| lint      | ✅ pass        | ESLint flat config + typescript-eslint・0 warning                                                                                                                                                                                                                                    |
+| test      | ✅ 231/231     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud (34) + governance-crud (26) + sqlite-audit-log (9) + workflow-crud (26) + audit-coverage (3) + migrate (2) + rate-limit (1) + tenant-scope (3) + audit-tenant-scope (5) + jwt-org (2) |
+| build     | ✅ pass        | `dist/` に型定義付き出力                                                                                                                                                                                                                                                             |
+| CI        | ✅ 設定済み    | `.github/workflows/ci.yml`（push / PR トリガー）                                                                                                                                                                                                                                     |
+| Docker    | ✅ multi-stage | non-root ユーザー・HEALTHCHECK 付き                                                                                                                                                                                                                                                  |
+| security  | ✅ hardened    | timingSafeEqual・ボディ制限・権限ゲート・CSP・API セキュリティヘッダ・監査網羅                                                                                                                                                                                                       |
 
 ---
 
@@ -710,28 +710,29 @@ sequenceDiagram
 
 ### 🛡️ セキュリティ強化一覧
 
-| カテゴリ                                     | 実装内容                                                                                                                                             | ファイル                                 |
-| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| タイミング攻撃対策                           | HMAC ハッシュ比較を `timingSafeEqual` で実施                                                                                                         | `middleware/auth.ts`                     |
-| JWT 署名・検証                               | HS256（`node:crypto` HMAC-SHA256）・jti replay guard・1h 有効期限・`iat < exp` 検証                                                                  | `middleware/jwt.ts`                      |
-| レート制限（Credential-Stuffing 対策）       | sliding-window 10 req/min を **socket.remoteAddress** でキー（X-Forwarded-For 非信頼）                                                               | `middleware/rate-limiter.ts`             |
-| グローバル API レート制限（v0.6.0）          | `/api/v1/*` 全体を per-socket-IP で制限（既定 300 req/min、`CEOP_RATE_LIMIT_MAX`/`CEOP_RATE_LIMIT_WINDOW_MS` で調整可）                              | `api/server.ts`                          |
-| DoS 防止                                     | リクエストボディを **1 MiB** で打ち切り（`req.destroy` 即断）                                                                                        | `router.ts`                              |
-| 監査ログ権限                                 | `GET /api/v1/governance/audit` に `audit:read` 権限チェック                                                                                          | `routes/governance.ts`                   |
-| ポリシー一覧権限                             | `GET /api/v1/governance/policies` に `policy:read` 権限チェック                                                                                      | `routes/governance.ts`                   |
-| 監査失敗の可視化                             | 監査イベント生成失敗を `console.error` でログ（サイレント廃棄を廃止）                                                                                | `routes/governance.ts`                   |
-| CSP ヘッダ                                   | SSR ページに `Content-Security-Policy: default-src 'self'` を付与                                                                                    | `routes/web.ts`                          |
-| 秘密情報のログ漏洩防止                       | デモキーログを `NODE_ENV !== production` 条件で制限                                                                                                  | `app.ts`                                 |
-| 監査アクター詐称防止                         | 評価 API の `actor` を認証済み `ctx.subject` から取得（リクエストボディ不使用）                                                                      | `routes/governance.ts`                   |
-| 監査網羅（v0.6.0）                           | CRUD・Policy/Workflow 変更・トークン発行/失効を監査ログへ記録（actor は認証済み subject）                                                            | `api/audit.ts` + routes                  |
-| テナント分離（v0.6.0）                       | API キー/JWT に `organizationId` を持ち、組織スコープ認証情報は自組織の entity のみ参照・変更可能（他組織は 404 で非公開）                           | `api/routes/*` + `dashboard.ts`          |
-| 権限昇格防止（v0.6.0）                       | ロール作成/更新・ユーザーへのロール割当は「自身が保有する権限の範囲内」のみ許可                                                                      | `api/routes/governance.ts`               |
-| JWT 失効 API（v0.6.0）                       | `POST /api/v1/auth/revoke` で現在の JWT を失効し、以後の認証を拒否                                                                                   | `routes/auth.ts`                         |
-| API レスポンスセキュリティヘッダ（v0.6.0）   | JSON 応答に `X-Content-Type-Options: nosniff` / `X-Frame-Options: DENY` / `Referrer-Policy: no-referrer` / `Cache-Control: no-store`                 | `router.ts`                              |
-| HSTS（M14）                                  | SSR ページに `Strict-Transport-Security: max-age=63072000; includeSubDomains` を付与                                                                 | `routes/web.ts`                          |
-| CORS opt-in（M14）                           | `CEOP_CORS_ORIGIN` 環境変数 or `corsOrigin` 設定が明示された場合のみ CORS ヘッダを出力（デフォルト非出力）                                           | `api/server.ts`                          |
-| JWT 無効化永続化（M14）                      | `RevocationStore` ポート（in-memory / SQLite 差し替え可）で `jti` を永続的に無効化。`CEOP_SQLITE_FILE` 設定時は自動で SQLite backing に切り替わる    | `persistence/sqlite/revocation-store.ts` |
-| SQLite FK 制約（M14 + v0.6.0 migration 004） | users/devices/applications は `REFERENCES organizations(id)`、organizations.parent_id は自己参照 FK。マイグレーション 004 で既存 DB を再構築して適用 | `scripts/migrate.ts`                     |
+| カテゴリ                                     | 実装内容                                                                                                                                                                                       | ファイル                                                 |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| タイミング攻撃対策                           | HMAC ハッシュ比較を `timingSafeEqual` で実施                                                                                                                                                   | `middleware/auth.ts`                                     |
+| JWT 署名・検証                               | HS256（`node:crypto` HMAC-SHA256）・jti replay guard・1h 有効期限・`iat < exp` 検証                                                                                                            | `middleware/jwt.ts`                                      |
+| レート制限（Credential-Stuffing 対策）       | sliding-window 10 req/min を **socket.remoteAddress** でキー（X-Forwarded-For 非信頼）                                                                                                         | `middleware/rate-limiter.ts`                             |
+| グローバル API レート制限（v0.6.0）          | `/api/v1/*` 全体を per-socket-IP で制限（既定 300 req/min、`CEOP_RATE_LIMIT_MAX`/`CEOP_RATE_LIMIT_WINDOW_MS` で調整可）                                                                        | `api/server.ts`                                          |
+| DoS 防止                                     | リクエストボディを **1 MiB** で打ち切り（`req.destroy` 即断）                                                                                                                                  | `router.ts`                                              |
+| 監査ログ権限                                 | `GET /api/v1/governance/audit` に `audit:read` 権限チェック                                                                                                                                    | `routes/governance.ts`                                   |
+| ポリシー一覧権限                             | `GET /api/v1/governance/policies` に `policy:read` 権限チェック                                                                                                                                | `routes/governance.ts`                                   |
+| 監査失敗の可視化                             | 監査イベント生成失敗を `console.error` でログ（サイレント廃棄を廃止）                                                                                                                          | `routes/governance.ts`                                   |
+| CSP ヘッダ                                   | SSR ページに `Content-Security-Policy: default-src 'self'` を付与                                                                                                                              | `routes/web.ts`                                          |
+| 秘密情報のログ漏洩防止                       | デモキーログを `NODE_ENV !== production` 条件で制限                                                                                                                                            | `app.ts`                                                 |
+| 監査アクター詐称防止                         | 評価 API の `actor` を認証済み `ctx.subject` から取得（リクエストボディ不使用）                                                                                                                | `routes/governance.ts`                                   |
+| 監査網羅（v0.6.0）                           | CRUD・Policy/Workflow 変更・トークン発行/失効を監査ログへ記録（actor は認証済み subject）                                                                                                      | `api/audit.ts` + routes                                  |
+| テナント分離（v0.6.0）                       | API キー/JWT に `organizationId` を持ち、組織スコープ認証情報は自組織の entity のみ参照・変更可能（他組織は 404 で非公開）                                                                     | `api/routes/*` + `dashboard.ts`                          |
+| 監査ログのテナント分離                       | 監査イベントに解決済み context のテナントを付与し、`GET /governance/audit` とダッシュボード監査カウンタを自組織へ絞込み（属性なしエントリは非表示＝fail-closed）。グローバル資格情報は全体可視 | `api/audit.ts` + `routes/governance.ts` + `dashboard.ts` |
+| 権限昇格防止（v0.6.0）                       | ロール作成/更新・ユーザーへのロール割当は「自身が保有する権限の範囲内」のみ許可                                                                                                                | `api/routes/governance.ts`                               |
+| JWT 失効 API（v0.6.0）                       | `POST /api/v1/auth/revoke` で現在の JWT を失効し、以後の認証を拒否                                                                                                                             | `routes/auth.ts`                                         |
+| API レスポンスセキュリティヘッダ（v0.6.0）   | JSON 応答に `X-Content-Type-Options: nosniff` / `X-Frame-Options: DENY` / `Referrer-Policy: no-referrer` / `Cache-Control: no-store`                                                           | `router.ts`                                              |
+| HSTS（M14）                                  | SSR ページに `Strict-Transport-Security: max-age=63072000; includeSubDomains` を付与                                                                                                           | `routes/web.ts`                                          |
+| CORS opt-in（M14）                           | `CEOP_CORS_ORIGIN` 環境変数 or `corsOrigin` 設定が明示された場合のみ CORS ヘッダを出力（デフォルト非出力）                                                                                     | `api/server.ts`                                          |
+| JWT 無効化永続化（M14）                      | `RevocationStore` ポート（in-memory / SQLite 差し替え可）で `jti` を永続的に無効化。`CEOP_SQLITE_FILE` 設定時は自動で SQLite backing に切り替わる                                              | `persistence/sqlite/revocation-store.ts`                 |
+| SQLite FK 制約（M14 + v0.6.0 migration 004） | users/devices/applications は `REFERENCES organizations(id)`、organizations.parent_id は自己参照 FK。マイグレーション 004 で既存 DB を再構築して適用                                           | `scripts/migrate.ts`                                     |
 
 ### ⚖️ ポリシーエンジン（Governance Core）
 
