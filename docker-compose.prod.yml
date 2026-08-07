@@ -1,50 +1,70 @@
 # Production Docker Compose configuration for CEOP.
 #
-# Usage:
-#   docker compose -f docker-compose.prod.yml up -d
+# ─── 実運用との関係（重要） ──────────────────────────────────────────────
+# 本番（ceop.mirai-dx-platform.com）は現在 `docker run` で起動されており、
+# compose 管理下にはない。`docker inspect ceop-platform` の Labels に
+# `com.docker.compose.*` が存在しないことで確認できる。
 #
-# Required environment variables (set in a .env file or via shell):
-#   CEOP_JWT_SECRET    — at least 32 random bytes (hex), e.g.:
-#                        openssl rand -hex 32
-#   CEOP_SQLITE_FILE   — path inside the container to the SQLite DB
-#                        (default: /data/ceop.db, mounted via ceop-data volume)
+# そのため `docker compose -f docker-compose.prod.yml stop` などは
+# 「一致するコンテナが無い」として静かに no-op で終わる。実機を止めたり
+# 更新したりはしない。実運用手順は docs/operations/RUNBOOK.md を正とする。
 #
-# Optional:
-#   PORT               — TCP port (default: 3000)
-#   CEOP_SEED_DEMO     — set to "true" to seed demo organisations / users on first start
-#   CEOP_LOG_DEMO_CREDS— set to "true" to print demo API key credentials (never in real prod)
-
-version: "3.9"
+# 本ファイルは、実運用中のコンテナと**同一のトポロジ**を再現するよう
+# 合わせてある（container_name / bind mount / listen アドレス / ポート）。
+# これにより、将来 compose へ切り替える際の差分をゼロにできる。切替手順は
+# RUNBOOK.md「6. compose への切替」を参照。
+#
+# ─── 必須環境変数 ────────────────────────────────────────────────────
+#   CEOP_JWT_SECRET   — 32 バイト以上のランダム値（`openssl rand -hex 32`）
+#   CEOP_DATA_DIR     — ホスト側の SQLite データディレクトリ（絶対パス）
+#                       本番では /home/kensan/.ceop/data
+#   CEOP_IMAGE        — 使用するイメージタグ（例: ceop-platform:v0.6.2）
+#
+# いずれも `:?` 付きで参照しており、未設定なら compose は起動せずエラーで
+# 停止する。既定値を与えると「空の DB を持つ 2 台目」が黙って立ち上がる
+# 事故につながるため、意図的にフェイルファストにしている。
+#
+# ─── 任意 ────────────────────────────────────────────────────────────
+#   CEOP_HOST_PORT    — ホスト側ポート（既定 3120。loopback のみに bind）
+#   CEOP_SEED_DEMO    — "true" で初回起動時にデモ組織/ユーザーを投入
+#   CEOP_CORS_ORIGIN  — ブラウザクライアント向けの許可オリジン
+#
+# 使い方:
+#   CEOP_DATA_DIR=/home/kensan/.ceop/data CEOP_IMAGE=ceop-platform:v0.6.2 \
+#     docker compose -f docker-compose.prod.yml --env-file /home/kensan/.ceop/.env up -d
 
 services:
   ceop-platform:
-    build:
-      context: .
-      target: runtime
-    image: ceop-platform:latest
-    container_name: ceop-platform-prod
+    # `build:` は意図的に置かない。production で `docker compose up` が
+    # 暗黙にローカルソースからビルドし、検証済みイメージと異なるものが
+    # 起動する事故を防ぐ。イメージは release ワークフローの成果物を使う。
+    image: "${CEOP_IMAGE:?CEOP_IMAGE を明示すること（例: ceop-platform:v0.6.2）。latest は使わない}"
+    container_name: ceop-platform
     restart: unless-stopped
 
+    # 公開は Cloudflare Tunnel（cloudflared-ceop.service）が担う。
+    # コンテナを 0.0.0.0 で公開すると Tunnel を迂回した LAN 直アクセスが
+    # 可能になり、Cloudflare 側のアクセス制御が効かなくなる。loopback 固定。
     ports:
-      - "${PORT:-3000}:3000"
+      - "127.0.0.1:${CEOP_HOST_PORT:-3120}:3000"
 
     environment:
       NODE_ENV: production
       PORT: "3000"
-      # Mandatory in production — app will refuse to start without this.
-      CEOP_JWT_SECRET: "${CEOP_JWT_SECRET}"
-      # SQLite DB path inside the container — backed by the named volume below.
+      # 未設定ならアプリが起動を拒否する。
+      CEOP_JWT_SECRET: "${CEOP_JWT_SECRET:?CEOP_JWT_SECRET が未設定}"
       CEOP_SQLITE_FILE: /data/ceop.db
-      # Set to "true" only when provisioning a fresh database.
+      # 新規 DB を用意するときだけ "true"。
       CEOP_SEED_DEMO: "${CEOP_SEED_DEMO:-false}"
-      # Never enable in production; kept here as an explicit no-op.
+      # production では常に無効。明示的な no-op として残す。
       CEOP_LOG_DEMO_CREDS: "false"
-      # Optional: exact origin for browser-based clients (off when unset).
       CEOP_CORS_ORIGIN: "${CEOP_CORS_ORIGIN:-}"
 
     volumes:
-      # Named volume keeps the SQLite file across container restarts.
-      - ceop-data:/data
+      # named volume ではなく bind mount。実運用が bind mount であり、
+      # named volume にすると「空の DB を持つ別インスタンス」が起動して
+      # しまう。パスは必ず明示させる。
+      - "${CEOP_DATA_DIR:?CEOP_DATA_DIR を明示すること（本番: /home/kensan/.ceop/data）}:/data"
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
@@ -53,21 +73,35 @@ services:
       retries: 3
       start_period: 20s
 
-    # Minimal resource limits — tune for your host.
+    # ─── ハードニング ──────────────────────────────────────────────
+    # 2026-08-07 に v0.6.2 イメージで実機検証済み。この構成で起動し、
+    # SQLite を読み、/health/ready が 200 を返すことを確認している。
+    # アプリは /data（bind mount）以外に書き込まないため rootfs は読取専用に
+    # できる。Node が使う /tmp だけ tmpfs で与える。
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+    # 単一ホスト同居構成のため、暴走時に他サービスを巻き込まないよう上限を置く。
     deploy:
       resources:
         limits:
           cpus: "1.0"
           memory: 256M
+          # compose は `pids_limit` を deploy.resources.limits.pids へ正規化する。
+          # 片方だけ書くと両者が食い違って `invalid compose project` になるため、
+          # 同じ値を両方に置く。
+          pids: 128
         reservations:
           memory: 64M
+    pids_limit: 128
 
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
-
-volumes:
-  ceop-data:
-    driver: local
