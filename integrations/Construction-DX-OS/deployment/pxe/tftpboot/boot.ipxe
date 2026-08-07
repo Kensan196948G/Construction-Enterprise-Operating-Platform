@@ -1,0 +1,48 @@
+#!ipxe
+# Construction-DX-OS iPXE boot script
+# Issue 0042 Phase 4.1
+#
+# Served from: http://192.168.0.185:8300/pxe/boot.ipxe
+# This script is chainloaded by dnsmasq after iPXE loads.
+
+echo Construction-DX-OS PXE Boot Menu
+echo ===================================
+
+# Show a menu for 10 seconds, then default to standard profile
+menu Construction-DX-OS — Boot Profile
+item standard   Standard Profile (standard.cfg)
+item field      Field Profile (field.cfg)
+item kiosk      Kiosk Profile (kiosk.cfg)
+item --gap
+item local      Boot from local disk
+choose --default standard --timeout 10000 profile || goto local
+
+:standard
+  set profile standard
+  goto install
+
+:field
+  set profile field
+  goto install
+
+:kiosk
+  set profile kiosk
+  goto install
+
+:local
+  sanboot --no-describe --drive 0x80 || exit
+
+:install
+  echo Booting profile: ${profile}
+  # Kernel + initrd from nginx ISO distribution server
+  kernel http://192.168.0.185/iso/vmlinuz
+  initrd http://192.168.0.185/iso/initrd.gz
+  # Preseed URL injected as kernel cmdline parameter
+  imgargs vmlinuz \
+    auto=true priority=critical \
+    url=http://192.168.0.185/preseed/${profile}.cfg \
+    hostname=cdx-${profile} domain=local \
+    cdx_profile=${profile} \
+    cdx_server=http://192.168.0.185:8300 \
+    console=tty0 console=ttyS0,115200n8
+  boot

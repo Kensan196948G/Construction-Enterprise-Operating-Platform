@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}ISO Builder — cdx-server Admin{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>🛠️ ISO Builder ({{ total }} jobs)</h2>
+  <p style="margin: 0.5rem 0 1rem; color: #666; font-size: 0.85rem;">
+    管理 WebUI から live-build を非同期実行する Phase 2 機能。
+    <a href="/admin/iso-builder/new">＋ 新規ビルドジョブ</a>
+  </p>
+
+  <form method="get" action="/admin/iso-builder" style="margin-bottom: 1rem; display: flex; gap: 0.5rem; align-items: center;">
+    <label>profile:
+      <select name="profile">
+        <option value="">all</option>
+        {% for p in profiles %}
+        <option value="{{ p }}" {% if p == selected_profile %}selected{% endif %}>{{ p }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>status:
+      <select name="status_filter">
+        <option value="">all</option>
+        {% for s in statuses %}
+        <option value="{{ s }}" {% if s == selected_status %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <button type="submit">フィルタ適用</button>
+    <a href="/admin/iso-builder" style="margin-left: 0.5rem;">クリア</a>
+  </form>
+
+  {% if jobs %}
+  <table>
+    <thead>
+      <tr>
+        <th>Job ID</th>
+        <th>Profile</th>
+        <th>Status</th>
+        <th>Git Ref</th>
+        <th>Requested By</th>
+        <th>Created At</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for j in jobs %}
+      <tr>
+        <td><a href="/admin/iso-builder/{{ j.id }}"><code>{{ j.id[:8] }}…</code></a></td>
+        <td>{{ j.profile }}</td>
+        <td>
+          {% if j.status == "succeeded" %}
+            <span class="badge badge-ok">{{ j.status }}</span>
+          {% elif j.status == "failed" %}
+            <span class="badge badge-error">{{ j.status }}</span>
+          {% elif j.status == "cancelled" %}
+            <span class="badge badge-degraded">{{ j.status }}</span>
+          {% else %}
+            <span class="badge" style="background:#3b82f6;color:#fff">{{ j.status }}</span>
+          {% endif %}
+        </td>
+        <td><code>{{ j.git_ref }}</code></td>
+        <td>{{ j.requested_by }}</td>
+        <td>{{ j.created_at.strftime("%Y-%m-%d %H:%M:%S UTC") }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">まだビルドジョブはありません。<a href="/admin/iso-builder/new">最初のジョブを作成</a></p>
+  {% endif %}
+</div>
+{% endblock %}

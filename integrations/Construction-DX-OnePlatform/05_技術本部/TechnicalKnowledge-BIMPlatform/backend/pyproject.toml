@@ -1,0 +1,78 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cdx-tech-api"
+version = "0.1.0"
+description = "Technical Knowledge & BIM Platform API (Construction DX One Platform)"
+requires-python = ">=3.12"
+authors = [{ name = "CDX Technical Team" }]
+license = { text = "UNLICENSED" }
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.3.0",
+    "sqlalchemy>=2.0.30",
+    "asyncpg>=0.29.0",
+    "psycopg[binary]>=3.2.0",
+    "alembic>=1.13.0",
+    "pgvector>=0.3.0",
+    "python-multipart>=0.0.9",
+    "httpx>=0.27.0",
+    "numpy>=1.26.0",
+    "cdx-shared-auth",
+    "cdx-shared-db",
+]
+
+[project.optional-dependencies]
+# 標準図 PDF サムネイル生成 (オプショナル: 未導入時は SVG プレースホルダ)
+thumbnail = [
+    "pymupdf>=1.24.0",
+]
+dev = [
+    "pytest>=8.2.0",
+    "pytest-asyncio>=0.23.0",
+    "ruff>=0.5.0",
+    "mypy>=1.10.0",
+    "pymupdf>=1.24.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tech_api"]
+
+[tool.uv.sources]
+cdx-shared-auth = { path = "../../../00_共通基盤/shared-auth", editable = true }
+cdx-shared-db = { path = "../../../00_共通基盤/shared-db", editable = true }
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff.lint]
+# Loop #32 / Issue #12 Step 2: practical ignore list to enable strict
+# `ruff check .` (no `|| true`) without requiring a sweeping legacy refactor.
+# Each rule is opt-out for a concrete reason:
+# - B008 (function-call-in-default-arg): FastAPI Depends() / Query() / Body()
+# - B904 (raise from): explicit context is sometimes intentionally omitted in
+#   adapters that translate upstream errors verbatim.
+# - B017 (assert-raises-exception): broad pytest.raises during early-stage tests
+# - B905 (zip without strict): Python <3.10 compat in some adapters
+# - SIM103/105/108/110/117/102: refactor suggestions (style), not bugs
+# - N802/N806/N818: legacy/domain naming (日本語混在 / API contract names)
+# - E741 (ambiguous variable name): domain-specific single-letter locals
+# - F841 (unused variable): intentional placeholders during stub phases
+# - UP042 (StrEnum) / UP046 (PEP 695 generics): py3.12 migration tracked separately
+ignore = [
+    "B008", "B904", "B017", "B905",
+    "SIM102", "SIM103", "SIM105", "SIM108", "SIM110", "SIM117",
+    "N802", "N806", "N818",
+    "E741", "F841",
+    "UP042", "UP046",
+]

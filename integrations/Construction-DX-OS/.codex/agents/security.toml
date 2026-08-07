@@ -1,0 +1,3 @@
+description = "廃止済み。security-reviewer.md に統合済み。"
+developer_instructions = "> このファイルは廃止されました。`security-reviewer.md` を参照してください。"
+name = "security"

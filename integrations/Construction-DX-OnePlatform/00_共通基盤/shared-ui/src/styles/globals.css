@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------- 基本リセット (建設DX) ---------- */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    -moz-tab-size: 4;
+    tab-size: 4;
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased;
+    font-feature-settings: 'palt';
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-white;
+  }
+
+  /* スクロールバー (現場PC向け省スペース) */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 rounded;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-400;
+  }
+}
+
+@layer components {
+  .cdx-btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2
+           rounded-cdx font-medium transition-colors
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .cdx-btn-primary {
+    @apply cdx-btn bg-primary text-white hover:bg-primary-600;
+  }
+  .cdx-btn-secondary {
+    @apply cdx-btn bg-secondary text-white hover:bg-secondary-700;
+  }
+  .cdx-card {
+    @apply bg-white rounded-cdx shadow-cdx-sm border border-slate-200;
+  }
+  .cdx-input {
+    @apply w-full px-3 py-2 rounded-cdx border border-slate-300
+           focus:border-primary focus:ring-1 focus:ring-primary
+           disabled:bg-slate-100;
+  }
+}

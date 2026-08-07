@@ -1,0 +1,28 @@
+[project]
+name = "tenant-identity-service"
+version = "0.0.1"
+description = "Sprint 0 minimal Tenant + Identity service for Synapse-OS"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.110,<1",
+    "uvicorn>=0.29,<1",
+    "pydantic>=2.7,<3",
+    "synapse-shared",
+    "PyJWT>=2.8,<3",
+    "bcrypt>=4.0,<5",
+    "python-multipart>=0.0.9,<1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "httpx>=0.27",
+]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["tenant_identity_app*"]

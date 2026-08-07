@@ -1,0 +1,266 @@
+{
+  "title": "CDX Service Health Overview",
+  "uid": "cdx-service-health",
+  "tags": ["cdx", "health", "production"],
+  "timezone": "Asia/Tokyo",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "description": "CDX 23サービス全体ヘルス一覧 (Frontend 11 + Backend 11 + Mocks + API-GW) — Generated Loop #36",
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "🟢 稼働サービス数 / 23",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "count(up{job=~\"cdx-.*\"} == 1)",
+          "legendFormat": "稼働中"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "steps": [
+              { "value": 0, "color": "red" },
+              { "value": 20, "color": "orange" },
+              { "value": 23, "color": "green" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "🔴 障害サービス数",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "count(up{job=~\"cdx-.*\"} == 0)",
+          "legendFormat": "障害"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "steps": [
+              { "value": 0, "color": "green" },
+              { "value": 1, "color": "orange" },
+              { "value": 3, "color": "red" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "⚡ API Gateway レスポンス時間 (p99)",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket{job=\"cdx-api-gateway\"}[5m]))",
+          "legendFormat": "p99"
+        }
+      ],
+      "options": { "colorMode": "value" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "steps": [
+              { "value": 0, "color": "green" },
+              { "value": 2, "color": "orange" },
+              { "value": 5, "color": "red" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "🔒 認証エラー率",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{job=~\"cdx-.*\",status=~\"401|403\"}[5m])) / clamp_min(sum(rate(http_requests_total{job=~\"cdx-.*\"}[5m])), 1e-9) * 100",
+          "legendFormat": "auth error %"
+        }
+      ],
+      "options": { "colorMode": "value" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "steps": [
+              { "value": 0, "color": "green" },
+              { "value": 1, "color": "orange" },
+              { "value": 5, "color": "red" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 10,
+      "type": "table",
+      "title": "📋 フロントエンドサービス一覧 (port 5180-5190)",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 10 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "up{job=~\"cdx-frontend-.*\"}",
+          "legendFormat": "{{job}}",
+          "instant": true
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "job": "サービス",
+              "Value": "状態"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "displayMode": "color-background" },
+          "thresholds": {
+            "steps": [
+              { "value": 0, "color": "red" },
+              { "value": 1, "color": "green" }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": { "text": "🔴 停止" },
+                "1": { "text": "🟢 正常" }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 11,
+      "type": "table",
+      "title": "📋 バックエンドサービス一覧 (port 8001-8011 + 8080 + 8090)",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 10 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "up{job=~\"cdx-backend-.*|cdx-api-gateway|cdx-mocks\"}",
+          "legendFormat": "{{job}}",
+          "instant": true
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": { "job": "サービス", "Value": "状態" }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "displayMode": "color-background" },
+          "thresholds": {
+            "steps": [
+              { "value": 0, "color": "red" },
+              { "value": 1, "color": "green" }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": { "text": "🔴 停止" },
+                "1": { "text": "🟢 正常" }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 20,
+      "type": "timeseries",
+      "title": "📈 全サービス HTTP リクエスト数 (5分移動平均)",
+      "gridPos": { "x": 0, "y": 14, "w": 24, "h": 8 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum by (job) (rate(http_requests_total{job=~\"cdx-.*\"}[5m]))",
+          "legendFormat": "{{job}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "reqps", "custom": { "lineWidth": 2 } }
+      }
+    },
+    {
+      "id": 21,
+      "type": "timeseries",
+      "title": "⚠️ 5xx エラー数 (部門別)",
+      "gridPos": { "x": 0, "y": 22, "w": 12, "h": 8 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum by (job) (rate(http_requests_total{job=~\"cdx-.*\",status=~\"5..\"}[5m]))",
+          "legendFormat": "{{job}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": { "lineWidth": 2 },
+          "thresholds": {
+            "steps": [
+              { "value": 0, "color": "green" },
+              { "value": 0.1, "color": "red" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 22,
+      "type": "timeseries",
+      "title": "💾 PostgreSQL 接続数 (部門別)",
+      "gridPos": { "x": 12, "y": 22, "w": 12, "h": 8 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "pg_stat_activity_count{datname=~\"cdx_.*\"}",
+          "legendFormat": "{{datname}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "short" }
+      }
+    }
+  ]
+}

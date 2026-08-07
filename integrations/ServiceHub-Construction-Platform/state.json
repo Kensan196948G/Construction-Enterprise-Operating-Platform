@@ -1,0 +1,1160 @@
+{
+  "project": {
+    "name": "ServiceHub Construction Platform",
+    "mode": "autonomous",
+    "registered_at": "2026-04-03",
+    "release_deadline": "2026-10-03",
+    "duration_months": 6,
+    "execution_method": "Linux Cron (Mon-Sat, 5h/session)",
+    "release_policy": "半年後の本番リリース絶対厳守。残日数による自動縮退: <=30日 Improvement縮退 / <=14日 新機能開発禁止 / <=7日 リリース準備のみ",
+    "phase_flexibility": "Monitor/Development/Verify/Improvement の配分は進捗に応じて CTO 判断で自由変更可 (リリース期限制約の下で)",
+    "start_date": "2026-05-12",
+    "phase_mode": "development"
+  },
+  "phase": "🎯 CTO Release Ready 判断 (2026-06-01) — 現実装済み機能セット(v1.1.x+)が Release Ready 達成。根拠: IDOR完全網羅+security_critical=0 / 95%coverage / 879テスト(統合61+E2E225) / ISO文書整備 / CI全green。PR #249 ✅MERGED(main cd801be)。次フェーズ: Phase 8 正式リリース準備 or Issue #225 Legal Techエピック",
+  "loop": "Day57-IDOR-Security-Clean-Rebase",
+  "loop_count": 196,
+  "status": "PR #236 (head 92c9bac): IDOR 防止 + create-side IDOR 追加修正 (create_contract に assert_project_access — PM の他プロジェクト契約注入を防止)。Codex 対抗レビュー (companion advanced runtime; direct codex exec は bubblewrap RTM_NEWADDR で不可) → High×2(safety delete) は service の複合キー検証 (resource.project_id != project_id → 404) で防御済=false positive、Medium×2(daily_reports/safety read/list 横断) は VIEWER 横断=製品意図ゆえ Issue #239 に将来課題化。CI 全12 GREEN, CodeRabbit pass, test_legal 14/14, ruff/mypy PASS。認可変更ゆえ REVIEW_REQUIRED 人間サインオフ待ち → 承認後 `gh pr merge 236 --admin --squash --delete-branch`",
+  "last_updated": "2026-06-01T00:25:00+09:00",
+  "execution": {
+    "start_time": "2026-05-20T08:30:11+09:00",
+    "max_duration_minutes": 300,
+    "session_deadline": "2026-05-20T13:30:11+09:00",
+    "phase": "Build — Security Scan Fix + Legal Tech Phase 1 実装 (#226/#227/#228)",
+    "auto_stop_threshold": 5,
+    "graceful_shutdown": true,
+    "current_session_start_at": "2026-06-14T04:41:03.469Z",
+    "last_trigger": "cron",
+    "last_cron_session_id": "20260614-062412-CMDB-DocKit",
+    "previous_session_id": "20260427-210230-ServiceHub-Construction-Platform",
+    "last_stop_at": "2026-06-14T04:33:25.570Z",
+    "repair_count": 0,
+    "max_repair": 3,
+    "same_error_limit": 2
+  },
+  "goal": "Phase 10 — ドキュメント整備・最終リリース (v1.1.0)",
+  "kpi": {
+    "success_rate_target": 0.9,
+    "backend_coverage_target": 0.9,
+    "backend_coverage_actual": 0.95,
+    "frontend_coverage_target": 0.85,
+    "frontend_coverage_actual": 0.88,
+    "status": "EXCEEDED (Phase 5 baseline) — Phase 6 KPI は integration / E2E 拡張で再定義予定",
+    "ci_success_rate": 1,
+    "test_pass_rate": 1,
+    "security_critical": 0,
+    "blocker_count": 0,
+    "idor_pr236_ci": "全12チェック GREEN (2026-05-29T04:27Z, commit c6d354f)"
+  },
+  "automation": {
+    "auto_issue_generation": true,
+    "self_evolution": true
+  },
+  "development_plan": {
+    "start_date": "2026-04-03",
+    "release_date": "2026-10-03",
+    "days_remaining": 143,
+    "current_phase": "Phase 6 — 品質強化 + 本番リリース準備",
+    "current_sprint": "Sprint 7",
+    "schedule": "Mon-Sat cron / 1 session 300min",
+    "month_breakdown": {
+      "month_1_2": "基盤整備・主要機能実装 (Phase 1〜5: 2026-04-03 〜 2026-05-03 予定) — Phase 5 完了済",
+      "month_3_4": "品質向上・テスト整備 (Phase 6: 〜 2026-08-03) — 現在開始",
+      "month_5": "統合テスト・バグ修正 (Phase 7: 〜 2026-09-03)",
+      "month_6": "リリース準備・本番移行 (Phase 8: 〜 2026-10-03)"
+    }
+  },
+  "priorities": {
+    "high": [
+      "週次 Performance Tests CI を安定維持 (PR#183 fix 適用済み) (P1)",
+      "セキュリティ依存パッケージの定期的な更新監視 (P1)",
+      "backend カバレッジ 95% 維持 — 新機能追加時は必ずテスト追加 (P1)"
+    ],
+    "medium": [
+      "フロントエンド依存更新: React 19 / vitest 3 / tailwind v4 段階的検討 (P2)",
+      "k6 SLO 週次結果の自動サマリーレポート化検討 (P2)",
+      "bcrypt 4.x 対応 — passlib 互換性調査後に対応 (P2)"
+    ],
+    "low": [
+      "Playwright SIGTRAP 環境調査 (Phase 5e-1 E2E spec ローカル実行不可)",
+      "distroless Docker イメージ検討 (PR #129 follow-up)",
+      "k6 スパイクテスト結果の可視化ダッシュボード"
+    ]
+  },
+  "decision_context": {
+    "risk_level": "low",
+    "tech_debt": "low",
+    "stability": "stable"
+  },
+  "metrics": {
+    "backend_tests": 365,
+    "backend_tests_note": "Phase 6b 統合テスト追加 (+51件: integration/conftest + auth/cost/photos/safety/contract) — ローカル実測 359 passed (5件 Redis未起動のみ失敗, CI全通過)",
+    "frontend_tests": 294,
+    "frontend_tests_note": "Phase 5e-3/5e-4/5e-5 追加分込みで実測 294 (旧記録 270 から +24)",
+    "e2e_tests": 225,
+    "e2e_tests_note": "Phase 7: legal.spec.ts +3 (Legal Tech E2E) / 35 spec ファイル",
+    "total_tests": 879,
+    "frontend_pages": 18,
+    "api_endpoints": 53,
+    "backend_coverage": 95,
+    "frontend_coverage": 88
+  },
+  "phase5_status": {
+    "phase_5a_docker": {
+      "status": "merged",
+      "pr": "#129",
+      "issue": "#125",
+      "merged_at": "2026-04-18T05:00:00Z",
+      "merge_commit": "c4c03c3",
+      "features": [
+        "multi-stage builds (backend 556MB -13% / frontend 48.7MB -9%)",
+        "nginx edge: CSP/X-Frame-Options/Permissions-Policy always",
+        "SSE 専用ロケーション設定",
+        "frontend 内部 nginx: SPA fallback + /assets/ 1y immutable",
+        "nginx.prod.conf 新規 / .dockerignore 新規"
+      ],
+      "follow_ups": [
+        "distroless 検討 (サイズ -30% 目標未達)",
+        "Trivy HIGH 0 検証",
+        "実機 compose up 検証"
+      ]
+    },
+    "phase_5b_lighthouse": {
+      "status": "merged",
+      "pr": "#139",
+      "issue": "#126",
+      "merged_at": "2026-04-18T08:52:15Z",
+      "merge_commit": "c7c8ac2",
+      "scope": "route-level code splitting (React.lazy + Suspense) + vite manualChunks で bundle 分割",
+      "achievements": {
+        "split_strategy": "vendor-react / vendor-query / vendor-charts / vendor-forms / vendor-icons",
+        "fallback": "PageFallback (最小スピナーで CLS 抑制)",
+        "seo": "index.html meta description 追加"
+      },
+      "lighthouse_targets": {
+        "performance": 90,
+        "accessibility": 95,
+        "best_practices": 95,
+        "seo": 90,
+        "lcp_sec": 2.5,
+        "cls": 0.1,
+        "tbt_ms": 300
+      },
+      "ci_result": "Lighthouse Audit PASS (2m11s)"
+    },
+    "phase_5c_coverage": {
+      "status": "merged",
+      "pr": "#130",
+      "issue": "#127",
+      "merged_at": "2026-04-18T06:06:24Z",
+      "merge_commit": "a98e179",
+      "branch": "feat/phase5c-coverage (deleted)",
+      "achievements": {
+        "coverage_delta": "85% → 95% (+10pp, target 90% 超過)",
+        "tests_added": 23,
+        "modules_100pct": [
+          "app/services/auth_service.py",
+          "app/services/notification_templates/renderer.py"
+        ]
+      }
+    },
+    "phase_5d_codegen": {
+      "status": "merged",
+      "issue": "#128",
+      "merge_commit_primary": "62d895b",
+      "merge_commit_resync": "3808ce2",
+      "resync_pr": "#148",
+      "merged_at_primary": "2026-04-18T10:04:00Z",
+      "merged_at_resync": "2026-04-23T11:39:29Z",
+      "scope": "OpenAPI spec → openapi-typescript 再生成。backend の LogoutRequest / jti invalidation / 422 response / Notification/Photo/Safety/Cost endpoint 拡充を frontend 型に反映。",
+      "files": [
+        "frontend/src/generated/openapi.json (+1684)",
+        "frontend/src/generated/api-types.ts (+698)",
+        "frontend/src/generated/index.ts (+6, 62d895b のみ)"
+      ],
+      "note": "PR #148 は既存 62d895b と同内容 re-apply (no-op diff) だったが state.json sync の受け皿として機能"
+    },
+    "phase_5e1_internal_pages": {
+      "status": "merged",
+      "pr": "#136",
+      "issue": "#132",
+      "merged_at": "2026-04-18T07:22:11Z",
+      "merge_commit": "3fb86d2",
+      "branch": "feat/phase5e1-internal-pages (deleted)",
+      "scope": "docs/design/ServiceHub-WebUI.html 正ソース化に基づく社内グループ 4 ページ新設",
+      "pages_added": [
+        "/portal (社内ポータル — お知らせ / 直近イベント / クイックリンク)",
+        "/notices (お知らせ一覧 — カテゴリフィルタ / 重要フラグ)",
+        "/hr (人事・勤怠 — KPI 4 枚 / 手続きメニュー 6 / 最近の申請テーブル)",
+        "/rules (社内規程 — カテゴリ検索 / 最近の改訂 / 様式・申請書)"
+      ],
+      "e2e_added": 4,
+      "ci_result": "E2E 10/10 PASS (post selector fix 1169ac6)",
+      "follow_ups": [
+        "ローカル Playwright chromium SIGTRAP 環境調査 (CI では未再現)"
+      ]
+    },
+    "phase_5e2_sidebar_groups": {
+      "status": "merged",
+      "pr": "#138",
+      "issue": "#133",
+      "merged_at": "2026-04-18T09:10:00Z",
+      "merge_commit": "1fe8787",
+      "branch": "feat/phase5e2-sidebar-groups (deleted)",
+      "scope": "Layout.tsx flat navItems → 4-group navGroups (業務/運用/社内/管理)",
+      "ci_result": "全10チェック PASS"
+    },
+    "phase_5e3_tailwind_tokens": {
+      "status": "merged",
+      "pr": "#140",
+      "issue": "#134",
+      "merged_at": "2026-04-18T08:57:42Z",
+      "merge_commit": "7241af7",
+      "scope": "Tailwind ブランドカラー token 整備 — canonical CSS 変数 (brand-10..90 / safety / warn) 反映"
+    },
+    "phase_5e4_sidebar_colors": {
+      "status": "merged",
+      "pr": "#141",
+      "issue": "#135",
+      "merged_at": "2026-04-18T09:10:05Z",
+      "merge_commit": "952adac",
+      "scope": "Sidebar 配色統一 — canonical white bg 準拠 (デジタル庁準拠)"
+    },
+    "phase_5e5_webui_design_system": {
+      "status": "merged",
+      "pr": "#144",
+      "issue": "#142",
+      "merged_at": "2026-04-18T09:56:32Z",
+      "merge_commit": "cda0f1a",
+      "scope": "ServiceHub WebUI デザインシステム実装 — IBM Plex フォント + TopBar + CommandPalette + Sidebar 刷新"
+    },
+    "phase_5d_post_resync": {
+      "status": "merged",
+      "pr": "#148",
+      "merged_at": "2026-04-23T11:39:29Z",
+      "merge_commit": "3808ce2",
+      "scope": "Phase 5d codegen 再同期 + state.json 5e-2 反映 + cron session 記録 (本セッション)",
+      "note": "2026-04-23 cron 再開時にローカル main が origin より古く、未コミット差分を片付ける形で作業した結果"
+    }
+  },
+  "phase4_status": {
+    "phase_4a_sse": {
+      "status": "merged",
+      "pr": "#119"
+    },
+    "phase_4b_notification_dispatcher": {
+      "status": "merged",
+      "pr": "#121"
+    },
+    "phase_4c_e2e": {
+      "status": "merged",
+      "pr": "#123"
+    }
+  },
+  "resume_point": {
+    "action": "Legal Tech 統合 Epic 起票 / Phase1 P1 子Issue 3件起票 / docs/design/legal-integration.md 作成 / prometheus-fastapi-instrumentator starlette 1.0.0 対応版リリース監視 / aiosmtplib 調査 / @lhci/cli 監視継続",
+    "branch": "main",
+    "main_head": "3586a3b",
+    "next_phase": "Legal Tech 統合 Phase 1 (W1-3) — legal/contracts.py 新設 / projects.py 法的ステータス強化 / itsm.py 法務承認WF / 2026-10-03本番リリースまで残143日",
+    "starlette_1x_blocker": "prometheus-fastapi-instrumentator 7.1.0 が starlette<1.0.0 を要求するため移行不可。PFI の starlette 1.x 対応版リリースを監視。",
+    "pr195_merged": "PR#195 (b84daba): asyncpg 0.31.0 / hiredis 3.3.1 / minio 7.2.20 (全CI通過)",
+    "pr193_merged": "PR#193 (0e96778): openai 2.33.0 / tiktoken 0.12.0 / numpy 2.2.6 / boto3 1.43.2",
+    "pr191_merged": "PR#191 (2329a19): frontend パッチ依存更新 — @tanstack/react-query 5.100.7 等",
+    "pr188_merged": "PR#188 (69a74c5): Python依存更新 — fastapi 0.136.1 / starlette 0.52.1 等 + httpx ASGITransport移行",
+    "npm_audit_status": "critical 0, high 0, moderate 2, low 3 (全て @lhci/cli 間接依存 / 非緊急)",
+    "python_audit_status": "直接依存は安全 (pip-audit はグローバル環境を検出) / CI Trivy CRITICAL/HIGH=0",
+    "pending_major_upgrades": [
+      "starlette 0.52.1 → 1.0.0 (Issue #189)",
+      "redis 5.x → 7.x (Issue #189)",
+      "pytest-asyncio 0.x → 1.x (Issue #189)",
+      "React 19 / vitest 4.x / tailwind v4 / zod 4 / vite 8.x (Issue #189)",
+      "aiosmtplib 3.x → 5.x 調査 (次セッション)"
+    ],
+    "pending_issues": [
+      "#186 (P3 @lhci/cli 脆弱性追跡)",
+      "#189 (P3 メジャー更新調査)"
+    ]
+  },
+  "phase6_plan": {
+    "kickoff_at": "2026-04-24",
+    "target_months": "Month 3〜4 (2026-05-03 〜 2026-08-03)",
+    "phase_6a_coverage": {
+      "status": "closed",
+      "issue": "#146",
+      "closed_at": "2026-04-24",
+      "result": "backend_coverage 0.95 (target 0.90) EXCEEDED — Phase 5c PR #130 で達成済。2026-04-24 ローカル pytest で再確認 (3129 stmts / 164 missed)"
+    },
+    "phase_6b_integration_tests": {
+      "status": "done",
+      "issue": "#152",
+      "pr": "#158",
+      "merged_at": "2026-04-24T01:55:48Z",
+      "merged_sha": "19d33bd",
+      "priority": "P2",
+      "scope": "integration/contract テスト拡充 — auth/cost/photos/safety 統合テスト + schemathesis contract テスト + CI integration job追加",
+      "closure_note": "2026-04-24 PR #158 admin-squash merged (main 19d33bd, 4/4 check green). 51件 integration tests 追加. CI ruff 0.15.11 統一 + async contract check 修正 + test_costs.py 404 回帰修正"
+    },
+    "phase_6c_e2e_expansion": {
+      "status": "done",
+      "issue": "#147",
+      "pr": "#151",
+      "merged_at": "2026-04-24",
+      "merged_sha": "4c0c62f",
+      "scope": "frontend/e2e/photos.spec.ts (200 lines) / safety.spec.ts (212 lines) は Phase 5 で既充実 / cost.spec.ts を 2→8 tests に拡張 (一覧・集計・エラー境界カバー)",
+      "closure_note": "2026-04-24 PR #151 admin-squash merged (main 4c0c62f, 10/10 check green) — cost.spec.ts 2→8 tests. 差異 strict-mode violation は summary card grid スコープ限定で解消 (bedf781)"
+    },
+    "phase_6d_observability": {
+      "status": "done",
+      "issue": "#153",
+      "pr": "#156",
+      "merged_at": "2026-04-24",
+      "merged_sha": "ad08511",
+      "priority": "P1",
+      "scope": "/health/live (liveness) + /health/ready (readiness DB+Redis) 分離 / X-Request-ID correlation middleware / structlog contextvars merge_contextvars 統合",
+      "closure_note": "2026-04-24 PR #156 admin-squash merged (main ad08511, 6/6 check green). test_health.py 6件 + test_middleware.py 4件 新規追加"
+    },
+    "phase_6e_security_hardening": {
+      "status": "done",
+      "issue": "#154",
+      "pr": "#157",
+      "merged_at": "2026-04-24T01:23:49Z",
+      "merged_sha": "0db064ef",
+      "priority": "P1",
+      "scope": "slowapi rate-limiting (5/min login, 10/min refresh) + JWT user_id audit log + CodeQL workflow + secret rotation docs",
+      "closure_note": "2026-04-24 PR #157 admin-squash merged (main 0db064ef, 9/9 check green). test_rate_limit.py 5テスト + test_middleware.py 4テスト追加. conftest.py に reset_limiter autouse フィクスチャ追加 (全テスト間カウンターリーク防止)"
+    }
+  },
+  "current_sprint": {
+    "phase": "Sprint 9 Phase 8 — リリース準備・本番移行",
+    "merged_prs_phase7_all": [
+      "PR#162 (7a 負荷テスト: Issue #159, 2026-04-25 e6cfca0)",
+      "PR#163 (7b E2E Fullstack: Issue #160, 2026-04-25 84e5e62)",
+      "PR#164 (7c デプロイパイプライン: Issue #161, 2026-04-25 c456f80)"
+    ],
+    "phase7_completion": "2026-04-25 Phase 7 全3タスク完了 — テスト886件 / E2E Fullstack 15件 / k6 + pytest-benchmark / GHCR deploy pipeline",
+    "phase8_status": {
+      "8a_changelog_tag": {
+        "status": "done",
+        "commit": "5453c9f",
+        "note": "CHANGELOG v0.8.0 エントリ追加 / Phase 6+7 完了内容記録"
+      },
+      "8b_prod_compose": {
+        "status": "done",
+        "commit": "785e4f9",
+        "note": "docker-compose.prod.yml — alembic migration / healthcheck / 欠落環境変数 / frontend depends_on 追加"
+      },
+      "8c_trivy_security": {
+        "status": "STABLE",
+        "commits": [
+          "0cc2dca",
+          "8b16deb",
+          "bbe0b00",
+          "5d6ac2b"
+        ],
+        "tag": "v0.8.1",
+        "note": "全CVE修正完了 (CRITICAL/HIGH=0達成): python-jose 3.5.0 / python-multipart 0.0.26 / starlette 0.49.1 / fastapi 0.124.4 / nginx:1.27-alpine + apk upgrade。全CI ✅ 7/7 green"
+      },
+      "8d_benchmark_fix": {
+        "status": "done",
+        "commit": "b3da5d7",
+        "note": "ScopeMismatch修正 — bench_client を function スコープに変更"
+      },
+      "8e_docs_update": {
+        "status": "done",
+        "commit": "0cc2dca",
+        "note": "README ロードマップ更新 / CI チェック数 19 / Phase 6+7 完了 / Phase 8 進行中"
+      }
+    },
+    "next": "Phase 9 本番運用準備 — 9a監視スタック実装済み / 9b負荷試験拡充 / 9c Kubernetes Helm chart"
+  },
+  "phase9_plan": {
+    "kickoff_at": "2026-04-25",
+    "phase_9a_monitoring": {
+      "status": "in_progress",
+      "issue": "#165",
+      "branch": "feat/phase9a-monitoring",
+      "scope": "Prometheus + Grafana + Alertmanager 監視スタック / docker-compose.monitoring.yml overlay",
+      "files_created": [
+        "prometheus/prometheus.yml",
+        "prometheus/alerts.yml",
+        "prometheus/alertmanager.yml",
+        "grafana/provisioning/datasources/prometheus.yml",
+        "grafana/provisioning/dashboards/dashboards.yml",
+        "grafana/dashboards/servicehub-api.json",
+        "docker-compose.monitoring.yml",
+        "Makefile (monitoring-up/down/logs 追加)"
+      ],
+      "note": "prometheus-fastapi-instrumentator は Phase 3a で既実装済み。api:8000/metrics をスクレイプ設定。SLO アラート 9種定義。Grafana 8パネルダッシュボード自動プロビジョニング"
+    },
+    "phase_9b_load_test": {
+      "status": "merged",
+      "issue": "#166",
+      "pr": "#169",
+      "merged_at": "2026-04-25T07:15:26Z",
+      "merged_sha": "c387be1",
+      "scope": "k6 負荷試験シナリオ拡充 + SLO 基準明文化 (P95 < 1s@100RPS)",
+      "files_created": [
+        "backend/tests/performance/k6_slo_test.js (smoke + 100VU SLO load)",
+        "backend/tests/performance/k6_spike_test.js (0→200VU spike)",
+        "backend/tests/performance/k6_endpoints_test.js (7 endpoint groups)",
+        "docs/design/slo.md (SLO定義書)",
+        ".github/workflows/performance-test.yml (k6-slo job追加)"
+      ]
+    },
+    "phase_9c_kubernetes": {
+      "status": "merged",
+      "issue": "#167",
+      "pr": "#170",
+      "branch": "feat/phase9c-kubernetes",
+      "merged_at": "2026-04-25T07:24:35Z",
+      "merged_sha": "81f7852",
+      "scope": "Kubernetes Helm chart 骨格 + namespace / RBAC / HPA 設定",
+      "files_created": [
+        "charts/servicehub/Chart.yaml",
+        "charts/servicehub/values.yaml",
+        "charts/servicehub/templates/_helpers.tpl",
+        "charts/servicehub/templates/backend-deployment.yaml",
+        "charts/servicehub/templates/backend-service.yaml",
+        "charts/servicehub/templates/frontend-deployment.yaml",
+        "charts/servicehub/templates/frontend-service.yaml",
+        "charts/servicehub/templates/hpa.yaml",
+        "charts/servicehub/templates/ingress.yaml",
+        "charts/servicehub/templates/configmap.yaml",
+        "charts/servicehub/templates/secret.yaml",
+        "charts/servicehub/templates/rbac.yaml",
+        "charts/servicehub/templates/namespace.yaml",
+        "charts/servicehub/templates/serviceaccount.yaml",
+        ".github/workflows/helm-lint.yml",
+        "docs/deployment/kubernetes.md"
+      ],
+      "ci_result": "13 checks pass (Helm Lint ✅ / E2E ✅ / Test & Coverage ✅ / CodeQL ✅)",
+      "local_lint_result": "1 chart(s) linted, 0 chart(s) failed"
+    }
+  },
+  "compact": {
+    "last_pre_compact_at": "2026-06-14T04:40:02.322Z"
+  },
+  "dreaming": {
+    "patterns": [],
+    "curated_memories": [],
+    "recurring_mistakes": [],
+    "last_dreaming_run": null,
+    "dreaming_enabled": false
+  },
+  "completed_issues": [
+    "Legal Tech Phase 2 — 証跡タイムライン + コンプライアンスチェック (PR #232, 2026-05-27)"
+  ],
+  "blocked_issues": [],
+  "learning": {
+    "failure_patterns": [],
+    "success_patterns": [],
+    "usage_history": {
+      "agents": {
+        "feature-dev_code-architect": {
+          "call_count": 1,
+          "last_used": "2026-05-20T00:23:38.939Z",
+          "last_description": "全サイドバーページへのインポート/エクスポートボタン追加 + Docker再ビルド"
+        },
+        "_total_agent_calls": 2,
+        "_last_agent_call_at": "2026-05-20T01:18:19.244Z",
+        "Explore": {
+          "call_count": 1,
+          "last_used": "2026-05-20T01:18:19.244Z",
+          "last_description": "Windows移設に必要な外部依存・設定情報の調査"
+        }
+      }
+    }
+  },
+  "quality_gates": {
+    "lint": {
+      "warning_threshold": 10,
+      "error_threshold": 0
+    },
+    "coverage": {
+      "line_min": 70,
+      "changed_files_min": 80
+    }
+  },
+  "warnings": [
+    {
+      "at": "2026-05-20T00:34:36.357Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 5 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "frontend/src/components/ui/DataActions.tsx",
+        "frontend/src/pages/estimates/EstimatesPage.tsx",
+        "frontend/src/pages/materials/MaterialsPage.tsx",
+        "frontend/src/pages/schedule/SchedulePage.tsx",
+        "frontend/src/pages/subcontractors/SubcontractorsPage.tsx"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-20T00:41:08.913Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 6 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "frontend/src/components/ui/DataActions.tsx",
+        "frontend/src/pages/audit/AuditPage.tsx",
+        "frontend/src/pages/estimates/EstimatesPage.tsx",
+        "frontend/src/pages/materials/MaterialsPage.tsx",
+        "frontend/src/pages/schedule/SchedulePage.tsx",
+        "frontend/src/pages/subcontractors/SubcontractorsPage.tsx"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-20T00:45:21.327Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 6 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "frontend/src/components/ui/DataActions.tsx",
+        "frontend/src/pages/audit/AuditPage.tsx",
+        "frontend/src/pages/estimates/EstimatesPage.tsx",
+        "frontend/src/pages/materials/MaterialsPage.tsx",
+        "frontend/src/pages/schedule/SchedulePage.tsx",
+        "frontend/src/pages/subcontractors/SubcontractorsPage.tsx"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-20T01:05:37.294Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 6 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "frontend/src/components/ui/DataActions.tsx",
+        "frontend/src/pages/audit/AuditPage.tsx",
+        "frontend/src/pages/estimates/EstimatesPage.tsx",
+        "frontend/src/pages/materials/MaterialsPage.tsx",
+        "frontend/src/pages/schedule/SchedulePage.tsx",
+        "frontend/src/pages/subcontractors/SubcontractorsPage.tsx"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-20T01:19:32.517Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 6 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "frontend/src/components/ui/DataActions.tsx",
+        "frontend/src/pages/audit/AuditPage.tsx",
+        "frontend/src/pages/estimates/EstimatesPage.tsx",
+        "frontend/src/pages/materials/MaterialsPage.tsx",
+        "frontend/src/pages/schedule/SchedulePage.tsx",
+        "frontend/src/pages/subcontractors/SubcontractorsPage.tsx"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-20T01:25:38.118Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 6 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "frontend/src/components/ui/DataActions.tsx",
+        "frontend/src/pages/audit/AuditPage.tsx",
+        "frontend/src/pages/estimates/EstimatesPage.tsx",
+        "frontend/src/pages/materials/MaterialsPage.tsx",
+        "frontend/src/pages/schedule/SchedulePage.tsx",
+        "frontend/src/pages/subcontractors/SubcontractorsPage.tsx"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-20T01:49:59.550Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 8 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "backend/app/seeds/seed_demo_data.py",
+        "frontend/src/components/ui/DataActions.tsx",
+        "frontend/src/pages/audit/AuditPage.tsx",
+        "frontend/src/pages/estimates/EstimatesPage.tsx",
+        "frontend/src/pages/materials/MaterialsPage.tsx",
+        "frontend/src/pages/schedule/SchedulePage.tsx",
+        "frontend/src/pages/settings/SettingsPage.tsx",
+        "frontend/src/pages/subcontractors/SubcontractorsPage.tsx"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-20T03:20:20.597Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 19 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "backend/alembic/versions/0011_legal_contracts.py",
+        "backend/app/api/v1/router.py",
+        "backend/app/api/v1/routers/itsm.py",
+        "backend/app/api/v1/routers/legal/__init__.py",
+        "backend/app/api/v1/routers/legal/contracts.py",
+        "backend/app/api/v1/routers/projects.py",
+        "backend/app/core/config.py",
+        "backend/app/models/__init__.py",
+        "backend/app/models/legal.py",
+        "backend/app/repositories/itsm.py",
+        "backend/app/repositories/legal.py",
+        "backend/app/schemas/itsm.py",
+        "backend/app/schemas/legal.py",
+        "backend/app/seeds/seed_demo_data.py",
+        "backend/app/services/itsm_service.py",
+        "backend/app/services/legal/__init__.py",
+        "backend/app/services/legal/anthropic_client.py",
+        "backend/app/services/legal/contracts_service.py",
+        "backend/tests/test_legal.py"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-20T03:45:22.304Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 21 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "backend/alembic/versions/0011_legal_contracts.py",
+        "backend/app/api/v1/router.py",
+        "backend/app/api/v1/routers/itsm.py",
+        "backend/app/api/v1/routers/legal/__init__.py",
+        "backend/app/api/v1/routers/legal/contracts.py",
+        "backend/app/api/v1/routers/projects.py",
+        "backend/app/core/config.py",
+        "backend/app/models/__init__.py",
+        "backend/app/models/legal.py",
+        "backend/app/repositories/itsm.py",
+        "backend/app/repositories/legal.py",
+        "backend/app/schemas/itsm.py",
+        "backend/app/schemas/legal.py",
+        "backend/app/seeds/seed_demo_data.py",
+        "backend/app/services/itsm_service.py",
+        "backend/app/services/legal/__init__.py",
+        "backend/app/services/legal/anthropic_client.py",
+        "backend/app/services/legal/contracts_service.py",
+        "backend/tests/test_legal.py",
+        "frontend/src/api/auth.ts",
+        "frontend/src/pages/settings/SettingsPage.tsx"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-20T03:49:02.451Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 21 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "backend/alembic/versions/0011_legal_contracts.py",
+        "backend/app/api/v1/router.py",
+        "backend/app/api/v1/routers/itsm.py",
+        "backend/app/api/v1/routers/legal/__init__.py",
+        "backend/app/api/v1/routers/legal/contracts.py",
+        "backend/app/api/v1/routers/projects.py",
+        "backend/app/core/config.py",
+        "backend/app/models/__init__.py",
+        "backend/app/models/legal.py",
+        "backend/app/repositories/itsm.py",
+        "backend/app/repositories/legal.py",
+        "backend/app/schemas/itsm.py",
+        "backend/app/schemas/legal.py",
+        "backend/app/seeds/seed_demo_data.py",
+        "backend/app/services/itsm_service.py",
+        "backend/app/services/legal/__init__.py",
+        "backend/app/services/legal/anthropic_client.py",
+        "backend/app/services/legal/contracts_service.py",
+        "backend/tests/test_legal.py",
+        "frontend/src/api/auth.ts",
+        "frontend/src/pages/settings/SettingsPage.tsx"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-20T04:21:07.601Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 20 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "backend/alembic/versions/0011_legal_contracts.py",
+        "backend/app/api/v1/router.py",
+        "backend/app/api/v1/routers/itsm.py",
+        "backend/app/api/v1/routers/legal/__init__.py",
+        "backend/app/api/v1/routers/legal/contracts.py",
+        "backend/app/api/v1/routers/projects.py",
+        "backend/app/core/config.py",
+        "backend/app/models/__init__.py",
+        "backend/app/models/legal.py",
+        "backend/app/repositories/itsm.py",
+        "backend/app/repositories/legal.py",
+        "backend/app/schemas/itsm.py",
+        "backend/app/schemas/legal.py",
+        "backend/app/services/itsm_service.py",
+        "backend/app/services/legal/__init__.py",
+        "backend/app/services/legal/anthropic_client.py",
+        "backend/app/services/legal/contracts_service.py",
+        "backend/tests/test_legal.py",
+        "frontend/src/api/auth.ts",
+        "frontend/src/pages/settings/SettingsPage.tsx"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-29T04:23:53.820Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 20 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "backend/app/api/v1/routers/costs.py",
+        "backend/app/api/v1/routers/daily_reports.py",
+        "backend/app/api/v1/routers/legal/compliance.py",
+        "backend/app/api/v1/routers/legal/contracts.py",
+        "backend/app/api/v1/routers/legal/evidence.py",
+        "backend/app/api/v1/routers/safety.py",
+        "backend/app/core/access_control.py",
+        "backend/app/repositories/legal.py",
+        "backend/app/repositories/project.py",
+        "backend/app/schemas/legal.py",
+        "backend/app/services/legal/contracts_service.py",
+        "backend/app/services/project_service.py",
+        "backend/tests/conftest.py",
+        "backend/tests/integration/test_projects_integration.py",
+        "backend/tests/test_costs.py",
+        "backend/tests/test_daily_reports.py",
+        "backend/tests/test_legal.py",
+        "backend/tests/test_legal_phase3.py",
+        "backend/tests/test_safety.py",
+        "backend/tests/unit/test_access_control.py"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-29T04:30:53.500Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 20 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "backend/app/api/v1/routers/costs.py",
+        "backend/app/api/v1/routers/daily_reports.py",
+        "backend/app/api/v1/routers/legal/compliance.py",
+        "backend/app/api/v1/routers/legal/contracts.py",
+        "backend/app/api/v1/routers/legal/evidence.py",
+        "backend/app/api/v1/routers/safety.py",
+        "backend/app/core/access_control.py",
+        "backend/app/repositories/legal.py",
+        "backend/app/repositories/project.py",
+        "backend/app/schemas/legal.py",
+        "backend/app/services/legal/contracts_service.py",
+        "backend/app/services/project_service.py",
+        "backend/tests/conftest.py",
+        "backend/tests/integration/test_projects_integration.py",
+        "backend/tests/test_costs.py",
+        "backend/tests/test_daily_reports.py",
+        "backend/tests/test_legal.py",
+        "backend/tests/test_legal_phase3.py",
+        "backend/tests/test_safety.py",
+        "backend/tests/unit/test_access_control.py"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-31T13:08:23.379Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 18 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "backend/alembic/versions/0012_legal_evidence_compliance.py",
+        "backend/app/api/v1/routers/costs.py",
+        "backend/app/api/v1/routers/daily_reports.py",
+        "backend/app/api/v1/routers/legal/__init__.py",
+        "backend/app/api/v1/routers/legal/compliance.py",
+        "backend/app/api/v1/routers/legal/evidence.py",
+        "backend/app/api/v1/routers/safety.py",
+        "backend/app/models/legal.py",
+        "backend/app/repositories/legal.py",
+        "backend/app/schemas/legal.py",
+        "backend/app/services/legal/compliance_service.py",
+        "backend/app/services/legal/evidence_service.py",
+        "backend/tests/test_legal_phase2.py",
+        "backend/tests/test_legal_phase3.py",
+        "frontend/e2e/fixtures/api-mocks.ts",
+        "frontend/src/api/legal.ts",
+        "frontend/src/pages/legal/LegalPage.tsx",
+        "frontend/src/pages/settings/SettingsPage.tsx"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-31T13:10:32.025Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 18 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "backend/alembic/versions/0012_legal_evidence_compliance.py",
+        "backend/app/api/v1/routers/costs.py",
+        "backend/app/api/v1/routers/daily_reports.py",
+        "backend/app/api/v1/routers/legal/__init__.py",
+        "backend/app/api/v1/routers/legal/compliance.py",
+        "backend/app/api/v1/routers/legal/evidence.py",
+        "backend/app/api/v1/routers/safety.py",
+        "backend/app/models/legal.py",
+        "backend/app/repositories/legal.py",
+        "backend/app/schemas/legal.py",
+        "backend/app/services/legal/compliance_service.py",
+        "backend/app/services/legal/evidence_service.py",
+        "backend/tests/test_legal_phase2.py",
+        "backend/tests/test_legal_phase3.py",
+        "frontend/e2e/fixtures/api-mocks.ts",
+        "frontend/src/api/legal.ts",
+        "frontend/src/pages/legal/LegalPage.tsx",
+        "frontend/src/pages/settings/SettingsPage.tsx"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-31T13:16:35.503Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 18 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "backend/alembic/versions/0012_legal_evidence_compliance.py",
+        "backend/app/api/v1/routers/costs.py",
+        "backend/app/api/v1/routers/daily_reports.py",
+        "backend/app/api/v1/routers/legal/__init__.py",
+        "backend/app/api/v1/routers/legal/compliance.py",
+        "backend/app/api/v1/routers/legal/evidence.py",
+        "backend/app/api/v1/routers/safety.py",
+        "backend/app/models/legal.py",
+        "backend/app/repositories/legal.py",
+        "backend/app/schemas/legal.py",
+        "backend/app/services/legal/compliance_service.py",
+        "backend/app/services/legal/evidence_service.py",
+        "backend/tests/test_legal_phase2.py",
+        "backend/tests/test_legal_phase3.py",
+        "frontend/e2e/fixtures/api-mocks.ts",
+        "frontend/src/api/legal.ts",
+        "frontend/src/pages/legal/LegalPage.tsx",
+        "frontend/src/pages/settings/SettingsPage.tsx"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-31T13:49:32.736Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 30 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "backend/alembic/versions/0012_legal_evidence_compliance.py",
+        "backend/app/api/v1/routers/costs.py",
+        "backend/app/api/v1/routers/daily_reports.py",
+        "backend/app/api/v1/routers/legal/__init__.py",
+        "backend/app/api/v1/routers/legal/compliance.py",
+        "backend/app/api/v1/routers/legal/contracts.py",
+        "backend/app/api/v1/routers/legal/evidence.py",
+        "backend/app/api/v1/routers/safety.py",
+        "backend/app/core/access_control.py",
+        "backend/app/models/legal.py",
+        "backend/app/repositories/legal.py",
+        "backend/app/repositories/project.py",
+        "backend/app/schemas/legal.py",
+        "backend/app/services/legal/compliance_service.py",
+        "backend/app/services/legal/contracts_service.py",
+        "backend/app/services/legal/evidence_service.py",
+        "backend/app/services/project_service.py",
+        "backend/tests/conftest.py",
+        "backend/tests/integration/test_projects_integration.py",
+        "backend/tests/test_costs.py",
+        "backend/tests/test_daily_reports.py",
+        "backend/tests/test_legal.py",
+        "backend/tests/test_legal_phase2.py",
+        "backend/tests/test_legal_phase3.py",
+        "backend/tests/test_safety.py",
+        "backend/tests/unit/test_access_control.py",
+        "frontend/e2e/fixtures/api-mocks.ts",
+        "frontend/src/api/legal.ts",
+        "frontend/src/pages/legal/LegalPage.tsx",
+        "frontend/src/pages/settings/SettingsPage.tsx"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-31T14:02:19.372Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 18 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "backend/app/api/v1/routers/costs.py",
+        "backend/app/api/v1/routers/daily_reports.py",
+        "backend/app/api/v1/routers/legal/compliance.py",
+        "backend/app/api/v1/routers/legal/contracts.py",
+        "backend/app/api/v1/routers/legal/evidence.py",
+        "backend/app/api/v1/routers/safety.py",
+        "backend/app/core/access_control.py",
+        "backend/app/repositories/legal.py",
+        "backend/app/repositories/project.py",
+        "backend/app/services/legal/contracts_service.py",
+        "backend/app/services/project_service.py",
+        "backend/tests/conftest.py",
+        "backend/tests/integration/test_projects_integration.py",
+        "backend/tests/test_costs.py",
+        "backend/tests/test_daily_reports.py",
+        "backend/tests/test_legal.py",
+        "backend/tests/test_safety.py",
+        "backend/tests/unit/test_access_control.py"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-31T14:08:54.762Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 30 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "backend/alembic/versions/0012_legal_evidence_compliance.py",
+        "backend/app/api/v1/routers/costs.py",
+        "backend/app/api/v1/routers/daily_reports.py",
+        "backend/app/api/v1/routers/legal/__init__.py",
+        "backend/app/api/v1/routers/legal/compliance.py",
+        "backend/app/api/v1/routers/legal/contracts.py",
+        "backend/app/api/v1/routers/legal/evidence.py",
+        "backend/app/api/v1/routers/safety.py",
+        "backend/app/core/access_control.py",
+        "backend/app/models/legal.py",
+        "backend/app/repositories/legal.py",
+        "backend/app/repositories/project.py",
+        "backend/app/schemas/legal.py",
+        "backend/app/services/legal/compliance_service.py",
+        "backend/app/services/legal/contracts_service.py",
+        "backend/app/services/legal/evidence_service.py",
+        "backend/app/services/project_service.py",
+        "backend/tests/conftest.py",
+        "backend/tests/integration/test_projects_integration.py",
+        "backend/tests/test_costs.py",
+        "backend/tests/test_daily_reports.py",
+        "backend/tests/test_legal.py",
+        "backend/tests/test_legal_phase2.py",
+        "backend/tests/test_legal_phase3.py",
+        "backend/tests/test_safety.py",
+        "backend/tests/unit/test_access_control.py",
+        "frontend/e2e/fixtures/api-mocks.ts",
+        "frontend/src/api/legal.ts",
+        "frontend/src/pages/legal/LegalPage.tsx",
+        "frontend/src/pages/settings/SettingsPage.tsx"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-31T14:19:53.364Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 19 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "backend/app/api/v1/routers/costs.py",
+        "backend/app/api/v1/routers/daily_reports.py",
+        "backend/app/api/v1/routers/legal/compliance.py",
+        "backend/app/api/v1/routers/legal/contracts.py",
+        "backend/app/api/v1/routers/legal/evidence.py",
+        "backend/app/api/v1/routers/projects.py",
+        "backend/app/api/v1/routers/safety.py",
+        "backend/app/core/access_control.py",
+        "backend/app/repositories/legal.py",
+        "backend/app/repositories/project.py",
+        "backend/app/services/legal/contracts_service.py",
+        "backend/app/services/project_service.py",
+        "backend/tests/conftest.py",
+        "backend/tests/integration/test_projects_integration.py",
+        "backend/tests/test_costs.py",
+        "backend/tests/test_daily_reports.py",
+        "backend/tests/test_legal.py",
+        "backend/tests/test_safety.py",
+        "backend/tests/unit/test_access_control.py"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-31T14:25:42.776Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 19 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "backend/app/api/v1/routers/costs.py",
+        "backend/app/api/v1/routers/daily_reports.py",
+        "backend/app/api/v1/routers/legal/compliance.py",
+        "backend/app/api/v1/routers/legal/contracts.py",
+        "backend/app/api/v1/routers/legal/evidence.py",
+        "backend/app/api/v1/routers/projects.py",
+        "backend/app/api/v1/routers/safety.py",
+        "backend/app/core/access_control.py",
+        "backend/app/repositories/legal.py",
+        "backend/app/repositories/project.py",
+        "backend/app/services/legal/contracts_service.py",
+        "backend/app/services/project_service.py",
+        "backend/tests/conftest.py",
+        "backend/tests/integration/test_projects_integration.py",
+        "backend/tests/test_costs.py",
+        "backend/tests/test_daily_reports.py",
+        "backend/tests/test_legal.py",
+        "backend/tests/test_safety.py",
+        "backend/tests/unit/test_access_control.py"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-31T14:30:30.113Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 21 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "backend/app/api/v1/routers/costs.py",
+        "backend/app/api/v1/routers/daily_reports.py",
+        "backend/app/api/v1/routers/legal/compliance.py",
+        "backend/app/api/v1/routers/legal/contracts.py",
+        "backend/app/api/v1/routers/legal/evidence.py",
+        "backend/app/api/v1/routers/projects.py",
+        "backend/app/api/v1/routers/safety.py",
+        "backend/app/core/access_control.py",
+        "backend/app/repositories/legal.py",
+        "backend/app/repositories/project.py",
+        "backend/app/schemas/legal.py",
+        "backend/app/services/legal/contracts_service.py",
+        "backend/app/services/project_service.py",
+        "backend/tests/conftest.py",
+        "backend/tests/integration/test_projects_integration.py",
+        "backend/tests/test_costs.py",
+        "backend/tests/test_daily_reports.py",
+        "backend/tests/test_legal.py",
+        "backend/tests/test_legal_phase3.py",
+        "backend/tests/test_safety.py",
+        "backend/tests/unit/test_access_control.py"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-31T14:36:11.301Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 19 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "backend/app/api/v1/routers/costs.py",
+        "backend/app/api/v1/routers/daily_reports.py",
+        "backend/app/api/v1/routers/legal/compliance.py",
+        "backend/app/api/v1/routers/legal/contracts.py",
+        "backend/app/api/v1/routers/legal/evidence.py",
+        "backend/app/api/v1/routers/projects.py",
+        "backend/app/api/v1/routers/safety.py",
+        "backend/app/core/access_control.py",
+        "backend/app/repositories/legal.py",
+        "backend/app/repositories/project.py",
+        "backend/app/services/legal/contracts_service.py",
+        "backend/app/services/project_service.py",
+        "backend/tests/conftest.py",
+        "backend/tests/integration/test_projects_integration.py",
+        "backend/tests/test_costs.py",
+        "backend/tests/test_daily_reports.py",
+        "backend/tests/test_legal.py",
+        "backend/tests/test_safety.py",
+        "backend/tests/unit/test_access_control.py"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-31T14:51:53.127Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 20 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "backend/app/api/v1/routers/costs.py",
+        "backend/app/api/v1/routers/daily_reports.py",
+        "backend/app/api/v1/routers/legal/compliance.py",
+        "backend/app/api/v1/routers/legal/contracts.py",
+        "backend/app/api/v1/routers/legal/evidence.py",
+        "backend/app/api/v1/routers/projects.py",
+        "backend/app/api/v1/routers/safety.py",
+        "backend/app/core/access_control.py",
+        "backend/app/repositories/legal.py",
+        "backend/app/repositories/project.py",
+        "backend/app/services/legal/contracts_service.py",
+        "backend/app/services/project_service.py",
+        "backend/tests/conftest.py",
+        "backend/tests/integration/test_legal_integration.py",
+        "backend/tests/integration/test_projects_integration.py",
+        "backend/tests/test_costs.py",
+        "backend/tests/test_daily_reports.py",
+        "backend/tests/test_legal.py",
+        "backend/tests/test_safety.py",
+        "backend/tests/unit/test_access_control.py"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-31T15:07:23.517Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 5 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "backend/app/api/v1/routers/projects.py",
+        "backend/tests/conftest.py",
+        "backend/tests/integration/test_legal_integration.py",
+        "backend/tests/integration/test_projects_integration.py",
+        "backend/tests/test_legal.py"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-31T15:17:05.269Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 2 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "backend/tests/integration/test_legal_integration.py",
+        "backend/tests/integration/test_projects_integration.py"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-31T15:23:13.210Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 5 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "backend/app/api/v1/routers/projects.py",
+        "backend/tests/conftest.py",
+        "backend/tests/integration/test_legal_integration.py",
+        "backend/tests/integration/test_projects_integration.py",
+        "backend/tests/test_legal.py"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-06-14T04:16:01.031Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 12 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "backend/app/api/v1/routers/dashboard.py",
+        "backend/app/api/v1/routers/knowledge.py",
+        "backend/app/api/v1/routers/notifications.py",
+        "backend/app/api/v1/routers/photos.py",
+        "backend/app/schemas/legal.py",
+        "backend/app/services/dashboard_service.py",
+        "backend/tests/integration/test_legal_integration.py",
+        "backend/tests/test_legal_phase3b.py",
+        "frontend/src/api/client.ts",
+        "frontend/src/mocks/data.ts",
+        "frontend/src/mocks/resolver.ts",
+        "frontend/vite.config.ts"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-06-14T04:22:23.459Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 11 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "backend/app/api/v1/routers/dashboard.py",
+        "backend/app/api/v1/routers/knowledge.py",
+        "backend/app/api/v1/routers/notifications.py",
+        "backend/app/api/v1/routers/photos.py",
+        "backend/app/schemas/legal.py",
+        "backend/app/services/dashboard_service.py",
+        "backend/tests/test_legal_phase3b.py",
+        "frontend/src/api/client.ts",
+        "frontend/src/mocks/data.ts",
+        "frontend/src/mocks/resolver.ts",
+        "frontend/vite.config.ts"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-06-14T04:33:26.168Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 11 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "backend/app/api/v1/routers/dashboard.py",
+        "backend/app/api/v1/routers/knowledge.py",
+        "backend/app/api/v1/routers/notifications.py",
+        "backend/app/api/v1/routers/photos.py",
+        "backend/app/schemas/legal.py",
+        "backend/app/services/dashboard_service.py",
+        "backend/tests/test_legal_phase3b.py",
+        "frontend/src/api/client.ts",
+        "frontend/src/mocks/data.ts",
+        "frontend/src/mocks/resolver.ts",
+        "frontend/vite.config.ts"
+      ],
+      "truncated": false
+    }
+  ]
+}

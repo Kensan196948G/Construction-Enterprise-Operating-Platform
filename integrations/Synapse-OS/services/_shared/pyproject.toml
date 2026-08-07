@@ -1,0 +1,16 @@
+[project]
+name = "synapse-shared"
+version = "0.0.1"
+description = "Synapse-OS shared contracts (IDs, Enums, Object/Audit base) for Sprint 0"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.7,<3",
+]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["synapse_shared*"]

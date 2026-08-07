@@ -1,0 +1,74 @@
+# ==============================================================================
+# Construction-Enterprise-OS — Windows Override for Docker Compose
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.windows.yml up -d
+#
+# Port conflict resolutions are handled via .env.windows (environment variables):
+#   POSTGRES_HOST_PORT=15440  (5432 is occupied by helpdesk-autostart-postgres-1)
+#   AUTH_HOST_PORT=18100      (8000 is occupied by itsm-backend)
+#   GIS_HOST_PORT=18103       (8003 is occupied by wmcdss-backend)
+#
+# This file handles:
+#   - Web/Mobile healthcheck port fix (was broken: checked 3000, service runs on 3100)
+#   - Nginx reverse proxy as single entry point (port 3200)
+#   - NEXT_PUBLIC_API_GATEWAY set to Windows host IP
+#
+# Host: 172.23.10.251 (Ethernet)
+# Access URLs:
+#   WebUI (推奨):  http://172.23.10.251:3200  (via Nginx)
+#   WebUI (直接):  http://172.23.10.251:3100
+#   Mobile:        http://172.23.10.251:3101
+#   API Gateway:   http://172.23.10.251:9000
+# ==============================================================================
+
+services:
+  # ============================================================
+  # 🌐 Frontend — fix healthcheck port (was checking 3000, app runs on 3100)
+  # ============================================================
+  web:
+    environment:
+      API_GATEWAY: http://gateway:9000
+      NEXT_PUBLIC_API_GATEWAY: http://172.23.10.251:9000
+      PORT: "3100"
+      HOSTNAME: "0.0.0.0"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://localhost:3100/dashboard', r => process.exit(r.statusCode < 400 ? 0 : 1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  mobile:
+    environment:
+      API_GATEWAY: http://gateway:9000
+      NEXT_PUBLIC_API_GATEWAY: http://172.23.10.251:9000
+      PORT: "3101"
+
+  # ============================================================
+  # 🚪 Nginx — single entry point (port 3200)
+  # ============================================================
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: construction-os-nginx
+    ports:
+      - "3200:80"
+    volumes:
+      - ./infra/nginx/nginx.windows.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - web
+      - gateway
+    restart: unless-stopped
+    networks:
+      - construction-net
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

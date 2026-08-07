@@ -1,0 +1,42 @@
+#!/bin/sh
+# postinst — post-installation script for cdx-agent
+
+set -e
+
+case "$1" in
+    configure)
+        # Create system user if it doesn't exist
+        if ! getent passwd cdx-agent > /dev/null 2>&1; then
+            useradd --system --no-create-home \
+                    --home /var/lib/cdx-agent \
+                    --shell /bin/false \
+                    --comment "Construction DX OS Agent" \
+                    cdx-agent
+        fi
+
+        # Ensure spool directory exists with correct ownership
+        install -d -m 750 -o cdx-agent -g cdx-agent /var/lib/cdx-agent
+        install -d -m 750 -o cdx-agent -g cdx-agent /var/lib/cdx-agent/spool
+
+        # Ensure config directory exists
+        install -d -m 750 -o root -g cdx-agent /etc/cdx-agent
+
+        # Load AppArmor profile if apparmor is available
+        if command -v apparmor_parser > /dev/null 2>&1 && \
+           [ -d /etc/apparmor.d ]; then
+            apparmor_parser -r /etc/apparmor.d/usr.bin.cdx-agent || true
+        fi
+        ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+        ;;
+
+    *)
+        echo "postinst: unrecognised argument '$1'" >&2
+        exit 1
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0

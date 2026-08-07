@@ -26,16 +26,16 @@
 
 ## 3. Plugins / Skills / MCP 対応表
 
-| 目的                           | 利用可能なもの                            | 使用可否         | 使用結果・未使用理由                                                                                                                        |
-| ------------------------------ | ----------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| GitHub（PR/Issue/CI/リリース） | gh CLI・GitHub MCP（app UI リソース）     | ✅ gh CLI を使用 | 認証・branch protection・CI・release を確認                                                                                                 |
+| 目的                           | 利用可能なもの                            | 使用可否         | 使用結果・未使用理由                                                                                                                                                                      |
+| ------------------------------ | ----------------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GitHub（PR/Issue/CI/リリース） | gh CLI・GitHub MCP（app UI リソース）     | ✅ gh CLI を使用 | 認証・branch protection・CI・release を確認                                                                                                                                               |
 | セキュリティ監査               | codex-security skills（security-scan 等） | ◯ 評価のみ       | security-scan は subagent 必須の多段スキャンのためスロット上限で実行不可。既存 scan-20260806（全指摘解決済み）+ v0.8.0 実装のコード/テストレビューで代替（exhaustive 相当とは主張しない） |
-| 検証ループ                     | verify-app（ユーザー .claude/skills）     | ✅ 準用          | 実装後の verify/build/audit ゲートとして使用                                                                                                |
-| 知識グラフ                     | memory://knowledge-graph（MCP リソース）  | ◯ 参照可         | 構造化検索ツールが本セッションに無いため、必要時のみ参照                                                                                    |
-| Cloudflare                     | cloudflare 系 skills                      | 未使用           | 本セッションに Cloudflare MCP ツール/資格情報が露出していない。Tunnel は実機 systemd で稼働中。変更時は local cloudflared + docs 経由で実施 |
-| Neon                           | neon-postgres 系 skills                   | 未使用           | MCP ツールなし。WebUI アクセスログは実機 env 経由で稼働中。変更時は docs + SQL 確認で実施                                                   |
-| コード調査                     | codebase-memory-mcp（AGENTS.md 記載）     | ◯                | `search_graph` 等の MCP ツールは本セッションに未露出。grep/rg で代替                                                                        |
-| デザイン                       | imagegen / design 系                      | 未使用           | 今回のスコープではビットマップ生成不要                                                                                                      |
+| 検証ループ                     | verify-app（ユーザー .claude/skills）     | ✅ 準用          | 実装後の verify/build/audit ゲートとして使用                                                                                                                                              |
+| 知識グラフ                     | memory://knowledge-graph（MCP リソース）  | ◯ 参照可         | 構造化検索ツールが本セッションに無いため、必要時のみ参照                                                                                                                                  |
+| Cloudflare                     | cloudflare 系 skills                      | 未使用           | 本セッションに Cloudflare MCP ツール/資格情報が露出していない。Tunnel は実機 systemd で稼働中。変更時は local cloudflared + docs 経由で実施                                               |
+| Neon                           | neon-postgres 系 skills                   | 未使用           | MCP ツールなし。WebUI アクセスログは実機 env 経由で稼働中。変更時は docs + SQL 確認で実施                                                                                                 |
+| コード調査                     | codebase-memory-mcp（AGENTS.md 記載）     | ◯                | `search_graph` 等の MCP ツールは本セッションに未露出。grep/rg で代替                                                                                                                      |
+| デザイン                       | imagegen / design 系                      | 未使用           | 今回のスコープではビットマップ生成不要                                                                                                                                                    |
 
 ## 4. Monitor フェーズの初期証跡
 
@@ -132,12 +132,12 @@
 
 ### 検証結果（2026-08-07 06:08 JST）
 
-| ゲート | 結果 |
-|---|---|
-| `pnpm run verify` | ✅ 302/302 pass（format / openapi:check / typecheck / lint / test） |
-| `pnpm run build` | ✅ pass |
-| `pnpm audit --audit-level=high` | ✅ 0 vulnerabilities |
-| 本番実測（v0.8.0 時点） | API 0.8.0・WebUI 0.8.0・HSTS/X-Request-Id 付与・コンテナ hardening 適用済み・cron 4 本稼働 |
+| ゲート                          | 結果                                                                                       |
+| ------------------------------- | ------------------------------------------------------------------------------------------ |
+| `pnpm run verify`               | ✅ 302/302 pass（format / openapi:check / typecheck / lint / test）                        |
+| `pnpm run build`                | ✅ pass                                                                                    |
+| `pnpm audit --audit-level=high` | ✅ 0 vulnerabilities                                                                       |
+| 本番実測（v0.8.0 時点）         | API 0.8.0・WebUI 0.8.0・HSTS/X-Request-Id 付与・コンテナ hardening 適用済み・cron 4 本稼働 |
 
 ### リリース・本番デプロイ（2026-08-07 06:14 JST）
 
@@ -152,3 +152,28 @@
    WebUI healthz = 0.8.1
 7. 残課題（運用管理対象）: Webhook 宛先設定・Cloudflare エッジ HSTS・オフサイトバックアップ・
    四半期復元試験・SLI 計測・GitHub Actions の Node 20 アクション更新・P3 バックログ
+
+## 10. 5 リポジトリ統合（2026-08-07 新タスク）
+
+### P0: ソース統合（PR #22 / feat/integration-source-import）
+
+- `integrations/` に 5 リポジトリ（ServiceHub / Enterprise-OS / OnePlatform / DX-OS / Synapse）の
+  現行スナップショット（.git 除く・秘密情報スキャン済み）を取り込み
+- `docs/integration/INTEGRATION_PLAN.md`・`FEATURE_INVENTORY.md`・`NOTICE.md` を作成
+- `eslint.config.js` / `AGENTS.md` / `.gitignore` を統合ソース保全用に調整
+- verify 302/302 pass（統合ソースは lint/typecheck 対象外）
+
+### P2: ワークフローインスタンス（L-02 / Y-04 / E-04）実装
+
+- `src/domain/workflow-instance.ts`（pending→approved/rejected/cancelled・不変条件）
+- リポジトリ: in-memory / file / SQLite（migration 006 `workflow_instances`）
+- API: GET 一覧 / POST 作成 / POST decision / POST cancel（workflow:read|write・テナントスコープ・監査記録）
+- OpenAPI 生成・README・CHANGELOG・FEATURE_INVENTORY を更新
+- テスト 13 件追加 → **315/315 pass**・build・audit 0
+
+### 次フェーズ
+
+- P1: CEOP ゲートウェイ（統合サービス向けリバースプロキシ/アダプタ）
+- P2 残: AI Gateway 統制（Y-09 / L-07）、端末エージェント受信（D-01〜D-03 / L-05）
+- P3: ServiceHub 業務モジュール移植（案件・日報・写真・原価・契約・ITSM）
+- P5/P6: パリティ検証・本番切替・**Y/N 確認後の旧リポジトリ削除**

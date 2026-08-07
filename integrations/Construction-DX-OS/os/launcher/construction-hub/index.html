@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Construction Hub — 建設DX OS</title>
+    <!-- cdx-server-meta -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="hub-header">
+        <div class="brand">
+            <span class="brand-mark">🏗️</span>
+            <h1>Construction Hub</h1>
+        </div>
+        <nav class="profile-tabs" id="profile-tabs">
+            <button class="tab active" data-profile="standard">📁 本社/支店</button>
+            <button class="tab" data-profile="field">📷 現場</button>
+            <button class="tab" data-profile="kiosk">🖥️ 共用端末</button>
+        </nav>
+        <div class="status">
+            <span class="status-dot ok"></span>
+            <span id="status-text">接続: ローカル</span>
+        </div>
+    </header>
+
+    <main class="hub-grid" id="hub-grid">
+        <!-- Cards rendered by app.js -->
+    </main>
+
+    <footer class="hub-footer">
+        <span>建設DX OS PoC — Phase 1</span>
+        <span id="agent-version">cdx-agent: --</span>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

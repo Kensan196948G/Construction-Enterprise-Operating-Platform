@@ -19,6 +19,11 @@ import type { Role, RoleId } from "../../domain/role.ts";
 import type { User, UserId } from "../../domain/user.ts";
 import type { Workflow, WorkflowId, WorkflowStatus, WorkflowType } from "../../domain/workflow.ts";
 import type {
+  WorkflowInstance,
+  WorkflowInstanceId,
+  WorkflowInstanceStatus,
+} from "../../domain/workflow-instance.ts";
+import type {
   ApplicationRepository,
   DeviceRepository,
   OrganizationRepository,
@@ -27,6 +32,7 @@ import type {
   RoleRepository,
   UserRepository,
   WorkflowRepository,
+  WorkflowInstanceRepository,
 } from "../ports.ts";
 import { BaseFileRepository, ensureDataDir } from "./base-file-repository.ts";
 
@@ -149,6 +155,26 @@ class FileWorkflowRepository extends BaseFileRepository<Workflow> implements Wor
   }
 }
 
+class FileWorkflowInstanceRepository
+  extends BaseFileRepository<WorkflowInstance>
+  implements WorkflowInstanceRepository
+{
+  override async findById(id: WorkflowInstanceId): Promise<WorkflowInstance | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: WorkflowInstanceId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByOrganization(orgId: string): Promise<readonly WorkflowInstance[]> {
+    const all = await this.findAll();
+    return all.filter((w) => (w.organizationId as string) === (orgId as string));
+  }
+  async findByStatus(status: WorkflowInstanceStatus): Promise<readonly WorkflowInstance[]> {
+    const all = await this.findAll();
+    return all.filter((w) => w.status === status);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Factory
 // ---------------------------------------------------------------------------
@@ -167,5 +193,6 @@ export async function createFileRepositories(dataDir: string): Promise<Repositor
     applications: new FileApplicationRepository(dataDir, "applications.json"),
     policies: new FilePolicyRepository(dataDir, "policies.json"),
     workflows: new FileWorkflowRepository(dataDir, "workflows.json"),
+    workflowInstances: new FileWorkflowInstanceRepository(dataDir, "workflow-instances.json"),
   };
 }

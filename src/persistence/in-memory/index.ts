@@ -12,6 +12,7 @@ export { InMemoryPolicyRepository } from "./policy-repository.ts";
 export { InMemoryRoleRepository } from "./role-repository.ts";
 export { InMemoryUserRepository } from "./user-repository.ts";
 export { InMemoryWorkflowRepository } from "./workflow-repository.ts";
+export { InMemoryWorkflowInstanceRepository } from "./workflow-instance-repository.ts";
 
 import type { Repositories } from "../ports.ts";
 import { InMemoryApplicationRepository } from "./application-repository.ts";
@@ -21,6 +22,7 @@ import { InMemoryPolicyRepository } from "./policy-repository.ts";
 import { InMemoryRoleRepository } from "./role-repository.ts";
 import { InMemoryUserRepository } from "./user-repository.ts";
 import { InMemoryWorkflowRepository } from "./workflow-repository.ts";
+import { InMemoryWorkflowInstanceRepository } from "./workflow-instance-repository.ts";
 
 /**
  * Construct a fresh set of empty in-memory repositories wired together as a
@@ -36,5 +38,6 @@ export function createInMemoryRepositories(): Repositories {
     applications: new InMemoryApplicationRepository(),
     policies: new InMemoryPolicyRepository(),
     workflows: new InMemoryWorkflowRepository(),
+    workflowInstances: new InMemoryWorkflowInstanceRepository(),
   };
 }

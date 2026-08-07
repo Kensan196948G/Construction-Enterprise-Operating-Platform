@@ -1,0 +1,74 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+*.egg
+.eggs/
+build/dist/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+.tox/
+
+# Node / Web UI
+node_modules/
+npm-debug.log*
+.pnpm-debug.log*
+.yarn/
+
+# Debian live-build artifacts
+build/live-build/binary/
+build/live-build/cache/
+build/live-build/chroot/
+build/live-build/.build/
+build/live-build/auto/
+build/live-build/*.iso
+build/live-build/*.img
+build/live-build/*.squashfs
+build/live-build/*.log
+
+# IDE / Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+# macOS resource forks / metadata
+._*
+
+# Secrets / local state
+*.env
+.env.local
+.env.*.local
+.env.prod
+secrets/
+*.pem
+*.key
+
+# ClaudeOS / Claude Code user-local runtime
+# Contains machine-specific paths; per-user overrides go here.
+# To share team settings later: `!.claude/settings.json` etc.
+.claude/
+claudeos/runtime/
+claudeos/cache/
+server/api/coverage.json
+
+# Generic AI agent skills (non-project-specific — lives in ~/.claude globally)
+.agents/skills/
+
+# Playwright MCP local captures
+.playwright-mcp/
+
+# Dev-session screenshots (admin-spa-*.png at repo root)
+/admin-spa-*.png

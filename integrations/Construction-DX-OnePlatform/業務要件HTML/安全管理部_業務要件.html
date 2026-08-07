@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>安全管理部_業務要件 | みらい建設工業 統合建設DX基盤</title>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
+
+  :root {
+    --bg:               #ffffff;
+    --bg-surface:       #f8fafc;
+    --bg-card:          #ffffff;
+    --text:             #1e293b;
+    --text-secondary:   #64748b;
+    --text-muted:       #94a3b8;
+    --accent:           #2563eb;
+    --accent-light:     #dbeafe;
+    --accent2:          #0ea5e9;
+    --accent3:          #7c3aed;
+    --accent-red:       #f43f5e;
+    --border:           #e2e8f0;
+    --border-light:     #f1f5f9;
+    --shadow:           0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-lg:        0 4px 16px rgba(0,0,0,0.06);
+    --header-bg:        #ffffff;
+    --header-text:      #0f172a;
+    --header-sub:       #475569;
+    --header-shadow:    0 1px 4px rgba(0,0,0,0.08), 0 1px 0 #e2e8f0;
+    --header-border:    #e2e8f0;
+    --nav-link:         #475569;
+    --nav-hover-bg:     rgba(37,99,235,0.08);
+    --nav-active-bg:    rgba(37,99,235,0.12);
+    --nav-active-text:  #2563eb;
+    --table-head-bg:    linear-gradient(135deg, #2563eb, #0ea5e9);
+    --table-head-text:  #ffffff;
+    --table-stripe:     #f8fafc;
+    --table-hover:      #eff6ff;
+    --code-bg:          #f1f5f9;
+    --code-color:       #2563eb;
+    --pre-bg:           #1e293b;
+    --pre-color:        #e2e8f0;
+    --section-bg:       #f0f9ff;
+    --quote-bg:         #fef2f2;
+    --quote-border:     #f43f5e;
+    --toggle-bg:        #e2e8f0;
+    --toggle-dot:       #ffffff;
+    --toggle-active-bg: #334155;
+    --toggle-active-dot:#f59e0b;
+    --btn-bg:           #2563eb;
+    --btn-text:         #ffffff;
+    --btn-hover:        #1d4ed8;
+  }
+
+  [data-theme="dark"] {
+    --bg:               #0f172a;
+    --bg-surface:       #1e293b;
+    --bg-card:          #1e293b;
+    --text:             #e2e8f0;
+    --text-secondary:   #94a3b8;
+    --text-muted:       #64748b;
+    --accent:           #60a5fa;
+    --accent-light:     #1e3a5f;
+    --accent2:          #38bdf8;
+    --accent3:          #a78bfa;
+    --accent-red:       #fb7185;
+    --border:           #334155;
+    --border-light:     #1e293b;
+    --shadow:           0 1px 3px rgba(0,0,0,0.3);
+    --shadow-lg:        0 4px 16px rgba(0,0,0,0.4);
+    --header-bg:        #0f172a;
+    --header-text:      #f1f5f9;
+    --header-sub:       #94a3b8;
+    --header-shadow:    0 1px 0 #1e293b, 0 4px 16px rgba(0,0,0,0.5);
+    --header-border:    #334155;
+    --nav-link:         rgba(255,255,255,0.7);
+    --nav-hover-bg:     rgba(255,255,255,0.1);
+    --nav-active-bg:    rgba(255,255,255,0.15);
+    --nav-active-text:  #60a5fa;
+    --table-head-bg:    linear-gradient(135deg, #1e3a5f, #0c4a6e);
+    --table-head-text:  #e2e8f0;
+    --table-stripe:     #1a2536;
+    --table-hover:      #253347;
+    --code-bg:          #334155;
+    --code-color:       #60a5fa;
+    --pre-bg:           #0b1120;
+    --pre-color:        #94a3b8;
+    --section-bg:       #172033;
+    --quote-bg:         #2a1520;
+    --quote-border:     #fb7185;
+    --toggle-bg:        #334155;
+    --toggle-dot:       #f59e0b;
+    --toggle-active-bg: #334155;
+    --toggle-active-dot:#f59e0b;
+    --btn-bg:           #2563eb;
+    --btn-text:         #ffffff;
+    --btn-hover:        #3b82f6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Noto Sans JP', 'Meiryo', 'Hiragino Sans', sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.85;
+    transition: background 0.35s, color 0.35s;
+  }
+
+  /* ── Header ── */
+  .header-bar {
+    background: var(--header-bg);
+    padding: 22px 36px 16px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: var(--header-shadow);
+    display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+    transition: background 0.35s, box-shadow 0.35s;
+    border-bottom: 1px solid var(--header-border);
+  }
+  .header-main { flex: 1; min-width: 280px; }
+  .header-bar h1 {
+    font-size: 1.55em; font-weight: 700; letter-spacing: 0.04em;
+    color: var(--header-text);
+    transition: color 0.35s;
+  }
+  .header-bar .subtitle {
+    font-size: 0.82em; margin-top: 3px;
+    color: var(--header-sub);
+    font-weight: 400; letter-spacing: 0.02em;
+    transition: color 0.35s;
+  }
+  .header-nav {
+    width: 100%; margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid var(--header-border);
+    display: flex; flex-wrap: wrap; gap: 3px;
+    transition: border-color 0.35s;
+  }
+  .header-nav a {
+    color: var(--nav-link); text-decoration: none;
+    padding: 4px 11px; border-radius: 6px;
+    font-size: 0.76em; transition: all 0.2s;
+  }
+  .header-nav a:hover { background: var(--nav-hover-bg); color: var(--nav-active-text); }
+  .header-nav a.active { background: var(--nav-active-bg); color: var(--nav-active-text); font-weight: 600; }
+
+  /* ── Toggle ── */
+  .toggle-wrap { display: flex; align-items: center; flex-shrink: 0; gap: 7px; }
+  .theme-label { font-size: 0.72em; color: var(--text-secondary); white-space: nowrap; transition: color 0.35s; }
+  .theme-toggle {
+    position: relative; width: 52px; height: 26px;
+    background: var(--toggle-bg); border-radius: 13px;
+    cursor: pointer; border: 2px solid var(--border);
+    outline: none; transition: all 0.3s;
+  }
+  .theme-toggle::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--accent);
+    transition: transform 0.3s, background 0.3s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+  [data-theme="dark"] .theme-toggle { background: var(--toggle-active-bg); border-color: #475569; }
+  [data-theme="dark"] .theme-toggle::after { transform: translateX(26px); background: var(--toggle-active-dot); }
+
+  /* ── Container ── */
+  .container { max-width: 1140px; margin: 28px auto; padding: 0 24px; }
+
+  /* ── Cards ── */
+  .content, .idx-card {
+    background: var(--bg-card); border-radius: 14px;
+    padding: 36px 42px; box-shadow: var(--shadow-lg);
+    margin: 20px 0; border: 1px solid var(--border-light);
+    transition: background 0.35s, border 0.35s, box-shadow 0.35s;
+  }
+
+  /* ── Typography ── */
+  h1 { color: var(--accent); font-size: 1.65em; margin: 28px 0 14px; padding-bottom: 10px; border-bottom: 3px solid var(--accent); }
+  h2 {
+    color: var(--text); font-size: 1.3em; margin: 26px 0 12px;
+    padding: 10px 0 10px 16px;
+    border-left: 4px solid var(--accent2);
+    background: var(--section-bg); border-radius: 0 8px 8px 0;
+    transition: background 0.35s;
+  }
+  h3 { color: var(--accent); font-size: 1.1em; margin: 20px 0 10px; }
+  h4 { color: var(--accent3); font-size: 1.0em; margin: 16px 0 8px; }
+  p { margin: 8px 0; text-align: justify; }
+  strong { color: var(--accent); }
+  ul, ol { margin: 8px 0 8px 24px; }
+  li { margin: 4px 0; }
+  a { color: var(--accent); transition: color 0.2s; }
+  a:hover { color: var(--accent2); }
+  hr { border: none; height: 1px; background: var(--border); margin: 24px 0; }
+
+  /* ── Tables ── */
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.91em; }
+  thead { background: var(--table-head-bg); color: var(--table-head-text); }
+  th { padding: 12px 16px; text-align: left; font-weight: 500; white-space: nowrap; }
+  td { padding: 10px 16px; border-bottom: 1px solid var(--border); transition: background 0.2s; }
+  tbody tr:nth-child(even) { background: var(--table-stripe); }
+  tbody tr:hover { background: var(--table-hover); }
+
+  /* ── Code ── */
+  code { background: var(--code-bg); padding: 2px 7px; border-radius: 5px; font-size: 0.9em; color: var(--code-color); transition: background 0.35s; }
+  pre { background: var(--pre-bg); color: var(--pre-color); padding: 20px; border-radius: 10px; overflow-x: auto; margin: 16px 0; font-size: 0.87em; line-height: 1.65; transition: background 0.35s; }
+  pre code { background: none; color: inherit; padding: 0; }
+
+  /* ── Misc ── */
+  blockquote { border-left: 4px solid var(--quote-border); padding: 12px 20px; margin: 16px 0; background: var(--quote-bg); border-radius: 0 8px 8px 0; transition: background 0.35s; }
+  .footer { text-align: center; padding: 32px; color: var(--text-muted); font-size: 0.83em; }
+
+  /* ── Index ── */
+  .dept-badge {
+    display: inline-block; padding: 2px 12px; border-radius: 20px;
+    font-size: 0.82em; font-weight: 500;
+    background: var(--accent-light); color: var(--accent);
+    transition: all 0.35s;
+  }
+  .btn-open {
+    display: inline-block; padding: 7px 22px; border-radius: 8px;
+    font-size: 0.84em; font-weight: 500;
+    background: var(--btn-bg); color: var(--btn-text);
+    text-decoration: none; transition: all 0.2s;
+  }
+  .btn-open:hover { background: var(--btn-hover); color: var(--btn-text); transform: translateY(-1px); }
+  .stats-bar { display: flex; gap: 16px; flex-wrap: wrap; margin: 20px 0 28px; }
+  .stat-chip {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 20px; border-radius: 10px;
+    background: var(--bg-surface); border: 1px solid var(--border);
+    font-size: 0.88em; transition: all 0.35s;
+  }
+  .stat-chip .num { font-size: 1.4em; font-weight: 700; color: var(--accent); }
+
+  @media print {
+    .header-bar { position: static; }
+    body { background: #fff !important; color: #000 !important; }
+    .content, .idx-card { box-shadow: none; border: 1px solid #ccc; }
+    .toggle-wrap { display: none; }
+  }
+</style>
+<script>
+  (function(){
+    var s = localStorage.getItem('mirai-dx-theme');
+    if(s==='dark') document.documentElement.setAttribute('data-theme','dark');
+  })();
+</script>
+
+</head>
+<body>
+<div class="header-bar">
+  <div class="header-main">
+    <h1>みらい建設工業 統合建設DX基盤</h1>
+    <div class="subtitle">Construction DX One Platform &mdash; 安全管理部_業務要件</div>
+  </div>
+  <div class="toggle-wrap">
+  <span class="theme-label">Light / Dark</span>
+  <button class="theme-toggle" onclick="toggleTheme()" aria-label="テーマ切替"></button>
+</div>
+  <div class="header-nav"><a href="index.html" style="font-weight:600;">一覧</a><a href="経営企画部_業務要件.html">経営企画部</a><a href="営業第一部_業務要件.html">営業第一部</a><a href="営業第二部_業務要件.html">営業第二部</a><a href="ソリューション営業本部_業務要件.html">ソリューション営業本部</a><a href="施工本部_工事部_業務要件.html">施工本部_工事部</a><a href="技術部_業務要件.html">技術部</a><a href="研究開発部_業務要件.html">研究開発部</a><a href="品質環境部_業務要件.html">品質環境部</a><a href="安全管理部_業務要件.html" class="active">安全管理部</a><a href="人事部_業務要件.html">人事部</a><a href="経理部_業務要件.html">経理部</a><a href="総務部_業務要件.html">総務部</a><a href="購買部_業務要件.html">購買部</a><a href="船舶事業部_業務要件.html">船舶事業部</a><a href="IT-DX部門_業務要件.html">IT-DX部門</a><a href="統合データ基盤_業務要件.html">統合データ基盤</a></div>
+</div>
+<div class="container">
+  <div class="content"><h1 id="_1">安全管理部 業務要件書</h1>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>文書ID</td>
+<td>BIZ-ANZ-001</td>
+</tr>
+<tr>
+<td>版数</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>作成日</td>
+<td>2026年5月16日</td>
+</tr>
+<tr>
+<td>対象部署</td>
+<td>安全品質環境本部 安全管理部</td>
+</tr>
+<tr>
+<td>対象システム</td>
+<td>Safety &amp; Quality Governance Platform</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1">1. 部署概要</h2>
+<h3 id="11">1.1 組織上の位置づけ</h3>
+<p>安全管理部は安全品質環境本部に属し、全社の労働安全衛生管理を統括する。労働安全衛生法・ISO45001に基づく安全管理体制の構築・運用・監視を行い、労働災害ゼロを目指す。</p>
+<h3 id="12">1.2 部署ミッション</h3>
+<ul>
+<li>全社安全衛生計画の策定・実行</li>
+<li>安全パトロールの実施・是正指導</li>
+<li>労働災害の防止と発生時の対応</li>
+<li>ヒヤリハット活動の推進</li>
+<li>安全教育の企画・実施</li>
+<li>ISO45001の運用・維持</li>
+</ul>
+<hr />
+<h2 id="2">2. 業務要件（詳細）</h2>
+<h3 id="21">2.1 ヒヤリハット管理</h3>
+<h4 id="211">2.1.1 報告フロー</h4>
+<div class="codehilite"><pre><span></span><code>作業員がヒヤリハットを体験
+    ↓
+現場でスマートフォン/タブレットから即時報告
+（写真添付・位置情報自動取得）
+    ↓
+現場代理人が確認・補足情報追加
+    ↓
+安全管理部で集約・分析
+    ↓
+4M分析（Man/Machine/Media/Management）
+    ↓
+類似事例検索（過去のヒヤリハットDB）
+    ↓
+対策立案・水平展開
+    ↓
+全社安全情報として共有
+</code></pre></div>
+
+<h4 id="212">2.1.2 報告入力項目</h4>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th style="text-align: center;">必須</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>発生日時</td>
+<td style="text-align: center;">○</td>
+<td>日時選択</td>
+</tr>
+<tr>
+<td>発生場所</td>
+<td style="text-align: center;">○</td>
+<td>現場名＋詳細位置</td>
+</tr>
+<tr>
+<td>状況説明</td>
+<td style="text-align: center;">○</td>
+<td>何が起きたか（テキスト）</td>
+</tr>
+<tr>
+<td>写真</td>
+<td style="text-align: center;">△</td>
+<td>状況写真（複数枚可）</td>
+</tr>
+<tr>
+<td>危険の種類</td>
+<td style="text-align: center;">○</td>
+<td>墜落/転倒/挟まれ/感電/崩壊等</td>
+</tr>
+<tr>
+<td>作業内容</td>
+<td style="text-align: center;">○</td>
+<td>発生時の作業</td>
+</tr>
+<tr>
+<td>原因分類</td>
+<td style="text-align: center;">○</td>
+<td>不安全行動/不安全状態</td>
+</tr>
+<tr>
+<td>リスクレベル</td>
+<td style="text-align: center;">○</td>
+<td>高/中/低</td>
+</tr>
+<tr>
+<td>4M分析</td>
+<td style="text-align: center;">△</td>
+<td>Man/Machine/Media/Management</td>
+</tr>
+<tr>
+<td>対策</td>
+<td style="text-align: center;">△</td>
+<td>再発防止策</td>
+</tr>
+</tbody>
+</table>
+<h4 id="213">2.1.3 分析要件</h4>
+<ul>
+<li>月次・年次のヒヤリハット報告件数推移</li>
+<li>危険の種類別集計（パレート図）</li>
+<li>現場別・工種別の発生頻度分析</li>
+<li>4M分析の傾向分析</li>
+<li>類似ヒヤリハットの自動検索（AIによるテキスト類似度）</li>
+<li>ヒヤリハットマップ（GIS上に発生位置をプロット）</li>
+</ul>
+<h4 id="214">2.1.4 オフライン対応</h4>
+<ul>
+<li>圏外現場でのオフライン報告入力必須</li>
+<li>写真撮影・添付のオフライン対応</li>
+<li>ネットワーク復帰時の自動同期</li>
+</ul>
+<hr />
+<h3 id="22">2.2 安全パトロール</h3>
+<h4 id="221">2.2.1 パトロール種別</h4>
+<table>
+<thead>
+<tr>
+<th>種別</th>
+<th>頻度</th>
+<th>実施者</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>本社パトロール</td>
+<td>月1回/現場</td>
+<td>安全管理部</td>
+</tr>
+<tr>
+<td>支店パトロール</td>
+<td>月2回/現場</td>
+<td>支店安全担当</td>
+</tr>
+<tr>
+<td>所長パトロール</td>
+<td>週1回</td>
+<td>現場代理人</td>
+</tr>
+<tr>
+<td>随時パトロール</td>
+<td>随時</td>
+<td>安全管理部・支店</td>
+</tr>
+</tbody>
+</table>
+<h4 id="222">2.2.2 チェックリスト管理</h4>
+<ul>
+<li>工種別のチェックリストテンプレート管理</li>
+<li>チェック項目の5段階評価（優/良/可/不可/該当なし）</li>
+<li>不適合項目の是正指示→フォローアップ管理</li>
+<li>写真付き記録（指摘箇所・是正後の比較写真）</li>
+<li>パトロール結果の自動採点（100点満点）</li>
+</ul>
+<h4 id="223">2.2.3 チェック項目例（海上工事）</h4>
+<table>
+<thead>
+<tr>
+<th>区分</th>
+<th>チェック項目</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>服装・保護具</td>
+<td>ヘルメット着用、安全帯着用、ライフジャケット着用</td>
+</tr>
+<tr>
+<td>仮設設備</td>
+<td>手すり・中さん・幅木の設置状況</td>
+</tr>
+<tr>
+<td>重機</td>
+<td>作業半径内立入禁止措置、誘導員の配置</td>
+</tr>
+<tr>
+<td>海上作業</td>
+<td>救命設備、気象情報確認、作業中止基準</td>
+</tr>
+<tr>
+<td>電気</td>
+<td>漏電ブレーカー設置、仮設電気配線</td>
+</tr>
+<tr>
+<td>整理整頓</td>
+<td>資材の整理整頓、通路の確保</td>
+</tr>
+<tr>
+<td>表示</td>
+<td>危険表示、作業手順掲示</td>
+</tr>
+</tbody>
+</table>
+<h4 id="224">2.2.4 是正処置管理</h4>
+<div class="codehilite"><pre><span></span><code>不適合指摘
+    ↓
+是正指示書発行（期限付き）
+    ↓
+現場での是正実施
+    ↓
+是正完了報告（写真付き）
+    ↓
+安全管理部による是正確認
+    ↓
+是正完了登録
+</code></pre></div>
+
+<ul>
+<li>是正期限超過の自動アラート</li>
+<li>是正完了率の管理（目標：期限内完了率95%以上）</li>
+</ul>
+<hr />
+<h3 id="23">2.3 労災事故管理</h3>
+<h4 id="231">2.3.1 事故発生時のフロー</h4>
+<div class="codehilite"><pre><span></span><code>事故発生
+    ↓（直ちに）
+現場から安全管理部へ第一報（電話）
+    ↓（24時間以内）
+事故速報入力（システム）
+    ↓（3日以内）
+詳細調査報告
+    ↓（必要に応じて）
+労働基準監督署への報告（労働者死傷病報告）
+    ↓
+根本原因分析（RCA）
+    ↓
+再発防止対策の策定
+    ↓
+全社への水平展開
+</code></pre></div>
+
+<h4 id="232">2.3.2 管理項目</h4>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>事故種別</td>
+<td>死亡/重傷/軽傷/応急手当のみ</td>
+</tr>
+<tr>
+<td>災害の種類</td>
+<td>墜落・転落/はさまれ/飛来落下/感電/倒壊等</td>
+</tr>
+<tr>
+<td>被災者情報</td>
+<td>年齢・経験年数・所属・資格</td>
+</tr>
+<tr>
+<td>発生状況</td>
+<td>5W1Hの記録</td>
+</tr>
+<tr>
+<td>原因分析</td>
+<td>直接原因・間接原因・根本原因</td>
+</tr>
+<tr>
+<td>休業日数</td>
+<td>労働損失日数</td>
+</tr>
+<tr>
+<td>再発防止策</td>
+<td>対策内容・実施期限・担当者</td>
+</tr>
+</tbody>
+</table>
+<h4 id="233">2.3.3 統計分析要件</h4>
+<ul>
+<li>度数率・強度率の自動計算（月次・年次）</li>
+<li>災害の種類別・工種別の統計</li>
+<li>業界平均との比較</li>
+<li>前年同期比の推移分析</li>
+<li>連続無災害記録の管理</li>
+</ul>
+<hr />
+<h3 id="24">2.4 安全教育管理</h3>
+<h4 id="241">2.4.1 管理要件</h4>
+<table>
+<thead>
+<tr>
+<th>教育種別</th>
+<th>頻度</th>
+<th>対象</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>新規入場者教育</td>
+<td>初回</td>
+<td>全作業員</td>
+</tr>
+<tr>
+<td>職長教育</td>
+<td>初回＋能力向上</td>
+<td>職長</td>
+</tr>
+<tr>
+<td>特別教育</td>
+<td>資格取得時</td>
+<td>該当作業者</td>
+</tr>
+<tr>
+<td>月次安全教育</td>
+<td>月1回</td>
+<td>全作業員</td>
+</tr>
+<tr>
+<td>安全大会</td>
+<td>年1回</td>
+<td>全社</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>受講履歴の管理</li>
+<li>未受講者への自動リマインダー</li>
+<li>教育資料のDB管理</li>
+<li>教育効果の測定（テスト結果管理）</li>
+</ul>
+<hr />
+<h3 id="25-ai">2.5 AI危険予測</h3>
+<h4 id="251">2.5.1 予測要件</h4>
+<table>
+<thead>
+<tr>
+<th>入力データ</th>
+<th>予測内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>作業内容・工種</td>
+<td>想定されるリスクと推奨対策</td>
+</tr>
+<tr>
+<td>天候予報</td>
+<td>天候に起因するリスク</td>
+</tr>
+<tr>
+<td>過去のヒヤリハット</td>
+<td>類似条件での過去事例</td>
+</tr>
+<tr>
+<td>作業員の経験年数</td>
+<td>経験不足に起因するリスク</td>
+</tr>
+<tr>
+<td>時間帯</td>
+<td>疲労に起因するリスク（午後の事故率上昇）</td>
+</tr>
+</tbody>
+</table>
+<h4 id="252-ai">2.5.2 AI映像解析要件</h4>
+<table>
+<thead>
+<tr>
+<th>検知対象</th>
+<th style="text-align: center;">重要度</th>
+<th>対応</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ヘルメット未着用</td>
+<td style="text-align: center;">最高</td>
+<td>即時アラート</td>
+</tr>
+<tr>
+<td>安全帯未使用（高所）</td>
+<td style="text-align: center;">最高</td>
+<td>即時アラート</td>
+</tr>
+<tr>
+<td>立入禁止区域侵入</td>
+<td style="text-align: center;">高</td>
+<td>即時アラート</td>
+</tr>
+<tr>
+<td>重機と作業員の接近</td>
+<td style="text-align: center;">高</td>
+<td>即時アラート</td>
+</tr>
+<tr>
+<td>不安全行動の検知</td>
+<td style="text-align: center;">中</td>
+<td>記録・後分析</td>
+</tr>
+</tbody>
+</table></div>
+  <div class="footer">&copy; 2026 みらい建設工業 IT-DX部門 &nbsp;|&nbsp; 統合建設DX基盤 業務要件書</div>
+</div>
+
+<script>
+function toggleTheme(){
+  var h=document.documentElement, d=h.getAttribute('data-theme')==='dark';
+  if(d){h.removeAttribute('data-theme');localStorage.setItem('mirai-dx-theme','light');}
+  else{h.setAttribute('data-theme','dark');localStorage.setItem('mirai-dx-theme','dark');}
+}
+</script>
+
+</body></html>

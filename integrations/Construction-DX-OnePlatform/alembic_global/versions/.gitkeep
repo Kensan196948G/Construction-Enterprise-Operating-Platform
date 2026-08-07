@@ -1,0 +1,2 @@
+# alembic_global は本番統合用途。新規 migration を直接置く運用ではなく、
+# サブプロジェクト毎の alembic を順番に適用する scripts/migrate-all.ps1 を利用する。

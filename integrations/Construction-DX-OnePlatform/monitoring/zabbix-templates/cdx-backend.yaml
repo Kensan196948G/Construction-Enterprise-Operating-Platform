@@ -1,0 +1,291 @@
+---
+# Construction DX One Platform — Zabbix Backend Templates
+# Generated: Loop #36 (2026-06-01)
+# Zabbix version: 6.4+
+#
+# 11 部門バックエンドサービス (port 8001-8011) + mocks (8090) + api-gateway (8080) を個別監視
+
+zabbix_export:
+  version: "6.4"
+  date: "2026-06-01T18:00:00Z"
+
+  templates:
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # API Gateway — port 8080
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    - uuid: cdxgw00-0000-0000-0000-000000000001
+      template: CDX API Gateway
+      name: "CDX API Gateway (port 8080)"
+      description: |
+        API Gateway 監視。全部門バックエンドへのルーティング + JWT 検証 + Rate Limiting。
+        X-Request-ID dedup (Loop #28 修正済) の監視を含む。
+      groups:
+        - name: "Construction DX / Infrastructure"
+      macros:
+        - macro: "{$CDX_PORT}"
+          value: "8080"
+        - macro: "{$CDX_HEALTH_PATH}"
+          value: "/health"
+        - macro: "{$GW_RATE_LIMIT_WARN}"
+          value: "1000"
+          description: "1分あたりのリクエスト数警告閾値"
+      items:
+        - uuid: cdxgw00-0001-0000-0000-000000000001
+          name: "API Gateway — 5xx エラー率"
+          type: HTTP_AGENT
+          key: "cdx.gw.error5xx"
+          url: "http://localhost:8080/metrics"
+          value_type: FLOAT
+          units: "%"
+          delay: 30s
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - "$.http_server_requests_total[?(@.status=~/5.*/)]"
+          description: "5xx エラー率 (%)"
+          tags:
+            - tag: component
+              value: gateway
+        - uuid: cdxgw00-0001-0000-0000-000000000002
+          name: "API Gateway — X-Request-ID 重複数"
+          type: HTTP_AGENT
+          key: "cdx.gw.request_id_dup"
+          url: "http://localhost:8080/metrics"
+          value_type: UNSIGNED
+          delay: 60s
+          description: "X-Request-ID 重複カウント (0 が正常, Loop #28 dedup 修正)"
+          tags:
+            - tag: component
+              value: gateway
+
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # Backend 01-11 (port 8001-8011)
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    - uuid: cdxbe01-0000-0000-0000-000000000001
+      template: CDX Backend 01 経営企画部
+      name: "CDX バックエンド 01_経営企画部 (port 8001)"
+      description: "経営企画部バックエンド (FastAPI + PostgreSQL, port 8001)"
+      groups:
+        - name: "Construction DX / Backend"
+      templates:
+        - name: CDX Universal Service Monitor
+      macros:
+        - macro: "{$CDX_PORT}"
+          value: "8001"
+        - macro: "{$CDX_HEALTH_PATH}"
+          value: "/health"
+        - macro: "{$DEPT_NAME}"
+          value: "01_経営企画部"
+      items:
+        - uuid: cdxbe01-0001-0000-0000-000000000001
+          name: "DB接続確認 (01_経営企画部)"
+          type: HTTP_AGENT
+          key: "cdx.db.health[8001]"
+          url: "http://localhost:8001/health/db"
+          retrieve_mode: STATUS_CODE
+          value_type: UNSIGNED
+          delay: 60s
+          description: "PostgreSQL 接続確認 (200=OK)"
+          tags:
+            - tag: component
+              value: database
+
+    - uuid: cdxbe02-0000-0000-0000-000000000001
+      template: CDX Backend 02 営業本部
+      name: "CDX バックエンド 02_営業本部 (port 8002)"
+      description: "営業本部バックエンド (FastAPI + PostgreSQL + CRM, port 8002)"
+      groups:
+        - name: "Construction DX / Backend"
+      templates:
+        - name: CDX Universal Service Monitor
+      macros:
+        - macro: "{$CDX_PORT}"
+          value: "8002"
+        - macro: "{$CDX_HEALTH_PATH}"
+          value: "/health"
+        - macro: "{$DEPT_NAME}"
+          value: "02_営業本部"
+
+    - uuid: cdxbe03-0000-0000-0000-000000000001
+      template: CDX Backend 03 ソリューション営業本部
+      name: "CDX バックエンド 03_ソリューション営業本部 (port 8003)"
+      groups:
+        - name: "Construction DX / Backend"
+      templates:
+        - name: CDX Universal Service Monitor
+      macros:
+        - macro: "{$CDX_PORT}"
+          value: "8003"
+        - macro: "{$CDX_HEALTH_PATH}"
+          value: "/health"
+        - macro: "{$DEPT_NAME}"
+          value: "03_ソリューション営業本部"
+
+    - uuid: cdxbe04-0000-0000-0000-000000000001
+      template: CDX Backend 04 施工本部
+      name: "CDX バックエンド 04_施工本部 (port 8004)"
+      description: "施工本部バックエンド (写真AI + S3 CORS + Service Worker, port 8004)"
+      groups:
+        - name: "Construction DX / Backend"
+      templates:
+        - name: CDX Universal Service Monitor
+      macros:
+        - macro: "{$CDX_PORT}"
+          value: "8004"
+        - macro: "{$CDX_HEALTH_PATH}"
+          value: "/health"
+        - macro: "{$DEPT_NAME}"
+          value: "04_施工本部"
+
+    - uuid: cdxbe05-0000-0000-0000-000000000001
+      template: CDX Backend 05 技術本部
+      name: "CDX バックエンド 05_技術本部 (port 8005)"
+      groups:
+        - name: "Construction DX / Backend"
+      templates:
+        - name: CDX Universal Service Monitor
+      macros:
+        - macro: "{$CDX_PORT}"
+          value: "8005"
+        - macro: "{$CDX_HEALTH_PATH}"
+          value: "/health"
+        - macro: "{$DEPT_NAME}"
+          value: "05_技術本部"
+
+    - uuid: cdxbe06-0000-0000-0000-000000000001
+      template: CDX Backend 06 安全品質環境本部
+      name: "CDX バックエンド 06_安全品質環境本部 (port 8006)"
+      groups:
+        - name: "Construction DX / Backend"
+      templates:
+        - name: CDX Universal Service Monitor
+      macros:
+        - macro: "{$CDX_PORT}"
+          value: "8006"
+        - macro: "{$CDX_HEALTH_PATH}"
+          value: "/health"
+        - macro: "{$DEPT_NAME}"
+          value: "06_安全品質環境本部"
+
+    - uuid: cdxbe07-0000-0000-0000-000000000001
+      template: CDX Backend 07 管理本部
+      name: "CDX バックエンド 07_管理本部 (port 8007)"
+      groups:
+        - name: "Construction DX / Backend"
+      templates:
+        - name: CDX Universal Service Monitor
+      macros:
+        - macro: "{$CDX_PORT}"
+          value: "8007"
+        - macro: "{$CDX_HEALTH_PATH}"
+          value: "/health"
+        - macro: "{$DEPT_NAME}"
+          value: "07_管理本部"
+
+    - uuid: cdxbe08-0000-0000-0000-000000000001
+      template: CDX Backend 08 購買部
+      name: "CDX バックエンド 08_購買部 (port 8008)"
+      groups:
+        - name: "Construction DX / Backend"
+      templates:
+        - name: CDX Universal Service Monitor
+      macros:
+        - macro: "{$CDX_PORT}"
+          value: "8008"
+        - macro: "{$CDX_HEALTH_PATH}"
+          value: "/health"
+        - macro: "{$DEPT_NAME}"
+          value: "08_購買部"
+
+    - uuid: cdxbe09-0000-0000-0000-000000000001
+      template: CDX Backend 09 船舶事業部
+      name: "CDX バックエンド 09_船舶事業部 (port 8009)"
+      groups:
+        - name: "Construction DX / Backend"
+      templates:
+        - name: CDX Universal Service Monitor
+      macros:
+        - macro: "{$CDX_PORT}"
+          value: "8009"
+        - macro: "{$CDX_HEALTH_PATH}"
+          value: "/health"
+        - macro: "{$DEPT_NAME}"
+          value: "09_船舶事業部"
+
+    - uuid: cdxbe10-0000-0000-0000-000000000001
+      template: CDX Backend 10 IT-DX部門
+      name: "CDX バックエンド 10_IT-DX部門 (port 8010)"
+      description: |
+        IT-DX部門バックエンド (ITSM + FortiGate Syslog/SNMP + Entra Graph API + pgvector, port 8010)
+        Issue #1 Phase 1 残作業: FortiGate本番Syslog/SNMP / Entra Graph本番運用 / pgvector チューニング
+      groups:
+        - name: "Construction DX / Backend"
+      templates:
+        - name: CDX Universal Service Monitor
+      macros:
+        - macro: "{$CDX_PORT}"
+          value: "8010"
+        - macro: "{$CDX_HEALTH_PATH}"
+          value: "/health"
+        - macro: "{$DEPT_NAME}"
+          value: "10_IT-DX部門"
+      items:
+        - uuid: cdxbe10-0001-0000-0000-000000000001
+          name: "FortiGate Syslog 受信確認 (10_IT-DX)"
+          type: ZABBIX_ACTIVE
+          key: 'log[/var/log/cdx-itsm/fortigate.log,"FortiGate","UTF-8",10]'
+          value_type: LOG
+          delay: 60s
+          description: "FortiGate Syslog の受信確認"
+          tags:
+            - tag: component
+              value: fortigate
+
+    - uuid: cdxbe11-0000-0000-0000-000000000001
+      template: CDX Backend 11 統合データ基盤
+      name: "CDX バックエンド 11_統合データ基盤 (port 8011)"
+      description: "統合データ基盤バックエンド (pgvector + Cesium地図タイル, port 8011)"
+      groups:
+        - name: "Construction DX / Backend"
+      templates:
+        - name: CDX Universal Service Monitor
+      macros:
+        - macro: "{$CDX_PORT}"
+          value: "8011"
+        - macro: "{$CDX_HEALTH_PATH}"
+          value: "/health"
+        - macro: "{$DEPT_NAME}"
+          value: "11_統合データ基盤"
+
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # Mocks — port 8090
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    - uuid: cdxmk00-0000-0000-0000-000000000001
+      template: CDX Mocks Server
+      name: "CDX Mocks Server (port 8090)"
+      description: "外部 API モックサーバ (FastAPI + pytest 9テスト, port 8090)"
+      groups:
+        - name: "Construction DX / Infrastructure"
+      macros:
+        - macro: "{$CDX_PORT}"
+          value: "8090"
+        - macro: "{$CDX_HEALTH_PATH}"
+          value: "/health"
+      items:
+        - uuid: cdxmk00-0001-0000-0000-000000000001
+          name: "Mocks コントラクトテスト通過率"
+          type: HTTP_AGENT
+          key: "cdx.mocks.contract_test_pass_rate"
+          url: "http://localhost:8090/metrics/contract_tests"
+          retrieve_mode: BODY
+          value_type: FLOAT
+          units: "%"
+          delay: 300s
+          description: "contract_check.py テスト通過率 (期待値: 100%)"
+          preprocessing:
+            - type: JSONPATH
+              params: "$.pass_rate"
+              error_handler: DISCARD_VALUE
+          tags:
+            - tag: component
+              value: mocks

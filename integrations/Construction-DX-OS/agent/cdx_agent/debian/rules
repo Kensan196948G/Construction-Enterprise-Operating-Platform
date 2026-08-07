@@ -1,0 +1,37 @@
+#!/usr/bin/make -f
+# debhelper rules for cdx-agent
+# Uses dh-python's pybuild to build the Python package.
+
+export DH_VERBOSE = 1
+export PYBUILD_NAME = cdx-agent
+
+%:
+	dh $@ --with python3 --buildsystem=pybuild
+
+override_dh_auto_install:
+	dh_auto_install
+	# Install systemd units
+	install -D -m 644 debian/cdx-agent.service \
+		debian/cdx-agent/lib/systemd/system/cdx-agent.service
+	install -D -m 644 debian/cdx-agent.timer \
+		debian/cdx-agent/lib/systemd/system/cdx-agent.timer
+	install -D -m 644 debian/cdx-agent-inventory.service \
+		debian/cdx-agent/lib/systemd/system/cdx-agent-inventory.service
+	install -D -m 644 debian/cdx-agent-inventory.timer \
+		debian/cdx-agent/lib/systemd/system/cdx-agent-inventory.timer
+	# Install AppArmor profile
+	install -D -m 644 debian/apparmor/usr.bin.cdx-agent \
+		debian/cdx-agent/etc/apparmor.d/usr.bin.cdx-agent
+	# Install example env file
+	install -D -m 640 debian/agent.env.example \
+		debian/cdx-agent/etc/cdx-agent/agent.env.example
+	# Create spool directory
+	install -d -m 750 debian/cdx-agent/var/lib/cdx-agent/spool
+
+override_dh_installinit:
+	# systemd units are handled by dh_installsystemd
+	:
+
+override_dh_installsystemd:
+	dh_installsystemd --name=cdx-agent cdx-agent.timer
+	dh_installsystemd --name=cdx-agent-inventory cdx-agent-inventory.timer

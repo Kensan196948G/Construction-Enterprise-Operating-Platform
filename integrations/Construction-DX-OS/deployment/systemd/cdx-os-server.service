@@ -1,0 +1,32 @@
+[Unit]
+Description=Construction DX OS — cdx-server API (Issue 0022/0027 stack)
+After=network.target
+Documentation=https://github.com/ClaudeOS/Construction-DX-OS
+
+[Service]
+Type=simple
+User=kensan
+Group=kensan
+WorkingDirectory=/home/kensan/Projects/Construction-DX-OS/server/api
+EnvironmentFile=-/home/kensan/Projects/Construction-DX-OS/.env
+Environment=PATH=/home/kensan/Projects/Construction-DX-OS/server/api/.venv/bin:/usr/local/bin:/usr/bin:/bin
+Environment=PYTHONPATH=/home/kensan/Projects/Construction-DX-OS/server/api
+ExecStart=/home/kensan/Projects/Construction-DX-OS/server/api/.venv/bin/uvicorn \
+    cdx_server.app:app \
+    --host 0.0.0.0 \
+    --port 8300 \
+    --log-level info
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=30
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=cdx-os-server
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/kensan/Projects/Construction-DX-OS
+
+[Install]
+WantedBy=multi-user.target

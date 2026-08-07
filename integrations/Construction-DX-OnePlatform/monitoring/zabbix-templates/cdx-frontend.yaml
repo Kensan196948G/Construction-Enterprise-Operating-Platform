@@ -1,0 +1,225 @@
+---
+# Construction DX One Platform — Zabbix Frontend Templates
+# Generated: Loop #36 (2026-06-01)
+# Zabbix version: 6.4+
+#
+# 11 部門フロントエンドサービス (port 5180-5190) を個別監視
+
+zabbix_export:
+  version: "6.4"
+  date: "2026-06-01T18:00:00Z"
+
+  templates:
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # 01 経営企画部 — port 5180
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    - uuid: cdxfe01-0000-0000-0000-000000000001
+      template: CDX Frontend 01 経営企画部
+      name: "CDX フロントエンド 01_経営企画部 (port 5180)"
+      description: "経営企画部フロントエンド (Vite dev server, port 5180)"
+      groups:
+        - name: "Construction DX / Frontend"
+      templates:
+        - name: CDX Universal Service Monitor
+      macros:
+        - macro: "{$CDX_PORT}"
+          value: "5180"
+        - macro: "{$CDX_HEALTH_PATH}"
+          value: "/"
+        - macro: "{$DEPT_NAME}"
+          value: "01_経営企画部"
+
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # 02 営業本部 — port 5181
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    - uuid: cdxfe02-0000-0000-0000-000000000001
+      template: CDX Frontend 02 営業本部
+      name: "CDX フロントエンド 02_営業本部 (port 5181)"
+      description: "営業本部フロントエンド (CRM + SFA, port 5181)"
+      groups:
+        - name: "Construction DX / Frontend"
+      templates:
+        - name: CDX Universal Service Monitor
+      macros:
+        - macro: "{$CDX_PORT}"
+          value: "5181"
+        - macro: "{$CDX_HEALTH_PATH}"
+          value: "/"
+        - macro: "{$DEPT_NAME}"
+          value: "02_営業本部"
+
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # 03 ソリューション営業本部 — port 5182
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    - uuid: cdxfe03-0000-0000-0000-000000000001
+      template: CDX Frontend 03 ソリューション営業本部
+      name: "CDX フロントエンド 03_ソリューション営業本部 (port 5182)"
+      description: "ソリューション営業本部フロントエンド (port 5182)"
+      groups:
+        - name: "Construction DX / Frontend"
+      templates:
+        - name: CDX Universal Service Monitor
+      macros:
+        - macro: "{$CDX_PORT}"
+          value: "5182"
+        - macro: "{$CDX_HEALTH_PATH}"
+          value: "/"
+        - macro: "{$DEPT_NAME}"
+          value: "03_ソリューション営業本部"
+
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # 04 施工本部 — port 5183
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    - uuid: cdxfe04-0000-0000-0000-000000000001
+      template: CDX Frontend 04 施工本部
+      name: "CDX フロントエンド 04_施工本部 (port 5183)"
+      description: "施工本部フロントエンド (写真AI + 工程管理, port 5183)"
+      groups:
+        - name: "Construction DX / Frontend"
+      templates:
+        - name: CDX Universal Service Monitor
+      macros:
+        - macro: "{$CDX_PORT}"
+          value: "5183"
+        - macro: "{$CDX_HEALTH_PATH}"
+          value: "/"
+        - macro: "{$DEPT_NAME}"
+          value: "04_施工本部"
+
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # 05 技術本部 — port 5184
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    - uuid: cdxfe05-0000-0000-0000-000000000001
+      template: CDX Frontend 05 技術本部
+      name: "CDX フロントエンド 05_技術本部 (port 5184)"
+      description: "技術本部フロントエンド (BIM + 3D図面, port 5184)"
+      groups:
+        - name: "Construction DX / Frontend"
+      templates:
+        - name: CDX Universal Service Monitor
+      macros:
+        - macro: "{$CDX_PORT}"
+          value: "5184"
+        - macro: "{$CDX_HEALTH_PATH}"
+          value: "/"
+        - macro: "{$DEPT_NAME}"
+          value: "05_技術本部"
+
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # 06 安全品質環境本部 — port 5185
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    - uuid: cdxfe06-0000-0000-0000-000000000001
+      template: CDX Frontend 06 安全品質環境本部
+      name: "CDX フロントエンド 06_安全品質環境本部 (port 5185)"
+      description: "安全品質環境本部フロントエンド (SQ管理 + モバイル最適化, port 5185)"
+      groups:
+        - name: "Construction DX / Frontend"
+      templates:
+        - name: CDX Universal Service Monitor
+      macros:
+        - macro: "{$CDX_PORT}"
+          value: "5185"
+        - macro: "{$CDX_HEALTH_PATH}"
+          value: "/"
+        - macro: "{$DEPT_NAME}"
+          value: "06_安全品質環境本部"
+
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # 07 管理本部 — port 5186
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    - uuid: cdxfe07-0000-0000-0000-000000000001
+      template: CDX Frontend 07 管理本部
+      name: "CDX フロントエンド 07_管理本部 (port 5186)"
+      description: "管理本部フロントエンド (経理・法務・人事, port 5186)"
+      groups:
+        - name: "Construction DX / Frontend"
+      templates:
+        - name: CDX Universal Service Monitor
+      macros:
+        - macro: "{$CDX_PORT}"
+          value: "5186"
+        - macro: "{$CDX_HEALTH_PATH}"
+          value: "/"
+        - macro: "{$DEPT_NAME}"
+          value: "07_管理本部"
+
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # 08 購買部 — port 5187
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    - uuid: cdxfe08-0000-0000-0000-000000000001
+      template: CDX Frontend 08 購買部
+      name: "CDX フロントエンド 08_購買部 (port 5187)"
+      description: "購買部フロントエンド (調達 + 在庫管理, port 5187)"
+      groups:
+        - name: "Construction DX / Frontend"
+      templates:
+        - name: CDX Universal Service Monitor
+      macros:
+        - macro: "{$CDX_PORT}"
+          value: "5187"
+        - macro: "{$CDX_HEALTH_PATH}"
+          value: "/"
+        - macro: "{$DEPT_NAME}"
+          value: "08_購買部"
+
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # 09 船舶事業部 — port 5188
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    - uuid: cdxfe09-0000-0000-0000-000000000001
+      template: CDX Frontend 09 船舶事業部
+      name: "CDX フロントエンド 09_船舶事業部 (port 5188)"
+      description: "船舶事業部フロントエンド (Marine + 地図, port 5188)"
+      groups:
+        - name: "Construction DX / Frontend"
+      templates:
+        - name: CDX Universal Service Monitor
+      macros:
+        - macro: "{$CDX_PORT}"
+          value: "5188"
+        - macro: "{$CDX_HEALTH_PATH}"
+          value: "/"
+        - macro: "{$DEPT_NAME}"
+          value: "09_船舶事業部"
+
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # 10 IT-DX部門 — port 5189
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    - uuid: cdxfe10-0000-0000-0000-000000000001
+      template: CDX Frontend 10 IT-DX部門
+      name: "CDX フロントエンド 10_IT-DX部門 (port 5189)"
+      description: "IT-DX部門フロントエンド (ITSM + FortiGate + Entra, port 5189)"
+      groups:
+        - name: "Construction DX / Frontend"
+      templates:
+        - name: CDX Universal Service Monitor
+      macros:
+        - macro: "{$CDX_PORT}"
+          value: "5189"
+        - macro: "{$CDX_HEALTH_PATH}"
+          value: "/"
+        - macro: "{$DEPT_NAME}"
+          value: "10_IT-DX部門"
+
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # 11 統合データ基盤 — port 5190
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    - uuid: cdxfe11-0000-0000-0000-000000000001
+      template: CDX Frontend 11 統合データ基盤
+      name: "CDX フロントエンド 11_統合データ基盤 (port 5190)"
+      description: "統合データ基盤フロントエンド (Cesium 3D + pgvector, port 5190)"
+      groups:
+        - name: "Construction DX / Frontend"
+      templates:
+        - name: CDX Universal Service Monitor
+      macros:
+        - macro: "{$CDX_PORT}"
+          value: "5190"
+        - macro: "{$CDX_HEALTH_PATH}"
+          value: "/"
+        - macro: "{$DEPT_NAME}"
+          value: "11_統合データ基盤"
+
+  # 全フロントエンドを束ねるホストグループ定義
+  host_groups:
+    - uuid: cdxhg01-0000-0000-0000-000000000001
+      name: "Construction DX / Frontend"

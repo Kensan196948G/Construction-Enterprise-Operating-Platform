@@ -1,0 +1,66 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 2 * * 1"  # 毎週月曜日 02:00 UTC
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  bandit:
+    name: Python Security (bandit)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install bandit[toml]
+      - run: bandit -r app/ -ll -x tests/ || true
+
+  trivy:
+    name: Trivy Container Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build backend image for scan
+        run: docker build -t servicehub-backend:scan ./backend --target development
+      - name: Trivy scan — backend image
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: servicehub-backend:scan
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: CRITICAL,HIGH
+      - name: Build frontend image for scan
+        run: docker build -t servicehub-frontend:scan ./frontend --target production
+      - name: Trivy scan — frontend image
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: servicehub-frontend:scan
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: CRITICAL,HIGH
+
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/dependency-review-action@v4
+        continue-on-error: true
+        with:
+          fail-on-severity: critical

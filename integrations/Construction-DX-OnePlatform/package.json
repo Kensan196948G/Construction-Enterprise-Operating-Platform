@@ -1,0 +1,57 @@
+{
+  "name": "construction-dx-one-platform",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Construction DX One Platform — npm workspaces root (shared-ui + 各部門 frontend)",
+  "workspaces": [
+    "00_共通基盤/shared-ui",
+    "01_経営企画部/ConstructionExecutiveDashboard/frontend",
+    "02_営業本部/ConstructionCRM-BidManagement/frontend",
+    "03_ソリューション営業本部/SmartInfrastructureSolutionPlatform/frontend",
+    "04_施工本部/ConstructionSiteManagementSystem/frontend",
+    "05_技術本部/TechnicalKnowledge-BIMPlatform/frontend",
+    "06_安全品質環境本部/SafetyQualityGovernancePlatform/frontend",
+    "07_管理本部/CorporateOperationPlatform/frontend",
+    "08_購買部/ProcurementMaterialPlatform/frontend",
+    "09_船舶事業部/MarineFleetManagement/frontend",
+    "10_IT-DX部門/ConstructionITSM-ZeroTrustPlatform/frontend",
+    "11_統合データ基盤/ConstructionDataLake-DigitalTwin/frontend"
+  ],
+  "scripts": {
+    "build:shared-ui": "npm -w @cdx/shared-ui run build",
+    "typecheck": "npm -w @cdx/shared-ui run typecheck && npm -w cdx-site-frontend run typecheck && npm -w @cdx/sq-frontend run typecheck || true",
+    "test:shared-ui": "npm -w @cdx/shared-ui run test",
+    "dev:exec": "npm -w cdx-exec-frontend     run dev -- --host 0.0.0.0 --port 5180",
+    "dev:crm": "npm -w cdx-crm-frontend      run dev -- --host 0.0.0.0 --port 5181",
+    "dev:sol": "npm -w cdx-sol-frontend      run dev -- --host 0.0.0.0 --port 5182",
+    "dev:site": "npm -w cdx-site-frontend     run dev -- --host 0.0.0.0 --port 5183",
+    "dev:tech": "npm -w cdx-tech-frontend     run dev -- --host 0.0.0.0 --port 5184",
+    "dev:sq": "npm -w @cdx/sq-frontend      run dev -- --host 0.0.0.0 --port 5185",
+    "dev:corp": "npm -w @cdx/corp-frontend    run dev -- --host 0.0.0.0 --port 5186",
+    "dev:proc": "npm -w cdx-proc-frontend     run dev -- --host 0.0.0.0 --port 5187",
+    "dev:marine": "npm -w cdx-marine-frontend   run dev -- --host 0.0.0.0 --port 5188",
+    "dev:itsm": "npm -w cdx-itsm-frontend     run dev -- --host 0.0.0.0 --port 5189",
+    "dev:data": "npm -w cdx-data-frontend     run dev -- --host 0.0.0.0 --port 5190"
+  },
+  "dependencies": {
+    "dexie": "^4.0.8",
+    "react-hook-form": "^7.53.0"
+  },
+  "overrides": {
+    "esbuild": "0.25.12",
+    "uuid": "11.1.1",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.0",
+    "@vitejs/plugin-react": "^5.2.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.6.0",
+    "typescript-eslint": "^8.60.0",
+    "vite": "^7.3.5",
+    "workbox-build": "^7.1.0"
+  }
+}

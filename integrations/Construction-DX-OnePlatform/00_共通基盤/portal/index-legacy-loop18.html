@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Construction DX One Platform — 統合ポータル</title>
+  <style>
+    :root {
+      --p1: #fef3c7; --p1b: #d97706;
+      --p2: #dbeafe; --p2b: #2563eb;
+      --p3: #dcfce7; --p3b: #16a34a;
+      --common: #ede9fe; --commonb: #7c3aed;
+      --text: #1f2937; --muted: #6b7280;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', 'Hiragino Kaku Gothic ProN', sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0f766e 100%);
+      color: white;
+      min-height: 100vh;
+      padding: 2rem 1.5rem;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 1.8rem;
+      max-width: 1400px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    h1 {
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      margin-bottom: 0.4rem;
+      font-weight: 700;
+    }
+    .subtitle {
+      opacity: 0.85;
+      font-size: 0.95rem;
+      margin-bottom: 0.4rem;
+    }
+    .lan-ip {
+      background: rgba(255,255,255,0.1);
+      padding: 0.3rem 0.8rem;
+      border-radius: 12px;
+      font-family: 'Consolas', monospace;
+      display: inline-block;
+      font-size: 0.85rem;
+    }
+
+    /* 構想 banner */
+    .vision {
+      max-width: 1400px;
+      margin: 0 auto 2rem;
+      background: rgba(255,255,255,0.07);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 14px;
+      padding: 1.4rem 1.6rem;
+    }
+    .vision h2 {
+      font-size: 1.1rem;
+      margin-bottom: 0.6rem;
+      letter-spacing: 0.02em;
+    }
+    .vision .flow {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      align-items: center;
+      font-size: 0.82rem;
+      font-family: 'Consolas', monospace;
+      opacity: 0.95;
+    }
+    .vision .flow span.step {
+      background: rgba(255,255,255,0.12);
+      padding: 0.3rem 0.7rem;
+      border-radius: 8px;
+    }
+    .vision .flow span.arrow { opacity: 0.5; }
+    .vision .compliance {
+      margin-top: 0.7rem;
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      font-size: 0.72rem;
+    }
+    .vision .compliance .b {
+      background: rgba(255,255,255,0.12);
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+
+    .section-label {
+      max-width: 1400px;
+      margin: 1.5rem auto 0.7rem;
+      font-size: 0.95rem;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .section-label .pill {
+      font-size: 0.65rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.15);
+      font-weight: 400;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+      gap: 1rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .card {
+      background: white;
+      color: var(--text);
+      border-radius: 12px;
+      padding: 1rem 1.2rem 1.1rem;
+      text-decoration: none;
+      display: block;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      border-left: 5px solid #ccc;
+      position: relative;
+      overflow: hidden;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 28px rgba(0,0,0,0.3);
+    }
+    .card.p1 { border-left-color: var(--p1b); background: linear-gradient(135deg, white 0%, var(--p1) 100%); }
+    .card.p2 { border-left-color: var(--p2b); background: linear-gradient(135deg, white 0%, var(--p2) 100%); }
+    .card.p3 { border-left-color: var(--p3b); background: linear-gradient(135deg, white 0%, var(--p3) 100%); }
+    .card.common { border-left-color: var(--commonb); background: linear-gradient(135deg, white 0%, var(--common) 100%); }
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.4rem;
+    }
+    .icon { font-size: 1.7rem; }
+    .num {
+      font-family: 'Consolas', monospace;
+      background: rgba(0,0,0,0.08);
+      padding: 0.1rem 0.45rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .name {
+      font-weight: 700;
+      font-size: 1rem;
+      margin-left: 0.1rem;
+      flex: 1;
+    }
+    .badge {
+      font-size: 0.62rem;
+      background: var(--p1b);
+      color: white;
+      padding: 0.15rem 0.5rem;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+    .card.p2 .badge { background: var(--p2b); }
+    .card.p3 .badge { background: var(--p3b); }
+    .card.common .badge { background: var(--commonb); }
+
+    .sys {
+      font-size: 0.78rem;
+      opacity: 0.7;
+      margin-bottom: 0.55rem;
+      line-height: 1.35;
+    }
+    .functions {
+      list-style: none;
+      font-size: 0.74rem;
+      margin: 0.3rem 0 0.5rem;
+      padding-left: 0;
+      line-height: 1.5;
+    }
+    .functions li {
+      display: inline-block;
+      background: rgba(0,0,0,0.05);
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      margin: 0.1rem 0.15rem 0.1rem 0;
+    }
+    .ai-row {
+      margin-top: 0.4rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .ai-row .ai-tag {
+      display: inline-block;
+      background: linear-gradient(90deg, #f59e0b, #ef4444);
+      color: white;
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      margin-right: 0.3rem;
+      font-size: 0.65rem;
+    }
+    .compliance-row {
+      margin-top: 0.4rem;
+      font-size: 0.65rem;
+      display: flex;
+      gap: 0.3rem;
+      flex-wrap: wrap;
+    }
+    .compliance-row .ct {
+      background: rgba(16,185,129,0.12);
+      color: #047857;
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      border: 1px solid rgba(16,185,129,0.25);
+    }
+    .urls {
+      display: flex;
+      gap: 0.4rem;
+      font-size: 0.72rem;
+      font-family: 'Consolas', monospace;
+      padding-top: 0.6rem;
+      border-top: 1px dashed rgba(0,0,0,0.1);
+      margin-top: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .url-tag {
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      background: rgba(0,0,0,0.06);
+    }
+    .url-tag.fe { color: #2563eb; }
+    .url-tag.be { color: #16a34a; }
+    .health-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #94a3b8;
+      margin-right: 0.3rem;
+    }
+    .health-dot.up { background: #10b981; box-shadow: 0 0 6px #10b981; }
+    .health-dot.down { background: #ef4444; }
+
+    /* 共通基盤スタック */
+    .infra-stack {
+      max-width: 1400px;
+      margin: 2rem auto 0;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 14px;
+      padding: 1.3rem 1.5rem;
+    }
+    .infra-stack h2 {
+      font-size: 1rem;
+      margin-bottom: 0.7rem;
+      letter-spacing: 0.02em;
+    }
+    .infra-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.7rem;
+      font-size: 0.78rem;
+    }
+    .infra-item {
+      background: rgba(255,255,255,0.08);
+      padding: 0.6rem 0.7rem;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .infra-item .label {
+      font-size: 0.7rem;
+      opacity: 0.75;
+      margin-bottom: 0.2rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .infra-item .val {
+      font-weight: 600;
+    }
+
+    footer {
+      max-width: 1400px;
+      margin: 2rem auto 0;
+      padding-top: 1.2rem;
+      border-top: 1px solid rgba(255,255,255,0.15);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      font-size: 0.82rem;
+    }
+    footer a {
+      color: #93c5fd;
+      text-decoration: none;
+    }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🏗 Construction DX One Platform — 統合ポータル</h1>
+    <div class="subtitle">みらい建設工業株式会社 — 全 11 部門 統合建設DX基盤</div>
+    <div class="lan-ip" id="lan-ip">LAN: 192.168.0.143</div>
+  </header>
+
+  <!-- 統合構想 (最終形) -->
+  <section class="vision">
+    <h2>🎯 統合構想 — Construction Digital Twin Platform</h2>
+    <div class="flow">
+      <span class="step">🏗 現場</span><span class="arrow">→</span>
+      <span class="step">📡 IoT/センサー</span><span class="arrow">→</span>
+      <span class="step">📐 BIM/CIM</span><span class="arrow">→</span>
+      <span class="step">🤖 AI 解析</span><span class="arrow">→</span>
+      <span class="step">📊 経営分析</span><span class="arrow">→</span>
+      <span class="step">🌐 全社最適化</span>
+    </div>
+    <div class="compliance">
+      <span style="opacity:0.7;">準拠規格・法令:</span>
+      <span class="b">ISO 9001</span>
+      <span class="b">ISO 14001</span>
+      <span class="b">ISO 45001</span>
+      <span class="b">建設業法</span>
+      <span class="b">品確法</span>
+      <span class="b">労働安全衛生法</span>
+      <span class="b">i-Construction 2.0</span>
+      <span class="b">電子帳簿保存法</span>
+      <span class="b">インボイス制度</span>
+    </div>
+  </section>
+
+  <!-- 共通基盤 -->
+  <div class="section-label">🧱 共通基盤 (Foundation)<span class="pill">Phase 1 — 認証/データ/API集約</span></div>
+  <div class="grid">
+    <a class="card common" href="http://192.168.0.143:8080" target="_blank">
+      <div class="card-head">
+        <span class="icon">🚪</span>
+        <span class="num">GW</span>
+        <span class="name">API Gateway</span>
+        <span class="badge">Gateway</span>
+      </div>
+      <div class="sys">11 部門 API を集約するエッジゲートウェイ</div>
+      <ul class="functions"><li>JWT 検証</li><li>ルーティング</li><li>Rate Limit</li><li>OIDC連携</li><li>集約 KPI</li><li>監査ログ</li></ul>
+      <div class="ai-row"><span class="ai-tag">AI</span>異常アクセス検知 / SLO 自動分析</div>
+      <div class="compliance-row"><span class="ct">ISO 27001</span><span class="ct">ゼロトラスト</span></div>
+      <div class="urls"><span class="url-tag be"><span class="health-dot" data-port="8080"></span>:8080</span></div>
+    </a>
+    <a class="card common" href="http://192.168.0.143:8090" target="_blank">
+      <div class="card-head">
+        <span class="icon">🎭</span>
+        <span class="num">MOCK</span>
+        <span class="name">Mocks サーバー</span>
+        <span class="badge">Dev/UAT</span>
+      </div>
+      <div class="sys">横断モックデータ供給 (UAT/開発時のフォールバック)</div>
+      <ul class="functions"><li>17 endpoint</li><li>KPI シナリオ</li><li>契約整合</li><li>aggregator 連携</li></ul>
+      <div class="urls"><span class="url-tag be"><span class="health-dot" data-port="8090"></span>:8090</span></div>
+    </a>
+  </div>
+
+  <!-- Phase 1 -->
+  <div class="section-label">🟡 Phase 1 — 現場・安全・IT 運用 (最優先)<span class="pill">施工/安全品質/ITSM</span></div>
+  <div class="grid">
+    <a class="card p1" href="http://192.168.0.143:5183" target="_blank">
+      <div class="card-head">
+        <span class="icon">🏗</span><span class="num">04</span><span class="name">施工本部</span>
+        <span class="badge">Phase 1</span>
+      </div>
+      <div class="sys">Construction Site Management System — 現場業務統合</div>
+      <ul class="functions"><li>工程管理</li><li>出来高</li><li>原価</li><li>電子黒板</li><li>日報</li><li>KY管理</li><li>作業員入退場</li><li>重機管理</li><li>ドローン連携</li><li>BIM連携</li></ul>
+      <div class="ai-row"><span class="ai-tag">AI</span>工程分析 / 写真分類 / 工期遅延予測</div>
+      <div class="compliance-row"><span class="ct">建設業法</span><span class="ct">品確法</span><span class="ct">i-Construction 2.0</span><span class="ct">PWA オフライン</span></div>
+      <div class="urls"><span class="url-tag fe"><span class="health-dot" data-port="5183"></span>WebUI :5183</span><span class="url-tag be"><span class="health-dot" data-port="8004"></span>API :8004</span></div>
+    </a>
+
+    <a class="card p1" href="http://192.168.0.143:5185" target="_blank">
+      <div class="card-head">
+        <span class="icon">🦺</span><span class="num">06</span><span class="name">安全品質環境本部</span>
+        <span class="badge">Phase 1</span>
+      </div>
+      <div class="sys">Safety & Quality Governance Platform</div>
+      <ul class="functions"><li>ヒヤリハット</li><li>KY 活動</li><li>労災分析</li><li>安全パトロール</li><li>品質記録</li><li>是正処置</li><li>ISO 監査</li><li>CO2 排出量</li><li>産廃管理</li><li>PPE 管理</li></ul>
+      <div class="ai-row"><span class="ai-tag">AI</span>映像解析 (ヘルメット/立入禁止/重機接触) / 危険予測</div>
+      <div class="compliance-row"><span class="ct">ISO 9001</span><span class="ct">ISO 14001</span><span class="ct">ISO 45001</span><span class="ct">労働安全衛生法</span></div>
+      <div class="urls"><span class="url-tag fe"><span class="health-dot" data-port="5185"></span>WebUI :5185</span><span class="url-tag be"><span class="health-dot" data-port="8006"></span>API :8006</span></div>
+    </a>
+
+    <a class="card p1" href="http://192.168.0.143:5189" target="_blank">
+      <div class="card-head">
+        <span class="icon">🛡</span><span class="num">10</span><span class="name">IT-DX 部門</span>
+        <span class="badge">Phase 1</span>
+      </div>
+      <div class="sys">Construction ITSM & ZeroTrust Platform</div>
+      <ul class="functions"><li>ITSM</li><li>CMDB</li><li>SIEM/SOC</li><li>資産管理</li><li>Intune 代替</li><li>AD/Entra 連携</li><li>FortiGate 監視</li><li>Cisco 監視</li></ul>
+      <div class="ai-row"><span class="ai-tag">AI</span>HelpDesk / インシデント自動分類 / 異常検知</div>
+      <div class="compliance-row"><span class="ct">ISO 20000</span><span class="ct">ISO 27001</span><span class="ct">J-SOX</span><span class="ct">ZeroTrust</span></div>
+      <div class="urls"><span class="url-tag fe"><span class="health-dot" data-port="5189"></span>WebUI :5189</span><span class="url-tag be"><span class="health-dot" data-port="8010"></span>API :8010</span></div>
+    </a>
+  </div>
+
+  <!-- Phase 2 -->
+  <div class="section-label">🔵 Phase 2 — 業務基幹 (営業・技術・管理・購買)<span class="pill">CRM/BIM/経理/調達</span></div>
+  <div class="grid">
+    <a class="card p2" href="http://192.168.0.143:5181" target="_blank">
+      <div class="card-head"><span class="icon">🤝</span><span class="num">02</span><span class="name">営業本部</span><span class="badge">Phase 2</span></div>
+      <div class="sys">Construction CRM & Bid Management — 入札・営業支援</div>
+      <ul class="functions"><li>案件管理</li><li>入札管理</li><li>総合評価点</li><li>発注機関分析</li><li>営業日報</li><li>名刺 OCR</li><li>契約管理</li><li>電子契約</li></ul>
+      <div class="ai-row"><span class="ai-tag">AI</span>入札支援 / 受注確率予測 / 技術提案書自動生成</div>
+      <div class="compliance-row"><span class="ct">建設業法</span><span class="ct">公共工事入札</span><span class="ct">電子契約</span></div>
+      <div class="urls"><span class="url-tag fe"><span class="health-dot" data-port="5181"></span>WebUI :5181</span><span class="url-tag be"><span class="health-dot" data-port="8002"></span>API :8002</span></div>
+    </a>
+
+    <a class="card p2" href="http://192.168.0.143:5184" target="_blank">
+      <div class="card-head"><span class="icon">🧠</span><span class="num">05</span><span class="name">技術本部</span><span class="badge">Phase 2</span></div>
+      <div class="sys">Technical Knowledge & BIM Platform</div>
+      <ul class="functions"><li>技術資料</li><li>BIM/CIM</li><li>CAD 図面</li><li>技術ナレッジ</li><li>施工標準</li><li>研究管理</li><li>特許管理</li><li>土質データ</li></ul>
+      <div class="ai-row"><span class="ai-tag">AI</span>類似工法検索 / 過去事例マッチング (RAG)</div>
+      <div class="compliance-row"><span class="ct">i-Construction 2.0</span><span class="ct">建設業法</span><span class="ct">著作権/特許</span></div>
+      <div class="urls"><span class="url-tag fe"><span class="health-dot" data-port="5184"></span>WebUI :5184</span><span class="url-tag be"><span class="health-dot" data-port="8005"></span>API :8005</span></div>
+    </a>
+
+    <a class="card p2" href="http://192.168.0.143:5186" target="_blank">
+      <div class="card-head"><span class="icon">🏢</span><span class="num">07</span><span class="name">管理本部</span><span class="badge">Phase 2</span></div>
+      <div class="sys">Corporate Operation Platform — 人事/経理/総務</div>
+      <ul class="functions"><li>人材配置</li><li>技能資格</li><li>教育管理</li><li>労務</li><li>原価/支払</li><li>電帳法</li><li>インボイス</li><li>稟議/WF</li></ul>
+      <div class="ai-row"><span class="ai-tag">AI</span>人材スキル分析 / 仕訳自動化 / 文書要約</div>
+      <div class="compliance-row"><span class="ct">電子帳簿保存法</span><span class="ct">インボイス制度</span><span class="ct">労働基準法</span><span class="ct">J-SOX</span></div>
+      <div class="urls"><span class="url-tag fe"><span class="health-dot" data-port="5186"></span>WebUI :5186</span><span class="url-tag be"><span class="health-dot" data-port="8007"></span>API :8007</span></div>
+    </a>
+
+    <a class="card p2" href="http://192.168.0.143:5187" target="_blank">
+      <div class="card-head"><span class="icon">📦</span><span class="num">08</span><span class="name">購買部</span><span class="badge">Phase 2</span></div>
+      <div class="sys">Procurement & Material Platform</div>
+      <ul class="functions"><li>資材発注</li><li>在庫管理</li><li>リース</li><li>協力会社</li><li>単価比較</li><li>納期管理</li><li>3 社見積</li></ul>
+      <div class="ai-row"><span class="ai-tag">AI</span>価格予測 / 納期遅延予兆検知 / サプライヤー評価</div>
+      <div class="compliance-row"><span class="ct">下請法</span><span class="ct">建設業法</span><span class="ct">J-SOX</span></div>
+      <div class="urls"><span class="url-tag fe"><span class="health-dot" data-port="5187"></span>WebUI :5187</span><span class="url-tag be"><span class="health-dot" data-port="8008"></span>API :8008</span></div>
+    </a>
+  </div>
+
+  <!-- Phase 3 -->
+  <div class="section-label">🟢 Phase 3 — 経営・先端 (Digital Twin への発展)<span class="pill">経営/ソリューション/船舶/データレイク</span></div>
+  <div class="grid">
+    <a class="card p3" href="http://192.168.0.143:5180" target="_blank">
+      <div class="card-head"><span class="icon">📊</span><span class="num">01</span><span class="name">経営企画部</span><span class="badge">Phase 3</span></div>
+      <div class="sys">Construction Executive Dashboard</div>
+      <ul class="functions"><li>受注高分析</li><li>工事利益率</li><li>原価推移</li><li>工事進捗</li><li>事故件数</li><li>BCP 状況</li><li>KPI 管理</li><li>ESG/SDGs</li></ul>
+      <div class="ai-row"><span class="ai-tag">AI</span>利益率低下予測 / 赤字案件予測 / 人材不足予測</div>
+      <div class="compliance-row"><span class="ct">J-SOX</span><span class="ct">ESG 開示</span><span class="ct">統合報告書</span></div>
+      <div class="urls"><span class="url-tag fe"><span class="health-dot" data-port="5180"></span>WebUI :5180</span><span class="url-tag be"><span class="health-dot" data-port="8001"></span>API :8001</span></div>
+    </a>
+
+    <a class="card p3" href="http://192.168.0.143:5182" target="_blank">
+      <div class="card-head"><span class="icon">🌐</span><span class="num">03</span><span class="name">ソリューション営業本部</span><span class="badge">Phase 3</span></div>
+      <div class="sys">Smart Infrastructure Solution Platform</div>
+      <ul class="functions"><li>BIM/CIM 提案</li><li>IoT 提案</li><li>AI 解析</li><li>ドローン測量</li><li>維持管理 DX</li><li>防災 DX</li><li>港湾 DX</li><li>河川監視</li></ul>
+      <div class="ai-row"><span class="ai-tag">AI</span>提案 ROI シミュレーション / 提案書自動生成</div>
+      <div class="compliance-row"><span class="ct">i-Construction 2.0</span><span class="ct">国土強靭化</span><span class="ct">PPP/PFI</span></div>
+      <div class="urls"><span class="url-tag fe"><span class="health-dot" data-port="5182"></span>WebUI :5182</span><span class="url-tag be"><span class="health-dot" data-port="8003"></span>API :8003</span></div>
+    </a>
+
+    <a class="card p3" href="http://192.168.0.143:5188" target="_blank">
+      <div class="card-head"><span class="icon">🚢</span><span class="num">09</span><span class="name">船舶事業部</span><span class="badge">Phase 3</span></div>
+      <div class="sys">Marine Fleet Management</div>
+      <ul class="functions"><li>船舶稼働</li><li>AIS 連携</li><li>GPS 管理</li><li>燃料管理</li><li>保守点検</li><li>航行記録</li><li>浚渫管理</li></ul>
+      <div class="ai-row"><span class="ai-tag">AI</span>故障予兆検知 / 最適航路 / 燃料効率分析</div>
+      <div class="compliance-row"><span class="ct">船舶安全法</span><span class="ct">海洋汚染防止法</span><span class="ct">SOLAS</span></div>
+      <div class="urls"><span class="url-tag fe"><span class="health-dot" data-port="5188"></span>WebUI :5188</span><span class="url-tag be"><span class="health-dot" data-port="8009"></span>API :8009</span></div>
+    </a>
+
+    <a class="card p3" href="http://192.168.0.143:5190" target="_blank">
+      <div class="card-head"><span class="icon">🌐</span><span class="num">11</span><span class="name">統合データ基盤</span><span class="badge">Phase 3</span></div>
+      <div class="sys">Construction Data Lake & Digital Twin — 全部門統合</div>
+      <ul class="functions"><li>工事</li><li>写真</li><li>BIM</li><li>人員</li><li>原価</li><li>安全</li><li>資材</li><li>車両</li><li>ドローン</li><li>IoT</li><li>GPS</li></ul>
+      <div class="ai-row"><span class="ai-tag">AI</span>クロス部門分析 / Digital Twin / 全社最適化</div>
+      <div class="compliance-row"><span class="ct">DataOps</span><span class="ct">i-Construction 2.0</span><span class="ct">情報銀行</span></div>
+      <div class="urls"><span class="url-tag fe"><span class="health-dot" data-port="5190"></span>WebUI :5190</span><span class="url-tag be"><span class="health-dot" data-port="8011"></span>API :8011</span></div>
+    </a>
+  </div>
+
+  <!-- 共通基盤スタック -->
+  <section class="infra-stack">
+    <h2>🔧 共通基盤スタック (既存資産活用 + 統合)</h2>
+    <div class="infra-grid">
+      <div class="infra-item"><div class="label">認証</div><div class="val">Entra ID + HENNGE SSO (OIDC/OAuth2)</div></div>
+      <div class="infra-item"><div class="label">文書管理</div><div class="val">SharePoint Online + DirectCloud</div></div>
+      <div class="infra-item"><div class="label">ワークフロー</div><div class="val">DeskNet's NEO + 内製 Workflow Engine</div></div>
+      <div class="infra-item"><div class="label">データ基盤</div><div class="val">PostgreSQL + PostGIS + DataLake (S3互換)</div></div>
+      <div class="infra-item"><div class="label">AI / LLM</div><div class="val">Azure OpenAI GPT-4o + ローカル LLM</div></div>
+      <div class="infra-item"><div class="label">検索</div><div class="val">Elasticsearch + Kuromoji (日本語)</div></div>
+      <div class="infra-item"><div class="label">ネットワーク</div><div class="val">FortiGate + Cisco</div></div>
+      <div class="infra-item"><div class="label">監視</div><div class="val">Zabbix + Grafana + Wazuh (SIEM)</div></div>
+      <div class="infra-item"><div class="label">メール / グループウェア</div><div class="val">Microsoft 365 (Exchange/Teams)</div></div>
+      <div class="infra-item"><div class="label">フロントエンド</div><div class="val">React 18 + Vite + PWA + Tailwind</div></div>
+      <div class="infra-item"><div class="label">バックエンド</div><div class="val">Python 3.12 + FastAPI + SQLAlchemy</div></div>
+      <div class="infra-item"><div class="label">CI / CD</div><div class="val">GitHub Actions + CodeRabbit + Codex</div></div>
+    </div>
+  </section>
+
+  <footer>
+    <div>📘 <a href="https://github.com/Kensan196948G/Construction-DX-OnePlatform" target="_blank">GitHub</a></div>
+    <div>📋 <a href="https://github.com/Kensan196948G/Construction-DX-OnePlatform/issues" target="_blank">Issues</a></div>
+    <div>🔍 <a href="https://github.com/Kensan196948G/Construction-DX-OnePlatform/pull/8" target="_blank">PR #8 (Production)</a></div>
+    <div>🔒 <a href="https://github.com/Kensan196948G/Construction-DX-OnePlatform/blob/main/docs/PORTS.md" target="_blank">公式ポート定義</a></div>
+    <div id="updated">最終更新: -</div>
+  </footer>
+
+  <script>
+    const hostInPage = window.location.hostname;
+    if (hostInPage && hostInPage !== 'localhost' && hostInPage !== '127.0.0.1') {
+      document.getElementById('lan-ip').textContent = 'LAN: ' + hostInPage;
+      document.querySelectorAll('a.card').forEach(a => {
+        a.href = a.href.replace('192.168.0.143', hostInPage);
+      });
+    }
+    document.getElementById('updated').textContent = '最終更新: ' + new Date().toLocaleString('ja-JP');
+
+    async function check(port) {
+      const dots = document.querySelectorAll(`[data-port="${port}"]`);
+      const url = `http://${hostInPage || '192.168.0.143'}:${port}/`;
+      try {
+        await fetch(url, { mode: 'no-cors', signal: AbortSignal.timeout(2500) });
+        dots.forEach(d => d.classList.add('up'));
+      } catch {
+        dots.forEach(d => d.classList.add('down'));
+      }
+    }
+    [5180,5181,5182,5183,5184,5185,5186,5187,5188,5189,5190,
+     8001,8002,8003,8004,8005,8006,8007,8008,8009,8010,8011,
+     8080,8090].forEach(p => check(p));
+    // 30 秒ごとに re-check
+    setInterval(() => {
+      document.querySelectorAll('.health-dot').forEach(d => d.classList.remove('up','down'));
+      [5180,5181,5182,5183,5184,5185,5186,5187,5188,5189,5190,
+       8001,8002,8003,8004,8005,8006,8007,8008,8009,8010,8011,
+       8080,8090].forEach(p => check(p));
+    }, 30000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+cdx-agent (0.2.0-1) unstable; urgency=low
+
+  * Initial Debian packaging (Phase 1 MVP).
+  * cdx-agent 0.2.0: inventory, heartbeat, policy-pull, HMAC signing,
+    offline spool, full-jitter backoff, Retry-After, JSON logging.
+  * Includes systemd service/timer units with NoNewPrivileges hardening.
+  * Includes AppArmor profile (usr.bin.cdx-agent).
+  * Creates cdx-agent system user via sysusers.d.
+
+ -- Construction DX OS Team <dev@cdx.local>  Wed, 16 Apr 2026 00:00:00 +0900

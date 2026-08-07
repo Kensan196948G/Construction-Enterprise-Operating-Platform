@@ -10,5 +10,6 @@ export * from "./user.ts";
 export * from "./device.ts";
 export * from "./application.ts";
 export * from "./workflow.ts";
+export * from "./workflow-instance.ts";
 export * from "./policy.ts";
 export * from "./audit-event.ts";

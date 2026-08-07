@@ -1,0 +1,61 @@
+[project]
+name = "cdx-api-gateway"
+version = "0.1.0"
+description = "Construction DX One Platform — 統合APIゲートウェイ (FastAPI)"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "httpx>=0.27",
+    "redis>=5.0",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.4",
+    "structlog>=24.1",
+    "slowapi>=0.1.9",
+    "prometheus-client>=0.20",
+    "cdx-shared-auth",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "pytest-cov>=5.0",
+    "httpx>=0.27",
+]
+
+[tool.uv.sources]
+cdx-shared-auth = { path = "../shared-auth", editable = true }
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff.lint]
+# Loop #32 / Issue #12 Step 2: practical ignore list to enable strict
+# `ruff check .` (no `|| true`) without requiring a sweeping legacy refactor.
+# Each rule is opt-out for a concrete reason:
+# - B008 (function-call-in-default-arg): FastAPI Depends() / Query() / Body()
+# - B904 (raise from): explicit context is sometimes intentionally omitted in
+#   adapters that translate upstream errors verbatim.
+# - B017 (assert-raises-exception): broad pytest.raises during early-stage tests
+# - B905 (zip without strict): Python <3.10 compat in some adapters
+# - SIM103/105/108/110/117/102: refactor suggestions (style), not bugs
+# - N802/N806/N818: legacy/domain naming (日本語混在 / API contract names)
+# - E741 (ambiguous variable name): domain-specific single-letter locals
+# - F841 (unused variable): intentional placeholders during stub phases
+# - UP042 (StrEnum) / UP046 (PEP 695 generics): py3.12 migration tracked separately
+ignore = [
+    "B008", "B904", "B017", "B905",
+    "SIM102", "SIM103", "SIM105", "SIM108", "SIM110", "SIM117",
+    "N802", "N806", "N818",
+    "E741", "F841",
+    "UP042", "UP046",
+]

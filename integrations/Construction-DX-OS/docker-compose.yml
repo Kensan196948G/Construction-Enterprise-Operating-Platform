@@ -1,0 +1,161 @@
+# Construction DX OS — local development stack
+#
+# Services:
+#   cdx-server   FastAPI central platform
+#   postgres     PostgreSQL persistent storage (Phase 2 — enabled)
+#   prometheus   Metrics scraping from /metrics endpoint
+#
+# Usage:
+#   cp .env.example .env                     # fill CDX_REGISTRATION_TOKEN + POSTGRES_PASSWORD
+#   docker compose up -d
+#   docker compose logs -f cdx-server
+#
+# Phase 1 (in-memory, no Postgres):
+#   Comment out DATABASE_URL in cdx-server environment and remove the
+#   depends_on postgres block to run without a database.
+
+services:
+  # --------------------------------------------------------------------------
+  # cdx-server: Construction DX OS central platform API
+  # --------------------------------------------------------------------------
+  cdx-server:
+    build:
+      context: ./server/api
+      dockerfile: Dockerfile
+    image: cdx-server:local
+    container_name: cdx-server
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # REQUIRED: set via .env file or export in shell
+      CDX_REGISTRATION_TOKEN: "${CDX_REGISTRATION_TOKEN:?CDX_REGISTRATION_TOKEN must be set}"
+      # Phase 2: PostgreSQL persistent storage (auto-detected when set)
+      DATABASE_URL: "postgresql+psycopg2://cdx:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@postgres/cdx"
+      # Optional rate-limit tuning (default: 10 hb/min, 3 inv/h per device)
+      CDX_RATE_LIMIT_ENABLED: "${CDX_RATE_LIMIT_ENABLED:-true}"
+      CDX_RATE_LIMIT_HEARTBEAT_PER_MIN: "${CDX_RATE_LIMIT_HEARTBEAT_PER_MIN:-10}"
+      CDX_RATE_LIMIT_INVENTORY_PER_HOUR: "${CDX_RATE_LIMIT_INVENTORY_PER_HOUR:-3}"
+      # Phase 4b: Redis rate-limit backend (auto-detected when set)
+      REDIS_URL: "${REDIS_URL:-redis://redis:6379/0}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python3",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - cdx-internal
+
+  # --------------------------------------------------------------------------
+  # prometheus: Metrics collection from cdx-server /metrics endpoint
+  # --------------------------------------------------------------------------
+  prometheus:
+    image: prom/prometheus:v3.3.0
+    container_name: cdx-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=7d"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+    depends_on:
+      cdx-server:
+        condition: service_healthy
+    networks:
+      - cdx-internal
+
+  # --------------------------------------------------------------------------
+  # grafana: Dashboard visualisation for Prometheus metrics (Issue 0027)
+  # Access: http://localhost:3000  (admin / admin — change on first login)
+  # --------------------------------------------------------------------------
+  grafana:
+    image: grafana/grafana:11.4.0
+    container_name: cdx-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD:-admin}"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s:%(http_port)s/"
+      # Alert email notifications — set CDX_ALERT_EMAIL to enable (Issue 0055)
+      CDX_ALERT_EMAIL: "${CDX_ALERT_EMAIL:-}"
+      CDX_ALERT_WEBHOOK_URL: "${CDX_ALERT_WEBHOOK_URL:-}"
+      # SMTP settings (required for email alerts)
+      GF_SMTP_ENABLED: "${GF_SMTP_ENABLED:-false}"
+      GF_SMTP_HOST: "${GF_SMTP_HOST:-localhost:25}"
+      GF_SMTP_USER: "${GF_SMTP_USER:-}"
+      GF_SMTP_PASSWORD: "${GF_SMTP_PASSWORD:-}"
+      GF_SMTP_FROM_ADDRESS: "${GF_SMTP_FROM_ADDRESS:-noreply@localhost}"
+      GF_SMTP_FROM_NAME: "Construction DX OS"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    networks:
+      - cdx-internal
+
+  # --------------------------------------------------------------------------
+  # redis: Distributed rate-limit backend (Phase 4b)
+  # --------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: cdx-redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - cdx-internal
+
+  # --------------------------------------------------------------------------
+  # postgres: PostgreSQL persistent storage (Phase 2)
+  # --------------------------------------------------------------------------
+  postgres:
+    image: postgres:17-alpine
+    container_name: cdx-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cdx
+      POSTGRES_USER: cdx
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cdx"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cdx-internal
+
+volumes:
+  prometheus-data:
+  postgres-data:
+  grafana-data:
+
+networks:
+  cdx-internal:
+    driver: bridge

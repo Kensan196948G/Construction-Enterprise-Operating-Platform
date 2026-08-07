@@ -1,0 +1,5 @@
+subsystem: shared
+order: 10
+alembic_dir: 00_共通基盤/shared-db
+heads:
+  - 0001_init_master   # 既存。次回より 20260522_shared_0001_init_master に揃える予定

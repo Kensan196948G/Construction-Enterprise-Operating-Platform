@@ -1,0 +1,235 @@
+{
+  "title": "CDX API Latency & Performance",
+  "uid": "cdx-api-latency",
+  "tags": ["cdx", "latency", "performance", "production"],
+  "timezone": "Asia/Tokyo",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-3h", "to": "now" },
+  "description": "CDX API レイテンシ・パフォーマンス監視 (p50/p95/p99) — Generated Loop #36",
+  "templating": {
+    "list": [
+      {
+        "name": "job",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(http_request_duration_seconds_bucket{job=~\"cdx-.*\"}, job)",
+        "label": "サービス",
+        "multi": true,
+        "includeAll": true,
+        "allValue": "cdx-.*"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "p50 レスポンス時間 (中央値)",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket{job=~\"$job\"}[5m])) by (le))",
+          "legendFormat": "p50"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "steps": [
+              { "value": 0, "color": "green" },
+              { "value": 1, "color": "orange" },
+              { "value": 3, "color": "red" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "p95 レスポンス時間",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=~\"$job\"}[5m])) by (le))",
+          "legendFormat": "p95"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "steps": [
+              { "value": 0, "color": "green" },
+              { "value": 2, "color": "orange" },
+              { "value": 5, "color": "red" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "p99 レスポンス時間 (SLA基準)",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job=~\"$job\"}[5m])) by (le))",
+          "legendFormat": "p99"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "steps": [
+              { "value": 0, "color": "green" },
+              { "value": 3, "color": "orange" },
+              { "value": 8, "color": "red" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "エラー率 (4xx+5xx)",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{job=~\"$job\",status=~\"[45]..\"}[5m])) / clamp_min(sum(rate(http_requests_total{job=~\"$job\"}[5m])), 1e-9) * 100",
+          "legendFormat": "error %"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "steps": [
+              { "value": 0, "color": "green" },
+              { "value": 1, "color": "orange" },
+              { "value": 5, "color": "red" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "📈 レスポンス時間パーセンタイル推移",
+      "gridPos": { "x": 0, "y": 4, "w": 24, "h": 10 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket{job=~\"$job\"}[5m])) by (le))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=~\"$job\"}[5m])) by (le))",
+          "legendFormat": "p95"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job=~\"$job\"}[5m])) by (le))",
+          "legendFormat": "p99"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "s", "custom": { "lineWidth": 2 } },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "p99" },
+            "properties": [
+              {
+                "id": "color",
+                "value": { "fixedColor": "red", "mode": "fixed" }
+              }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "p95" },
+            "properties": [
+              {
+                "id": "color",
+                "value": { "fixedColor": "orange", "mode": "fixed" }
+              }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "p50" },
+            "properties": [
+              {
+                "id": "color",
+                "value": { "fixedColor": "green", "mode": "fixed" }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 20,
+      "type": "timeseries",
+      "title": "🔢 部門別リクエスト数 (req/s)",
+      "gridPos": { "x": 0, "y": 14, "w": 12, "h": 8 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum by (job) (rate(http_requests_total{job=~\"$job\"}[5m]))",
+          "legendFormat": "{{job}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "reqps" } }
+    },
+    {
+      "id": 21,
+      "type": "heatmap",
+      "title": "🌡 レスポンス時間ヒートマップ",
+      "gridPos": { "x": 12, "y": 14, "w": 12, "h": 8 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rate(http_request_duration_seconds_bucket{job=~\"$job\"}[5m])) by (le)",
+          "legendFormat": "{{le}}"
+        }
+      ],
+      "options": {
+        "calculate": false,
+        "yAxis": { "unit": "s" },
+        "color": { "scheme": "Oranges" }
+      }
+    },
+    {
+      "id": 30,
+      "type": "table",
+      "title": "🏆 レスポンス時間ランキング (遅い順, p99)",
+      "gridPos": { "x": 0, "y": 22, "w": 24, "h": 8 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sort_desc(histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job=~\"cdx-.*\"}[5m])) by (le, job)))",
+          "legendFormat": "{{job}}",
+          "instant": true
+        }
+      ],
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": { "fields": [{ "desc": true, "displayName": "Value" }] }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "s" }
+      }
+    }
+  ]
+}

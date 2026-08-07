@@ -6,6 +6,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 ## [Unreleased]
 
+### Added
+
+- **Workflow Instance API（統合 L-02 / Synapse Issue→Approval→Audit）** —
+  ワークフローテンプレートからテナント単位の実行インスタンスを生成・承認・却下・取消できる
+  `GET/POST /api/v1/workflow-instances` と `POST /:id/decision`・`POST /:id/cancel` を追加。
+  認可は `workflow:read` / `workflow:write`、テナントスコープと監査記録を標準適用。
+  migration `006`（`workflow_instances` テーブル）を追加。テスト 13 件追加（315/315 pass）
+
 ## [0.8.1] - 2026-08-07
 
 ### Fixed

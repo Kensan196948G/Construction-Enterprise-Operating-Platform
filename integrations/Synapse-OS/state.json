@@ -1,0 +1,595 @@
+{
+  "project": {
+    "name": "Synapse-OS",
+    "start_date": "2026-05-02",
+    "release_deadline": "2026-12-20",
+    "release_milestone": "Synapse-OS Pilot Release / Production RC",
+    "description": "AI Governance / Federation Native Enterprise Operating Platform"
+  },
+  "phase": {
+    "current": "build",
+    "week": 5,
+    "milestone": "Sprint 9: G5 Direct AI Access CI 強制 + G6 Audit Evidence Export (CSV/JSON) + npm audit + Docker restart:unless-stopped"
+  },
+  "session": {
+    "started_at": "2026-05-14T09:55:32.485Z",
+    "max_duration_minutes": 300,
+    "loop_count": 1,
+    "max_loops": 3,
+    "current_loop": "Monitor->Build->Verify"
+  },
+  "kpi": {
+    "ci_success_rate": 1,
+    "ci_last_run": "26668955509",
+    "ci_last_run_result": "success",
+    "ci_last_commit": "2f3070b",
+    "test_pass_rate": 1,
+    "test_total": 396,
+    "test_passed": 396,
+    "test_failed": 0,
+    "deprecation_warning_count": 0,
+    "review_blocker_count": 0,
+    "security_issue_count": 0,
+    "ruff_errors": 0,
+    "bandit_medium_or_high": 0,
+    "pip_audit_vulnerabilities": 0
+  },
+  "execution": {
+    "ci_retry_limit": 5,
+    "same_error_limit": 2,
+    "current_session_start_at": "2026-06-06T13:06:01.531Z",
+    "last_trigger": "manual",
+    "last_stop_at": "2026-05-30T00:22:16.007Z",
+    "last_cron_session_id": "20260606-215913-Synapse-OS"
+  },
+  "status": {
+    "current_phase": "verify",
+    "current_sprint": "sprint9-governance-audit",
+    "stable": true,
+    "stable_consecutive_runs": 4,
+    "stable_target": 3,
+    "stable_target_reason": "Sprint 9 = 機能追加（通常変更）N=3 基準",
+    "stable_criterion_met": "sprint9_stable_achieved_2026-06-06",
+    "ci_present": true,
+    "frontend_present": true,
+    "open_issues": 3,
+    "open_prs": 1,
+    "open_pr_urls": ["https://github.com/Kensan196948G/Synapse-OS/pull/22"],
+    "mvp_rc_criteria_met": 10,
+    "mvp_rc_criteria_total": 10,
+    "docker_support": true,
+    "e2e_tests": 20,
+    "frontend_screens": 7,
+    "sprint3_goals": [
+      "Policy Service SQLite persistence",
+      "Audit Hash Chain (previous_hash_ref mandatory + verify endpoint)",
+      "Object Service full CRUD Governed Action (GET/UPDATE/DELETE → Audit)",
+      "CommonObject authority_ref field",
+      "AI Gateway real LLM (Anthropic API via ANTHROPIC_API_KEY)",
+      "README/state.json/CI alignment"
+    ]
+  },
+  "priority": {
+    "score": 0
+  },
+  "learning": {
+    "failure_patterns": [],
+    "success_patterns": [
+      "Sprint 0/1 delivered 9 services (object/workflow/policy/audit/ai-gateway/federation/knowledge/dashboard/tenant-identity) by BL-001..013 with ADR-001..008 guardrails",
+      "Sprint 1 acceptance test (Issue->Approval->Audit timeline) integrated under tests/sprint1_acceptance/",
+      "Starlette HTTP_422_UNPROCESSABLE_ENTITY -> HTTP_422_UNPROCESSABLE_CONTENT migration restored 0-warning test runs",
+      "STABLE achieved at session 2026-05-03 with 201/201 PASS x 2 consecutive runs",
+      "Session 2026-05-04: removed unused TransformationType import (knowledge_app), added tests/smoke/test_service_healthz.py (27 tests across 9 services), bandit Medium+/pip-audit clean",
+      "Sprint 2 MVP RC (2026-05-13): 262/262 PASS, CI green, Docker support, 7 frontend screens, E2E tests, JWT auth, SQLite object storage — PR#4 merged to main",
+      "Sprint 3 Governance Kernel (2026-05-14): 274/274 PASS, ruff clean, bandit 0 Medium+. AuthorityRole enum + CommonObject authority_ref/authority_role, Policy SQLite persistence, Audit Hash Chain mandatory (previous_hash_ref + verify endpoint), Object CRUD full Governed Action (PATCH/DELETE/GET audit), AI Gateway AnthropicLLMClient (ANTHROPIC_API_KEY fallback to Stub)",
+      "Sprint 3 SQLite engine hardening (2026-05-16): replaced default 'file::memory:?cache=shared' (which created stray on-disk DB without uri=True) with sqlite:///:memory: + StaticPool. 274/274 PASS preserved, ruff clean, bandit 0 Medium+. Removes silent ondisk artifact leak in both object-service and policy-service",
+      "Sprint 3 CodeRabbit Critical/Major fixes (2026-05-16): (1) Fail-closed policy gate — issue.update/delete now require final_decision=='allow', no longer pass approval_required. (2) Audit-first ordering — before/after states pre-computed; audit_client.append() before repo.save(); ensures no mutated-but-unaudited state. (3) delete return value checked → 409 on race. (4) AnthropicLLMClient defensive env access with explicit RuntimeError. (5) policy decision_store: tz UTC-normalized, try/except + rollback. (6) audit hash_ref now JSON-serialized to remove ambiguity collisions. (7) verify_chain uses append-order snapshot under lock. 274/274 PASS preserved, N=5 STABLE criterion met for Sprint 3 重要変更",
+      "Sprint 4 Federation Observability (2026-05-19): 328/328 PASS, STABLE N=3 達成. (1) Dashboard GovernanceMetrics endpoint — 7 tests covering per-tenant decision breakdown. (2) AI Gateway LLM client — 10 tests (AnthropicLLMClient + StubLLMClient protocol isolation). (3) Audit AuditEventStore — 11 tests (hash chain integrity, concurrent append, tamper detection via verify_chain). (4) Policy PolicyDecisionStore — 11 tests (issue_id sequential scoping, save+get roundtrip, list tenant filter). (5) JWT Auth endpoint (tenant-identity-service) — 11 tests (POST /auth/token + GET /auth/me, Bearer scheme, 401/422 edge cases). STABLE N=3 criterion confirmed across 4 consecutive CI runs. Release milestone set: 2026-12-20 Pilot Release / Production RC.",
+      "Sprint 5 CI Hardening (2026-05-19): 341/341 PASS, G1 CI gates established. (1) frontend-build job (Next.js npm run build + ESLint) added to CI — typedRoutes fix in Sidebar.tsx (href as Route cast). (2) docker-smoke job (audit service healthcheck) added — all 8 Python service Docker healthchecks migrated from httpx (not in prod) to urllib.request (stdlib). (3) Issue #6: federation-service 13 policy propagation tests (risk_score/policy_result_ref/reasoning_summary/outcome mapping/three-company scenario). (4) Dashboard HTTP clients confirmed fully implemented (no change needed). All 5 CI jobs green: lint/test/frontend-build/docker-smoke/security. PR #10 open sprint/5-ci-hardening -> main.",
+      "Sprint 5 G1-c Governance E2E (2026-05-19): 350/350 PASS (+9 e2e tests). Created tests/e2e/test_governance_e2e.py covering 3 cross-service governance flows: (1) Audit hash chain integrity (chain valid after 3 events, genesis on empty tenant, tenant isolation), (2) Federation cross-service e2e (real audit store wired via _AuditAdapter TestClient adapter — allow/deny/multi-event chain), (3) AI Gateway governance e2e (policy gate + audit trail — allow/deny ADR-006 preserved, chain integrity). Root-cause fixed: 7 AuditEventType enum values missing from synapse_shared/audit_base.py (AIInvoked/AIBlocked/AIMasked/AIRoutedLocal/AIReviewRequired/FederationBlocked/FederationReviewRequired) — invisible in StubAuditClient tests but exposed when cross-service adapter hit real Pydantic validation. All 5 CI jobs: lint/test/frontend-build/docker-smoke/security. STABLE N=3 criterion met.",
+      "Sprint 5 G1-c cleanup (2026-05-19): Issue #7 closed (GovernanceMetrics already met all acceptance criteria in Sprint4). Issue #8 closed (Sprint3 tdd_required: 4 target files 57 tests PASS — ai-gateway:10/audit:11/object:25/policy:11). Each run in isolation to avoid conftest fixture scoping interference across services.",
+      "Sprint 6 G3 PostgreSQL (2026-05-23): 364/364 PASS (+14 DB config tests). (1) database.py _resolve_db_config() — DATABASE_URL > SQLITE_DB > :memory: 優先順位。(2) Dockerfile[postgres] extra — psycopg2-binary を本番 Docker に含める critical fix。(3) FastAPI lifespan startup — init_db() で PostgreSQL 起動時テーブル自動作成。(4) Alembic マイグレーション — alembic.ini/env.py/versions/0001_initial_schema.py (object/policy 両サービス, render_as_batch=True)。(5) docker-compose postgres:16-alpine サービス追加 (pg_isready ヘルスチェック)。(6) CI test-postgres ジョブ追加 — 6/6 jobs SUCCESS。(7) Frontend: Dashboard KPI cards + Sprint progress table + ASCII arch diagram + ServiceHealth.tsx + error.tsx + loading.tsx。PR #5/#9/#10 全 main マージ完了 + PR #12 open. G2/G3 gate 達成。STABLE N=5 (通常N=3超過)。",
+      "Sprint 7 G4 Federation Demo (2026-05-27): 384/384 PASS (+20 federation-demo tests). (1) federation_demo.py — GET /federation-demo/scenario 静的エンドポイント。ADR-002 準拠 (read-only)。3社間シナリオ: A→B APPROVED/L3/shared, A→C BLOCKED/L1/source_only, B→C REVIEW_REQUIRED/L2/shared。(2) test_federation_demo.py — 20 テスト: schema field names/ADR-002 cross-tenant/status coverage/audit_boundary/trust_level/risk_score/idempotency。(3) object-service delete_issue: response_model=None + explicit Response(204) で FastAPI 0.115.0 AssertionError 修正。(4) workflow-service approvals.py: HTTP_422_UNPROCESSABLE_ENTITY → integer 422 (Starlette version-agnostic fix, -W error::DeprecationWarning CI 失敗解消)。(5) Frontend FederationEvent schema: source_tenant/target_tenant (not _id suffix), dlp_triggered 除去, getFederationDemoScenario() 追加。STABLE N=3 (CI 連続成功: run 26508306977/26508310254/26508492247)。",
+      "Sprint 8 G5 Frontend Auth + Dashboard (2026-05-27): JWT 認証フロー完全実装。(1) web/lib/session.ts — SESSION_COOKIE 共有定数 + cookieOptions (httpOnly/sameSite=lax/secure in prod/maxAge=3600)。(2) web/app/api/auth/login/route.ts — POST /auth/token プロキシ → httpOnly cookie セット、401/400/503 ステータス整理。(3) web/app/api/auth/logout/route.ts — cookie 削除。(4) web/middleware.ts — Edge middleware で全保護ルート -> /login リダイレクト (next param 付き)、PUBLIC_PATHS=[/login,/api/auth/*]。(5) web/app/login/page.tsx — Client Component ログインフォーム + safeNextPath() で Open Redirect 防御 (`//evil.com` や scheme 付き URL を拒否)。(6) web/app/layout.tsx — Server Component で cookie 読み取り + /auth/me 呼び出し、user prop を Sidebar に渡す。(7) web/components/Sidebar.tsx — user props 受け取り + logout ボタン追加。(8) Dashboard page.tsx Sprint 8 状態反映: 384 tests、Sprint 7 G4 Open PR 行追加、Sprint 8 G5 In Progress 行追加、ASCII アーキ図に JWT Auth flow 反映、ヘッダ Sprint 6 → Sprint 8。Issues #15/#16 対応。security review Medium (Open Redirect) は safeNextPath() で同一オリジン制約により解消。",
+      "Sprint 8 G5 typedRoutes 修正 (2026-05-27, 022a9d8): Next.js 14 experimental.typedRoutes 有効環境で router.push(string) は RouteImpl<string> 型を要求。app/login/page.tsx で `import type { Route } from 'next'` を追加し `router.push(next as Route)` にキャスト。同パターンは Sidebar.tsx の Sprint 5 typedRoutes fix と一貫。CI 6 jobs × 2 trigger runs (26509706761/26509712619) all SUCCESS、Sprint 8 G5 STABLE N=1/3 達成 (Sprint 7 STABLE 状態は Sprint 境界でリセット)。教訓: typedRoutes は実行時ではなく Next.js build 時の TypeScript チェックで失敗するため、Edge middleware や Server Component で型推論されない外部入力 (searchParams.get) を router.push に渡す場面では明示的 cast が必須。",
+      "Sprint 9 G5+G6 Governance Gates (2026-05-30/2026-06-06): 396/396 PASS (+12: G5×2 + G6×10)。G5: tests/governance/test_no_direct_ai_access.py — AST静的解析でai-gateway以外のAI SDK直接インポートを検出 (ADR-001 CI強制)。G6: GET /audit-events/export (CSV/JSON) — ISO/J-SOX監査証跡エクスポート、7フィールド (audit_event_id/event_type/occurred_at/tenant_id/actor_id/hash_ref/previous_hash_ref)。Security: web/package.json overrides.glob=^10.5.0 (GHSA-5j98解消、npm audit high 4→1、残1件はnext@14.x DoS Accepted Risk)。Docker: restart:unless-stopped 全11サービス。CI 4連続成功 → STABLE N=4 (target N=3超過)。PR #22 open sprint/9-governance-audit→main。全6 Governance Gates完了: G1-G6 ✅。PostToolUse hook pattern: state.json Edit後に自動フォーマットされるため、連続Edit時は必ずRead→Edit→(hook)→Read→Edit の順を守ること。"
+    ],
+    "usage_history": {
+      "agents": {
+        "general-purpose": {
+          "call_count": 9,
+          "last_used": "2026-05-23T00:25:38.664Z",
+          "last_description": "フロントエンド UI 改善"
+        },
+        "_total_agent_calls": 12,
+        "_last_agent_call_at": "2026-05-29T13:06:36.085Z",
+        "Explore": {
+          "call_count": 3,
+          "last_used": "2026-05-29T13:06:36.085Z",
+          "last_description": "Web/フロントエンド探索"
+        }
+      }
+    }
+  },
+  "guardrails": {
+    "adr": [
+      "ADR-001",
+      "ADR-002",
+      "ADR-003",
+      "ADR-004",
+      "ADR-005",
+      "ADR-006",
+      "ADR-007",
+      "ADR-008"
+    ],
+    "principles": [
+      "Governance First",
+      "Federation Native",
+      "AI Gateway Mandatory",
+      "Auditability",
+      "Explainability"
+    ]
+  },
+  "session_log": {
+    "2026-05-03": {
+      "started_at": "08:48 JST",
+      "actions": [
+        "Initialized state.json (no prior state)",
+        "Ran full pytest -> 201 passed, 1 DeprecationWarning",
+        "Fixed services/workflow-service/workflow_app/api/approvals.py: HTTP_422_UNPROCESSABLE_ENTITY -> HTTP_422_UNPROCESSABLE_CONTENT",
+        "Re-ran pytest -W error::DeprecationWarning -> 201 passed, 0 warnings (x2 consecutive)",
+        "STABLE confirmed (small change criterion N=2)"
+      ],
+      "remaining": [
+        "Sprint 2 expansion (federation cross-tenant, ai-gateway DLP edge cases)",
+        "CI pipeline integration (Sprint 0 non-goals guard currently forbids .github/workflows; lift gate at Sprint 2 entrance)",
+        "Frontend (web/) bootstrap"
+      ]
+    },
+    "2026-05-04": {
+      "started_at": "08:47:59 JST",
+      "actions": [
+        "Re-ran baseline pytest -W error::DeprecationWarning -> 201 passed, 0 warnings",
+        "Ran ruff check -> fixed F401 (TransformationType) in services/knowledge-service/knowledge_app/api/knowledge.py",
+        "Ran bandit -r services/ -s B101 --severity-level medium -> 0 Medium+ issues",
+        "Ran pip-audit (48 deps via pip freeze --exclude-editable) -> 0 vulnerabilities",
+        "Created tests/smoke/test_service_healthz.py covering 9 services x 3 observations (healthz, openapi, 404 routing)",
+        "Re-ran full pytest -W error::DeprecationWarning -> 228 passed, 0 warnings (3rd consecutive STABLE run)",
+        "Authored docs/12_Design_Review_Readiness/SESSION_VERIFICATION_REPORT.md with 250-item-checklist applicability analysis"
+      ],
+      "remaining": [
+        "Frontend (web/) bootstrap: stack selection + first MVP screen wiring against G1_MVP_SCREEN_FIELD_LIST",
+        "Lift Sprint 0 Non-Goals Guard for .github/workflows + integrate CI",
+        "Sprint 2: federation cross-tenant DLP edge cases, ai-gateway Explainability UI binding"
+      ],
+      "round2": {
+        "trigger": "user request: 残り時間で 250 項目 5 領域の検証 (CTO 全権委任)",
+        "scope_decision": "5 領域中 Frontend/Infra/Database/E2E は web/ infra/ 不在および DB 層未導入で構造的に適用不能。Backend と Security の baseline 2 本に絞って未来の Sprint で再利用できる資産を残す。",
+        "actions": [
+          "Created tests/backend/test_method_routing.py: 9 services x (POST/PUT/DELETE/PATCH 405 + OPTIONS no-5xx + HEAD healthz) = 27 tests",
+          "Created tests/security/test_secrets_scan.py: zero-secret baseline + 2 self-tests = 3 tests",
+          "Full pytest 258/258 PASS x 2 consecutive runs, 0 deprecation warnings, ruff clean"
+        ],
+        "test_total_after": 258
+      }
+    }
+  },
+  "compact": {
+    "last_pre_compact_at": "2026-06-06T13:04:31.459Z"
+  },
+  "session_log_2026-05-13": {
+    "started_at": "01:41 UTC",
+    "goal": "Sprint 2 MVP基盤完成: CI Pipeline + Frontend Bootstrap",
+    "actions": [
+      "Created .github/workflows/ci.yml: 3-job parallel CI (lint/test/security) for GitHub Actions",
+      "Updated tests/non_goals_guard/test_sprint0_scope.py: lifted .github/workflows restriction (Sprint 2 entrance)",
+      "Confirmed pytest baseline 256/256 PASS (was 258, -2 from removed guard parametrize cases)",
+      "Bootstrapped web/ Next.js 14 frontend: package.json, next.config.js, tsconfig.json, tailwind.config.js, postcss.config.js",
+      "Created 6 app screens: Dashboard, Issues, Approvals, AI Governance, Federation, Audit",
+      "Created components/Sidebar.tsx with 6-item navigation",
+      "Created lib/api.ts with typed API client for all 6 domains",
+      "npm install: 390 packages installed",
+      "tsc --noEmit: 0 errors",
+      "next lint: 0 warnings/errors",
+      "next dev: OOM on constrained host; TypeScript + ESLint verified instead"
+    ],
+    "remaining": [
+      "Sprint 2 backend: federation DLP edge cases, ai-gateway explainability endpoints",
+      "Frontend: wire real API calls (replace mock data), add auth context",
+      "npm vulnerability remediation (glob, eslint-config-next - dev deps, P2)",
+      "CI: verify GitHub Actions runs green on push"
+    ]
+  },
+  "dreaming": {
+    "patterns": [],
+    "curated_memories": [],
+    "recurring_mistakes": [],
+    "last_dreaming_run": null,
+    "dreaming_enabled": false
+  },
+  "warnings": [
+    {
+      "at": "2026-05-13T01:51:37.216Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 18 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "tests/backend/__init__.py",
+        "tests/backend/test_method_routing.py",
+        "tests/non_goals_guard/test_sprint0_scope.py",
+        "tests/security/__init__.py",
+        "tests/security/test_secrets_scan.py",
+        "web/app/ai-governance/page.tsx",
+        "web/app/approvals/page.tsx",
+        "web/app/audit/page.tsx",
+        "web/app/federation/page.tsx",
+        "web/app/issues/page.tsx",
+        "web/app/layout.tsx",
+        "web/app/page.tsx",
+        "web/components/Sidebar.tsx",
+        "web/lib/api.ts",
+        "web/next-env.d.ts",
+        "web/next.config.js",
+        "web/postcss.config.js",
+        "web/tailwind.config.js"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-13T02:20:24.371Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 17 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "services/object-service/object_app/storage/database.py",
+        "services/object-service/object_app/storage/issue_repository.py",
+        "services/object-service/object_app/storage/orm_models.py",
+        "services/tenant-identity-service/tenant_identity_app/api/auth.py",
+        "services/tenant-identity-service/tenant_identity_app/auth.py",
+        "tests/auth/__init__.py",
+        "tests/auth/test_jwt_auth.py",
+        "tests/e2e/__init__.py",
+        "tests/e2e/test_mvp_rc_e2e.py",
+        "tests/non_goals_guard/test_sprint0_scope.py",
+        "web/app/ai-governance/page.tsx",
+        "web/app/approvals/page.tsx",
+        "web/app/audit/page.tsx",
+        "web/app/federation/page.tsx",
+        "web/app/issues/page.tsx",
+        "web/app/page.tsx",
+        "web/lib/api.ts"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-14T10:50:58.296Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 21 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "services/_shared/synapse_shared/audit_base.py",
+        "services/_shared/synapse_shared/enums.py",
+        "services/_shared/synapse_shared/object_base.py",
+        "services/ai-gateway-service/ai_gateway_app/api/ai_actions.py",
+        "services/ai-gateway-service/ai_gateway_app/llm/llm_client.py",
+        "services/audit-service/audit_app/api/audit_events.py",
+        "services/audit-service/audit_app/schemas/ingest.py",
+        "services/audit-service/audit_app/storage/event_store.py",
+        "services/audit-service/tests/test_audit_events.py",
+        "services/object-service/object_app/api/issues.py",
+        "services/object-service/object_app/schemas/issue.py",
+        "services/object-service/object_app/storage/issue_repository.py",
+        "services/object-service/tests/conftest.py",
+        "services/object-service/tests/test_issues.py",
+        "services/policy-service/policy_app/storage/database.py",
+        "services/policy-service/policy_app/storage/decision_store.py",
+        "services/policy-service/policy_app/storage/orm_models.py",
+        "services/policy-service/tests/conftest.py",
+        "tests/non_goals_guard/test_sprint0_scope.py",
+        "web/app/page.tsx",
+        "web/lib/api.ts"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-14T10:57:12.412Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 21 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "services/_shared/synapse_shared/audit_base.py",
+        "services/_shared/synapse_shared/enums.py",
+        "services/_shared/synapse_shared/object_base.py",
+        "services/ai-gateway-service/ai_gateway_app/api/ai_actions.py",
+        "services/ai-gateway-service/ai_gateway_app/llm/llm_client.py",
+        "services/audit-service/audit_app/api/audit_events.py",
+        "services/audit-service/audit_app/schemas/ingest.py",
+        "services/audit-service/audit_app/storage/event_store.py",
+        "services/audit-service/tests/test_audit_events.py",
+        "services/object-service/object_app/api/issues.py",
+        "services/object-service/object_app/schemas/issue.py",
+        "services/object-service/object_app/storage/issue_repository.py",
+        "services/object-service/tests/conftest.py",
+        "services/object-service/tests/test_issues.py",
+        "services/policy-service/policy_app/storage/database.py",
+        "services/policy-service/policy_app/storage/decision_store.py",
+        "services/policy-service/policy_app/storage/orm_models.py",
+        "services/policy-service/tests/conftest.py",
+        "tests/non_goals_guard/test_sprint0_scope.py",
+        "web/app/page.tsx",
+        "web/lib/api.ts"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-14T10:59:29.040Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 21 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "services/_shared/synapse_shared/audit_base.py",
+        "services/_shared/synapse_shared/enums.py",
+        "services/_shared/synapse_shared/object_base.py",
+        "services/ai-gateway-service/ai_gateway_app/api/ai_actions.py",
+        "services/ai-gateway-service/ai_gateway_app/llm/llm_client.py",
+        "services/audit-service/audit_app/api/audit_events.py",
+        "services/audit-service/audit_app/schemas/ingest.py",
+        "services/audit-service/audit_app/storage/event_store.py",
+        "services/audit-service/tests/test_audit_events.py",
+        "services/object-service/object_app/api/issues.py",
+        "services/object-service/object_app/schemas/issue.py",
+        "services/object-service/object_app/storage/issue_repository.py",
+        "services/object-service/tests/conftest.py",
+        "services/object-service/tests/test_issues.py",
+        "services/policy-service/policy_app/storage/database.py",
+        "services/policy-service/policy_app/storage/decision_store.py",
+        "services/policy-service/policy_app/storage/orm_models.py",
+        "services/policy-service/tests/conftest.py",
+        "tests/non_goals_guard/test_sprint0_scope.py",
+        "web/app/page.tsx",
+        "web/lib/api.ts"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-15T23:45:56.300Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 8 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "services/ai-gateway-service/ai_gateway_app/api/ai_actions.py",
+        "services/ai-gateway-service/ai_gateway_app/llm/llm_client.py",
+        "services/audit-service/audit_app/storage/event_store.py",
+        "services/object-service/object_app/api/issues.py",
+        "services/object-service/object_app/storage/database.py",
+        "services/policy-service/policy_app/storage/database.py",
+        "services/policy-service/policy_app/storage/decision_store.py",
+        "tests/non_goals_guard/test_sprint0_scope.py"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-19T03:06:12.510Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 2 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "services/federation-service/tests/test_policy_propagation.py",
+        "web/components/Sidebar.tsx"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-22T23:59:37.335Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 37 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "services/_shared/synapse_shared/audit_base.py",
+        "services/_shared/synapse_shared/enums.py",
+        "services/_shared/synapse_shared/object_base.py",
+        "services/ai-gateway-service/ai_gateway_app/api/ai_actions.py",
+        "services/ai-gateway-service/ai_gateway_app/llm/llm_client.py",
+        "services/ai-gateway-service/tests/test_llm_client.py",
+        "services/audit-service/audit_app/api/audit_events.py",
+        "services/audit-service/audit_app/schemas/ingest.py",
+        "services/audit-service/audit_app/storage/event_store.py",
+        "services/audit-service/tests/test_audit_events.py",
+        "services/audit-service/tests/test_event_store.py",
+        "services/dashboard-service/dashboard_app/api/dashboard.py",
+        "services/dashboard-service/dashboard_app/clients/ai_gateway_client.py",
+        "services/dashboard-service/dashboard_app/clients/federation_client.py",
+        "services/dashboard-service/dashboard_app/clients/policy_client.py",
+        "services/dashboard-service/dashboard_app/schemas/dashboard.py",
+        "services/dashboard-service/tests/test_governance_metrics.py",
+        "services/federation-service/tests/test_policy_propagation.py",
+        "services/object-service/object_app/api/issues.py",
+        "services/object-service/object_app/schemas/issue.py",
+        "services/object-service/object_app/storage/database.py",
+        "services/object-service/object_app/storage/issue_repository.py",
+        "services/object-service/tests/conftest.py",
+        "services/object-service/tests/test_issues.py",
+        "services/object-service/tests/test_object_db_config.py",
+        "services/policy-service/policy_app/storage/database.py",
+        "services/policy-service/policy_app/storage/decision_store.py",
+        "services/policy-service/policy_app/storage/orm_models.py",
+        "services/policy-service/tests/conftest.py",
+        "services/policy-service/tests/test_decision_store.py"
+      ],
+      "truncated": true
+    },
+    {
+      "at": "2026-05-23T00:35:52.828Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 17 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "services/object-service/alembic/__init__.py",
+        "services/object-service/alembic/env.py",
+        "services/object-service/alembic/versions/0001_initial_schema.py",
+        "services/object-service/alembic/versions/__init__.py",
+        "services/object-service/object_app/storage/database.py",
+        "services/object-service/tests/test_object_db_config.py",
+        "services/policy-service/alembic/__init__.py",
+        "services/policy-service/alembic/env.py",
+        "services/policy-service/alembic/versions/0001_initial_schema.py",
+        "services/policy-service/alembic/versions/__init__.py",
+        "services/policy-service/policy_app/storage/database.py",
+        "services/policy-service/tests/test_policy_db_config.py",
+        "web/app/ai-governance/page.tsx",
+        "web/app/error.tsx",
+        "web/app/loading.tsx",
+        "web/app/page.tsx",
+        "web/components/ServiceHealth.tsx"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-23T00:53:46.745Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 13 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "services/object-service/alembic/__init__.py",
+        "services/object-service/alembic/env.py",
+        "services/object-service/alembic/versions/0001_initial_schema.py",
+        "services/object-service/alembic/versions/__init__.py",
+        "services/policy-service/alembic/__init__.py",
+        "services/policy-service/alembic/env.py",
+        "services/policy-service/alembic/versions/0001_initial_schema.py",
+        "services/policy-service/alembic/versions/__init__.py",
+        "web/app/ai-governance/page.tsx",
+        "web/app/error.tsx",
+        "web/app/loading.tsx",
+        "web/app/page.tsx",
+        "web/components/ServiceHealth.tsx"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-29T14:21:18.563Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 11 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "web/app/api/auth/login/route.ts",
+        "web/app/api/auth/logout/route.ts",
+        "web/app/layout.tsx",
+        "web/app/login/page.tsx",
+        "web/app/page.tsx",
+        "web/lib/api.ts",
+        "web/lib/csrf.ts",
+        "web/lib/route-access.ts",
+        "web/lib/url-safety.ts",
+        "web/middleware.ts",
+        "web/vitest.config.ts"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-29T14:29:33.124Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 5 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "web/app/api/auth/login/route.ts",
+        "web/app/layout.tsx",
+        "web/app/page.tsx",
+        "web/lib/api.ts",
+        "web/lib/session.ts"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-29T14:42:25.210Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 11 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "web/app/api/auth/login/route.ts",
+        "web/app/dashboard-content.tsx",
+        "web/app/layout.tsx",
+        "web/app/login/page.tsx",
+        "web/app/page.tsx",
+        "web/components/Providers.tsx",
+        "web/components/Sidebar.tsx",
+        "web/lib/api.ts",
+        "web/lib/i18n.tsx",
+        "web/lib/session.ts",
+        "web/tailwind.config.js"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-29T14:50:26.872Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 15 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "web/app/api/auth/login/route.ts",
+        "web/app/approvals/page.tsx",
+        "web/app/audit/page.tsx",
+        "web/app/dashboard-content.tsx",
+        "web/app/federation/page.tsx",
+        "web/app/issues/page.tsx",
+        "web/app/layout.tsx",
+        "web/app/login/page.tsx",
+        "web/app/page.tsx",
+        "web/components/Providers.tsx",
+        "web/components/Sidebar.tsx",
+        "web/lib/api.ts",
+        "web/lib/i18n.tsx",
+        "web/lib/session.ts",
+        "web/tailwind.config.js"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-29T14:52:00.054Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 15 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "web/app/api/auth/login/route.ts",
+        "web/app/approvals/page.tsx",
+        "web/app/audit/page.tsx",
+        "web/app/dashboard-content.tsx",
+        "web/app/federation/page.tsx",
+        "web/app/issues/page.tsx",
+        "web/app/layout.tsx",
+        "web/app/login/page.tsx",
+        "web/app/page.tsx",
+        "web/components/Providers.tsx",
+        "web/components/Sidebar.tsx",
+        "web/lib/api.ts",
+        "web/lib/i18n.tsx",
+        "web/lib/session.ts",
+        "web/tailwind.config.js"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-30T00:22:16.177Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 55 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "scripts/tools/run-ultrareview.js",
+        "services/_shared/synapse_shared/audit_base.py",
+        "services/ai-gateway-service/ai_gateway_app/schemas/ai_action.py",
+        "services/audit-service/audit_app/api/audit_events.py",
+        "services/audit-service/tests/test_audit_export.py",
+        "services/federation-service/federation_app/api/federation_demo.py",
+        "services/federation-service/tests/test_federation_demo.py",
+        "services/object-service/alembic/__init__.py",
+        "services/object-service/alembic/env.py",
+        "services/object-service/alembic/versions/0001_initial_schema.py",
+        "services/object-service/alembic/versions/__init__.py",
+        "services/object-service/object_app/api/issues.py",
+        "services/object-service/object_app/schemas/document.py",
+        "services/object-service/object_app/schemas/issue.py",
+        "services/object-service/object_app/storage/database.py",
+        "services/object-service/tests/test_object_db_config.py",
+        "services/policy-service/alembic/__init__.py",
+        "services/policy-service/alembic/env.py",
+        "services/policy-service/alembic/versions/0001_initial_schema.py",
+        "services/policy-service/alembic/versions/__init__.py",
+        "services/policy-service/policy_app/schemas/decision.py",
+        "services/policy-service/policy_app/storage/database.py",
+        "services/policy-service/tests/test_policy_db_config.py",
+        "services/tenant-identity-service/tenant_identity_app/auth.py",
+        "services/workflow-service/workflow_app/api/approvals.py",
+        "services/workflow-service/workflow_app/schemas/approval.py",
+        "tests/governance/__init__.py",
+        "tests/governance/test_no_direct_ai_access.py",
+        "web/app/ai-governance/page.tsx",
+        "web/app/api/auth/login/route.ts"
+      ],
+      "truncated": true
+    }
+  ]
+}

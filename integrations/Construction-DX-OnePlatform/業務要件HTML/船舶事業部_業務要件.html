@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>船舶事業部_業務要件 | みらい建設工業 統合建設DX基盤</title>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
+
+  :root {
+    --bg:               #ffffff;
+    --bg-surface:       #f8fafc;
+    --bg-card:          #ffffff;
+    --text:             #1e293b;
+    --text-secondary:   #64748b;
+    --text-muted:       #94a3b8;
+    --accent:           #2563eb;
+    --accent-light:     #dbeafe;
+    --accent2:          #0ea5e9;
+    --accent3:          #7c3aed;
+    --accent-red:       #f43f5e;
+    --border:           #e2e8f0;
+    --border-light:     #f1f5f9;
+    --shadow:           0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-lg:        0 4px 16px rgba(0,0,0,0.06);
+    --header-bg:        #ffffff;
+    --header-text:      #0f172a;
+    --header-sub:       #475569;
+    --header-shadow:    0 1px 4px rgba(0,0,0,0.08), 0 1px 0 #e2e8f0;
+    --header-border:    #e2e8f0;
+    --nav-link:         #475569;
+    --nav-hover-bg:     rgba(37,99,235,0.08);
+    --nav-active-bg:    rgba(37,99,235,0.12);
+    --nav-active-text:  #2563eb;
+    --table-head-bg:    linear-gradient(135deg, #2563eb, #0ea5e9);
+    --table-head-text:  #ffffff;
+    --table-stripe:     #f8fafc;
+    --table-hover:      #eff6ff;
+    --code-bg:          #f1f5f9;
+    --code-color:       #2563eb;
+    --pre-bg:           #1e293b;
+    --pre-color:        #e2e8f0;
+    --section-bg:       #f0f9ff;
+    --quote-bg:         #fef2f2;
+    --quote-border:     #f43f5e;
+    --toggle-bg:        #e2e8f0;
+    --toggle-dot:       #ffffff;
+    --toggle-active-bg: #334155;
+    --toggle-active-dot:#f59e0b;
+    --btn-bg:           #2563eb;
+    --btn-text:         #ffffff;
+    --btn-hover:        #1d4ed8;
+  }
+
+  [data-theme="dark"] {
+    --bg:               #0f172a;
+    --bg-surface:       #1e293b;
+    --bg-card:          #1e293b;
+    --text:             #e2e8f0;
+    --text-secondary:   #94a3b8;
+    --text-muted:       #64748b;
+    --accent:           #60a5fa;
+    --accent-light:     #1e3a5f;
+    --accent2:          #38bdf8;
+    --accent3:          #a78bfa;
+    --accent-red:       #fb7185;
+    --border:           #334155;
+    --border-light:     #1e293b;
+    --shadow:           0 1px 3px rgba(0,0,0,0.3);
+    --shadow-lg:        0 4px 16px rgba(0,0,0,0.4);
+    --header-bg:        #0f172a;
+    --header-text:      #f1f5f9;
+    --header-sub:       #94a3b8;
+    --header-shadow:    0 1px 0 #1e293b, 0 4px 16px rgba(0,0,0,0.5);
+    --header-border:    #334155;
+    --nav-link:         rgba(255,255,255,0.7);
+    --nav-hover-bg:     rgba(255,255,255,0.1);
+    --nav-active-bg:    rgba(255,255,255,0.15);
+    --nav-active-text:  #60a5fa;
+    --table-head-bg:    linear-gradient(135deg, #1e3a5f, #0c4a6e);
+    --table-head-text:  #e2e8f0;
+    --table-stripe:     #1a2536;
+    --table-hover:      #253347;
+    --code-bg:          #334155;
+    --code-color:       #60a5fa;
+    --pre-bg:           #0b1120;
+    --pre-color:        #94a3b8;
+    --section-bg:       #172033;
+    --quote-bg:         #2a1520;
+    --quote-border:     #fb7185;
+    --toggle-bg:        #334155;
+    --toggle-dot:       #f59e0b;
+    --toggle-active-bg: #334155;
+    --toggle-active-dot:#f59e0b;
+    --btn-bg:           #2563eb;
+    --btn-text:         #ffffff;
+    --btn-hover:        #3b82f6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Noto Sans JP', 'Meiryo', 'Hiragino Sans', sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.85;
+    transition: background 0.35s, color 0.35s;
+  }
+
+  /* ── Header ── */
+  .header-bar {
+    background: var(--header-bg);
+    padding: 22px 36px 16px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: var(--header-shadow);
+    display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+    transition: background 0.35s, box-shadow 0.35s;
+    border-bottom: 1px solid var(--header-border);
+  }
+  .header-main { flex: 1; min-width: 280px; }
+  .header-bar h1 {
+    font-size: 1.55em; font-weight: 700; letter-spacing: 0.04em;
+    color: var(--header-text);
+    transition: color 0.35s;
+  }
+  .header-bar .subtitle {
+    font-size: 0.82em; margin-top: 3px;
+    color: var(--header-sub);
+    font-weight: 400; letter-spacing: 0.02em;
+    transition: color 0.35s;
+  }
+  .header-nav {
+    width: 100%; margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid var(--header-border);
+    display: flex; flex-wrap: wrap; gap: 3px;
+    transition: border-color 0.35s;
+  }
+  .header-nav a {
+    color: var(--nav-link); text-decoration: none;
+    padding: 4px 11px; border-radius: 6px;
+    font-size: 0.76em; transition: all 0.2s;
+  }
+  .header-nav a:hover { background: var(--nav-hover-bg); color: var(--nav-active-text); }
+  .header-nav a.active { background: var(--nav-active-bg); color: var(--nav-active-text); font-weight: 600; }
+
+  /* ── Toggle ── */
+  .toggle-wrap { display: flex; align-items: center; flex-shrink: 0; gap: 7px; }
+  .theme-label { font-size: 0.72em; color: var(--text-secondary); white-space: nowrap; transition: color 0.35s; }
+  .theme-toggle {
+    position: relative; width: 52px; height: 26px;
+    background: var(--toggle-bg); border-radius: 13px;
+    cursor: pointer; border: 2px solid var(--border);
+    outline: none; transition: all 0.3s;
+  }
+  .theme-toggle::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--accent);
+    transition: transform 0.3s, background 0.3s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+  [data-theme="dark"] .theme-toggle { background: var(--toggle-active-bg); border-color: #475569; }
+  [data-theme="dark"] .theme-toggle::after { transform: translateX(26px); background: var(--toggle-active-dot); }
+
+  /* ── Container ── */
+  .container { max-width: 1140px; margin: 28px auto; padding: 0 24px; }
+
+  /* ── Cards ── */
+  .content, .idx-card {
+    background: var(--bg-card); border-radius: 14px;
+    padding: 36px 42px; box-shadow: var(--shadow-lg);
+    margin: 20px 0; border: 1px solid var(--border-light);
+    transition: background 0.35s, border 0.35s, box-shadow 0.35s;
+  }
+
+  /* ── Typography ── */
+  h1 { color: var(--accent); font-size: 1.65em; margin: 28px 0 14px; padding-bottom: 10px; border-bottom: 3px solid var(--accent); }
+  h2 {
+    color: var(--text); font-size: 1.3em; margin: 26px 0 12px;
+    padding: 10px 0 10px 16px;
+    border-left: 4px solid var(--accent2);
+    background: var(--section-bg); border-radius: 0 8px 8px 0;
+    transition: background 0.35s;
+  }
+  h3 { color: var(--accent); font-size: 1.1em; margin: 20px 0 10px; }
+  h4 { color: var(--accent3); font-size: 1.0em; margin: 16px 0 8px; }
+  p { margin: 8px 0; text-align: justify; }
+  strong { color: var(--accent); }
+  ul, ol { margin: 8px 0 8px 24px; }
+  li { margin: 4px 0; }
+  a { color: var(--accent); transition: color 0.2s; }
+  a:hover { color: var(--accent2); }
+  hr { border: none; height: 1px; background: var(--border); margin: 24px 0; }
+
+  /* ── Tables ── */
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.91em; }
+  thead { background: var(--table-head-bg); color: var(--table-head-text); }
+  th { padding: 12px 16px; text-align: left; font-weight: 500; white-space: nowrap; }
+  td { padding: 10px 16px; border-bottom: 1px solid var(--border); transition: background 0.2s; }
+  tbody tr:nth-child(even) { background: var(--table-stripe); }
+  tbody tr:hover { background: var(--table-hover); }
+
+  /* ── Code ── */
+  code { background: var(--code-bg); padding: 2px 7px; border-radius: 5px; font-size: 0.9em; color: var(--code-color); transition: background 0.35s; }
+  pre { background: var(--pre-bg); color: var(--pre-color); padding: 20px; border-radius: 10px; overflow-x: auto; margin: 16px 0; font-size: 0.87em; line-height: 1.65; transition: background 0.35s; }
+  pre code { background: none; color: inherit; padding: 0; }
+
+  /* ── Misc ── */
+  blockquote { border-left: 4px solid var(--quote-border); padding: 12px 20px; margin: 16px 0; background: var(--quote-bg); border-radius: 0 8px 8px 0; transition: background 0.35s; }
+  .footer { text-align: center; padding: 32px; color: var(--text-muted); font-size: 0.83em; }
+
+  /* ── Index ── */
+  .dept-badge {
+    display: inline-block; padding: 2px 12px; border-radius: 20px;
+    font-size: 0.82em; font-weight: 500;
+    background: var(--accent-light); color: var(--accent);
+    transition: all 0.35s;
+  }
+  .btn-open {
+    display: inline-block; padding: 7px 22px; border-radius: 8px;
+    font-size: 0.84em; font-weight: 500;
+    background: var(--btn-bg); color: var(--btn-text);
+    text-decoration: none; transition: all 0.2s;
+  }
+  .btn-open:hover { background: var(--btn-hover); color: var(--btn-text); transform: translateY(-1px); }
+  .stats-bar { display: flex; gap: 16px; flex-wrap: wrap; margin: 20px 0 28px; }
+  .stat-chip {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 20px; border-radius: 10px;
+    background: var(--bg-surface); border: 1px solid var(--border);
+    font-size: 0.88em; transition: all 0.35s;
+  }
+  .stat-chip .num { font-size: 1.4em; font-weight: 700; color: var(--accent); }
+
+  @media print {
+    .header-bar { position: static; }
+    body { background: #fff !important; color: #000 !important; }
+    .content, .idx-card { box-shadow: none; border: 1px solid #ccc; }
+    .toggle-wrap { display: none; }
+  }
+</style>
+<script>
+  (function(){
+    var s = localStorage.getItem('mirai-dx-theme');
+    if(s==='dark') document.documentElement.setAttribute('data-theme','dark');
+  })();
+</script>
+
+</head>
+<body>
+<div class="header-bar">
+  <div class="header-main">
+    <h1>みらい建設工業 統合建設DX基盤</h1>
+    <div class="subtitle">Construction DX One Platform &mdash; 船舶事業部_業務要件</div>
+  </div>
+  <div class="toggle-wrap">
+  <span class="theme-label">Light / Dark</span>
+  <button class="theme-toggle" onclick="toggleTheme()" aria-label="テーマ切替"></button>
+</div>
+  <div class="header-nav"><a href="index.html" style="font-weight:600;">一覧</a><a href="経営企画部_業務要件.html">経営企画部</a><a href="営業第一部_業務要件.html">営業第一部</a><a href="営業第二部_業務要件.html">営業第二部</a><a href="ソリューション営業本部_業務要件.html">ソリューション営業本部</a><a href="施工本部_工事部_業務要件.html">施工本部_工事部</a><a href="技術部_業務要件.html">技術部</a><a href="研究開発部_業務要件.html">研究開発部</a><a href="品質環境部_業務要件.html">品質環境部</a><a href="安全管理部_業務要件.html">安全管理部</a><a href="人事部_業務要件.html">人事部</a><a href="経理部_業務要件.html">経理部</a><a href="総務部_業務要件.html">総務部</a><a href="購買部_業務要件.html">購買部</a><a href="船舶事業部_業務要件.html" class="active">船舶事業部</a><a href="IT-DX部門_業務要件.html">IT-DX部門</a><a href="統合データ基盤_業務要件.html">統合データ基盤</a></div>
+</div>
+<div class="container">
+  <div class="content"><h1 id="_1">船舶事業部 業務要件書</h1>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>文書ID</td>
+<td>BIZ-SEN-001</td>
+</tr>
+<tr>
+<td>版数</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>作成日</td>
+<td>2026年5月16日</td>
+</tr>
+<tr>
+<td>対象部署</td>
+<td>船舶事業部</td>
+</tr>
+<tr>
+<td>対象システム</td>
+<td>Marine Fleet Management</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1">1. 部署概要</h2>
+<h3 id="11">1.1 組織上の位置づけ</h3>
+<p>船舶事業部は、自社保有船舶（起重機船・浚渫船・台船・曳船等）の運航管理・保守管理を担う。港湾・海上工事を主力とするみらい建設工業にとって、船舶は最重要の施工設備であり、その稼働率最大化と安全運航が事業基盤を支える。</p>
+<h3 id="12">1.2 部署ミッション</h3>
+<ul>
+<li>全船舶の安全運航の確保</li>
+<li>船舶稼働率の最大化</li>
+<li>保守点検の計画的実施による突発故障の防止</li>
+<li>燃費最適化によるコスト削減とCO2排出量削減</li>
+<li>浚渫工事の施工管理支援</li>
+</ul>
+<hr />
+<h2 id="2">2. 業務要件（詳細）</h2>
+<h3 id="21">2.1 船舶稼働管理</h3>
+<h4 id="211">2.1.1 保有船舶種別（想定）</h4>
+<table>
+<thead>
+<tr>
+<th>船種</th>
+<th>用途</th>
+<th>管理項目</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>起重機船</td>
+<td>重量物の吊込み・据付</td>
+<td>吊上能力・ブーム長</td>
+</tr>
+<tr>
+<td>浚渫船</td>
+<td>港湾・河川の浚渫</td>
+<td>浚渫能力（m³/h）</td>
+</tr>
+<tr>
+<td>台船</td>
+<td>資材運搬・作業足場</td>
+<td>積載能力・甲板面積</td>
+</tr>
+<tr>
+<td>曳船</td>
+<td>台船・起重機船の曳航</td>
+<td>馬力・曳航能力</td>
+</tr>
+<tr>
+<td>作業船</td>
+<td>各種海上作業</td>
+<td>作業内容に依存</td>
+</tr>
+<tr>
+<td>揚錨船</td>
+<td>アンカーの打設・揚収</td>
+<td>ウインチ能力</td>
+</tr>
+<tr>
+<td>交通船</td>
+<td>作業員の現場往来</td>
+<td>定員・速力</td>
+</tr>
+</tbody>
+</table>
+<h4 id="212">2.1.2 稼働スケジュール管理</h4>
+<table>
+<thead>
+<tr>
+<th>要件</th>
+<th>詳細</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>配船計画</td>
+<td>工事別の船舶配置計画（ガントチャート）</td>
+</tr>
+<tr>
+<td>稼働/非稼働管理</td>
+<td>稼働中/待機中/修繕中/ドック入り のステータス管理</td>
+</tr>
+<tr>
+<td>稼働率分析</td>
+<td>船種別・月別の稼働率集計</td>
+</tr>
+<tr>
+<td>回航計画</td>
+<td>現場間の回航スケジュール管理</td>
+</tr>
+<tr>
+<td>共用管理</td>
+<td>複数現場での船舶の共用スケジュール調整</td>
+</tr>
+</tbody>
+</table>
+<h4 id="213">2.1.3 配船計画の制約条件</h4>
+<ul>
+<li>気象条件（風速・波高・潮流）による作業可否</li>
+<li>船舶のドック入り予定との調整</li>
+<li>乗組員の配置（有資格者の充足確認）</li>
+<li>回航日数の考慮</li>
+</ul>
+<hr />
+<h3 id="22-aisgps">2.2 AIS・GPS連携</h3>
+<h4 id="221">2.2.1 リアルタイム位置管理</h4>
+<table>
+<thead>
+<tr>
+<th>要件</th>
+<th>詳細</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AIS受信</td>
+<td>船舶自動識別装置からのデータ受信</td>
+</tr>
+<tr>
+<td>GPS追跡</td>
+<td>全船舶のGPSリアルタイム位置表示</td>
+</tr>
+<tr>
+<td>GIS地図表示</td>
+<td>海図上への船舶位置プロット</td>
+</tr>
+<tr>
+<td>航跡表示</td>
+<td>過去の航行履歴の軌跡表示</td>
+</tr>
+<tr>
+<td>ジオフェンス</td>
+<td>指定区域からの逸脱アラート</td>
+</tr>
+</tbody>
+</table>
+<h4 id="222">2.2.2 受信データ</h4>
+<table>
+<thead>
+<tr>
+<th>データ</th>
+<th>更新頻度</th>
+<th>ソース</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>位置（緯度経度）</td>
+<td>10秒～3分</td>
+<td>AIS/GPS</td>
+</tr>
+<tr>
+<td>速力（ノット）</td>
+<td>10秒～3分</td>
+<td>AIS/GPS</td>
+</tr>
+<tr>
+<td>針路（度）</td>
+<td>10秒～3分</td>
+<td>AIS/GPS</td>
+</tr>
+<tr>
+<td>船舶識別</td>
+<td>固定</td>
+<td>MMSI</td>
+</tr>
+<tr>
+<td>船舶状態</td>
+<td>変更時</td>
+<td>AIS Class A</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="23">2.3 燃料管理</h3>
+<h4 id="231">2.3.1 管理要件</h4>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>給油記録</td>
+<td>給油日・給油量・油種・単価・給油場所</td>
+</tr>
+<tr>
+<td>消費量記録</td>
+<td>日次の燃料消費量</td>
+</tr>
+<tr>
+<td>燃費分析</td>
+<td>船種別・工事別の燃費（L/h、L/kWh）</td>
+</tr>
+<tr>
+<td>コスト分析</td>
+<td>燃料コストの月次集計・予算比較</td>
+</tr>
+<tr>
+<td>在油管理</td>
+<td>各船舶の燃料残量管理</td>
+</tr>
+<tr>
+<td>CO2算出</td>
+<td>燃料消費量からのCO2排出量自動計算</td>
+</tr>
+</tbody>
+</table>
+<h4 id="232">2.3.2 省エネ分析</h4>
+<ul>
+<li>運航パターンと燃料消費の相関分析</li>
+<li>最適運航速度の提案（燃費最適化）</li>
+<li>船齢・機関状態と燃費の関係分析</li>
+<li>ESG/SDGs報告用のCO2排出データ集計</li>
+</ul>
+<hr />
+<h3 id="24">2.4 保守点検管理</h3>
+<h4 id="241">2.4.1 点検種別</h4>
+<table>
+<thead>
+<tr>
+<th>点検種別</th>
+<th>頻度</th>
+<th>実施者</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>日常点検</td>
+<td>毎日</td>
+<td>乗組員</td>
+</tr>
+<tr>
+<td>定期点検</td>
+<td>月次</td>
+<td>機関士</td>
+</tr>
+<tr>
+<td>中間検査</td>
+<td>2.5年ごと</td>
+<td>船級協会</td>
+</tr>
+<tr>
+<td>定期検査</td>
+<td>5年ごと</td>
+<td>船級協会</td>
+</tr>
+<tr>
+<td>ドック入り</td>
+<td>2.5年ごと</td>
+<td>造船所</td>
+</tr>
+</tbody>
+</table>
+<h4 id="242">2.4.2 管理要件</h4>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>点検スケジュール</td>
+<td>年間点検計画の作成・管理</td>
+</tr>
+<tr>
+<td>点検記録</td>
+<td>点検チェックリスト・結果の記録</td>
+</tr>
+<tr>
+<td>故障記録</td>
+<td>故障内容・原因・対応・停止期間</td>
+</tr>
+<tr>
+<td>修理履歴</td>
+<td>修理内容・費用・修理業者</td>
+</tr>
+<tr>
+<td>部品管理</td>
+<td>主要部品の在庫・交換履歴</td>
+</tr>
+<tr>
+<td>予防保全</td>
+<td>稼働時間ベースの予防保全アラート</td>
+</tr>
+</tbody>
+</table>
+<h4 id="243">2.4.3 予防保全要件</h4>
+<ul>
+<li>機関の稼働時間に基づく部品交換時期の自動算出</li>
+<li>過去の故障パターンに基づく故障予測（将来：AI対応）</li>
+<li>ドック入り時の修繕項目の事前計画</li>
+</ul>
+<hr />
+<h3 id="25">2.5 航行記録管理</h3>
+<h4 id="251">2.5.1 航行日誌（ログブック）電子化</h4>
+<table>
+<thead>
+<tr>
+<th>記録項目</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>日時</td>
+<td>記録時刻</td>
+</tr>
+<tr>
+<td>位置</td>
+<td>緯度・経度</td>
+</tr>
+<tr>
+<td>天候</td>
+<td>天気・風向・風速・波高</td>
+</tr>
+<tr>
+<td>作業内容</td>
+<td>航行/作業/停泊の区分と内容</td>
+</tr>
+<tr>
+<td>乗組員</td>
+<td>当日の乗船者名簿</td>
+</tr>
+<tr>
+<td>特記事項</td>
+<td>事故・故障・異常等</td>
+</tr>
+</tbody>
+</table>
+<h4 id="252">2.5.2 気象データ連携</h4>
+<ul>
+<li>気象庁データとの連携（天気予報・波浪予報）</li>
+<li>海上気象の自動記録</li>
+<li>荒天時の作業中止判断支援（風速・波高による基準）</li>
+</ul>
+<hr />
+<h3 id="26">2.6 浚渫管理</h3>
+<h4 id="261">2.6.1 業務要件</h4>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>浚渫量管理</td>
+<td>日次の浚渫量（m³）の記録</td>
+</tr>
+<tr>
+<td>土砂運搬記録</td>
+<td>運搬先・運搬量・運搬回数</td>
+</tr>
+<tr>
+<td>深浅測量管理</td>
+<td>施工前後の深浅測量データ管理</td>
+</tr>
+<tr>
+<td>土質記録</td>
+<td>浚渫土の土質・含水比等の記録</td>
+</tr>
+<tr>
+<td>出来高管理</td>
+<td>浚渫出来高と設計量の対比</td>
+</tr>
+<tr>
+<td>GIS表示</td>
+<td>浚渫区域のGIS上での可視化</td>
+</tr>
+</tbody>
+</table>
+<h4 id="262">2.6.2 深浅測量データ管理</h4>
+<ul>
+<li>マルチビーム測深機のデータ取込</li>
+<li>施工前後の海底地形3D表示</li>
+<li>計画深度との差分表示</li>
+<li>出来形管理図の自動生成</li>
+</ul>
+<hr />
+<h2 id="3">3. 安全管理要件（海上特有）</h2>
+<h3 id="31">3.1 海上作業安全基準</h3>
+<table>
+<thead>
+<tr>
+<th>基準</th>
+<th>条件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>作業中止（風速）</td>
+<td>10m/s以上で軽作業中止、15m/s以上で全作業中止</td>
+</tr>
+<tr>
+<td>作業中止（波高）</td>
+<td>0.5m以上で潜水作業中止、1.5m以上で海上作業中止</td>
+</tr>
+<tr>
+<td>作業中止（視程）</td>
+<td>500m未満で船舶航行注意、100m未満で航行中止</td>
+</tr>
+<tr>
+<td>落水対策</td>
+<td>ライフジャケット常時着用、救命設備の配置</td>
+</tr>
+<tr>
+<td>荒天準備</td>
+<td>台風接近時の係留強化・避難計画</td>
+</tr>
+</tbody>
+</table>
+<h3 id="32">3.2 乗組員資格管理</h3>
+<table>
+<thead>
+<tr>
+<th>資格</th>
+<th>対象</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>海技士（航海/機関）</td>
+<td>船長・機関長</td>
+</tr>
+<tr>
+<td>小型船舶操縦免許</td>
+<td>交通船操縦者</td>
+</tr>
+<tr>
+<td>潜水士</td>
+<td>潜水作業者</td>
+</tr>
+<tr>
+<td>玉掛け</td>
+<td>起重機船作業者</td>
+</tr>
+<tr>
+<td>クレーン運転</td>
+<td>起重機船オペレーター</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4">4. 外部連携要件</h2>
+<table>
+<thead>
+<tr>
+<th>連携先</th>
+<th>連携内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>施工管理システム</td>
+<td>工事別の船舶使用実績</td>
+</tr>
+<tr>
+<td>経営ダッシュボード</td>
+<td>船舶稼働率・コストデータ</td>
+</tr>
+<tr>
+<td>安全品質システム</td>
+<td>海上安全記録</td>
+</tr>
+<tr>
+<td>気象庁API</td>
+<td>海上気象データ</td>
+</tr>
+<tr>
+<td>AIS受信機</td>
+<td>船舶位置データ</td>
+</tr>
+</tbody>
+</table></div>
+  <div class="footer">&copy; 2026 みらい建設工業 IT-DX部門 &nbsp;|&nbsp; 統合建設DX基盤 業務要件書</div>
+</div>
+
+<script>
+function toggleTheme(){
+  var h=document.documentElement, d=h.getAttribute('data-theme')==='dark';
+  if(d){h.removeAttribute('data-theme');localStorage.setItem('mirai-dx-theme','light');}
+  else{h.setAttribute('data-theme','dark');localStorage.setItem('mirai-dx-theme','dark');}
+}
+</script>
+
+</body></html>

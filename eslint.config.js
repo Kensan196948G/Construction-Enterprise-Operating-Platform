@@ -9,6 +9,7 @@ export default tseslint.config(
       "webui/dist/**",
       "node_modules/**",
       "legacy-projects/**",
+      "integrations/**",
       "coverage/**",
       "reports/**",
       "docs/**",

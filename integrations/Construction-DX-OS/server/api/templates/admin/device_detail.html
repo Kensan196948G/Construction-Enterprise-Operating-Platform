@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}{{ device.device_id }} — cdx-server Admin{% endblock %}
+{% block content %}
+<a href="/admin" class="back-link">&larr; All Devices</a>
+
+<div class="card">
+  <h2>
+    Device: {{ device.device_id }}
+    {% if is_online %}
+      <span class="badge badge-online">🟢 オンライン</span>
+    {% elif last_seen_minutes is not none %}
+      <span class="badge badge-offline">🔴 オフライン</span>
+    {% else %}
+      <span class="badge badge-unknown">⚪ 未確認</span>
+    {% endif %}
+  </h2>
+  {% if last_seen_minutes is not none %}
+  <p class="last-seen">
+    最終ハートビート:
+    {% if last_seen_minutes == 0 %}
+      1分未満前
+    {% elif last_seen_minutes < 60 %}
+      {{ last_seen_minutes }}分前
+    {% else %}
+      {{ (last_seen_minutes // 60) }}時間{{ (last_seen_minutes % 60) }}分前
+    {% endif %}
+  </p>
+  {% endif %}
+  <table>
+    <tbody>
+      <tr><th>Profile</th><td>{{ device.profile }}</td></tr>
+      <tr><th>Hostname</th><td>{{ device.hostname }}</td></tr>
+      <tr><th>Registered At</th><td>{{ device.registered_at.strftime("%Y-%m-%d %H:%M:%S UTC") }}</td></tr>
+    </tbody>
+  </table>
+</div>
+
+{% if policy %}
+<div class="card">
+  <h2>ポリシー設定 (profile: {{ policy.profile }})</h2>
+  <table>
+    <tbody>
+      <tr><th>Update Ring</th><td>{{ policy.update_ring }}</td></tr>
+      <tr><th>Heartbeat 間隔</th><td>{{ policy.heartbeat_interval_seconds }}秒 ({{ (policy.heartbeat_interval_seconds // 60) }}分)</td></tr>
+      <tr><th>Inventory 間隔</th><td>{{ policy.inventory_interval_seconds }}秒 ({{ (policy.inventory_interval_seconds // 3600) }}時間)</td></tr>
+      <tr><th>Policy Version</th><td>v{{ policy.policy_version }}</td></tr>
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<div class="card">
+  <h2>Recent Heartbeats (last {{ heartbeats | length }})</h2>
+  {% if heartbeats %}
+  <table>
+    <thead>
+      <tr>
+        <th>Bucket (epoch)</th>
+        <th>Agent Version</th>
+        <th>Uptime (s)</th>
+        <th>Sent At</th>
+        <th>Received At</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for h in heartbeats %}
+      <tr>
+        <td>{{ h.timestamp_bucket }}</td>
+        <td>{{ h.agent_version }}</td>
+        <td>{{ h.uptime_seconds }}</td>
+        <td>{{ h.sent_at }}</td>
+        <td>{{ h.received_at.strftime("%Y-%m-%d %H:%M:%S UTC") }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">No heartbeats recorded for this device.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>Recent Inventory Snapshots (last {{ inventories | length }})</h2>
+  {% if inventories %}
+    {% for inv in inventories %}
+    <details style="margin-bottom:0.75rem">
+      <summary style="cursor:pointer;font-size:0.85rem;color:#555;padding:0.4rem 0">
+        Bucket {{ inv.timestamp_bucket }} — {{ inv.received_at.strftime("%Y-%m-%d %H:%M:%S UTC") }}
+      </summary>
+      <pre style="margin-top:0.5rem">{{ inv.body | tojson(indent=2) }}</pre>
+    </details>
+    {% endfor %}
+  {% else %}
+  <p class="empty">No inventory snapshots for this device.</p>
+  {% endif %}
+</div>
+
+<style>
+.badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: normal;
+  padding: 0.2rem 0.55rem;
+  border-radius: 1rem;
+  vertical-align: middle;
+  margin-left: 0.5rem;
+}
+.badge-online  { background: #d4edda; color: #155724; }
+.badge-offline { background: #f8d7da; color: #721c24; }
+.badge-unknown { background: #e2e3e5; color: #383d41; }
+.last-seen { font-size: 0.85rem; color: #666; margin: 0.25rem 0 0.75rem; }
+details > summary { list-style: none; }
+details > summary::-webkit-details-marker { display: none; }
+details > summary::before { content: "▶ "; font-size: 0.7rem; }
+details[open] > summary::before { content: "▼ "; }
+</style>
+{% endblock %}

@@ -1,0 +1,101 @@
+# Kafka Topics for Construction-Enterprise-OS
+# Applied via: kubectl apply -f kafka-topics.yaml
+# Or via Docker: kafka-topics.sh --create --topic <name> --partitions 3 --replication-factor 1
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: construction-enterprise-os.users
+  namespace: construction-enterprise-os
+  labels:
+    strimzi.io/cluster: construction-enterprise-os-kafka
+spec:
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: 604800000
+    segment.bytes: 1073741824
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: construction-enterprise-os.documents
+  namespace: construction-enterprise-os
+  labels:
+    strimzi.io/cluster: construction-enterprise-os-kafka
+spec:
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: 604800000
+    segment.bytes: 1073741824
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: construction-enterprise-os.workflows
+  namespace: construction-enterprise-os
+  labels:
+    strimzi.io/cluster: construction-enterprise-os-kafka
+spec:
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: 2592000000
+    segment.bytes: 1073741824
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: construction-enterprise-os.projects
+  namespace: construction-enterprise-os
+  labels:
+    strimzi.io/cluster: construction-enterprise-os-kafka
+spec:
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: -1
+    segment.bytes: 1073741824
+    cleanup.policy: compact
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: construction-enterprise-os.iot
+  namespace: construction-enterprise-os
+  labels:
+    strimzi.io/cluster: construction-enterprise-os-kafka
+spec:
+  partitions: 6
+  replicas: 1
+  config:
+    retention.ms: 86400000
+    segment.bytes: 536870912
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: construction-enterprise-os.safety
+  namespace: construction-enterprise-os
+  labels:
+    strimzi.io/cluster: construction-enterprise-os-kafka
+spec:
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: 2592000000
+    segment.bytes: 1073741824
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: construction-enterprise-os.notifications
+  namespace: construction-enterprise-os
+  labels:
+    strimzi.io/cluster: construction-enterprise-os-kafka
+spec:
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: 604800000
+    segment.bytes: 1073741824

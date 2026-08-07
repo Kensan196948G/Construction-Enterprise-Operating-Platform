@@ -1,0 +1,85 @@
+<!--
+Construction DX One Platform - Wazuh Custom Rules
+Codex Review 推奨 5メトリクスを Wazuh ルールとして実装
+
+配置先: /var/ossec/etc/rules/cdx_rules.xml
+-->
+
+<group name="cdx,authentication,">
+
+  <!-- 認証基盤 (shared-auth) のログを取り込む -->
+  <rule id="100001" level="3">
+    <decoded_as>json</decoded_as>
+    <field name="logger">cdx_auth.*</field>
+    <description>CDX shared-auth: log captured</description>
+  </rule>
+
+  <!-- Codex指摘 #1: auth_unavailable / 503 rate -->
+  <rule id="100010" level="10" frequency="50" timeframe="300">
+    <if_matched_sid>100001</if_matched_sid>
+    <field name="message">auth_unavailable</field>
+    <description>CDX: auth_unavailable burst (5分で50件超 = JWKS/IdP可用性障害の疑い)</description>
+    <group>authentication_failure,critical,</group>
+  </rule>
+
+  <!-- Codex指摘 #2: untrusted issuer 急増 (issuer偽装) -->
+  <rule id="100020" level="12" frequency="10" timeframe="300">
+    <if_matched_sid>100001</if_matched_sid>
+    <field name="message">untrusted issuer</field>
+    <description>CDX: untrusted issuer attempts (5分で10件超 = 偽装攻撃の疑い)</description>
+    <group>authentication_failure,attack,critical,</group>
+  </rule>
+
+  <!-- Codex指摘 #3: unknown kid / JWKS force-refresh -->
+  <rule id="100030" level="8" frequency="5" timeframe="300">
+    <if_matched_sid>100001</if_matched_sid>
+    <field name="message">unknown kid|JWKS force-refreshed</field>
+    <description>CDX: JWKS desync or kid attack (5分で5件超)</description>
+    <group>authentication_failure,</group>
+  </rule>
+
+  <!-- Codex指摘 #4: HENNGE_JWKS_URI host mismatch (設定ミス) -->
+  <rule id="100040" level="13">
+    <if_matched_sid>100001</if_matched_sid>
+    <field name="message">disabling HENNGE</field>
+    <description>CDX: HENNGE設定ミス / 不正URL混入 (1件で即通知)</description>
+    <group>configuration_error,critical,</group>
+  </rule>
+
+  <!-- Codex指摘 #5: RBAC config rejected / deny burst -->
+  <rule id="100050" level="9" frequency="20" timeframe="600">
+    <if_matched_sid>100001</if_matched_sid>
+    <field name="message">rbac config rejected|insufficient role</field>
+    <description>CDX: RBAC deny急増 (10分で20件超 = 設定ミス or 不正アクセス)</description>
+    <group>authentication_failure,</group>
+  </rule>
+
+</group>
+
+<group name="cdx,construction,">
+
+  <!-- 04 施工: オフライン同期 連続失敗 -->
+  <rule id="100100" level="9" frequency="5" timeframe="300">
+    <decoded_as>json</decoded_as>
+    <field name="logger">site_api.services.sync_engine</field>
+    <field name="message">sync failed</field>
+    <description>CDX: 施工オフライン同期 連続失敗5回</description>
+  </rule>
+
+  <!-- 10 ITSM: SLA違反 -->
+  <rule id="100110" level="10">
+    <decoded_as>json</decoded_as>
+    <field name="logger">itsm_api.services.sla_evaluator</field>
+    <field name="message">breach detected</field>
+    <description>CDX: ITSM SLA 違反 (即通知)</description>
+  </rule>
+
+  <!-- 11 統合DB: ETL job failed -->
+  <rule id="100120" level="8">
+    <decoded_as>json</decoded_as>
+    <field name="logger">data_api.services.etl_engine</field>
+    <field name="message">ETL job failed</field>
+    <description>CDX: ETL ジョブ失敗</description>
+  </rule>
+
+</group>

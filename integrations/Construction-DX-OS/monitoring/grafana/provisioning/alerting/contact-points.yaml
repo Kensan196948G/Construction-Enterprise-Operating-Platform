@@ -1,0 +1,49 @@
+apiVersion: 1
+
+# Contact points for cdx-server alerts.
+# Configure CDX_ALERT_EMAIL (and optional GF_SMTP_* vars) to enable email notifications.
+# If CDX_ALERT_EMAIL is not set, alerts remain visible in Grafana UI but no email is sent.
+#
+# Example docker-compose environment block:
+#   environment:
+#     CDX_ALERT_EMAIL: ops@example.com
+#     GF_SMTP_ENABLED: "true"
+#     GF_SMTP_HOST: smtp.example.com:587
+#     GF_SMTP_USER: noreply@example.com
+#     GF_SMTP_PASSWORD: <smtp-password>
+#     GF_SMTP_FROM_ADDRESS: noreply@example.com
+
+contactPoints:
+  - orgId: 1
+    name: cdx-ops
+    receivers:
+      - uid: cdx-ops-email
+        type: email
+        settings:
+          addresses: "${CDX_ALERT_EMAIL:-}"
+          subject: "[CDX {{ .Status | toUpper }}] {{ .CommonLabels.alertname }}"
+          message: |
+            **{{ .CommonLabels.alertname }}** (重大度: {{ .CommonLabels.severity }})
+
+            {{ range .Alerts }}
+            - **サマリー**: {{ .Annotations.summary }}
+            - **詳細**: {{ .Annotations.description }}
+            - **開始時刻**: {{ .StartsAt.Format "2006-01-02 15:04:05 JST" }}
+            {{ end }}
+
+            Grafana: http://localhost:3000/alerting/list
+            Runbook: deployment/RUNBOOK.md
+          singleEmail: false
+        disableResolveMessage: false
+
+  - orgId: 1
+    name: cdx-webhook
+    receivers:
+      - uid: cdx-ops-webhook
+        type: webhook
+        settings:
+          url: "${CDX_ALERT_WEBHOOK_URL:-}"
+          httpMethod: POST
+          title: "[CDX] {{ .CommonLabels.alertname }}"
+          message: "{{ .CommonLabels.alertname }}: {{ range .Alerts }}{{ .Annotations.summary }}{{ end }}"
+        disableResolveMessage: false

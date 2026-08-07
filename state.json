@@ -6,7 +6,7 @@
     "registered_at": "2026-06-25",
     "phase_mode": "maintenance"
   },
-  "goal": "v0.8.1 本番運用継続 — SSR アセット経路（/api/assets/*）修正を本線へ反映し、302 テスト pass・CI グリーン・本番 ceop.mirai-dx-platform.com を稼働維持",
+  "goal": "5 リポジトリ統合進行中 — P0 ソース統合（PR #22）+ L-02 ワークフローインスタンス実装（315 テスト pass）。旧リポジトリ削除は全機能移行後の Y/N 判断",
   "phase": "maintenance",
   "release": {
     "v0_1_0_foundation": "release_ready",
@@ -24,7 +24,7 @@
     "success_rate_target": 0.9,
     "ci_success_rate": 1,
     "test_pass_rate": 1,
-    "test_count": 302,
+    "test_count": 315,
     "security_critical": 0,
     "security_high_resolved": 19,
     "blocker_count": 0

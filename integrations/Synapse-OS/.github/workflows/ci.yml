@@ -1,0 +1,218 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "feature/**", "fix/**", "chore/**", "sprint/**"]
+  pull_request:
+    branches: ["main", "sprint/**"]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  lint:
+    name: Lint (ruff)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+      - run: pip install ruff
+      - name: ruff check
+        run: ruff check services/ tests/
+
+  test:
+    name: Test (pytest 350+)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+      - name: Install shared and all services (editable)
+        run: |
+          pip install -e services/_shared
+          pip install -e services/object-service
+          pip install -e services/policy-service
+          pip install -e services/audit-service
+          pip install -e services/workflow-service
+          pip install -e services/ai-gateway-service
+          pip install -e services/federation-service
+          pip install -e services/knowledge-service
+          pip install -e services/dashboard-service
+          pip install -e services/tenant-identity-service
+      - name: Install test dependencies
+        run: pip install pytest httpx pytest-asyncio pyyaml python-multipart
+      - name: Run full test suite
+        run: python -m pytest tests/ services/ -W error::DeprecationWarning --tb=short -q
+
+  frontend-build:
+    name: Frontend build (Next.js)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: web/package-lock.json
+      - name: Install dependencies
+        working-directory: web
+        run: npm ci
+      - name: Unit tests (vitest)
+        working-directory: web
+        run: npm test
+      - name: TypeScript + Next.js build
+        working-directory: web
+        run: npm run build
+      - name: ESLint check
+        working-directory: web
+        run: npm run lint
+
+  docker-smoke:
+    name: Docker build smoke (audit service)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Build audit service image
+        run: docker compose build audit
+      - name: Start audit service and verify healthz
+        run: |
+          docker compose up -d audit
+          # Poll Docker's built-in healthcheck (port 8003 is internal-only in compose)
+          for i in $(seq 1 30); do
+            CONTAINER_ID=$(docker compose ps -q audit 2>/dev/null)
+            if [ -n "$CONTAINER_ID" ]; then
+              STATUS=$(docker inspect "$CONTAINER_ID" --format='{{.State.Health.Status}}' 2>/dev/null || echo "starting")
+              echo "Attempt $i/30: health=$STATUS"
+              if [ "$STATUS" = "healthy" ]; then
+                echo "audit service is healthy"
+                break
+              fi
+            fi
+            if [ "$i" -eq 30 ]; then
+              echo "ERROR: audit service did not become healthy in 90s"
+              docker compose logs audit
+              exit 1
+            fi
+            sleep 3
+          done
+          docker compose down
+
+  test-postgres:
+    name: Test (pytest — PostgreSQL backend)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      # CI-only ephemeral test credentials assembled from job env (not committed defaults).
+      # zizmor / Checkov: not a real secret — Postgres service container is throwaway per job.
+      PGUSER: synapse_ci
+      PGPASSWORD: ${{ secrets.CI_PG_PASSWORD || 'ci_ephemeral_pw_change_me' }}
+      PGDATABASE: synapse_ci
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: synapse_ci
+          POSTGRES_PASSWORD: ${{ secrets.CI_PG_PASSWORD || 'ci_ephemeral_pw_change_me' }}
+          POSTGRES_DB: synapse_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U synapse_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+      - name: Install shared and services (editable)
+        run: |
+          pip install -e services/_shared
+          pip install -e "services/object-service[postgres]"
+          pip install -e "services/policy-service[postgres]"
+          pip install -e services/audit-service
+          pip install -e services/workflow-service
+          pip install -e services/ai-gateway-service
+          pip install -e services/federation-service
+          pip install -e services/knowledge-service
+          pip install -e services/dashboard-service
+          pip install -e services/tenant-identity-service
+      - name: Install test dependencies
+        run: pip install pytest httpx pytest-asyncio pyyaml python-multipart psycopg2-binary
+      - name: Verify PostgreSQL is reachable
+        run: |
+          python -c "import psycopg2, os; psycopg2.connect(host='localhost', port=5432, user=os.environ['PGUSER'], password=os.environ['PGPASSWORD'], dbname=os.environ['PGDATABASE']).close(); print('postgres ok')"
+      - name: Run DB-config unit tests against PostgreSQL
+        env:
+          DATABASE_URL: postgresql://${{ env.PGUSER }}:${{ env.PGPASSWORD }}@localhost:5432/${{ env.PGDATABASE }}
+        run: |
+          python -m pytest services/object-service/tests/test_object_db_config.py \
+                            services/policy-service/tests/test_policy_db_config.py \
+                            -W error::DeprecationWarning --tb=short -q
+
+  security:
+    name: Security (bandit + pip-audit)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+      - name: Install dependencies
+        run: pip install --upgrade pip bandit pip-audit
+      - name: bandit scan (medium+)
+        run: bandit -r services/ -s B101 --severity-level medium -q
+      - name: Install services for pip-audit
+        run: |
+          pip install -e services/_shared
+          pip install -e services/object-service
+          pip install -e services/policy-service
+          pip install -e services/audit-service
+          pip install -e services/workflow-service
+          pip install -e services/ai-gateway-service
+          pip install -e services/federation-service
+          pip install -e services/knowledge-service
+          pip install -e services/dashboard-service
+          pip install -e services/tenant-identity-service
+      - name: pip-audit
+        run: pip-audit --skip-editable

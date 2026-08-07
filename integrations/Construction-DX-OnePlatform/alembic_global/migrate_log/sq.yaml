@@ -1,0 +1,5 @@
+subsystem: sq
+order: 30
+alembic_dir: 06_安全品質環境本部/SafetyQualityGovernancePlatform/backend
+heads:
+  - 0001_initial   # 既存。次回より 20260522_sq_0001_initial に揃える

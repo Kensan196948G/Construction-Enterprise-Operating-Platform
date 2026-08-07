@@ -1,0 +1,96 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.venv/
+.venv-test/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml
+*.cover
+
+# --- Node / TypeScript ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.next/
+out/
+build/
+dist/
+.vite/
+.turbo/
+.parcel-cache/
+*.tsbuildinfo
+
+# --- Env / Secrets ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+secrets/
+
+# --- IDE / OS ---
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.recommended.json
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Logs / Runtime ---
+logs/
+.runtime/
+*.log
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# --- Docker / Data ---
+data/
+.docker/
+docker-data/
+volumes/
+
+# --- Misc ---
+.cache/
+tmp/
+temp/
+*.tmp
+*.bak
+*.bak-*
+*.swp
+
+# --- Claude Code / AI ---
+.claude/local/
+.claude/claudeos/snapshots/
+.codex/
+reports/agent-transcripts/
+reports/ultrareview/

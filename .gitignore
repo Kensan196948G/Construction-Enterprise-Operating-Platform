@@ -1,10 +1,10 @@
 .env
 .env.*
-!.env.example
-*secret*
-*secrets*
-*token*
-*Token*
+!**/.env.example
+/*secret*
+/*secrets*
+/*token*
+/*Token*
 node_modules/
 .venv/
 venv/

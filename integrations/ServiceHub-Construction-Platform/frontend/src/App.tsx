@@ -1,0 +1,84 @@
+import { lazy, Suspense } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import Layout from "@/components/layout/Layout";
+import { useAuthStore } from "@/stores/authStore";
+
+const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
+const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
+const ProjectsPage = lazy(() => import("@/pages/projects/ProjectsPage"));
+const ProjectDetailPage = lazy(() => import("@/pages/projects/ProjectDetailPage"));
+const DailyReportsPage = lazy(() => import("@/pages/reports/DailyReportsPage"));
+const SafetyPage = lazy(() => import("@/pages/safety/SafetyPage"));
+const ItsmPage = lazy(() => import("@/pages/itsm/ItsmPage"));
+const KnowledgePage = lazy(() => import("@/pages/knowledge/KnowledgePage"));
+const CostPage = lazy(() => import("@/pages/cost/CostPage"));
+const PhotosPage = lazy(() => import("@/pages/photos/PhotosPage"));
+const UsersPage = lazy(() => import("@/pages/users/UsersPage"));
+const SettingsPage = lazy(() => import("@/pages/settings/SettingsPage"));
+const NotificationDeliveriesPage = lazy(
+  () => import("@/pages/notifications/NotificationDeliveriesPage"),
+);
+const SchedulePage = lazy(() => import("@/pages/schedule/SchedulePage"));
+const MaterialsPage = lazy(() => import("@/pages/materials/MaterialsPage"));
+const SubcontractorsPage = lazy(() => import("@/pages/subcontractors/SubcontractorsPage"));
+const EstimatesPage = lazy(() => import("@/pages/estimates/EstimatesPage"));
+const ImportPage = lazy(() => import("@/pages/data/ImportPage"));
+const ExportPage = lazy(() => import("@/pages/data/ExportPage"));
+const AuditPage = lazy(() => import("@/pages/audit/AuditPage"));
+const LegalPage = lazy(() => import("@/pages/legal/LegalPage"));
+
+function PageFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-[200px]" aria-label="読み込み中">
+      <div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
+
+function PrivateRoute({ children }: { children: React.ReactNode }) {
+  const token = useAuthStore((s) => s.token);
+  return token ? <>{children}</> : <Navigate to="/login" replace />;
+}
+
+export default function App() {
+  return (
+    <Suspense fallback={<PageFallback />}>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/"
+          element={
+            <PrivateRoute>
+              <Layout />
+            </PrivateRoute>
+          }
+        >
+          <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="projects" element={<ProjectsPage />} />
+          <Route path="projects/:id" element={<ProjectDetailPage />} />
+          <Route path="reports" element={<DailyReportsPage />} />
+          <Route path="safety" element={<SafetyPage />} />
+          <Route path="itsm" element={<ItsmPage />} />
+          <Route path="knowledge" element={<KnowledgePage />} />
+          <Route path="cost" element={<CostPage />} />
+          <Route path="photos" element={<PhotosPage />} />
+          <Route path="users" element={<UsersPage />} />
+          <Route
+            path="admin/notifications"
+            element={<NotificationDeliveriesPage />}
+          />
+          <Route path="schedule" element={<SchedulePage />} />
+          <Route path="materials" element={<MaterialsPage />} />
+          <Route path="subcontractors" element={<SubcontractorsPage />} />
+          <Route path="estimates" element={<EstimatesPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+          <Route path="import" element={<ImportPage />} />
+          <Route path="export" element={<ExportPage />} />
+          <Route path="audit" element={<AuditPage />} />
+          <Route path="legal" element={<LegalPage />} />
+        </Route>
+      </Routes>
+    </Suspense>
+  );
+}
