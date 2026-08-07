@@ -1,152 +1,168 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>建設企業オペレーティングプラットフォーム — ダッシュボード</title>
-  <link rel="stylesheet" href="/api/assets/app.css" />
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>建設企業オペレーティングプラットフォーム — ダッシュボード</title>
+    <link rel="icon" href="/api/assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/api/assets/app.css" />
+  </head>
+  <body>
+    <input type="hidden" id="ceopToken" value="{{API_TOKEN}}" />
 
-<input type="hidden" id="ceopToken" value="{{API_TOKEN}}" />
+    <header class="header">
+      <button class="hamburger" id="hamburgerBtn" aria-label="メニューを開閉">☰</button>
+      <a class="header__logo" href="/dashboard">
+        <span class="header__logo-mark">🏗</span>
+        <span>
+          <span class="header__title">建設企業プラットフォーム</span>
+          <span class="header__subtitle">Construction Enterprise Operating Platform</span>
+        </span>
+      </a>
+      <div class="header__spacer"></div>
+      <span class="header__version">v{{VERSION}}</span>
+      <div class="health-indicator">
+        <span class="health-dot" id="healthDot"></span>
+        <span id="healthText">システム正常</span>
+      </div>
+      <button class="btn-icon" id="refreshBtn">更新</button>
+    </header>
 
-<header class="header">
-  <button class="hamburger" id="hamburgerBtn" aria-label="メニューを開閉">☰</button>
-  <a class="header__logo" href="/dashboard">
-    <span class="header__logo-mark">🏗</span>
-    <span>
-      <span class="header__title">建設企業プラットフォーム</span>
-      <span class="header__subtitle">Construction Enterprise Operating Platform</span>
-    </span>
-  </a>
-  <div class="header__spacer"></div>
-  <span class="header__version">v{{VERSION}}</span>
-  <div class="health-indicator">
-    <span class="health-dot" id="healthDot"></span>
-    <span id="healthText">システム正常</span>
-  </div>
-  <button class="btn-icon" id="refreshBtn">更新</button>
-</header>
+    <div class="layout">
+      <nav class="sidebar" id="sidebar">
+        <div class="sidebar__section-label">メインメニュー</div>
+        <a class="nav-item active" href="/dashboard"
+          ><span class="nav-icon">📊</span> ダッシュボード</a
+        >
+        <a class="nav-item" href="/governance"><span class="nav-icon">🛡</span> ガバナンス</a>
+        <hr class="sidebar__divider" />
+        <div class="sidebar__section-label">リソース</div>
+        <a class="nav-item" href="/dashboard#users"><span class="nav-icon">👥</span> ユーザー</a>
+        <a class="nav-item" href="/dashboard#devices"><span class="nav-icon">📱</span> デバイス</a>
+        <a class="nav-item" href="/dashboard#applications"
+          ><span class="nav-icon">🔧</span> アプリケーション</a
+        >
+        <hr class="sidebar__divider" />
+        <div class="sidebar__section-label">コンプライアンス</div>
+        <a class="nav-item" href="/dashboard#audit"><span class="nav-icon">📋</span> 監査ログ</a>
+        <a class="nav-item" href="/dashboard#approvals"
+          ><span class="nav-icon">✅</span> 承認キュー</a
+        >
+        <hr class="sidebar__divider" />
+        <div class="sidebar__section-label">API</div>
+        <a class="nav-item" href="/api/v1/dashboard" target="_blank" rel="noopener"
+          ><span class="nav-icon">🔌</span> REST API</a
+        >
+        <a class="nav-item" href="/api/v1/governance/audit" target="_blank" rel="noopener"
+          ><span class="nav-icon">📑</span> 監査API</a
+        >
+      </nav>
 
-<div class="layout">
-  <nav class="sidebar" id="sidebar">
-    <div class="sidebar__section-label">メインメニュー</div>
-    <a class="nav-item active" href="/dashboard"><span class="nav-icon">📊</span> ダッシュボード</a>
-    <a class="nav-item" href="/governance"><span class="nav-icon">🛡</span> ガバナンス</a>
-    <hr class="sidebar__divider" />
-    <div class="sidebar__section-label">リソース</div>
-    <a class="nav-item" href="/dashboard#users"><span class="nav-icon">👥</span> ユーザー</a>
-    <a class="nav-item" href="/dashboard#devices"><span class="nav-icon">📱</span> デバイス</a>
-    <a class="nav-item" href="/dashboard#applications"><span class="nav-icon">🔧</span> アプリケーション</a>
-    <hr class="sidebar__divider" />
-    <div class="sidebar__section-label">コンプライアンス</div>
-    <a class="nav-item" href="/dashboard#audit"><span class="nav-icon">📋</span> 監査ログ</a>
-    <a class="nav-item" href="/dashboard#approvals"><span class="nav-icon">✅</span> 承認キュー</a>
-    <hr class="sidebar__divider" />
-    <div class="sidebar__section-label">API</div>
-    <a class="nav-item" href="/api/v1/dashboard" target="_blank" rel="noopener"><span class="nav-icon">🔌</span> REST API</a>
-    <a class="nav-item" href="/api/v1/governance/audit" target="_blank" rel="noopener"><span class="nav-icon">📑</span> 監査API</a>
-  </nav>
+      <main class="main" id="mainContent">
+        <div class="page-header">
+          <div class="page-eyebrow">Governance Overview</div>
+          <h1 class="page-title">
+            ガバナンス ダッシュボード
+            <span class="badge badge-muted" id="viewerBadge">{{VIEWER}}</span>
+          </h1>
+          <p class="page-subtitle">
+            最終更新: <span id="generatedAt">{{GENERATED_AT}}</span>
+            &nbsp;|&nbsp; 30秒ごとに自動更新
+          </p>
+        </div>
 
-  <main class="main" id="mainContent">
-    <div class="page-header">
-      <div class="page-eyebrow">Governance Overview</div>
-      <h1 class="page-title">
-        ガバナンス ダッシュボード
-        <span class="badge badge-muted" id="viewerBadge">{{VIEWER}}</span>
-      </h1>
-      <p class="page-subtitle">
-        最終更新: <span id="generatedAt">{{GENERATED_AT}}</span>
-        &nbsp;|&nbsp; 30秒ごとに自動更新
-      </p>
+        <section class="section">
+          <div class="section-title">ガバナンス統計</div>
+          <div class="stats-grid" id="statsGrid">
+            <div class="stat-card accent-blue">
+              <div class="stat-label">総ユーザー数</div>
+              <div class="stat-value" id="statTotalUsers">{{TOTAL_USERS}}</div>
+              <div class="stat-sub">
+                アクティブ: <span id="statActiveUsers">{{ACTIVE_USERS}}</span>
+              </div>
+              <div class="stat-icon">👥</div>
+            </div>
+            <div class="stat-card accent-green">
+              <div class="stat-label">アプリケーション</div>
+              <div class="stat-value" id="statApps">{{VISIBLE_APPS}}</div>
+              <div class="stat-sub">
+                障害: <span id="statUnhealthyApps">{{UNHEALTHY_APPS}}</span> 件
+              </div>
+              <div class="stat-icon">🔧</div>
+            </div>
+            <div class="stat-card accent-blue">
+              <div class="stat-label">デバイス</div>
+              <div class="stat-value" id="statDevices">{{VISIBLE_DEVICES}}</div>
+              <div class="stat-sub">管理対象端末数</div>
+              <div class="stat-icon">📱</div>
+            </div>
+            <div class="stat-card accent-yellow">
+              <div class="stat-label">未処理承認</div>
+              <div class="stat-value" id="statApprovals">{{OPEN_APPROVALS}}</div>
+              <div class="stat-sub">対応待ちリクエスト</div>
+              <div class="stat-icon">⏳</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">監査イベント</div>
+              <div class="stat-value" id="statAuditEvents">{{AUDIT_EVENTS}}</div>
+              <div class="stat-sub">拒否: <span id="statDenied">{{DENIED_EVENTS}}</span> 件</div>
+              <div class="stat-icon">📋</div>
+            </div>
+            <div class="stat-card accent-red">
+              <div class="stat-label">アクセス拒否</div>
+              <div class="stat-value" id="statDeniedBig">{{DENIED_EVENTS}}</div>
+              <div class="stat-sub">ポリシー違反検出</div>
+              <div class="stat-icon">🚫</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="applications">
+          <div class="section-title">アプリケーション健全性</div>
+          <div class="app-grid" id="appGrid">{{APP_CARDS}}</div>
+        </section>
+
+        <section class="section" id="devices">
+          <div class="section-title">フィールドデバイス状態</div>
+          <div class="card">
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>デバイスID</th>
+                    <th>種別</th>
+                    <th>ステータス</th>
+                    <th>担当ユーザー</th>
+                  </tr>
+                </thead>
+                <tbody id="deviceTableBody">
+                  {{DEVICE_ROWS}}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="approvals">
+          <div class="section-title">未処理承認リクエスト</div>
+          <div class="approval-list" id="approvalList">{{APPROVAL_ITEMS}}</div>
+        </section>
+
+        <section class="section" id="audit">
+          <div class="section-title">最新監査イベント（直近10件）</div>
+          <div class="audit-list" id="auditList">{{AUDIT_ITEMS}}</div>
+        </section>
+      </main>
     </div>
 
-    <section class="section">
-      <div class="section-title">ガバナンス統計</div>
-      <div class="stats-grid" id="statsGrid">
-        <div class="stat-card accent-blue">
-          <div class="stat-label">総ユーザー数</div>
-          <div class="stat-value" id="statTotalUsers">{{TOTAL_USERS}}</div>
-          <div class="stat-sub">アクティブ: <span id="statActiveUsers">{{ACTIVE_USERS}}</span></div>
-          <div class="stat-icon">👥</div>
-        </div>
-        <div class="stat-card accent-green">
-          <div class="stat-label">アプリケーション</div>
-          <div class="stat-value" id="statApps">{{VISIBLE_APPS}}</div>
-          <div class="stat-sub">障害: <span id="statUnhealthyApps">{{UNHEALTHY_APPS}}</span> 件</div>
-          <div class="stat-icon">🔧</div>
-        </div>
-        <div class="stat-card accent-blue">
-          <div class="stat-label">デバイス</div>
-          <div class="stat-value" id="statDevices">{{VISIBLE_DEVICES}}</div>
-          <div class="stat-sub">管理対象端末数</div>
-          <div class="stat-icon">📱</div>
-        </div>
-        <div class="stat-card accent-yellow">
-          <div class="stat-label">未処理承認</div>
-          <div class="stat-value" id="statApprovals">{{OPEN_APPROVALS}}</div>
-          <div class="stat-sub">対応待ちリクエスト</div>
-          <div class="stat-icon">⏳</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">監査イベント</div>
-          <div class="stat-value" id="statAuditEvents">{{AUDIT_EVENTS}}</div>
-          <div class="stat-sub">拒否: <span id="statDenied">{{DENIED_EVENTS}}</span> 件</div>
-          <div class="stat-icon">📋</div>
-        </div>
-        <div class="stat-card accent-red">
-          <div class="stat-label">アクセス拒否</div>
-          <div class="stat-value" id="statDeniedBig">{{DENIED_EVENTS}}</div>
-          <div class="stat-sub">ポリシー違反検出</div>
-          <div class="stat-icon">🚫</div>
-        </div>
-      </div>
-    </section>
+    <footer class="footer">
+      <span>建設企業オペレーティングプラットフォーム v{{VERSION}}</span>
+      <span class="footer__right">生成: {{GENERATED_AT}}</span>
+    </footer>
 
-    <section class="section" id="applications">
-      <div class="section-title">アプリケーション健全性</div>
-      <div class="app-grid" id="appGrid">{{APP_CARDS}}</div>
-    </section>
+    <div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div></div>
+    <div class="toast-container" id="toastContainer"></div>
 
-    <section class="section" id="devices">
-      <div class="section-title">フィールドデバイス状態</div>
-      <div class="card">
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>デバイスID</th>
-                <th>種別</th>
-                <th>ステータス</th>
-                <th>担当ユーザー</th>
-              </tr>
-            </thead>
-            <tbody id="deviceTableBody">{{DEVICE_ROWS}}</tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <section class="section" id="approvals">
-      <div class="section-title">未処理承認リクエスト</div>
-      <div class="approval-list" id="approvalList">{{APPROVAL_ITEMS}}</div>
-    </section>
-
-    <section class="section" id="audit">
-      <div class="section-title">最新監査イベント（直近10件）</div>
-      <div class="audit-list" id="auditList">{{AUDIT_ITEMS}}</div>
-    </section>
-  </main>
-</div>
-
-<footer class="footer">
-  <span>建設企業オペレーティングプラットフォーム v{{VERSION}}</span>
-  <span class="footer__right">生成: {{GENERATED_AT}}</span>
-</footer>
-
-<div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div></div>
-<div class="toast-container" id="toastContainer"></div>
-
-<script src="/api/assets/app.js"></script>
-</body>
+    <script src="/api/assets/app.js"></script>
+  </body>
 </html>

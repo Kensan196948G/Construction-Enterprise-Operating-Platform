@@ -97,6 +97,23 @@ test("healthz reports service identity without caching", async () => {
   assert.equal(res.headers.get("cache-control"), "no-store");
 });
 
+test("favicon.svg is served with SVG MIME and caching", async () => {
+  const res = await fetch(`${baseUrl}/favicon.svg`);
+  assert.equal(res.status, 200);
+  assert.match(res.headers.get("content-type") ?? "", /image\/svg\+xml/);
+  assert.equal(res.headers.get("cache-control"), "public, max-age=86400");
+  const body = await res.text();
+  assert.match(body, /<svg/);
+  assert.match(body, /d97757/);
+});
+
+test("favicon.ico redirects to the SVG icon", async () => {
+  const res = await fetch(`${baseUrl}/favicon.ico`, { redirect: "manual" });
+  assert.equal(res.status, 302);
+  assert.equal(res.headers.get("location"), "/favicon.svg");
+  assert.equal(res.headers.get("x-content-type-options"), "nosniff");
+});
+
 test("HEAD returns headers with empty body; non-GET methods get 405", async () => {
   const headRes = await fetch(`${baseUrl}/`, { method: "HEAD" });
   assert.equal(headRes.status, 200);

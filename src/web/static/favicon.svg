@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="CEOP">
+  <rect width="64" height="64" rx="14" fill="#d97757"/>
+  <g fill="none" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M24 52V16"/>
+    <path d="M16 16h32"/>
+    <path d="M24 26h14"/>
+    <path d="M38 26v14"/>
+    <path d="M30 40h16"/>
+    <path d="M38 40l6 7M38 40l-6 7"/>
+  </g>
+</svg>

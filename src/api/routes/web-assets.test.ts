@@ -64,6 +64,18 @@ test("SSR assets: /api/assets/app.js is served publicly with JS MIME type", asyn
   assert.ok((await res.text()).includes("refreshDashboard"));
 });
 
+test("SSR assets: /api/assets/favicon.svg is served with SVG MIME and security headers", async (t) => {
+  const h = await buildHarness();
+  t.after(() => h.close());
+
+  const res = await fetch(`${h.baseUrl}/api/assets/favicon.svg`);
+  assert.equal(res.status, 200);
+  assert.match(res.headers.get("content-type") ?? "", /image\/svg\+xml/);
+  assert.equal(res.headers.get("strict-transport-security"), "max-age=63072000; includeSubDomains");
+  assert.ok(res.headers.get("x-request-id"), "X-Request-Id should be present");
+  assert.match(await res.text(), /<svg/);
+});
+
 test("SSR assets: legacy /assets/* routes still work for direct deployments", async (t) => {
   const h = await buildHarness();
   t.after(() => h.close());
