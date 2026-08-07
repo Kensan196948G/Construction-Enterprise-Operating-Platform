@@ -18,13 +18,16 @@
 
 import { createServer as httpCreateServer } from "node:http";
 import type { IncomingMessage, Server, ServerResponse } from "node:http";
-import { createReadStream, statSync } from "node:fs";
+import { createReadStream, readFileSync, statSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { extname, resolve, sep } from "node:path";
 
 import { PLATFORM_VERSION } from "../version.ts";
 import { clientIpFromRequest } from "../api/client-ip.ts";
 import { type AccessLogger, nullAccessLogger } from "./access-log.ts";
+
+/** Browser-tab icon shared with the SSR pages (kept outside the design bundle). */
+const FAVICON_PATH = new URL("../web/static/favicon.svg", import.meta.url);
 
 export interface WebuiServerConfig {
   /** Directory containing index.html and assets/ (the unpacked bundle). */
@@ -125,6 +128,28 @@ export function createWebuiServer(config: WebuiServerConfig): Server {
 
     if (pathname === "/healthz") {
       sendJson(res, 200, { status: "ok", service: "ceop-webui", version: PLATFORM_VERSION }, head);
+      return;
+    }
+
+    // Browsers request /favicon.ico by default; serve the SVG icon instead.
+    if (pathname === "/favicon.ico") {
+      res.setHeader("Location", "/favicon.svg");
+      res.writeHead(302, { "Cache-Control": "no-store" });
+      res.end();
+      return;
+    }
+    if (pathname === "/favicon.svg") {
+      try {
+        const buf = readFileSync(FAVICON_PATH);
+        res.writeHead(200, {
+          "Content-Type": "image/svg+xml",
+          "Content-Length": buf.byteLength,
+          "Cache-Control": "public, max-age=86400",
+        });
+        res.end(head ? undefined : buf);
+      } catch {
+        sendJson(res, 404, { error: "Not Found" }, head);
+      }
       return;
     }
 

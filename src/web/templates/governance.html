@@ -1,170 +1,238 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>建設企業オペレーティングプラットフォーム — ガバナンス</title>
-  <link rel="stylesheet" href="/api/assets/app.css" />
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>建設企業オペレーティングプラットフォーム — ガバナンス</title>
+    <link rel="icon" href="/api/assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/api/assets/app.css" />
+  </head>
+  <body>
+    <input type="hidden" id="ceopToken" value="{{API_TOKEN}}" />
 
-<input type="hidden" id="ceopToken" value="{{API_TOKEN}}" />
+    <header class="header">
+      <button class="hamburger" id="hamburgerBtn" aria-label="メニューを開閉">☰</button>
+      <a class="header__logo" href="/dashboard">
+        <span class="header__logo-mark">🏗</span>
+        <span>
+          <span class="header__title">建設企業プラットフォーム</span>
+          <span class="header__subtitle">Construction Enterprise Operating Platform</span>
+        </span>
+      </a>
+      <div class="header__spacer"></div>
+      <span class="header__version">v{{VERSION}}</span>
+    </header>
 
-<header class="header">
-  <button class="hamburger" id="hamburgerBtn" aria-label="メニューを開閉">☰</button>
-  <a class="header__logo" href="/dashboard">
-    <span class="header__logo-mark">🏗</span>
-    <span>
-      <span class="header__title">建設企業プラットフォーム</span>
-      <span class="header__subtitle">Construction Enterprise Operating Platform</span>
-    </span>
-  </a>
-  <div class="header__spacer"></div>
-  <span class="header__version">v{{VERSION}}</span>
-</header>
+    <div class="layout">
+      <nav class="sidebar" id="sidebar">
+        <div class="sidebar__section-label">メインメニュー</div>
+        <a class="nav-item" href="/dashboard"><span class="nav-icon">📊</span> ダッシュボード</a>
+        <a class="nav-item active" href="/governance"
+          ><span class="nav-icon">🛡</span> ガバナンス</a
+        >
+        <hr class="sidebar__divider" />
+        <div class="sidebar__section-label">リソース</div>
+        <a class="nav-item" href="/dashboard#users"><span class="nav-icon">👥</span> ユーザー</a>
+        <a class="nav-item" href="/dashboard#devices"><span class="nav-icon">📱</span> デバイス</a>
+        <a class="nav-item" href="/dashboard#applications"
+          ><span class="nav-icon">🔧</span> アプリケーション</a
+        >
+        <hr class="sidebar__divider" />
+        <div class="sidebar__section-label">コンプライアンス</div>
+        <a class="nav-item" href="/dashboard#audit"><span class="nav-icon">📋</span> 監査ログ</a>
+        <a class="nav-item" href="/dashboard#approvals"
+          ><span class="nav-icon">✅</span> 承認キュー</a
+        >
+        <hr class="sidebar__divider" />
+        <div class="sidebar__section-label">API</div>
+        <a class="nav-item" href="/api/v1/dashboard" target="_blank" rel="noopener"
+          ><span class="nav-icon">🔌</span> REST API</a
+        >
+        <a class="nav-item" href="/api/v1/governance/audit" target="_blank" rel="noopener"
+          ><span class="nav-icon">📑</span> 監査API</a
+        >
+      </nav>
 
-<div class="layout">
-  <nav class="sidebar" id="sidebar">
-    <div class="sidebar__section-label">メインメニュー</div>
-    <a class="nav-item" href="/dashboard"><span class="nav-icon">📊</span> ダッシュボード</a>
-    <a class="nav-item active" href="/governance"><span class="nav-icon">🛡</span> ガバナンス</a>
-    <hr class="sidebar__divider" />
-    <div class="sidebar__section-label">リソース</div>
-    <a class="nav-item" href="/dashboard#users"><span class="nav-icon">👥</span> ユーザー</a>
-    <a class="nav-item" href="/dashboard#devices"><span class="nav-icon">📱</span> デバイス</a>
-    <a class="nav-item" href="/dashboard#applications"><span class="nav-icon">🔧</span> アプリケーション</a>
-    <hr class="sidebar__divider" />
-    <div class="sidebar__section-label">コンプライアンス</div>
-    <a class="nav-item" href="/dashboard#audit"><span class="nav-icon">📋</span> 監査ログ</a>
-    <a class="nav-item" href="/dashboard#approvals"><span class="nav-icon">✅</span> 承認キュー</a>
-    <hr class="sidebar__divider" />
-    <div class="sidebar__section-label">API</div>
-    <a class="nav-item" href="/api/v1/dashboard" target="_blank" rel="noopener"><span class="nav-icon">🔌</span> REST API</a>
-    <a class="nav-item" href="/api/v1/governance/audit" target="_blank" rel="noopener"><span class="nav-icon">📑</span> 監査API</a>
-  </nav>
+      <main class="main">
+        <div class="page-header">
+          <div class="page-eyebrow">Policy &amp; Evidence</div>
+          <h1 class="page-title">ガバナンス管理</h1>
+          <p class="page-subtitle">ポリシー一覧とアクセス評価エンジン</p>
+        </div>
 
-  <main class="main">
-    <div class="page-header">
-      <div class="page-eyebrow">Policy &amp; Evidence</div>
-      <h1 class="page-title">ガバナンス管理</h1>
-      <p class="page-subtitle">ポリシー一覧とアクセス評価エンジン</p>
+        <section class="section">
+          <div class="section-title">登録済みポリシー</div>
+          <div class="card">
+            <div class="table-wrapper">
+              <table id="policyTable">
+                <thead>
+                  <tr>
+                    <th>ポリシーID</th>
+                    <th>名前</th>
+                    <th>効果</th>
+                    <th>対象アクション</th>
+                    <th>対象リソース</th>
+                    <th>条件</th>
+                  </tr>
+                </thead>
+                <tbody id="policyTableBody">
+                  {{POLICY_ROWS}}
+                </tbody>
+              </table>
+            </div>
+            <div class="btn-row justify-end mt-sm">
+              <button class="btn btn-secondary btn-sm" id="policyRefreshBtn">更新</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-title">アクセス評価</div>
+          <div class="card">
+            <p class="form-hint mb-md">
+              指定したサブジェクトがリソースに対してアクションを実行できるかをリアルタイムで評価します。
+            </p>
+
+            <div class="form-group mb-md">
+              <label class="form-label" for="inputApiKey">API キー（Bearer トークン）</label>
+              <input
+                class="form-input mono"
+                id="inputApiKey"
+                type="password"
+                placeholder="例: keyId:secret"
+                autocomplete="off"
+              />
+              <div class="form-hint">
+                認証情報が必要です。セッションに埋め込まれたトークンがある場合は入力を省略できます。
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label" for="inputSubject">サブジェクト（ユーザーID）</label>
+                <input
+                  class="form-input"
+                  id="inputSubject"
+                  type="text"
+                  placeholder="例: user-admin"
+                  value="user-admin"
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="inputResource">リソース</label>
+                <input
+                  class="form-input"
+                  id="inputResource"
+                  type="text"
+                  placeholder="例: application"
+                  value="application"
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="inputAction">アクション</label>
+                <input
+                  class="form-input"
+                  id="inputAction"
+                  type="text"
+                  placeholder="例: read"
+                  value="read"
+                />
+              </div>
+            </div>
+
+            <div class="btn-row">
+              <button class="btn btn-primary" id="evaluateBtn">評価する</button>
+              <button class="btn btn-secondary" id="clearResultBtn">クリア</button>
+            </div>
+
+            <div class="example-row">
+              <span class="example-label">例:</span>
+              <button
+                class="btn btn-secondary btn-sm js-example"
+                data-subject="user-admin"
+                data-resource="application"
+                data-action="read"
+              >
+                管理者 → アプリ読取
+              </button>
+              <button
+                class="btn btn-secondary btn-sm js-example"
+                data-subject="user-field-worker"
+                data-resource="governance"
+                data-action="write"
+              >
+                現場員 → ガバナンス書込
+              </button>
+              <button
+                class="btn btn-secondary btn-sm js-example"
+                data-subject="guest"
+                data-resource="sensitive"
+                data-action="read"
+              >
+                ゲスト → センシティブ読取
+              </button>
+              <button
+                class="btn btn-secondary btn-sm js-example"
+                data-subject="user-site-manager"
+                data-resource="device"
+                data-action="read"
+              >
+                現場所長 → デバイス読取
+              </button>
+            </div>
+
+            <div class="result-panel" id="resultPanel">
+              <div class="result-header">
+                <span class="result-decision" id="resultDecision">—</span>
+                <span class="result-summary" id="resultSummary"></span>
+              </div>
+              <div class="result-row">
+                <div class="result-key">理由</div>
+                <div class="result-val" id="resultReason">—</div>
+              </div>
+              <div class="result-row hidden-row" id="resultPoliciesRow">
+                <div class="result-key">適用ポリシー</div>
+                <div class="result-val" id="resultPolicies"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-title">監査ログ（直近20件）</div>
+          <div class="card">
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>日時</th>
+                    <th>アクター</th>
+                    <th>アクション</th>
+                    <th>リソース</th>
+                    <th>結果</th>
+                  </tr>
+                </thead>
+                <tbody id="auditTableBody">
+                  <tr>
+                    <td colspan="6" class="empty-cell">読込中...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="btn-row justify-end mt-sm">
+              <button class="btn btn-secondary btn-sm" id="auditRefreshBtn">更新</button>
+            </div>
+          </div>
+        </section>
+      </main>
     </div>
 
-    <section class="section">
-      <div class="section-title">登録済みポリシー</div>
-      <div class="card">
-        <div class="table-wrapper">
-          <table id="policyTable">
-            <thead>
-              <tr>
-                <th>ポリシーID</th>
-                <th>名前</th>
-                <th>効果</th>
-                <th>対象アクション</th>
-                <th>対象リソース</th>
-                <th>条件</th>
-              </tr>
-            </thead>
-            <tbody id="policyTableBody">{{POLICY_ROWS}}</tbody>
-          </table>
-        </div>
-        <div class="btn-row justify-end mt-sm">
-          <button class="btn btn-secondary btn-sm" id="policyRefreshBtn">更新</button>
-        </div>
-      </div>
-    </section>
+    <footer class="footer">
+      <span>建設企業オペレーティングプラットフォーム v{{VERSION}}</span>
+      <span>ガバナンス管理画面</span>
+    </footer>
 
-    <section class="section">
-      <div class="section-title">アクセス評価</div>
-      <div class="card">
-        <p class="form-hint mb-md">
-          指定したサブジェクトがリソースに対してアクションを実行できるかをリアルタイムで評価します。
-        </p>
-
-        <div class="form-group mb-md">
-          <label class="form-label" for="inputApiKey">API キー（Bearer トークン）</label>
-          <input class="form-input mono" id="inputApiKey" type="password" placeholder="例: keyId:secret" autocomplete="off" />
-          <div class="form-hint">認証情報が必要です。セッションに埋め込まれたトークンがある場合は入力を省略できます。</div>
-        </div>
-
-        <div class="form-grid">
-          <div class="form-group">
-            <label class="form-label" for="inputSubject">サブジェクト（ユーザーID）</label>
-            <input class="form-input" id="inputSubject" type="text" placeholder="例: user-admin" value="user-admin" />
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="inputResource">リソース</label>
-            <input class="form-input" id="inputResource" type="text" placeholder="例: application" value="application" />
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="inputAction">アクション</label>
-            <input class="form-input" id="inputAction" type="text" placeholder="例: read" value="read" />
-          </div>
-        </div>
-
-        <div class="btn-row">
-          <button class="btn btn-primary" id="evaluateBtn">評価する</button>
-          <button class="btn btn-secondary" id="clearResultBtn">クリア</button>
-        </div>
-
-        <div class="example-row">
-          <span class="example-label">例:</span>
-          <button class="btn btn-secondary btn-sm js-example" data-subject="user-admin" data-resource="application" data-action="read">管理者 → アプリ読取</button>
-          <button class="btn btn-secondary btn-sm js-example" data-subject="user-field-worker" data-resource="governance" data-action="write">現場員 → ガバナンス書込</button>
-          <button class="btn btn-secondary btn-sm js-example" data-subject="guest" data-resource="sensitive" data-action="read">ゲスト → センシティブ読取</button>
-          <button class="btn btn-secondary btn-sm js-example" data-subject="user-site-manager" data-resource="device" data-action="read">現場所長 → デバイス読取</button>
-        </div>
-
-        <div class="result-panel" id="resultPanel">
-          <div class="result-header">
-            <span class="result-decision" id="resultDecision">—</span>
-            <span class="result-summary" id="resultSummary"></span>
-          </div>
-          <div class="result-row">
-            <div class="result-key">理由</div>
-            <div class="result-val" id="resultReason">—</div>
-          </div>
-          <div class="result-row hidden-row" id="resultPoliciesRow">
-            <div class="result-key">適用ポリシー</div>
-            <div class="result-val" id="resultPolicies"></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="section-title">監査ログ（直近20件）</div>
-      <div class="card">
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>日時</th>
-                <th>アクター</th>
-                <th>アクション</th>
-                <th>リソース</th>
-                <th>結果</th>
-              </tr>
-            </thead>
-            <tbody id="auditTableBody">
-              <tr><td colspan="6" class="empty-cell">読込中...</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="btn-row justify-end mt-sm">
-          <button class="btn btn-secondary btn-sm" id="auditRefreshBtn">更新</button>
-        </div>
-      </div>
-    </section>
-  </main>
-</div>
-
-<footer class="footer">
-  <span>建設企業オペレーティングプラットフォーム v{{VERSION}}</span>
-  <span>ガバナンス管理画面</span>
-</footer>
-
-<script src="/api/assets/app.js"></script>
-</body>
+    <script src="/api/assets/app.js"></script>
+  </body>
 </html>

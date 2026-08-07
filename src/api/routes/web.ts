@@ -118,6 +118,13 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
     false,
   );
   router.get(
+    "/api/assets/favicon.svg",
+    async (_req, _ctx, res) => {
+      await sendFile(res, join(staticDir, "favicon.svg"), "image/svg+xml; charset=utf-8");
+    },
+    false,
+  );
+  router.get(
     "/assets/app.css",
     async (_req, _ctx, res) => {
       await sendFile(res, join(staticDir, "app.css"), "text/css; charset=utf-8");
@@ -128,6 +135,13 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
     "/assets/app.js",
     async (_req, _ctx, res) => {
       await sendFile(res, join(staticDir, "app.js"), "text/javascript; charset=utf-8");
+    },
+    false,
+  );
+  router.get(
+    "/assets/favicon.svg",
+    async (_req, _ctx, res) => {
+      await sendFile(res, join(staticDir, "favicon.svg"), "image/svg+xml; charset=utf-8");
     },
     false,
   );

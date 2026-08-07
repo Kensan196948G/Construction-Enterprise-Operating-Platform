@@ -8,6 +8,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 ### Added
 
+- **ブラウザタブ favicon** — SSR ページ（`/dashboard`・`/governance`）と WebUI 配信に
+  `favicon.svg`（タワークレーンアイコン）を追加。`/api/assets/favicon.svg`・
+  `/assets/favicon.svg`・WebUI の `/favicon.svg`（`/favicon.ico` は 302 リダイレクト）で配信
+
 - **Workflow Instance API（統合 L-02 / Synapse Issue→Approval→Audit）** —
   ワークフローテンプレートからテナント単位の実行インスタンスを生成・承認・却下・取消できる
   `GET/POST /api/v1/workflow-instances` と `POST /:id/decision`・`POST /:id/cancel` を追加。
