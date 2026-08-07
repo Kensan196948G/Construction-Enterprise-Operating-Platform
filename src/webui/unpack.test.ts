@@ -129,6 +129,18 @@ test("unpackBundle rejects malformed manifest JSON", () => {
   assert.match(result.error, /JSON parse failed/);
 });
 
+test("unpackBundle rejects manifest keys that are not UUIDs (path traversal guard)", () => {
+  const html = [
+    "<!doctype html><html><body>",
+    '<script type="__bundler/manifest">{"../../evil":{"data":"eA=="}}</script>',
+    '<script type="__bundler/template">"<html><body>ok</body></html>"</script>',
+    "</body></html>",
+  ].join("\n");
+  const result = unpackBundle(html);
+  assert.ok(!result.ok);
+  assert.match(result.error, /invalid asset uuid/);
+});
+
 test("writeUnpackedBundle materialises index.html and assets on disk", () => {
   const result = unpackBundle(syntheticBundle());
   assert.ok(result.ok);

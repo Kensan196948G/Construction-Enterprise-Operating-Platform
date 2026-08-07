@@ -9,7 +9,9 @@
 
 import { createServer as httpCreateServer } from "node:http";
 import type { IncomingMessage, Server, ServerResponse } from "node:http";
+import { randomUUID } from "node:crypto";
 import { Router } from "./router.ts";
+import { clientIpFromRequest } from "./client-ip.ts";
 import { createRateLimiter } from "./middleware/rate-limiter.ts";
 import { registerAuthRoutes } from "./routes/auth.ts";
 import { registerHealthRoutes } from "./routes/health.ts";
@@ -53,7 +55,13 @@ export function createServer(config: ServerConfig, container: AppContainer): Ser
   });
   registerHealthRoutes(router, container);
   if (container.jwtIssuer !== undefined) {
-    registerAuthRoutes(router, container.apiKeyStore, container.jwtIssuer, container.auditLog);
+    registerAuthRoutes(
+      router,
+      container.apiKeyStore,
+      container.jwtIssuer,
+      container.auditLog,
+      container.apiKeyRepository,
+    );
   }
   registerGovernanceRoutes(router, container);
   registerDashboardRoutes(router, container);
@@ -61,7 +69,8 @@ export function createServer(config: ServerConfig, container: AppContainer): Ser
   registerWorkflowRoutes(router, container);
   registerWebRoutes(router, container);
 
-  return httpCreateServer((req: IncomingMessage, res: ServerResponse): void => {
+  const server = httpCreateServer((req: IncomingMessage, res: ServerResponse): void => {
+    res.setHeader("X-Request-Id", randomUUID());
     if (corsOrigin !== undefined) {
       res.setHeader("Access-Control-Allow-Origin", corsOrigin);
       res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
@@ -78,17 +87,22 @@ export function createServer(config: ServerConfig, container: AppContainer): Ser
     // Global API rate limit (per socket IP) — applies to all /api/v1/* paths.
     const pathOnly = (req.url ?? "/").split("?")[0] ?? "/";
     if (pathOnly.startsWith("/api/v1/")) {
-      const clientIp = req.socket?.remoteAddress;
-      if (clientIp !== undefined) {
-        const rl = apiRateLimiter.check(clientIp);
-        res.setHeader("X-RateLimit-Limit", String(rateLimit.maxRequests));
-        res.setHeader("X-RateLimit-Remaining", String(rl.remaining));
-        res.setHeader("X-RateLimit-Reset", String(Math.ceil(rl.resetAt / 1000)));
-        if (!rl.allowed) {
-          res.writeHead(429, { "Content-Type": "application/json; charset=utf-8" });
-          res.end(JSON.stringify({ error: "Too Many Requests", message: "rate limit exceeded" }));
-          return;
-        }
+      const clientIp = clientIpFromRequest(req);
+      const rl = apiRateLimiter.check(clientIp);
+      res.setHeader("X-RateLimit-Limit", String(rateLimit.maxRequests));
+      res.setHeader("X-RateLimit-Remaining", String(rl.remaining));
+      res.setHeader("X-RateLimit-Reset", String(Math.ceil(rl.resetAt / 1000)));
+      if (!rl.allowed) {
+        res.writeHead(429, {
+          "Content-Type": "application/json; charset=utf-8",
+          "X-Content-Type-Options": "nosniff",
+          "X-Frame-Options": "DENY",
+          "Referrer-Policy": "no-referrer",
+          "Cache-Control": "no-store",
+          "Strict-Transport-Security": "max-age=63072000; includeSubDomains",
+        });
+        res.end(JSON.stringify({ error: "Too Many Requests", message: "rate limit exceeded" }));
+        return;
       }
     }
 
@@ -103,4 +117,10 @@ export function createServer(config: ServerConfig, container: AppContainer): Ser
       }
     });
   });
+
+  // Production hardening against slowloris-style socket exhaustion.
+  server.headersTimeout = 60_000;
+  server.requestTimeout = 30_000;
+  server.keepAliveTimeout = 5_000;
+  return server;
 }

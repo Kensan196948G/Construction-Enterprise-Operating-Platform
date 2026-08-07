@@ -27,21 +27,31 @@ docker run --rm \
 
 保存先: `/home/kensan/.ceop/backups/`
 実行ログ: `/home/kensan/.ceop/backup.log`
-ヘルス失敗ログ: `/home/kensan/.ceop/health.log`（**失敗時のみ追記**。ファイルが存在しない＝一度も失敗していない）
+ヘルスログ: `/home/kensan/.ceop/health.log`（**成功/失敗の両方を追記**。5 分間隔の外形プローブ）
 
 ### 保持世代
 
 方針: 日次 14 世代、週次 8 世代、月次 12 世代（外部ストレージへのオフサイトコピー推奨）。
 
-**現状: 自動削除は未実装。** cron は追加のみで、古いバックアップは残り続ける。
-1 世代あたり約 170 KB、ディスク残 1.3 TB のため当面問題にならないが、
-保持ポリシーを実装するまでは手動確認とする。
+**自動削除（v0.8.0 で実装）:** `scripts/backup-retention.ts` が `ceop-*.db` の
+mtime を基準に `--keep-days`（既定 14 日）より古い世代を削除します。
+`predeploy` / `crontest` を含むファイル名は誤削除防止のため対象外です。
+
+```bash
+# 手動実行
+docker run --rm -v /home/kensan/.ceop/backups:/backups \
+  ceop-platform:current node --experimental-strip-types scripts/backup-retention.ts \
+  /backups --keep-days 14
+```
+
+cron のバックアップ行に後続して実行する運用とします（RUNBOOK §3 手順 6b）。
+オフサイトコピーは未設定。ホスト障害時はバックアップも同時に失われる（受容中のリスク）。
 
 | 項目 | 担当 | 周期 | 手順 | 判定基準 |
 |---|---|---|---|---|
 | バックアップ生成確認 | 運用担当 | 週次 | `ls -la /home/kensan/.ceop/backups/` | 直近 7 日分が揃っている |
 | バックアップログ確認 | 運用担当 | 週次 | `tail -20 /home/kensan/.ceop/backup.log` | `snapshot written` が日次で出ている |
-| 世代の手動整理 | 運用担当 | 月次 | 30 日より古い日次分を削除 | ディスク使用率 < 80% |
+| 保持ポリシー確認 | 運用担当 | 月次 | `ls -la /home/kensan/.ceop/backups/` と `backup-retention` のログ確認 | 14 日より古い日次分が残っていない |
 | 復元試験 | 運用担当 | 四半期 | 下記「復元」を検証環境で実施 | RTO 1 時間以内で `/health/ready` 200 |
 
 オフサイトコピーは未設定。ホスト障害時はバックアップも同時に失われる（受容中のリスク）。

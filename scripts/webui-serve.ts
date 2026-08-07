@@ -2,7 +2,8 @@
  * WebUI static server entrypoint (systemd unit `ceop-webui` runs this).
  *
  * Environment (typically from /home/kensan/.ceop/webui.env via systemd):
- *   CEOP_WEBUI_HOST      — listen address (default 0.0.0.0)
+ *   CEOP_WEBUI_HOST      — listen address (default 127.0.0.1; Cloudflare Tunnel
+ *                          reaches it on loopback, so the LAN is not exposed)
  *   CEOP_WEBUI_PORT      — listen port (default 3130)
  *   CEOP_WEBUI_ROOT      — unpacked bundle directory (default webui/dist)
  *   CEOP_WEBUI_NEON_URL  — optional Neon connection string enabling access
@@ -14,7 +15,7 @@ import { statSync } from "node:fs";
 import { createWebuiServer } from "../src/webui/server.ts";
 import { createNeonAccessLogger, nullAccessLogger } from "../src/webui/access-log.ts";
 
-const host = process.env["CEOP_WEBUI_HOST"] ?? "0.0.0.0";
+const host = process.env["CEOP_WEBUI_HOST"] ?? "127.0.0.1";
 const port = Number(process.env["CEOP_WEBUI_PORT"] ?? "3130");
 const rootDir = process.env["CEOP_WEBUI_ROOT"] ?? "webui/dist";
 const neonUrl = process.env["CEOP_WEBUI_NEON_URL"];

@@ -7,7 +7,7 @@
  * Zero runtime dependencies — uses only node:fs/promises.
  */
 
-import { writeFile, mkdir } from "node:fs/promises";
+import { writeFile, mkdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { PLATFORM_VERSION } from "../src/version.ts";
 
@@ -108,7 +108,7 @@ const schemas: { [k: string]: YamlValue } = {
       id: { type: "string" },
       name: { type: "string" },
       type: { type: "string", enum: ["headquarters", "branch", "site", "partner"] },
-      status: { type: "string", enum: ["active", "inactive", "suspended"] },
+      status: { type: "string", enum: ["active", "suspended", "archived"] },
       parentId: { type: "string" },
       createdAt: { type: "string", format: "date-time" },
     },
@@ -121,7 +121,7 @@ const schemas: { [k: string]: YamlValue } = {
       organizationId: { type: "string" },
       displayName: { type: "string" },
       email: { type: "string", format: "email" },
-      status: { type: "string", enum: ["active", "inactive", "suspended", "deactivated"] },
+      status: { type: "string", enum: ["invited", "active", "suspended", "deactivated"] },
       roleIds: { type: "array", items: { type: "string" } },
       createdAt: { type: "string", format: "date-time" },
     },
@@ -143,8 +143,8 @@ const schemas: { [k: string]: YamlValue } = {
     properties: {
       id: { type: "string" },
       organizationId: { type: "string" },
-      kind: { type: "string", enum: ["phone", "tablet", "laptop", "kiosk", "sensor", "camera", "other"] },
-      status: { type: "string", enum: ["active", "inactive", "maintenance", "decommissioned"] },
+      kind: { type: "string", enum: ["tablet", "phone", "kiosk", "sensor", "laptop"] },
+      status: { type: "string", enum: ["provisioned", "active", "lost", "retired"] },
     },
   },
   Application: {
@@ -154,8 +154,8 @@ const schemas: { [k: string]: YamlValue } = {
       id: { type: "string" },
       key: { type: "string" },
       name: { type: "string" },
-      category: { type: "string", enum: ["governance", "field", "portal", "workflow", "document", "security"] },
-      health: { type: "string", enum: ["healthy", "degraded", "unavailable"] },
+      category: { type: "string", enum: ["portal", "governance", "field", "workflow", "document"] },
+      health: { type: "string", enum: ["healthy", "degraded", "down", "unknown"] },
       ownerOrganizationId: { type: "string" },
     },
   },
@@ -172,17 +172,17 @@ const schemas: { [k: string]: YamlValue } = {
   },
   Workflow: {
     type: "object",
-    required: ["id", "name", "type", "status", "steps", "createdAt", "updatedAt"],
+    required: ["id", "name", "type", "status", "steps"],
     properties: {
       id: { type: "string" },
       name: { type: "string" },
       type: {
         type: "string",
-        enum: ["approval", "onboarding", "procurement", "inspection", "incident"],
+        enum: ["approval", "notification", "task"],
       },
       status: {
         type: "string",
-        enum: ["draft", "active", "suspended", "archived"],
+        enum: ["draft", "active", "suspended", "retired"],
       },
       steps: {
         type: "array",
@@ -196,8 +196,6 @@ const schemas: { [k: string]: YamlValue } = {
           },
         },
       },
-      createdAt: { type: "string", format: "date-time" },
-      updatedAt: { type: "string", format: "date-time" },
     },
   },
   AuditEntry: {
@@ -226,6 +224,21 @@ const schemas: { [k: string]: YamlValue } = {
         description: "Organization scope when the credential is org-scoped; absent for global credentials",
       },
     },
+  },
+  AuthKey: {
+    type: "object",
+    required: ["keyId", "subject", "permissions"],
+    properties: {
+      keyId: { type: "string", description: "Credential identifier used in `keyId:secret`" },
+      subject: { type: "string", description: "Subject the key authenticates as" },
+      permissions: { type: "array", items: { type: "string" }, description: "Granted permissions" },
+      organizationId: {
+        type: "string",
+        description: "Organization scope; absent for platform-level credentials",
+      },
+      createdAt: { type: "string", format: "date-time", description: "Provisioning time (SQLite mode)" },
+    },
+    description: "API key metadata. The secret hash is never returned.",
   },
 };
 
@@ -256,7 +269,7 @@ const parameters: { [k: string]: YamlValue } = {
   limitParam: {
     name: "limit",
     in: "query",
-    schema: { type: "integer", default: 20, minimum: 1, maximum: 100 },
+    schema: { type: "integer", default: 20, minimum: 1, maximum: 200 },
     description: "Number of items per page",
   },
   offsetParam: {
@@ -272,18 +285,25 @@ const parameters: { [k: string]: YamlValue } = {
     schema: { type: "string" },
     description: "Resource ID",
   },
+  keyIdPath: {
+    name: "keyId",
+    in: "path",
+    required: true,
+    schema: { type: "string" },
+    description: "API key ID",
+  },
 };
 
 // ---------------------------------------------------------------------------
 // Helper to build paginated list response
 // ---------------------------------------------------------------------------
 
-function paginatedList(schemaRef: string): YamlValue {
+function paginatedList(listKey: string, schemaRef: string): YamlValue {
   return {
     type: "object",
-    required: ["items", "count", "total", "limit", "offset"],
+    required: [listKey, "count", "total", "limit", "offset"],
     properties: {
-      items: { type: "array", items: { "$ref": `#/components/schemas/${schemaRef}` } },
+      [listKey]: { type: "array", items: { "$ref": `#/components/schemas/${schemaRef}` } },
       count: { type: "integer" },
       total: { type: "integer" },
       limit: { type: "integer" },
@@ -381,6 +401,7 @@ const paths: { [k: string]: YamlValue } = {
                 properties: {
                   name: { type: "string" },
                   version: { type: "string" },
+                  environment: { type: "string", description: "NODE_ENV at runtime" },
                   nodeVersion: { type: "string" },
                 },
               },
@@ -433,6 +454,50 @@ const paths: { [k: string]: YamlValue } = {
     },
   },
 
+  "/api/v1/auth/keys": {
+    get: {
+      operationId: "listApiKeys",
+      summary: "List API key metadata (requires auth:write, platform-level credential)",
+      tags: ["Auth"],
+      security: authSecurity,
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["keys"],
+          properties: {
+            keys: {
+              type: "array",
+              items: { "$ref": "#/components/schemas/AuthKey" },
+              description: "Key metadata only — the secret hash is never exposed",
+            },
+          },
+        }),
+        ...errorResponses(401, 403),
+      },
+    },
+  },
+
+  "/api/v1/auth/keys/{keyId}": {
+    delete: {
+      operationId: "revokeApiKey",
+      summary: "Revoke an API key (requires auth:write, platform-level credential)",
+      tags: ["Auth"],
+      security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/keyIdPath" }],
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["revoked", "keyId"],
+          properties: {
+            revoked: { type: "boolean", example: true },
+            keyId: { type: "string" },
+          },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+  },
+
   // ── Dashboard ────────────────────────────────────────────────────────────
   "/api/v1/dashboard": {
     get: {
@@ -462,7 +527,7 @@ const paths: { [k: string]: YamlValue } = {
         { "$ref": "#/components/parameters/offsetParam" },
       ],
       responses: {
-        ...jsonResponse(200, paginatedList("Organization")),
+        ...jsonResponse(200, paginatedList("organizations", "Organization")),
         ...errorResponses(401, 403),
       },
     },
@@ -482,7 +547,7 @@ const paths: { [k: string]: YamlValue } = {
                 name: { type: "string" },
                 type: { type: "string", enum: ["headquarters", "branch", "site", "partner"] },
                 parentId: { type: "string", description: "Required for non-headquarters types" },
-                status: { type: "string", enum: ["active", "inactive", "suspended"] },
+                status: { type: "string", enum: ["active", "suspended", "archived"] },
               },
             },
           },
@@ -520,7 +585,7 @@ const paths: { [k: string]: YamlValue } = {
               type: "object",
               properties: {
                 name: { type: "string" },
-                status: { type: "string", enum: ["active", "inactive", "suspended"] },
+                status: { type: "string", enum: ["active", "suspended", "archived"] },
               },
             },
           },
@@ -553,7 +618,7 @@ const paths: { [k: string]: YamlValue } = {
         { "$ref": "#/components/parameters/offsetParam" },
       ],
       responses: {
-        ...jsonResponse(200, paginatedList("User")),
+        ...jsonResponse(200, paginatedList("users", "User")),
         ...errorResponses(401, 403),
       },
     },
@@ -573,7 +638,7 @@ const paths: { [k: string]: YamlValue } = {
                 organizationId: { type: "string" },
                 displayName: { type: "string" },
                 email: { type: "string", format: "email" },
-                status: { type: "string", enum: ["active", "inactive", "suspended"] },
+                status: { type: "string", enum: ["invited", "active", "suspended", "deactivated"] },
                 roleIds: { type: "array", items: { type: "string" } },
               },
             },
@@ -612,7 +677,7 @@ const paths: { [k: string]: YamlValue } = {
               type: "object",
               properties: {
                 displayName: { type: "string" },
-                status: { type: "string", enum: ["active", "inactive", "suspended"] },
+                status: { type: "string", enum: ["invited", "active", "suspended", "deactivated"] },
                 roleIds: { type: "array", items: { type: "string" } },
               },
             },
@@ -646,7 +711,7 @@ const paths: { [k: string]: YamlValue } = {
         { "$ref": "#/components/parameters/offsetParam" },
       ],
       responses: {
-        ...jsonResponse(200, paginatedList("Role")),
+        ...jsonResponse(200, paginatedList("roles", "Role")),
         ...errorResponses(401, 403),
       },
     },
@@ -738,7 +803,7 @@ const paths: { [k: string]: YamlValue } = {
         { "$ref": "#/components/parameters/offsetParam" },
       ],
       responses: {
-        ...jsonResponse(200, paginatedList("Device")),
+        ...jsonResponse(200, paginatedList("devices", "Device")),
         ...errorResponses(401, 403),
       },
     },
@@ -756,8 +821,8 @@ const paths: { [k: string]: YamlValue } = {
               required: ["organizationId", "kind"],
               properties: {
                 organizationId: { type: "string" },
-                kind: { type: "string", enum: ["phone", "tablet", "laptop", "kiosk", "sensor", "camera", "other"] },
-                status: { type: "string", enum: ["active", "inactive", "maintenance", "decommissioned"] },
+                kind: { type: "string", enum: ["tablet", "phone", "kiosk", "sensor", "laptop"] },
+                status: { type: "string", enum: ["provisioned", "active", "lost", "retired"] },
               },
             },
           },
@@ -794,7 +859,7 @@ const paths: { [k: string]: YamlValue } = {
             schema: {
               type: "object",
               properties: {
-                status: { type: "string", enum: ["active", "inactive", "maintenance", "decommissioned"] },
+                status: { type: "string", enum: ["provisioned", "active", "lost", "retired"] },
               },
             },
           },
@@ -827,7 +892,7 @@ const paths: { [k: string]: YamlValue } = {
         { "$ref": "#/components/parameters/offsetParam" },
       ],
       responses: {
-        ...jsonResponse(200, paginatedList("Application")),
+        ...jsonResponse(200, paginatedList("applications", "Application")),
         ...errorResponses(401, 403),
       },
     },
@@ -846,8 +911,8 @@ const paths: { [k: string]: YamlValue } = {
               properties: {
                 key: { type: "string", description: "Unique slug for the application" },
                 name: { type: "string" },
-                category: { type: "string", enum: ["governance", "field", "portal", "workflow", "document", "security"] },
-                health: { type: "string", enum: ["healthy", "degraded", "unavailable"] },
+                category: { type: "string", enum: ["portal", "governance", "field", "workflow", "document"] },
+                health: { type: "string", enum: ["healthy", "degraded", "down", "unknown"] },
                 ownerOrganizationId: { type: "string" },
               },
             },
@@ -886,7 +951,7 @@ const paths: { [k: string]: YamlValue } = {
               type: "object",
               properties: {
                 name: { type: "string" },
-                health: { type: "string", enum: ["healthy", "degraded", "unavailable"] },
+                health: { type: "string", enum: ["healthy", "degraded", "down", "unknown"] },
               },
             },
           },
@@ -1085,7 +1150,7 @@ const paths: { [k: string]: YamlValue } = {
         { "$ref": "#/components/parameters/offsetParam" },
       ],
       responses: {
-        ...jsonResponse(200, paginatedList("Policy")),
+        ...jsonResponse(200, paginatedList("policies", "Policy")),
         ...errorResponses(401, 403),
       },
     },
@@ -1179,18 +1244,18 @@ const paths: { [k: string]: YamlValue } = {
         {
           name: "type",
           in: "query",
-          schema: { type: "string", enum: ["approval", "onboarding", "procurement", "inspection", "incident"] },
+          schema: { type: "string", enum: ["approval", "notification", "task"] },
           description: "Filter by workflow type",
         },
         {
           name: "status",
           in: "query",
-          schema: { type: "string", enum: ["draft", "active", "suspended", "archived"] },
+          schema: { type: "string", enum: ["draft", "active", "suspended", "retired"] },
           description: "Filter by workflow status",
         },
       ],
       responses: {
-        ...jsonResponse(200, paginatedList("Workflow")),
+        ...jsonResponse(200, paginatedList("workflows", "Workflow")),
         ...errorResponses(401, 403),
       },
     },
@@ -1208,8 +1273,8 @@ const paths: { [k: string]: YamlValue } = {
               required: ["name", "type", "steps"],
               properties: {
                 name: { type: "string" },
-                type: { type: "string", enum: ["approval", "onboarding", "procurement", "inspection", "incident"] },
-                status: { type: "string", enum: ["draft", "active", "suspended", "archived"] },
+                type: { type: "string", enum: ["approval", "notification", "task"] },
+                status: { type: "string", enum: ["draft", "active", "suspended", "retired"] },
                 steps: {
                   type: "array",
                   items: {
@@ -1259,7 +1324,7 @@ const paths: { [k: string]: YamlValue } = {
               type: "object",
               properties: {
                 name: { type: "string" },
-                status: { type: "string", enum: ["draft", "active", "suspended", "archived"] },
+                status: { type: "string", enum: ["draft", "active", "suspended", "retired"] },
                 steps: {
                   type: "array",
                   items: {
@@ -1310,6 +1375,7 @@ const spec: { [k: string]: YamlValue } = {
   servers: [
     { url: "http://localhost:3000", description: "Local development" },
     { url: "http://localhost:8080", description: "Docker compose" },
+    { url: "https://ceop.mirai-dx-platform.com", description: "Production" },
   ],
   tags: [
     { name: "System",       description: "Health and metadata endpoints" },
@@ -1333,6 +1399,18 @@ const spec: { [k: string]: YamlValue } = {
 
 const outDir = join(import.meta.dirname ?? ".", "..", "docs");
 const outPath = join(outDir, "openapi.yaml");
-await mkdir(outDir, { recursive: true });
-await writeFile(outPath, toYaml(spec), "utf8");
-console.log(`✅ OpenAPI spec written to ${outPath}`);
+const content = toYaml(spec);
+
+if (process.argv.includes("--check")) {
+  const existing = await readFile(outPath, "utf8").catch(() => "");
+  if (existing === content) {
+    console.log("✅ OpenAPI spec is up to date");
+  } else {
+    console.error("❌ OpenAPI drift detected — run `pnpm run openapi:gen` and commit docs/openapi.yaml");
+    process.exitCode = 1;
+  }
+} else {
+  await mkdir(outDir, { recursive: true });
+  await writeFile(outPath, content, "utf8");
+  console.log(`✅ OpenAPI spec written to ${outPath}`);
+}

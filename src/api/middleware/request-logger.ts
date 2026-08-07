@@ -18,9 +18,11 @@ export function logRequest(
   url: string,
   statusCode: number,
   durationMs: number,
+  requestId?: string,
 ): void {
   const timestamp = new Date().toISOString();
   // Strip query string to avoid logging tokens or sensitive parameters.
   const safePath = url.split("?")[0] ?? url;
-  console.error(`[${timestamp}] ${method} ${safePath} ${statusCode} ${durationMs}ms`);
+  const id = requestId === undefined ? "" : ` ${requestId}`;
+  console.error(`[${timestamp}]${id} ${method} ${safePath} ${statusCode} ${durationMs}ms`);
 }

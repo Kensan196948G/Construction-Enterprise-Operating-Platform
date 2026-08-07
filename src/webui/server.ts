@@ -19,9 +19,11 @@
 import { createServer as httpCreateServer } from "node:http";
 import type { IncomingMessage, Server, ServerResponse } from "node:http";
 import { createReadStream, statSync } from "node:fs";
+import { randomUUID } from "node:crypto";
 import { extname, resolve, sep } from "node:path";
 
 import { PLATFORM_VERSION } from "../version.ts";
+import { clientIpFromRequest } from "../api/client-ip.ts";
 import { type AccessLogger, nullAccessLogger } from "./access-log.ts";
 
 export interface WebuiServerConfig {
@@ -53,6 +55,7 @@ const SECURITY_HEADERS: Readonly<Record<string, string>> = {
     "default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; " +
     "font-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; " +
     "form-action 'none'; frame-ancestors 'none'",
+  "Strict-Transport-Security": "max-age=63072000; includeSubDomains",
 };
 
 function applySecurityHeaders(res: ServerResponse): void {
@@ -75,8 +78,9 @@ export function createWebuiServer(config: WebuiServerConfig): Server {
   const rootDir = resolve(config.rootDir);
   const accessLogger = config.accessLogger ?? nullAccessLogger;
 
-  return httpCreateServer((req: IncomingMessage, res: ServerResponse): void => {
+  const server = httpCreateServer((req: IncomingMessage, res: ServerResponse): void => {
     const startedAt = process.hrtime.bigint();
+    res.setHeader("X-Request-Id", randomUUID());
     const method = req.method ?? "GET";
     const rawPath = (req.url ?? "/").split("?")[0] ?? "/";
 
@@ -90,7 +94,7 @@ export function createWebuiServer(config: WebuiServerConfig): Server {
         path: rawPath.slice(0, 512),
         statusCode: res.statusCode,
         durationMs,
-        ...(req.socket.remoteAddress !== undefined ? { remoteAddr: req.socket.remoteAddress } : {}),
+        ...(req.socket.remoteAddress !== undefined ? { remoteAddr: clientIpFromRequest(req) } : {}),
         ...(typeof req.headers["user-agent"] === "string"
           ? { userAgent: req.headers["user-agent"].slice(0, 256) }
           : {}),
@@ -171,4 +175,9 @@ export function createWebuiServer(config: WebuiServerConfig): Server {
       res.destroy();
     });
   });
+
+  server.headersTimeout = 60_000;
+  server.requestTimeout = 30_000;
+  server.keepAliveTimeout = 5_000;
+  return server;
 }

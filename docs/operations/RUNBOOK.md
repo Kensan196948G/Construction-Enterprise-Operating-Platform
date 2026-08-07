@@ -4,7 +4,7 @@
 
 - アプリ: Node.js 22+ / TypeScript（ランタイム依存ゼロ）
 - 永続化: SQLite（WAL、コンテナ内 `/data/ceop.db`）
-- 配布: Docker イメージ（GHCR `ghcr.io/kensan196948g/construction-eop:0.6.2` / ローカル `ceop-platform:v0.6.2`）
+- 配布: Docker イメージ（GHCR `ghcr.io/kensan196948g/construction-eop:0.8.0` / ローカル `ceop-platform:v0.8.0`）
 - ヘルス: `GET /health`（liveness）、`GET /health/ready`（readiness）
 - ログ: stdout/stderr（Docker 既定の json-file。**ホストにローテーション設定なし** — 下記「既知の差分」参照）
 
@@ -16,13 +16,14 @@
 | ホスト       | 192.168.0.185（LAN）                                                              |
 | 起動方式     | **`docker run`**（compose 管理下ではない。§6 参照）                               |
 | コンテナ     | `ceop-platform`（`--restart unless-stopped`、127.0.0.1:3120→3000）                |
-| イメージ     | `ceop-platform:v0.6.2`（可動エイリアス `ceop-platform:current` が同一 ID を指す） |
+| イメージ     | `ceop-platform:v0.8.0`（可動エイリアス `ceop-platform:current` が同一 ID を指す） |
 | トンネル     | Cloudflare Tunnel `ceop`（systemd: `cloudflared-ceop.service`）                   |
 | DB           | ホスト `/home/kensan/.ceop/data/ceop.db` を `/data` へ bind mount                 |
 | 環境変数     | `/home/kensan/.ceop/.env`（chmod 600、`--env-file` で読み込み）                   |
 | 認証情報     | `/home/kensan/.ceop/*-credential.txt`（chmod 600）                                |
 | バックアップ | cron 02:15 JST → `/home/kensan/.ceop/backups/`                                    |
-| ヘルス確認   | cron 02:30 JST → 失敗時のみ `/home/kensan/.ceop/health.log` へ追記                |
+| ヘルス確認   | cron 5 分間隔 → `/home/kensan/.ceop/health.log` へ成功/失敗を追記                 |
+| 保持ポリシー | 日次 14 世代を `scripts/backup-retention.ts` で自動削除                           |
 
 ### イメージタグの運用
 
@@ -47,31 +48,41 @@ install -m 600 /dev/null /home/kensan/.ceop/.env
 mkdir -p /home/kensan/.ceop/data
 
 # 4. イメージ取得
-docker pull ghcr.io/kensan196948g/construction-eop:0.6.2
-docker tag  ghcr.io/kensan196948g/construction-eop:0.6.2 ceop-platform:v0.6.2
+docker pull ghcr.io/kensan196948g/construction-eop:0.8.0
+docker tag  ghcr.io/kensan196948g/construction-eop:0.8.0 ceop-platform:v0.8.0
 
 # 5. マイグレーション（bind mount に対して実行）
 docker run --rm -v /home/kensan/.ceop/data:/data \
   --env-file /home/kensan/.ceop/.env \
-  ceop-platform:v0.6.2 \
+  ceop-platform:v0.8.0 \
   node --experimental-strip-types scripts/migrate.ts
 
 # 6. API キー発行（出力は Secrets 管理へ。標準出力を残さない）
 docker run --rm -v /home/kensan/.ceop/data:/data \
   --env-file /home/kensan/.ceop/.env \
-  ceop-platform:v0.6.2 \
+  ceop-platform:v0.8.0 \
   node --experimental-strip-types scripts/provision-api-key.ts \
   --subject admin --permissions "*:*"
 
 # 7. 起動
-docker tag ceop-platform:v0.6.2 ceop-platform:current
+docker tag ceop-platform:v0.8.0 ceop-platform:current
 docker run -d \
   --name ceop-platform \
   --restart unless-stopped \
   -p 127.0.0.1:3120:3000 \
+  --read-only \
+  --tmpfs /tmp:rw,noexec,nosuid,size=32m \
+  --cap-drop ALL \
+  --security-opt no-new-privileges:true \
+  --cpus 1.0 \
+  --memory 256m \
+  --memory-reservation 64m \
+  --pids-limit 128 \
+  --log-opt max-size=10m \
+  --log-opt max-file=3 \
   --env-file /home/kensan/.ceop/.env \
   -v /home/kensan/.ceop/data:/data \
-  ceop-platform:v0.6.2
+  ceop-platform:v0.8.0
 
 # 8. 確認（コンテナは loopback:3120 のみで listen。公開は Tunnel 経由）
 docker inspect ceop-platform --format '{{.State.Health.Status}}'
@@ -84,7 +95,7 @@ curl -fsS https://ceop.mirai-dx-platform.com/health/ready
 ## 3. 更新手順
 
 ```bash
-NEW=v0.6.3   # 例
+NEW=v0.7.2   # 例
 
 # 1. バックアップ（VACUUM INTO。手順は BACKUP_RESTORE.md）
 docker run --rm -v /home/kensan/.ceop/data:/data -v /home/kensan/.ceop/backups:/backups \
@@ -106,16 +117,25 @@ docker rename ceop-platform ceop-platform-prev
 # 5. 新バージョン起動
 docker run -d --name ceop-platform --restart unless-stopped \
   -p 127.0.0.1:3120:3000 --env-file /home/kensan/.ceop/.env \
+  --read-only --tmpfs /tmp:rw,noexec,nosuid,size=32m \
+  --cap-drop ALL --security-opt no-new-privileges:true \
+  --cpus 1.0 --memory 256m --memory-reservation 64m --pids-limit 128 \
+  --log-opt max-size=10m --log-opt max-file=3 \
   -v /home/kensan/.ceop/data:/data ceop-platform:${NEW}
 docker tag ceop-platform:${NEW} ceop-platform:current
 
-# 6. 確認
+# 6. 保持ポリシー適用（バックアップ cron と併設）
+docker run --rm -v /home/kensan/.ceop/backups:/backups \
+  ceop-platform:current node --experimental-strip-types scripts/backup-retention.ts \
+  /backups --keep-days 14
+
+# 7. 確認
 docker inspect ceop-platform --format '{{.State.Health.Status}}'   # healthy になるまで待つ
 curl -fsS https://ceop.mirai-dx-platform.com/api/v1/info           # version が ${NEW#v} であること
 ```
 
-7. スモークテスト（トークン取得 → 監査ログ取得 → 主要 CRUD 一覧 → SSR 画面）を実施。異常があれば §4 の rollback へ。
-8. 正常確認後、`docker rm ceop-platform-prev` で旧コンテナを片付ける。**旧イメージ `ceop-platform:vX.Y.Z` は消さない。**
+8. スモークテスト（トークン取得 → 監査ログ取得 → 主要 CRUD 一覧 → SSR 画面）を実施。異常があれば §4 の rollback へ。
+9. 正常確認後、`docker rm ceop-platform-prev` で旧コンテナを片付ける。**旧イメージ `ceop-platform:vX.Y.Z` は消さない。**
 
 ダウンタイムは手順 4〜5 の数秒。無停止が必要になった段階で、別ポートに新バージョンを立ててから Tunnel の向き先を切り替える方式へ変更する（現時点では未実装）。
 
@@ -135,6 +155,10 @@ docker start ceop-platform
 docker rm -f ceop-platform
 docker run -d --name ceop-platform --restart unless-stopped \
   -p 127.0.0.1:3120:3000 --env-file /home/kensan/.ceop/.env \
+  --read-only --tmpfs /tmp:rw,noexec,nosuid,size=32m \
+  --cap-drop ALL --security-opt no-new-privileges:true \
+  --cpus 1.0 --memory 256m --memory-reservation 64m --pids-limit 128 \
+  --log-opt max-size=10m --log-opt max-file=3 \
   -v /home/kensan/.ceop/data:/data ceop-platform:${OLD}
 docker tag ceop-platform:${OLD} ceop-platform:current
 
@@ -164,7 +188,7 @@ journalctl -u cloudflared-ceop.service -n 50 --no-pager
 
 ## 6. compose への切替（未実施）
 
-`docker-compose.prod.yml` は、実運用中のコンテナと同一のトポロジ（`container_name` / bind mount / loopback bind / ポート）を再現するよう合わせてある。加えて `read_only` / `cap_drop: ALL` / `no-new-privileges` / memory・cpu・pids 制限 / ログローテーションのハードニングを含む（2026-08-07 に v0.6.2 イメージで起動検証済み）。
+`docker-compose.prod.yml` は、実運用中のコンテナと同一のトポロジ（`container_name` / bind mount / loopback bind / ポート）を再現するよう合わせてある。ハードニング（`read_only` / `cap_drop: ALL` / `no-new-privileges` / memory・cpu・pids 制限 / ログローテーション）は v0.8.0 以降の **`docker run` オプションでも同等に適用済み**。compose 切替は管理性の向上のみが目的で、未実施。
 
 現在の本番コンテナは compose 管理下にない。確認方法:
 
@@ -183,7 +207,7 @@ docker inspect ceop-platform --format '{{json .Config.Labels}}'
 docker stop ceop-platform && docker rename ceop-platform ceop-platform-prev
 # 3. compose で起動（必須変数は未設定ならエラー停止する）
 cd <repo>
-CEOP_IMAGE=ceop-platform:v0.6.2 CEOP_DATA_DIR=/home/kensan/.ceop/data \
+CEOP_IMAGE=ceop-platform:v0.8.0 CEOP_DATA_DIR=/home/kensan/.ceop/data \
   docker compose -f docker-compose.prod.yml --env-file /home/kensan/.ceop/.env up -d
 # 4. 検証後、labels に com.docker.compose.* が付いていることを確認
 docker inspect ceop-platform --format '{{index .Config.Labels "com.docker.compose.project"}}'
@@ -191,17 +215,16 @@ docker inspect ceop-platform --format '{{index .Config.Labels "com.docker.compos
 
 切替後は本 Runbook の §3 / §4 を compose 版へ差し替える。
 
-### 既知の差分（compose 未適用のため本番に効いていない設定）
+### 既知の差分（v0.8.0 以降はハードニング適用済み）
 
-| 設定                     | compose    | 実運用（docker run）                           |
-| ------------------------ | ---------- | ---------------------------------------------- |
-| `read_only` rootfs       | 有効       | **無効**                                       |
-| `cap_drop: ALL`          | 有効       | **無効**                                       |
-| `no-new-privileges`      | 有効       | **無効**                                       |
-| memory / cpu / pids 制限 | 有効       | **無制限**                                     |
-| ログローテーション       | 10 MiB × 3 | **無制限**（`/etc/docker/daemon.json` 未設定） |
-
-これらは compose 切替、または `docker run` に同等オプションを追加することで解消する。切替まではリスクとして受容している（単一ホスト・LAN 内・Tunnel 経由のみの公開のため）。
+| 項目                     | 状態                                                                    |
+| ------------------------ | ----------------------------------------------------------------------- |
+| rootfs 読取専用          | ✅ `docker run --read-only` + tmpfs で適用                              |
+| capabilities             | ✅ `--cap-drop ALL` で適用                                              |
+| no-new-privileges        | ✅ `--security-opt no-new-privileges:true` で適用                       |
+| CPU / memory / pids 制限 | ✅ `--cpus 1.0 --memory 256m --memory-reservation 64m --pids-limit 128` |
+| ログローテーション       | ✅ `--log-opt max-size=10m --log-opt max-file=3` で適用                 |
+| compose 管理             | 未切替（`docker run` のまま。切替は任意）                               |
 
 ## 7. WebUI（ceop-webui.service / port 3130）
 
@@ -210,7 +233,7 @@ docker inspect ceop-platform --format '{{index .Config.Labels "com.docker.compos
 | 項目         | 値                                                                             |
 | ------------ | ------------------------------------------------------------------------------ |
 | unit         | `ceop-webui.service`（正本: `deploy/systemd/ceop-webui.service`）              |
-| listen       | `0.0.0.0:3130`（LAN: `http://192.168.0.185:3130/`）                            |
+| listen       | `127.0.0.1:3130`（loopback のみ。公開は Tunnel 経由）                          |
 | 環境変数     | `/home/kensan/.ceop/webui.env`（chmod 600・git 管理外・Neon 接続文字列を含む） |
 | 配信ルート   | `/home/kensan/.ceop/webui/current/webui-dist`                                  |
 | アプリ本体   | `/home/kensan/.ceop/webui/current/app`（rsync 反映）                           |
@@ -244,10 +267,10 @@ bash scripts/webui-deploy.sh
 - `https://ceop.mirai-dx-platform.com` 配下への公開（Tunnel ingress パス分割）は
   production route 変更のため Approval PR での承認後に実施する。
 
-## 8. Tunnel ingress パス分割（WebUI 公開・Approval PR 承認後のみ）
+## 8. Tunnel ingress パス分割（WebUI 公開・適用済み）
 
 `ceop.mirai-dx-platform.com` を API（3120）と WebUI（3130）へパスで振り分ける。
-**production route 変更のため、承認済み Approval PR がない状態で実施しない。**
+実適用は PR #14 で実施済み。**今後の production route 変更は、承認済み Approval PR がない状態で実施しない。**
 
 | パス                                                                          | 振り分け先                |
 | ----------------------------------------------------------------------------- | ------------------------- |

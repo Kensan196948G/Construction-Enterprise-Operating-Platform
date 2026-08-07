@@ -74,11 +74,15 @@ test("HEAD: public probe endpoints mirror GET status and headers with no body", 
     );
     // Content-Length is retained even though the body is not sent — that is
     // the whole point of HEAD: learn the size without paying for the transfer.
-    assert.equal(
-      head.headers.get("content-length"),
-      String(Buffer.byteLength(getBody)),
-      `${path}: Content-Length must describe the body GET would have returned`,
-    );
+    // `/health` includes `uptime`, whose decimal length can change between the
+    // GET and HEAD calls, so only the stable endpoints get an exact assertion.
+    if (path !== "/health") {
+      assert.equal(
+        head.headers.get("content-length"),
+        String(Buffer.byteLength(getBody)),
+        `${path}: Content-Length must describe the body GET would have returned`,
+      );
+    }
     assert.equal(headBody, "", `${path}: HEAD must not return a body`);
   }
 });
@@ -92,6 +96,8 @@ test("HEAD: baseline security headers are present on probe responses", async (t)
   assert.equal(res.headers.get("x-frame-options"), "DENY");
   assert.equal(res.headers.get("referrer-policy"), "no-referrer");
   assert.equal(res.headers.get("cache-control"), "no-store");
+  assert.equal(res.headers.get("strict-transport-security"), "max-age=63072000; includeSubDomains");
+  assert.ok(res.headers.get("x-request-id"), "X-Request-Id should be present");
 });
 
 test("HEAD: authentication is still enforced — no credential means 401, not 200", async (t) => {

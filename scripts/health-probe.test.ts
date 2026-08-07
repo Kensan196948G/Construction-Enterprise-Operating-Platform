@@ -43,7 +43,12 @@ async function makeEnv(): Promise<ProbeEnv> {
   return { dir, log: join(dir, "health.log"), stateFile: join(dir, "probe.state") };
 }
 
-function runProbe(env: ProbeEnv, url: string, threshold = "3"): Promise<number> {
+function runProbe(
+  env: ProbeEnv,
+  url: string,
+  threshold = "3",
+  webhookUrl?: string,
+): Promise<number> {
   return new Promise((resolve) => {
     execFile(
       SCRIPT,
@@ -56,6 +61,7 @@ function runProbe(env: ProbeEnv, url: string, threshold = "3"): Promise<number> 
           CEOP_HEALTH_STATE: env.stateFile,
           CEOP_HEALTH_THRESHOLD: threshold,
           CEOP_HEALTH_TIMEOUT: "2",
+          ...(webhookUrl !== undefined ? { CEOP_ALERT_WEBHOOK_URL: webhookUrl } : {}),
         },
       },
       (error) => resolve(error === null ? 0 : ((error as { code?: number }).code ?? 1)),
@@ -63,9 +69,14 @@ function runProbe(env: ProbeEnv, url: string, threshold = "3"): Promise<number> 
   });
 }
 
-async function probe(env: ProbeEnv, url: string, threshold = "3"): Promise<ProbeRun> {
+async function probe(
+  env: ProbeEnv,
+  url: string,
+  threshold = "3",
+  webhookUrl?: string,
+): Promise<ProbeRun> {
   const before = await readFile(env.log, "utf-8").catch(() => "");
-  const exitCode = await runProbe(env, url, threshold);
+  const exitCode = await runProbe(env, url, threshold, webhookUrl);
   const after = await readFile(env.log, "utf-8");
   const state = (await readFile(env.stateFile, "utf-8").catch(() => "")).trim();
   return { exitCode, line: after.slice(before.length).trim(), state };
@@ -150,4 +161,47 @@ test("health-probe: success logs OK and resets the counter", async (t) => {
   // from a probe that stopped running at all.
   const steady = await probe(env, liveUrl);
   assert.match(steady.line, /^\S+ OK /);
+});
+
+test("health-probe: ALERT posts to the configured webhook", async (t) => {
+  const env = await makeEnv();
+  const { createServer } = await import("node:http");
+  let receivedBody = "";
+  const server = createServer((req, res) => {
+    let raw = "";
+    req.on("data", (chunk) => {
+      raw += chunk.toString("utf-8");
+    });
+    req.on("end", () => {
+      receivedBody = raw;
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end("{}");
+    });
+  });
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.after(
+    () => new Promise<void>((resolve, reject) => server.close((e) => (e ? reject(e) : resolve()))),
+  );
+  const { port } = server.address() as { port: number };
+
+  const run = await probe(env, DEAD_URL, "1", `http://127.0.0.1:${port}/hook`);
+  assert.equal(run.exitCode, 1);
+  assert.match(run.line, /^\S+ ALERT /);
+  assert.ok(receivedBody.length > 0, "webhook must receive a JSON payload");
+  const payload = JSON.parse(receivedBody) as {
+    event: string;
+    target: string;
+    consecutiveFailures: number;
+  };
+  assert.equal(payload.event, "ALERT");
+  assert.equal(payload.consecutiveFailures, 1);
+  assert.ok(payload.target.includes("/health"), "payload must identify the probed target");
+});
+
+test("health-probe: a webhook outage does not change probe semantics", async () => {
+  const env = await makeEnv();
+  const run = await probe(env, DEAD_URL, "1", "http://127.0.0.1:1/hook");
+  assert.equal(run.exitCode, 1, "alert state is still reported when delivery fails");
+  assert.match(run.line, /^\S+ ALERT /);
+  assert.match(run.line, /NOTIFY_FAILED/, "delivery failure must be visible in the log");
 });

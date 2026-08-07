@@ -49,7 +49,11 @@ function sendHtml(res: ServerResponse, status: number, html: string): void {
 
 /** Redirect to another path with a 302. */
 function redirect(res: ServerResponse, location: string): void {
-  res.writeHead(302, { Location: location });
+  res.writeHead(302, {
+    Location: location,
+    "Cache-Control": "no-store",
+    "Strict-Transport-Security": "max-age=63072000; includeSubDomains",
+  });
   res.end();
 }
 
@@ -85,6 +89,7 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
         "Content-Length": buf.byteLength,
         "Cache-Control": "public, max-age=300",
         "X-Content-Type-Options": "nosniff",
+        "Strict-Transport-Security": "max-age=63072000; includeSubDomains",
       });
       res.end(buf);
     } catch {

@@ -6,6 +6,53 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-08-07
+
+### Added
+
+- **API キー管理 API（SEC-013）** — `GET /api/v1/auth/keys`（一覧）と
+  `DELETE /api/v1/auth/keys/:keyId`（失効・削除）を追加。`auth:write` 権限かつ
+  プラットフォームレベル資格情報のみ利用可能（組織スコープは 403）。
+  SQLite 永続化と同期し、秘密ハッシュは一切返却しない。失効は監査ログに記録され、
+  直ちに認証不能になる（統合テスト 2 件）
+- **HSTS を全応答へ適用（G-22）** — API JSON/添付・SSR・静的アセット・WebUI 配信の
+  全応答に `Strict-Transport-Security: max-age=63072000; includeSubDomains` を付与。
+  Cloudflare エッジ設定を待たずにアプリ層で HTTPS 強制の効力を得る
+- **リクエスト相関 ID（SEC-010）** — API/WebUI の全応答に `X-Request-Id`（UUID）を付与し、
+  API アクセスログにも出力。障害切り分け時の相関を可能に
+- **Cloudflare Tunnel の実クライアント IP 分離（G-25）** — loopback peer 限定で
+  `CF-Connecting-IP` を信頼し、グローバル/認証レート制限と WebUI アクセスログの
+  バケットを実クライアント IP 単位へ分離。非 loopback からの偽装ヘッダは無視
+- **バックアップ世代自動削除（G-24）** — `scripts/backup-retention.ts`（既定 14 日）を追加。
+  `predeploy` / `crontest` は保護し、cron からバックアップ直後に実行
+- **OpenAPI ドリフト検査** — `pnpm run openapi:check` を `verify` に統合し、
+  enum・ページネーションキー・limit 上限（200）・Workflow スキーマをドメイン実装へ整合
+- **WebUI 展開時の UUID パストラバーサル防御** — `__bundler` マニフェストのキーが
+  UUID 形式以外の場合に展開を拒否（不正なバンドルによるディレクトリ外書き込み防止）
+- **ヘルス情報の拡充** — `/api/v1/info` に `environment` / `nodeVersion` を追加
+
+### Fixed
+
+- **本番 API コンテナのバージョン乖離（G-29）** — 公開環境が v0.6.2 のままで
+  HEAD 対応・監査エクスポートが未配信だった。v0.8.0 として本 PR でリリースし、
+  RUNBOOK §3 の更新手順でデプロイ（デプロイ後に `/api/v1/info` 等で実測確認）
+- **監査イベントのテナント属性欠落（G-32）** — `auth:token` と
+  `governance:evaluate` が解決済み context の `organizationId` を metadata に
+  持たない経路を修正し、組織スコープの監査閲覧から不可視にならないようにした
+- **WebUI の LAN 全公開（G-31）** — 既定 bind を `127.0.0.1` へ変更し、
+  Cloudflare Tunnel 経由のみで公開（LAN 直アクセスを遮断）
+- **HEAD テストのタイミング依存** — `/health` の `uptime` 桁数変化による
+  Content-Length 比較の flake を、安定エンドポイントのみ厳密比較する形へ修正
+
+### Changed
+
+- API サーバ / WebUI サーバに `headersTimeout` / `requestTimeout` /
+  `keepAliveTimeout` を設定し slowloris 対策を強化
+- 本番 `docker run` に `read_only` / `cap_drop ALL` / no-new-privileges /
+  CPU・メモリ・pids 制限 / ログローテーションを適用（RUNBOOK §3 に反映）
+- テスト 297/297 pass（client-ip 4・CF-IP レート分離 1・監査テナント 2・
+  backup-retention 3・auth-keys 2・WebUI unpack UUID 防御 1・HEAD 安定化）
+
 ## [0.7.1] - 2026-08-07
 
 ### Fixed

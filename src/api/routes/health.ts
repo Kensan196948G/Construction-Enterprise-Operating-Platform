@@ -56,6 +56,8 @@ export function registerHealthRoutes(router: Router, container?: AppContainer): 
       writeJson(res, 200, {
         name: "construction-eop",
         version: PLATFORM_VERSION,
+        environment: process.env["NODE_ENV"] ?? "development",
+        nodeVersion: process.version,
       });
     },
     false,

@@ -8,6 +8,9 @@
 # Environment lives in /home/kensan/.ceop/webui.env (chmod 600, not in git):
 #   CEOP_WEBUI_HOST / CEOP_WEBUI_PORT / CEOP_WEBUI_ROOT / CEOP_WEBUI_NEON_URL
 #
+# CEOP_WEBUI_HOST must stay 127.0.0.1 (default). Cloudflare Tunnel reaches the
+# service on loopback; binding 0.0.0.0 would expose the design bundle on the LAN.
+#
 # NOTE: ExecStart pins the nvm-managed node binary; update the path when the
 # host default node version changes (documented in docs/RUNBOOK.md).
 
