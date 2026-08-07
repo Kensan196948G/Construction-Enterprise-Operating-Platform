@@ -194,6 +194,21 @@
 - テスト 11 件追加 → **346/346 pass**・verify/build/audit 0
 - PR #26（feat/p2-ai-device）
 
+### v0.9.0 リリース・本番デプロイ（2026-08-07・ユーザー Y 承認）
+
+- PR #28（chore/release-v0.9.0）マージ → tag `v0.9.0`（6ce8dc2）・Release workflow success
+  （GHCR `ghcr.io/kensan196948g/construction-eop:0.9.0` + GitHub Release 公開）
+- 事前バックアップ: `/home/kensan/.ceop/backups/ceop-predeploy-v0.9.0-20260807T074959Z.db`（184KB・snapshot OK）
+- migration `007`（ai_actions）本番適用済み・schema_migrations 001〜007 確認・`ai_actions` テーブル/列検証
+- ローカル再現ビルド `ceop-platform:v0.9.0`（80fd7c41）でデプロイ:
+  `--read-only --cap-drop ALL --no-new-privileges --cpus 1 --memory 256m --pids-limit 128 --log-opt max-size=10m --log-opt max-file=3 --tmpfs /tmp:rw,noexec,nosuid,size=32m -p 127.0.0.1:3120:3000 --env-file /home/kensan/.ceop/.env -v /home/kensan/.ceop/data:/data`
+- 旧コンテナは `ceop-platform-prev-v0803` として保持（rollback 用）
+- スモーク: `/health` 200・`/api/v1/info` = 0.9.0（production）・`/health/ready` 200・
+  protected ルート 401（ai-actions/devices/register/workflow-instances）・
+  gateway はサービス未登録のため 404（fail-closed・P3 で設定）・WebUI 200/200・公開 API 0.9.0・公開 root 200
+- container health: healthy・ログ異常なし
+- 残課題: CEOP_GATEWAY_SERVICES は P3 統合サービス接続時に設定（現状無効・fail-closed）
+
 ### 次フェーズ
 
 - P1: CEOP ゲートウェイ（統合サービス向けリバースプロキシ/アダプタ）
