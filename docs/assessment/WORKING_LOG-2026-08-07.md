@@ -138,3 +138,17 @@
 | `pnpm run build` | ✅ pass |
 | `pnpm audit --audit-level=high` | ✅ 0 vulnerabilities |
 | 本番実測（v0.8.0 時点） | API 0.8.0・WebUI 0.8.0・HSTS/X-Request-Id 付与・コンテナ hardening 適用済み・cron 4 本稼働 |
+
+### リリース・本番デプロイ（2026-08-07 06:14 JST）
+
+1. ✅ PR #20 マージ（main = 3b47408）→ CI 全チェック成功
+2. ✅ タグ v0.8.1 → Release workflow 成功（run 31153192070・GitHub Release 作成）
+3. ✅ 事前バックアップ: `ceop-predeploy-v0.8.1-20260807T061357Z.db`・migration 0 件（冪等確認）
+4. ✅ コンテナ差し替え: 旧 v0.8.0 → `ceop-platform-prev-080`（停止保持）、新 `ceop-platform` = v0.8.1
+   （read-only / cap-drop ALL / no-new-privileges / cpus=1 / mem=256m / pids=128 / log 10m×3 / loopback 3120）
+5. ✅ WebUI 更新: `scripts/webui-deploy.sh` で v0.8.1 配信・`/healthz` = 0.8.1
+6. ✅ 実測: `/api/v1/info` = 0.8.1 / health・ready 200 / dashboard 200（`/api/assets/*` 参照）/
+   `/api/assets/app.css` 200 + HSTS / governance 200 / auth keys 200 / 無資格 401 /
+   WebUI healthz = 0.8.1
+7. 残課題（運用管理対象）: Webhook 宛先設定・Cloudflare エッジ HSTS・オフサイトバックアップ・
+   四半期復元試験・SLI 計測・GitHub Actions の Node 20 アクション更新・P3 バックログ

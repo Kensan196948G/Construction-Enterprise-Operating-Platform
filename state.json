@@ -402,6 +402,38 @@
         ".claude/skills/ (untracked)"
       ],
       "known_env_issue": "ローカルの GITHUB_TOKEN 環境変数が無効。gh/git remote 操作は `env -u GITHUB_TOKEN` 経由が必須"
+    },
+    "session_2026_08_07_v0_8_1_ssr_fix": {
+      "focus": "v0.8.1 — SSR アセット経路修正（G-36）・本番デプロイ",
+      "branches": [
+        "fix/ssr-assets-public-path (PR #20 merged)"
+      ],
+      "issue": "Cloudflare Tunnel の /assets/* → WebUI ルーティングにより API の /dashboard・/governance が参照する app.css/app.js が 404。SSR テンプレートを /api/assets/* へ変更し、旧 /assets/* はローカル互換で維持",
+      "release": {
+        "tag": "v0.8.1",
+        "workflow_run": "31153192070 success",
+        "ghcr": "Release workflow により公開（ローカルは read:packages 無しのため main 3b47408 からの再現ビルドでデプロイ）"
+      },
+      "production": {
+        "url": "https://ceop.mirai-dx-platform.com",
+        "version": "0.8.1",
+        "predeploy_backup": "/home/kensan/.ceop/backups/ceop-predeploy-v0.8.1-20260807T061357Z.db",
+        "rollback_ready": "ceop-platform-prev-080（v0.8.0）停止保持 + ceop-platform:v0.8.0 イメージ + 事前バックアップ",
+        "smoke": "PASS — /api/v1/info=0.8.1 / health・ready 200 / dashboard 200（/api/assets/* 参照）/ /api/assets/app.css 200+HSTS / governance 200 / auth keys 200 / 無資格 401 / WebUI healthz=0.8.1"
+      },
+      "verify": {
+        "format_check": "PASS",
+        "typecheck": "PASS",
+        "lint": "PASS",
+        "test": "302/302 PASS",
+        "build": "PASS",
+        "dependency_audit": "PASS — pnpm audit --audit-level=high 0 件",
+        "openapi_drift": "PASS"
+      },
+      "protected_user_changes": [
+        ".claude/START_PROMPT.md (modified)",
+        ".claude/skills/ (untracked)"
+      ]
     }
   }
 }
