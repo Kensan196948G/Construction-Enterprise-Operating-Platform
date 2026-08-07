@@ -1,0 +1,14 @@
+# CEOP Prometheus scrape configuration (P4).
+# Scrapes the platform /metrics endpoint on the loopback port.
+global:
+  scrape_interval: 30s
+  evaluation_interval: 30s
+
+scrape_configs:
+  - job_name: ceop
+    metrics_path: /metrics
+    scheme: http
+    static_configs:
+      - targets: ["host.docker.internal:3120"]
+        labels:
+          app: ceop-platform

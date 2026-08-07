@@ -1,0 +1,62 @@
+{
+  "annotations": { "list": [] },
+  "editable": false,
+  "panels": [
+    {
+      "title": "HTTP Requests / sec",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(ceop_http_requests_total[5m]))",
+          "legendFormat": "all"
+        }
+      ]
+    },
+    {
+      "title": "HTTP Error Rate (5xx)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(ceop_http_requests_total{status=~\"5..\"}[5m])) / clamp_min(sum(rate(ceop_http_requests_total[5m])), 0.0001)",
+          "legendFormat": "5xx"
+        }
+      ]
+    },
+    {
+      "title": "Pending Workflow Instances",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 8 },
+      "targets": [{ "expr": "ceop_workflow_instances_pending", "legendFormat": "pending" }]
+    },
+    {
+      "title": "Pending AI Actions",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 8 },
+      "targets": [{ "expr": "ceop_ai_actions_pending", "legendFormat": "pending" }]
+    },
+    {
+      "title": "Notification Queue",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 8 },
+      "targets": [
+        { "expr": "ceop_notifications_pending", "legendFormat": "pending" },
+        { "expr": "ceop_notifications_failed", "legendFormat": "failed" }
+      ]
+    },
+    {
+      "title": "Audit Log Size",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 8 },
+      "targets": [{ "expr": "ceop_audit_log_size", "legendFormat": "entries" }]
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["ceop"],
+  "time": { "from": "now-6h", "to": "now" },
+  "title": "CEOP Platform",
+  "uid": "ceop-platform",
+  "version": 1
+}

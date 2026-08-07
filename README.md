@@ -24,7 +24,7 @@
 | HTTP サーバ  | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                                                                                                                                        |
 | 依存方針     | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）                                                                                                                |
 | パッケージ   | pnpm 10.26.2                                                                                                                                                                                    |
-| テスト       | 373 tests pass（node:test ビルトインランナー）                                                                                                                                                  |
+| テスト       | 379 tests pass（node:test ビルトインランナー）                                                                                                                                                  |
 | コンテナ     | Docker multi-stage build（non-root・HEALTHCHECK 付き）                                                                                                                                          |
 | セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限                                                                                                               |
 
@@ -656,7 +656,7 @@ node --experimental-strip-types scripts/sqlite-backup.ts /data/ceop.db /backup/c
 | --------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | typecheck | ✅ pass        | strict・`noUncheckedIndexedAccess`・0 error                                                                                                                                                                                                                                                                                                                                                                |
 | lint      | ✅ pass        | ESLint flat config + typescript-eslint・0 warning                                                                                                                                                                                                                                                                                                                                                          |
-| test      | ✅ 373/373     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud + governance-crud + sqlite-audit-log + workflow-crud + workflow-instance + audit-coverage + migrate + rate-limit（CF-IP 分離含む）+ tenant-scope + audit-tenant-scope + jwt-org + webui + client-ip + backup-retention + auth-keys + api-key-repository + web-assets + favicon + ai-actions + device-ingest |
+| test      | ✅ 379/379     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud + governance-crud + sqlite-audit-log + workflow-crud + workflow-instance + audit-coverage + migrate + rate-limit（CF-IP 分離含む）+ tenant-scope + audit-tenant-scope + jwt-org + webui + client-ip + backup-retention + auth-keys + api-key-repository + web-assets + favicon + ai-actions + device-ingest |
 | build     | ✅ pass        | `dist/` に型定義付き出力                                                                                                                                                                                                                                                                                                                                                                                   |
 | CI        | ✅ 設定済み    | `.github/workflows/ci.yml`（push / PR トリガー）                                                                                                                                                                                                                                                                                                                                                           |
 | Docker    | ✅ multi-stage | non-root ユーザー・HEALTHCHECK 付き                                                                                                                                                                                                                                                                                                                                                                        |
@@ -1213,6 +1213,30 @@ migration `018`（documents）・`019`（work_schedules）・`020`（purchase_or
   （`CEOP_SMTP_HOST/PORT/SECURE/USER/PASSWORD/FROM`。未設定は `not-configured` として失敗記録）
 
 migration `022`（compliance_checks）・`023`（legal_evidence）・`024`（notification_templates）を追加。
+
+---
+
+## 🏛️ Portal（P4）
+
+`GET /portal` で CEOP の全モジュール（ダッシュボード / ガバナンス / プラットフォーム情報 / メトリクス）を
+一覧するポータル入口を提供します（未認証・loopback 前提。公開面は Tunnel ingress で制御）。
+
+## 📈 Prometheus Metrics（P4）
+
+`GET /metrics` が Prometheus text format で以下を公開します（`CEOP_METRICS_TOKEN` 設定時は Bearer 必須）。
+
+| メトリクス                                      | 種別    | 説明                 |
+| ----------------------------------------------- | ------- | -------------------- |
+| `ceop_http_requests_total{method,route,status}` | counter | 全 HTTP リクエスト   |
+| `ceop_audit_log_size`                           | gauge   | 監査ログ件数         |
+| `ceop_notifications_pending/failed`             | gauge   | 通知キュー           |
+| `ceop_ai_actions_pending`                       | gauge   | AI 承認待ち          |
+| `ceop_workflow_instances_pending`               | gauge   | ワークフロー承認待ち |
+| `ceop_gateway_services`                         | gauge   | 統合サービス登録数   |
+
+構成資産: `deploy/prometheus/prometheus.yml`・`deploy/grafana/provisioning/`（ダッシュボード
+「CEOP Platform」）。`docker compose --profile monitoring up -d` で Prometheus(9090) +
+Grafana(3001) を loopback 起動できます（実機導入は RUNBOOK 参照）。
 
 ---
 
