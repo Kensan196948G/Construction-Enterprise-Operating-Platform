@@ -10,7 +10,7 @@
 |---|---|
 | 実装本体 | `feat/platform-foundation`（M1〜M16）→ 本作業ブランチ `feat/production-hardening` で v0.6.0 化 |
 | main | v0.6.2 統合済み（PR #2〜#9）・タグ v0.6.2・GHCR イメージ・GitHub Release 作成済み |
-| テスト | 252/252 pass（ローカル + GitHub Actions 検証済み） |
+| テスト | 263/263 pass（ローカル + GitHub Actions 検証済み） |
 | typecheck / lint / build | 全パス |
 | 依存監査 | `pnpm audit --audit-level=high` → 0 vulnerabilities（override で解消） |
 | CI | グリーン（main: typecheck/lint/test/build/security/Docker 全成功） |
@@ -58,14 +58,16 @@
 | G-24 | P3 | バックアップの世代自動削除が未実装・オフサイトコピー無し | 運用台帳で手動管理（BACKUP_RESTORE.md）。ホスト障害時はバックアップも同時消失 |
 | G-25 | P3 | 全トラフィックが Tunnel 経由で loopback から届くため、per-IP レート制限が実質単一バケット | バックログ（`CF-Connecting-IP` を信頼境界付きで採用する設計が必要） |
 | G-26 | P2 | 監査証跡を監査人へ引き渡す手段が無く、ハッシュ連鎖のオフライン再検証ができなかった（legacy-gap-analysis L-01） | ✅ 解消（2026-08-07）。`GET /api/v1/governance/audit/export` を追加。`audit:export` 権限分離・拒否の監査記録・スナップショット順序・チェーン列同梱・CSV 数式インジェクション対策を 20 テスト（変異検証済み）で固定 |
+| G-27 | P2 | `Router.#match` が HTTP メソッドを厳密一致で照合するため、HEAD が `/health` を含む**全ルートで 404**。多くの死活監視・ロードバランサは既定で HEAD をプローブに使うため、正常稼働中のサービスが停止と誤判定されうる（GET 200 / HEAD 404 を実測） | ✅ 解消（2026-08-07）。`#match` に HEAD→GET フォールバックを追加。`node:http` が HEAD 応答のボディのみ抑制しヘッダを維持するため全ハンドラ無改修。認可は GET ルートの `requiresAuth` を継承。6 テスト（変異 3 種検証済み）。ルータ層に初のテストを設置 |
+| G-28 | P2 | 監視ドキュメントと実態の乖離。MONITORING.md は「本番の一意特定が可能になった時点でアラートルールをデプロイ」と記載するが本番は既に一意特定済み。「30 秒間隔・3 回失敗でアラート」は Docker HEALTHCHECK の検知条件としては正しいが**誰にも通知されない**（`unless-stopped` はコンテナ終了時のみ再起動し、unhealthy では何も起きない）。外形監視は 1 日 1 回の `curl` で**失敗時のみ**ログ追記のため、`health.log` が存在しないことが「無障害」か「cron 未実行」か判別不能だった。OPERATIONS_LEDGER は存在しない「アラートダッシュボード」を参照 | ✅ 解消（2026-08-07）。`scripts/health-probe.sh`（連続失敗カウンタを永続化し WARN/ALERT/RECOVERED を出し分け、成功も記録、状態破損時は 0 から再開）を追加し 5 テストで固定。MONITORING.md を「実装済み」「未実装（目標設計）」「通知経路が無い間の手順」の 3 章へ再構成。OPERATIONS_LEDGER の日次項目を実行可能なコマンドと判定基準へ置換し、自動化されていない理由（通知先未決定）を明記 |
 
 ## 4. リリース可否判断の根拠
 
-- コード品質: typecheck / lint / build / 252 tests / audit 0 / OpenAPI 生成一致
+- コード品質: typecheck / lint / build / 263 tests / audit 0 / OpenAPI 生成一致
 - セキュリティ: 認証・認可・監査・レート制限・ヘッダ・FK・依存監査を確認
 - 運用: バックアップ・復元手順・監視・Runbook・運用台帳を整備
 - 判定: **GO（v0.6.2 を本番デプロイ済み・2026-08-07）**。公開 URL 経由で `/health`・`/health/ready`（storage: sqlite）・`/api/v1/info`（version 0.6.2）と、認証込みスモーク（トークン交換 → 主要 9 API 200 → SSR 2 画面 200）・ネガティブ制御（無効資格情報 / 資格情報なし → 401）を確認
-- 残作業: 初期安定化監視、四半期の復元試験、G-22（HSTS）・G-23（compose 切替）・G-24（保持世代）
+- 残作業: 四半期の復元試験、**アラート通知経路の決定と実装**（G-28 で検知は実装したが伝達先が未決定）、G-22（HSTS）・G-23（compose 切替 / ログローテーション）・G-24（保持世代・オフサイト）・G-25（レート制限バケット）
 
 ## 5. バックログ（実装対象外）
 
