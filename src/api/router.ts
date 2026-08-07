@@ -105,8 +105,32 @@ export class Router {
     return this.#add("DELETE", path, handler, requiresAuth);
   }
 
-  /** Find the first route matching `method` + `path`, extracting path params. */
+  /**
+   * Find the route for `method` + `path`, falling back to `GET` for `HEAD`.
+   *
+   * RFC 9110 requires general-purpose servers to support HEAD, and many uptime
+   * monitors and load balancers probe with it by default. Without this fallback
+   * every route answered 404 to HEAD — including `/health`, which is precisely
+   * what those probes target.
+   *
+   * No handler needs to change: `node:http` suppresses the response body for a
+   * HEAD request while keeping the headers the handler wrote (`Content-Length`
+   * included), which is exactly the semantics HEAD is defined to have. Auth is
+   * likewise inherited, so HEAD on a protected route still answers 401.
+   */
   #match(method: string, path: string): { route: Route; params: Record<string, string> } | null {
+    const direct = this.#matchExact(method, path);
+    if (direct !== null || method !== "HEAD") {
+      return direct;
+    }
+    return this.#matchExact("GET", path);
+  }
+
+  /** Find the first route whose method and compiled pattern both match. */
+  #matchExact(
+    method: string,
+    path: string,
+  ): { route: Route; params: Record<string, string> } | null {
     for (const route of this.#routes) {
       if (route.method !== method) {
         continue;

@@ -398,6 +398,7 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
       // before the response so a client that hangs up cannot suppress it.
       recordAudit(container.auditLog, ctx, "audit:export", AUDIT_EXPORT_RESOURCE, "denied", {
         format: String(rawFormat),
+        method: req.method,
       });
       writeJson(res, 403, { error: "Forbidden", message: "requires 'audit:export' permission" });
       return;
@@ -422,12 +423,17 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
     const entries = scoped.slice(offset, offset + limit);
     const exportedAt = new Date().toISOString();
 
+    // `method` distinguishes a real download from a HEAD probe: HEAD reaches
+    // this route (RFC 9110 requires it) but node:http discards the body, so the
+    // rows were never delivered. Recording the method keeps the evidence trail
+    // from asserting a data transfer that did not occur.
     recordAudit(container.auditLog, ctx, "audit:export", AUDIT_EXPORT_RESOURCE, "success", {
       format,
       count: String(entries.length),
       total: String(scoped.length),
       offset: String(offset),
       limit: String(limit),
+      method: req.method,
     });
 
     // Colons are legal in a quoted filename but confuse some download managers,
