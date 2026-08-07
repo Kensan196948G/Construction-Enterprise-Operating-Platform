@@ -115,10 +115,12 @@ services:
     container_name: ceop-prometheus
     profiles: ["monitoring"]
     restart: unless-stopped
-    ports:
-      - "127.0.0.1:9090:9090"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    # CEOP API は 127.0.0.1:3120 にしか bind していないため、コンテナから
+    # 到達するには host ネットワークが必要。listen は loopback のみに限定する。
+    network_mode: host
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.listen-address=127.0.0.1:19090
     volumes:
       - ./deploy/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ceop-prometheus-data:/prometheus
@@ -140,9 +142,10 @@ services:
     container_name: ceop-grafana
     profiles: ["monitoring"]
     restart: unless-stopped
-    ports:
-      - "127.0.0.1:3001:3000"
+    network_mode: host
     environment:
+      GF_SERVER_HTTP_ADDR: "127.0.0.1"
+      GF_SERVER_HTTP_PORT: "13001"
       GF_SECURITY_ADMIN_USER: "${GRAFANA_ADMIN_USER:-admin}"
       GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD を設定（loopback 限定だが必須）}"
       GF_USERS_ALLOW_SIGN_UP: "false"

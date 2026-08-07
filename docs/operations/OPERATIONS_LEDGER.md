@@ -35,3 +35,14 @@
 | 16:51 | コンテナ差し替え ceop-platform:v0.9.0（旧 v0.8.3 は ceop-platform-prev-v0803 保持） | ✅ healthy |
 | 16:51 | スモーク: /health・/ready・info=0.9.0・protected 401・WebUI・公開 URL | ✅ 全 PASS |
 | 16:51 | ゲートウェイ: CEOP_GATEWAY_SERVICES 未設定（P3 で設定・fail-closed） | ✅ 想定どおり |
+
+## 実行記録（2026-08-07・P5 本番切替）
+
+| 日時 (JST) | 内容 | 結果 |
+| --- | --- | --- |
+| 18:33 | parity 検証（FEATURE_INVENTORY 突合 + API 24 プローブ + migration 24 件） | ✅ |
+| 18:34 | migration 016〜024 欠落を検出・復元（PR #37） | ✅ |
+| 18:40 | v0.10.0 修正版 tag（a005ab6）・Release workflow success（GHCR） | ✅ |
+| 18:41 | 本番 migration 001〜024 適用・9 業務テーブル確認 | ✅ |
+| 18:42 | コンテナ差し替え v0.10.0（旧 v0.9.0 保持）・スモーク全 PASS（/metrics・/portal 含む） | ✅ |
+| 18:45 | Prometheus(19090)/Grafana(13001) 導入（host network・loopback・read-only）・target up | ✅ |

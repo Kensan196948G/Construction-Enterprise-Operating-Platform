@@ -21,7 +21,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 - **P5 パリティ検証** — `scripts/verify-parity.ts`（FEATURE_INVENTORY 突合 + API プローブ 24 ルート）を
   `pnpm run verify` に組込。Y-03/Y-07・O-02/O-03/O-05・D-08 を統合済みに更新し、
-  次期バックログ（O-04/O-06/O-08/O-09/D-04/D-07/D-09）を明示。テスト 2 件追加（381/381 pass）。
+  次期バックログ（O-04/O-06/O-08/O-09/D-04/D-07/D-09）を明示。テスト 2 件追加（382/382 pass）。
 
 ## [0.9.0] - 2026-08-07
 
