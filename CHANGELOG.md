@@ -6,6 +6,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-08-07
+
+### Fixed
+
+- **WebUI 白画面（CSP による React CDN ブロック）** — デザインバンドルのランタイムは
+  `window.__resources` に CDN URL → ローカルパスの対応が無い場合、unpkg.com から
+  React / ReactDOM を読み込もうとし、CSP `script-src 'self'` にブロックされて
+  ページが白画面のまま起動しなかった。`src/webui/unpack.ts` が
+  `__bundler/ext_resources` セクション（CDN URL → 同梱アセット UUID）を解析し、
+  展開済みローカルアセットへのマッピングを `<head>` 直後に
+  `<script>window.__resources = {...}</script>` として注入するよう修正。
+  CSP は緩和せず、デザイン HTML も無改変のまま（元の自己展開ローダーと同じ手法を
+  blob: URL の代わりにローカルパスで再現）。ユニットテスト 3 件追加（注入・
+  セクション欠落時の無変更・未知 UUID 参照の拒否）
+
 ## [0.7.0] - 2026-08-07
 
 ### Added

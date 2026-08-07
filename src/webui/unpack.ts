@@ -38,6 +38,12 @@ interface ManifestEntry {
   readonly compressed?: boolean;
 }
 
+/** `__bundler/ext_resources` entry: a CDN URL bundled as a local asset. */
+interface ExtResourceEntry {
+  readonly id: string;
+  readonly uuid: string;
+}
+
 const EXTENSION_BY_MIME: Readonly<Record<string, string>> = {
   "text/css": ".css",
   "text/html": ".html",
@@ -98,6 +104,7 @@ export function unpackBundle(html: string): Result<UnpackedBundle, string> {
   }
 
   const assets: UnpackedAsset[] = [];
+  const pathByUuid = new Map<string, string>();
   for (const [uuid, entry] of Object.entries(manifest)) {
     if (typeof entry?.data !== "string") {
       return err(`manifest entry ${uuid} has no data`);
@@ -113,11 +120,71 @@ export function unpackBundle(html: string): Result<UnpackedBundle, string> {
     const mime = ((entry.mime ?? "application/octet-stream").split(";")[0] ?? "").trim();
     const path = `assets/${uuid}${EXTENSION_BY_MIME[mime] ?? ".bin"}`;
     assets.push({ path, mime, bytes });
+    pathByUuid.set(uuid, path);
     // The template references assets by bare UUID (in src/href/url()).
     template = template.split(uuid).join(path);
   }
 
-  return ok({ indexHtml: template, assets });
+  const withResources = injectResourceMap(html, template, pathByUuid);
+  if (!withResources.ok) return withResources;
+
+  return ok({ indexHtml: withResources.value, assets });
+}
+
+/**
+ * The bundle's runtime (`src/cdn.ts` in the design tool) loads React et al.
+ * from CDN URLs unless `window.__resources` maps those URLs to local paths.
+ * The original self-extracting loader builds that map from the optional
+ * `__bundler/ext_resources` section (CDN URL → bundled asset UUID) using
+ * blob: URLs; under our CSP (`script-src 'self'`, no CDN hosts) we must do
+ * the same with the unpacked local asset paths, or the page boots blank.
+ */
+function injectResourceMap(
+  html: string,
+  template: string,
+  pathByUuid: ReadonlyMap<string, string>,
+): Result<string, string> {
+  const section = bundlerSection(html, "ext_resources");
+  if (!section.ok) return ok(template); // optional section: nothing to map
+
+  let entries: readonly ExtResourceEntry[];
+  try {
+    entries = JSON.parse(section.value) as ExtResourceEntry[];
+  } catch (e) {
+    return err(`ext_resources JSON parse failed: ${e instanceof Error ? e.message : String(e)}`);
+  }
+  if (!Array.isArray(entries)) {
+    return err("ext_resources is not a JSON array");
+  }
+
+  const resources: Record<string, string> = {};
+  for (const entry of entries) {
+    if (typeof entry?.id !== "string" || typeof entry?.uuid !== "string") {
+      return err("ext_resources entry missing id/uuid");
+    }
+    const path = pathByUuid.get(entry.uuid);
+    if (path === undefined) {
+      return err(`ext_resources references unknown asset ${entry.uuid}`);
+    }
+    resources[entry.id] = path;
+  }
+  if (Object.keys(resources).length === 0) {
+    return ok(template);
+  }
+
+  // Mirror the original loader: inject right after <head> (keeps the DOCTYPE
+  // first) and escape "</" so the JSON cannot terminate the script element.
+  const headOpen = /<head(\s[^>]*)?>/i.exec(template);
+  if (!headOpen || headOpen.index === undefined) {
+    return err("template has no <head> to inject window.__resources into");
+  }
+  const insertAt = headOpen.index + headOpen[0].length;
+  const script =
+    "<script>window.__resources = " +
+    JSON.stringify(resources).replace(/<\//g, "<\\/") +
+    ";</" +
+    "script>";
+  return ok(template.slice(0, insertAt) + script + template.slice(insertAt));
 }
 
 /** Materialise an unpacked bundle under `outDir` (index.html + assets/). */
