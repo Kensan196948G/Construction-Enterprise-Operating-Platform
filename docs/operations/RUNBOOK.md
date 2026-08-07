@@ -10,25 +10,25 @@
 
 ### 本番環境（2026-08-07 現在）
 
-| 項目 | 値 |
-|---|---|
-| URL | https://ceop.mirai-dx-platform.com |
-| ホスト | 192.168.0.185（LAN） |
-| 起動方式 | **`docker run`**（compose 管理下ではない。§6 参照） |
-| コンテナ | `ceop-platform`（`--restart unless-stopped`、127.0.0.1:3120→3000） |
-| イメージ | `ceop-platform:v0.6.2`（可動エイリアス `ceop-platform:current` が同一 ID を指す） |
-| トンネル | Cloudflare Tunnel `ceop`（systemd: `cloudflared-ceop.service`） |
-| DB | ホスト `/home/kensan/.ceop/data/ceop.db` を `/data` へ bind mount |
-| 環境変数 | `/home/kensan/.ceop/.env`（chmod 600、`--env-file` で読み込み） |
-| 認証情報 | `/home/kensan/.ceop/*-credential.txt`（chmod 600） |
-| バックアップ | cron 02:15 JST → `/home/kensan/.ceop/backups/` |
-| ヘルス確認 | cron 02:30 JST → 失敗時のみ `/home/kensan/.ceop/health.log` へ追記 |
+| 項目         | 値                                                                                |
+| ------------ | --------------------------------------------------------------------------------- |
+| URL          | https://ceop.mirai-dx-platform.com                                                |
+| ホスト       | 192.168.0.185（LAN）                                                              |
+| 起動方式     | **`docker run`**（compose 管理下ではない。§6 参照）                               |
+| コンテナ     | `ceop-platform`（`--restart unless-stopped`、127.0.0.1:3120→3000）                |
+| イメージ     | `ceop-platform:v0.6.2`（可動エイリアス `ceop-platform:current` が同一 ID を指す） |
+| トンネル     | Cloudflare Tunnel `ceop`（systemd: `cloudflared-ceop.service`）                   |
+| DB           | ホスト `/home/kensan/.ceop/data/ceop.db` を `/data` へ bind mount                 |
+| 環境変数     | `/home/kensan/.ceop/.env`（chmod 600、`--env-file` で読み込み）                   |
+| 認証情報     | `/home/kensan/.ceop/*-credential.txt`（chmod 600）                                |
+| バックアップ | cron 02:15 JST → `/home/kensan/.ceop/backups/`                                    |
+| ヘルス確認   | cron 02:30 JST → 失敗時のみ `/home/kensan/.ceop/health.log` へ追記                |
 
 ### イメージタグの運用
 
-| タグ | 役割 |
-|---|---|
-| `ceop-platform:vX.Y.Z` | 不変タグ。rollback と監査の基準。**prune しない** |
+| タグ                    | 役割                                                                  |
+| ----------------------- | --------------------------------------------------------------------- |
+| `ceop-platform:vX.Y.Z`  | 不変タグ。rollback と監査の基準。**prune しない**                     |
 | `ceop-platform:current` | 可動エイリアス。稼働中バージョンを指す。cron などの自動処理が参照する |
 
 デプロイのたびに `docker tag ceop-platform:vX.Y.Z ceop-platform:current` を実行する（§3 手順に含む）。これにより、バックアップ cron がリリースごとのタグ更新を必要としなくなる。
@@ -193,13 +193,13 @@ docker inspect ceop-platform --format '{{index .Config.Labels "com.docker.compos
 
 ### 既知の差分（compose 未適用のため本番に効いていない設定）
 
-| 設定 | compose | 実運用（docker run） |
-|---|---|---|
-| `read_only` rootfs | 有効 | **無効** |
-| `cap_drop: ALL` | 有効 | **無効** |
-| `no-new-privileges` | 有効 | **無効** |
-| memory / cpu / pids 制限 | 有効 | **無制限** |
-| ログローテーション | 10 MiB × 3 | **無制限**（`/etc/docker/daemon.json` 未設定） |
+| 設定                     | compose    | 実運用（docker run）                           |
+| ------------------------ | ---------- | ---------------------------------------------- |
+| `read_only` rootfs       | 有効       | **無効**                                       |
+| `cap_drop: ALL`          | 有効       | **無効**                                       |
+| `no-new-privileges`      | 有効       | **無効**                                       |
+| memory / cpu / pids 制限 | 有効       | **無制限**                                     |
+| ログローテーション       | 10 MiB × 3 | **無制限**（`/etc/docker/daemon.json` 未設定） |
 
 これらは compose 切替、または `docker run` に同等オプションを追加することで解消する。切替まではリスクとして受容している（単一ホスト・LAN 内・Tunnel 経由のみの公開のため）。
 
@@ -207,15 +207,15 @@ docker inspect ceop-platform --format '{{index .Config.Labels "com.docker.compos
 
 デザインバンドル配信専用の systemd サービス。API コンテナ（3120）とは独立しており、片方の障害はもう片方に波及しない。
 
-| 項目 | 値 |
-|---|---|
-| unit | `ceop-webui.service`（正本: `deploy/systemd/ceop-webui.service`） |
-| listen | `0.0.0.0:3130`（LAN: `http://192.168.0.185:3130/`） |
-| 環境変数 | `/home/kensan/.ceop/webui.env`（chmod 600・git 管理外・Neon 接続文字列を含む） |
-| 配信ルート | `/home/kensan/.ceop/webui/current/webui-dist` |
-| アプリ本体 | `/home/kensan/.ceop/webui/current/app`（rsync 反映） |
-| ヘルス | `GET http://127.0.0.1:3130/healthz` |
-| アクセスログ | Neon `ceop-production` / `webui_access_log`（ページヒットのみ） |
+| 項目         | 値                                                                             |
+| ------------ | ------------------------------------------------------------------------------ |
+| unit         | `ceop-webui.service`（正本: `deploy/systemd/ceop-webui.service`）              |
+| listen       | `0.0.0.0:3130`（LAN: `http://192.168.0.185:3130/`）                            |
+| 環境変数     | `/home/kensan/.ceop/webui.env`（chmod 600・git 管理外・Neon 接続文字列を含む） |
+| 配信ルート   | `/home/kensan/.ceop/webui/current/webui-dist`                                  |
+| アプリ本体   | `/home/kensan/.ceop/webui/current/app`（rsync 反映）                           |
+| ヘルス       | `GET http://127.0.0.1:3130/healthz`                                            |
+| アクセスログ | Neon `ceop-production` / `webui_access_log`（ページヒットのみ）                |
 
 ### 日常操作
 
@@ -243,3 +243,48 @@ bash scripts/webui-deploy.sh
   `webui-deploy.sh` を再実行する（展開先は再生成されるため手編集しない）。
 - `https://ceop.mirai-dx-platform.com` 配下への公開（Tunnel ingress パス分割）は
   production route 変更のため Approval PR での承認後に実施する。
+
+## 8. Tunnel ingress パス分割（WebUI 公開・Approval PR 承認後のみ）
+
+`ceop.mirai-dx-platform.com` を API（3120）と WebUI（3130）へパスで振り分ける。
+**production route 変更のため、承認済み Approval PR がない状態で実施しない。**
+
+| パス                                                                          | 振り分け先                |
+| ----------------------------------------------------------------------------- | ------------------------- |
+| `/api/*` `/health*`（`/health` `/health/ready`） `/dashboard*` `/governance*` | `localhost:3120`（API）   |
+| 上記以外すべて（`/` `/assets/*` `/healthz` など）                             | `localhost:3130`（WebUI） |
+
+正本: `deploy/cloudflared/ceop-config.yml`
+
+### 切替手順
+
+```bash
+# 1. 事前確認（両バックエンドが健全であること）
+curl -fsS http://127.0.0.1:3120/health >/dev/null && echo api-ok
+curl -fsS http://127.0.0.1:3130/healthz >/dev/null && echo webui-ok
+
+# 2. 現行設定の退避（復旧地点）
+cp /home/kensan/.cloudflared/ceop-config.yml /home/kensan/.cloudflared/ceop-config.yml.bak
+
+# 3. 新設定を配置
+cp <repo>/deploy/cloudflared/ceop-config.yml /home/kensan/.cloudflared/ceop-config.yml
+
+# 4. 設定検証と反映
+cloudflared tunnel ingress validate --config /home/kensan/.cloudflared/ceop-config.yml
+sudo systemctl restart cloudflared-ceop.service
+
+# 5. 事後確認（外部経路）
+curl -fsS https://ceop.mirai-dx-platform.com/health/ready   # API に到達
+curl -fsS https://ceop.mirai-dx-platform.com/healthz        # WebUI に到達
+curl -fsS -o /dev/null -w '%{http_code}\n' https://ceop.mirai-dx-platform.com/   # 200 (WebUI)
+```
+
+### Rollback
+
+```bash
+cp /home/kensan/.cloudflared/ceop-config.yml.bak /home/kensan/.cloudflared/ceop-config.yml
+sudo systemctl restart cloudflared-ceop.service
+curl -fsS https://ceop.mirai-dx-platform.com/health/ready   # 従来経路の復旧確認
+```
+
+DNS・証明書・Tunnel 自体（UUID / credentials）には一切触れない。変更は ingress ルールのみで、rollback は設定ファイルの復元 + サービス再起動で完結する（所要 10 秒程度）。

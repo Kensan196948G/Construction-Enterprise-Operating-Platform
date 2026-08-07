@@ -1,0 +1,24 @@
+# Cloudflare Tunnel ingress for ceop.mirai-dx-platform.com — path-split routing.
+#
+# Source of truth for /home/kensan/.cloudflared/ceop-config.yml.
+# Apply ONLY via the approved procedure in docs/operations/RUNBOOK.md §8
+# (this is a production route change and requires an approved Approval PR).
+#
+# Routing:
+#   /api/*, /health*, /dashboard*, /governance* → API container (localhost:3120)
+#   everything else (incl. /healthz, /assets/*)  → WebUI service  (localhost:3130)
+#
+# cloudflared evaluates ingress rules top-down; `path` is a regex matched
+# against the request path. The catch-all hostname rule must come after the
+# path-scoped rule, and the final http_status:404 rule is mandatory.
+
+tunnel: 21a24cec-9ac1-4aa8-aa92-c64867bece8b
+credentials-file: /home/kensan/.cloudflared/21a24cec-9ac1-4aa8-aa92-c64867bece8b.json
+
+ingress:
+  - hostname: ceop.mirai-dx-platform.com
+    path: ^/(api|health|dashboard|governance)(/.*)?$
+    service: http://localhost:3120
+  - hostname: ceop.mirai-dx-platform.com
+    service: http://localhost:3130
+  - service: http_status:404
