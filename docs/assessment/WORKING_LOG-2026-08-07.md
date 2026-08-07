@@ -191,7 +191,7 @@
 - `src/api/routes/device-ingest.ts`: register / heartbeat / inventory（device:write・監査・クロステナント拒否）
 - 永続化: in-memory / file / SQLite（migration 007 `ai_actions`）・ports に `aiActions` を追加
 - OpenAPI・README・CHANGELOG・FEATURE_INVENTORY（Y-09 / D-01〜D-03 ✅）・RUNBOOK 更新
-- テスト 11 件追加 → **381/381 pass**・verify/build/audit 0
+- テスト 11 件追加 → **382/382 pass**・verify/build/audit 0
 - PR #26（feat/p2-ai-device）
 
 ### v0.9.0 リリース・本番デプロイ（2026-08-07・ユーザー Y 承認）
@@ -217,7 +217,7 @@
   `/api/v1/daily-reports/:id` + `/transition`（project:read|write / daily-report:read|write・テナント・監査）
 - 永続化: in-memory / file / SQLite（migration 008 projects / 009 daily_reports）
 - OpenAPI・README・CHANGELOG・FEATURE_INVENTORY（S-01/S-02 ✅）・RUNBOOK 更新
-- テスト 10 件追加 → **381/381 pass**・verify/build/audit 0
+- テスト 10 件追加 → **382/382 pass**・verify/build/audit 0
 - PR #30（feat/p3-servicehub-projects）
 
 ### P3 継続: S-03〜S-05・S-09 スライス実装（2026-08-07 本セッション追記）
@@ -228,7 +228,7 @@
   notifications（各 read/write 権限・テナント・監査）
 - persistence: in-memory/file/SQLite + migration 010〜015
 - OpenAPI・README・CHANGELOG・FEATURE_INVENTORY（S-03/S-04/S-05/S-09 ✅）・RUNBOOK 更新
-- テスト 5 件追加 → **381/381 pass**・verify/build/audit 0
+- テスト 5 件追加 → **382/382 pass**・verify/build/audit 0
 - PR #31（feat/p3-s03-s09）
 
 ### P3 継続: S-06〜S-08 + 日報承認ワークフロー連携（2026-08-07 本セッション追記）
@@ -238,7 +238,7 @@
 - 日報 submitted → workflow-instance（resourceType=daily-report）自動作成 → approve で approved 自動遷移
 - persistence: in-memory/file/SQLite + migration 016（knowledge_articles）・017（legal_contracts）
 - OpenAPI・README・CHANGELOG・FEATURE_INVENTORY（S-06/S-07/S-08 ✅）・RUNBOOK 更新
-- テスト 4 件追加 → **381/381 pass**・verify/build/audit 0
+- テスト 4 件追加 → **382/382 pass**・verify/build/audit 0
 - PR #32（feat/p3-s06-s08-wf）
 
 ### P3 継続: Enterprise-OS E-02/E-03/E-05/E-11 + 通知ディスパッチャー（2026-08-07 本セッション追記）
@@ -250,7 +250,7 @@
   Webhook/Slack 実送信・not-configured/transient 失敗記録・retry 対象
 - persistence: in-memory/file/SQLite + migration 018〜021
 - OpenAPI・README・CHANGELOG・FEATURE_INVENTORY（E-02/E-03/E-05/E-11 ✅）・RUNBOOK 更新
-- テスト 2 件追加 → **381/381 pass**・verify/build/audit 0
+- テスト 2 件追加 → **382/382 pass**・verify/build/audit 0
 - PR #33（feat/p3-e-slices）
 
 ### P3 完了スライス: S-07 残・E-11 残（2026-08-07 本セッション追記）
@@ -260,7 +260,7 @@
 - `src/notifications/smtp.ts`: 最小 SMTP クライアント（implicit TLS・AUTH PLAIN）+ email 実送信
 - persistence: in-memory/file/SQLite + migration 022〜024
 - OpenAPI・README・CHANGELOG・INTEGRATION_PLAN（P3 主要完了）・RUNBOOK・.env.example 更新
-- テスト 6 件追加 → **381/381 pass**・verify/build/audit 0
+- テスト 6 件追加 → **382/382 pass**・verify/build/audit 0
 - PR #34（feat/p3-s07-e11-rest）
 
 ### P4: ポータル/監視統合（2026-08-07 本セッション追記）
@@ -272,8 +272,26 @@
 - `deploy/prometheus/prometheus.yml`・`deploy/grafana/provisioning/`（datasource + CEOP Platform ダッシュボード）・
   `docker-compose.prod.yml` に `--profile monitoring`（Prometheus 9090 / Grafana 3001・loopback・read-only）
 - OpenAPI 対象外（/metrics /portal は API ドキュメント外・README に記載）
-- テスト 6 件追加 → **381/381 pass**・verify/build/audit 0
+- テスト 6 件追加 → **382/382 pass**・verify/build/audit 0
 - PR #35（feat/p4-portal-monitoring）
+
+### P5: パリティ検証・本番切替（v0.10.0・2026-08-07 本セッション追記）
+
+- `scripts/verify-parity.ts`: FEATURE_INVENTORY 突合 + API プローブ 24 ルート + migration 001〜024
+  カバレッジ検査（pnpm run verify に組込）
+- FEATURE_INVENTORY: Y-03/Y-07・O-02/O-03/O-05・D-08 を ✅ に更新し、次期バックログ
+  （O-04/O-06/O-08/O-09/D-04/D-07/D-09）を明示
+- **発見・修正**: P3/P4 の migration 016〜024 がマージ過程で欠落 → 復元（PR #37）+
+  parity 検査で再発防止
+- v0.10.0 リリース: tag（a005ab6・修正版）・Release workflow success（GHCR 0.10.0）
+- 本番切替:
+  - 事前バックアップ ceop-predeploy-v0.10.0-*.db
+  - migration 001〜024 適用（016〜024 を追加適用・9 業務テーブル確認）
+  - コンテナ差し替え ceop-platform:v0.10.0（旧 v0.9.0 は ceop-platform-prev-v090 保持）
+  - スモーク: /health 200・info=0.10.0・/metrics 200・/portal 200・protected 401・WebUI/公開 200
+- 監視スタック導入: Prometheus(19090)/Grafana(13001) host network・loopback bind・read-only・
+  cap-drop ALL。target up・ceop_http_requests_total 収集確認・Grafana ログイン 200
+- 次期バックログ: O-04/O-06/O-08/O-09/D-04/D-07/D-09 + STARTTLS/OAuth SMTP・通知テンプレート変数
 
 ### 次フェーズ
 

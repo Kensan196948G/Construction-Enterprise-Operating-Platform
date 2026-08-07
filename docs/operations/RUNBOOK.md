@@ -337,6 +337,6 @@ DNS・証明書・Tunnel 自体（UUID / credentials）には一切触れない�
 ## P4 監視スタック（Prometheus / Grafana）
 
 - `GET /metrics` は loopback 3120 で公開済み（`CEOP_METRICS_TOKEN` 任意）。
-- 実機導入: `docker compose --profile monitoring up -d`（`GRAFANA_ADMIN_PASSWORD` 必須・loopback 9090/3001）。
+- 実機導入: `docker compose --profile monitoring up -d`（`GRAFANA_ADMIN_PASSWORD` 必須・host network・loopback 19090/13001）。
 - Tunnel ingress は `/metrics` を公開しないよう分割すること（`/api/*` のみ API へ）。
-- 確認: `curl http://127.0.0.1:9090/api/v1/targets`・Grafana `http://127.0.0.1:3001`（CEOP Platform ダッシュボード）。
+- 確認: `curl http://127.0.0.1:19090/api/v1/targets`・Grafana `http://127.0.0.1:13001`（CEOP Platform ダッシュボード）。
