@@ -3,6 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { findMissingCoreDomains, parseInventory } from "./verify-parity.ts";
+import { MIGRATIONS } from "./migrate.ts";
 
 const SAMPLE = `
 | #    | 機能        | 内容   | CEOP 対応              | 状態 |
@@ -23,4 +24,12 @@ test("findMissingCoreDomains flags only planned-but-unimplemented domains", () =
   const missing = findMissingCoreDomains(rows);
   assert.equal(missing.length, 1);
   assert.equal(missing[0]?.id, "S-02");
+});
+
+test("migration registry covers 001 through 024", () => {
+  const versions = new Set(MIGRATIONS.map((m) => m.version));
+  for (let i = 1; i <= 24; i += 1) {
+    const v = String(i).padStart(3, "0");
+    assert.ok(versions.has(v), `migration ${v} must exist`);
+  }
 });
