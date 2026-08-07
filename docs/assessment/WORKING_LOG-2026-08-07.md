@@ -191,7 +191,7 @@
 - `src/api/routes/device-ingest.ts`: register / heartbeat / inventory（device:write・監査・クロステナント拒否）
 - 永続化: in-memory / file / SQLite（migration 007 `ai_actions`）・ports に `aiActions` を追加
 - OpenAPI・README・CHANGELOG・FEATURE_INVENTORY（Y-09 / D-01〜D-03 ✅）・RUNBOOK 更新
-- テスト 11 件追加 → **356/356 pass**・verify/build/audit 0
+- テスト 11 件追加 → **361/361 pass**・verify/build/audit 0
 - PR #26（feat/p2-ai-device）
 
 ### v0.9.0 リリース・本番デプロイ（2026-08-07・ユーザー Y 承認）
@@ -217,8 +217,19 @@
   `/api/v1/daily-reports/:id` + `/transition`（project:read|write / daily-report:read|write・テナント・監査）
 - 永続化: in-memory / file / SQLite（migration 008 projects / 009 daily_reports）
 - OpenAPI・README・CHANGELOG・FEATURE_INVENTORY（S-01/S-02 ✅）・RUNBOOK 更新
-- テスト 10 件追加 → **356/356 pass**・verify/build/audit 0
+- テスト 10 件追加 → **361/361 pass**・verify/build/audit 0
 - PR #30（feat/p3-servicehub-projects）
+
+### P3 継続: S-03〜S-05・S-09 スライス実装（2026-08-07 本セッション追記）
+
+- `src/domain/photo.ts`（S-03）・`safety.ts`（S-04: SafetyCheck/QualityInspection）・
+  `cost.ts`（S-05: CostRecord/WorkHour）・`notification.ts`（S-09: NotificationDelivery）
+- API: photos / safety-checks / quality-inspections / cost-records / work-hours /
+  notifications（各 read/write 権限・テナント・監査）
+- persistence: in-memory/file/SQLite + migration 010〜015
+- OpenAPI・README・CHANGELOG・FEATURE_INVENTORY（S-03/S-04/S-05/S-09 ✅）・RUNBOOK 更新
+- テスト 5 件追加 → **361/361 pass**・verify/build/audit 0
+- PR #31（feat/p3-s03-s09）
 
 ### 次フェーズ
 

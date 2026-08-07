@@ -45,6 +45,14 @@ import type {
 } from "../ports.ts";
 import type { ApiKeyStore } from "../../api/types.ts";
 import { BaseSqliteRepository, openDatabase } from "./base-sqlite-repository.ts";
+import {
+  SqlitePhotoRepository,
+  SqliteSafetyCheckRepository,
+  SqliteQualityInspectionRepository,
+  SqliteCostRecordRepository,
+  SqliteWorkHourRepository,
+  SqliteNotificationDeliveryRepository,
+} from "./business-repositories.ts";
 
 // ---------------------------------------------------------------------------
 // Concrete repositories
@@ -547,6 +555,12 @@ export function createSqliteRepositories(dbPath: string): Repositories {
     aiActions: new SqliteAiActionRepository(db),
     projects: new SqliteProjectRepository(db),
     dailyReports: new SqliteDailyReportRepository(db),
+    photos: new SqlitePhotoRepository(db),
+    safetyChecks: new SqliteSafetyCheckRepository(db),
+    qualityInspections: new SqliteQualityInspectionRepository(db),
+    costRecords: new SqliteCostRecordRepository(db),
+    workHours: new SqliteWorkHourRepository(db),
+    notificationDeliveries: new SqliteNotificationDeliveryRepository(db),
   };
 }
 

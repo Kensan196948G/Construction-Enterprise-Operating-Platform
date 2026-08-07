@@ -321,3 +321,6 @@ DNS・証明書・Tunnel 自体（UUID / credentials）には一切触れない�
 
 > マイグレーション 008（projects）・009（daily_reports）: ServiceHub S-01/S-02 移植で追加。
 > 本番適用は `scripts/migrate.ts` で 007 と同様（既存 DB は 008/009 のみ追加実行）。
+
+> マイグレーション 010〜015: S-03 photos / S-04 safety_checks+quality_inspections / S-05 cost_records+work_hours / S-09 notification_deliveries。
+> 本番適用は `scripts/migrate.ts`（既存 DB は 010〜015 のみ追加実行）。

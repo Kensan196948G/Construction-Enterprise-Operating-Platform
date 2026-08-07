@@ -29,6 +29,14 @@ import { InMemoryWorkflowInstanceRepository } from "./workflow-instance-reposito
 import { InMemoryAiActionRepository } from "./ai-action-repository.ts";
 import { InMemoryProjectRepository } from "./project-repository.ts";
 import { InMemoryDailyReportRepository } from "./daily-report-repository.ts";
+import {
+  InMemoryPhotoRepository,
+  InMemorySafetyCheckRepository,
+  InMemoryQualityInspectionRepository,
+  InMemoryCostRecordRepository,
+  InMemoryWorkHourRepository,
+  InMemoryNotificationDeliveryRepository,
+} from "./business-repositories.ts";
 
 /**
  * Construct a fresh set of empty in-memory repositories wired together as a
@@ -48,5 +56,11 @@ export function createInMemoryRepositories(): Repositories {
     aiActions: new InMemoryAiActionRepository(),
     projects: new InMemoryProjectRepository(),
     dailyReports: new InMemoryDailyReportRepository(),
+    photos: new InMemoryPhotoRepository(),
+    safetyChecks: new InMemorySafetyCheckRepository(),
+    qualityInspections: new InMemoryQualityInspectionRepository(),
+    costRecords: new InMemoryCostRecordRepository(),
+    workHours: new InMemoryWorkHourRepository(),
+    notificationDeliveries: new InMemoryNotificationDeliveryRepository(),
   };
 }

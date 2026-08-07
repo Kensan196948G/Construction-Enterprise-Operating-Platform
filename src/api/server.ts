@@ -26,6 +26,10 @@ import { registerAiActionRoutes } from "./routes/ai-actions.ts";
 import { registerDeviceIngestRoutes } from "./routes/device-ingest.ts";
 import { registerProjectRoutes } from "./routes/projects.ts";
 import { registerDailyReportRoutes } from "./routes/daily-reports.ts";
+import { registerPhotoRoutes } from "./routes/photos.ts";
+import { registerSafetyRoutes } from "./routes/safety.ts";
+import { registerCostRoutes } from "./routes/cost.ts";
+import { registerNotificationRoutes } from "./routes/notifications.ts";
 import type { GatewayService } from "../domain/gateway-service.ts";
 import type { AppContainer } from "./types.ts";
 
@@ -84,6 +88,10 @@ export function createServer(config: ServerConfig, container: AppContainer): Ser
   registerDeviceIngestRoutes(router, container);
   registerProjectRoutes(router, container);
   registerDailyReportRoutes(router, container);
+  registerPhotoRoutes(router, container);
+  registerSafetyRoutes(router, container);
+  registerCostRoutes(router, container);
+  registerNotificationRoutes(router, container);
   registerWebRoutes(router, container);
 
   const server = httpCreateServer((req: IncomingMessage, res: ServerResponse): void => {

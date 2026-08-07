@@ -19,7 +19,22 @@ import type {
   WorkflowInstanceStatus,
 } from "../domain/workflow-instance.ts";
 import type { AiAction, AiActionId, AiActionStatus } from "../domain/ai-action.ts";
+
 import type { Project, ProjectId, ProjectStatus } from "../domain/project.ts";
+import type { Photo, PhotoId } from "../domain/photo.ts";
+import type {
+  SafetyCheck,
+  SafetyCheckId,
+  QualityInspection,
+  QualityInspectionId,
+} from "../domain/safety.ts";
+import type { CostRecord, CostRecordId, WorkHour, WorkHourId } from "../domain/cost.ts";
+import type {
+  NotificationDelivery,
+  NotificationDeliveryId,
+  NotificationStatus,
+} from "../domain/notification.ts";
+
 import type { DailyReport, DailyReportId, DailyReportStatus } from "../domain/daily-report.ts";
 
 // ---------------------------------------------------------------------------
@@ -101,6 +116,31 @@ export interface AiActionRepository extends Repository<AiAction, AiActionId> {
   findByStatus(status: AiActionStatus): Promise<readonly AiAction[]>;
 }
 
+export interface PhotoRepository extends Repository<Photo, PhotoId> {
+  findByProject(projectId: ProjectId): Promise<readonly Photo[]>;
+}
+export interface SafetyCheckRepository extends Repository<SafetyCheck, SafetyCheckId> {
+  findByProject(projectId: ProjectId): Promise<readonly SafetyCheck[]>;
+}
+export interface QualityInspectionRepository extends Repository<
+  QualityInspection,
+  QualityInspectionId
+> {
+  findByProject(projectId: ProjectId): Promise<readonly QualityInspection[]>;
+}
+export interface CostRecordRepository extends Repository<CostRecord, CostRecordId> {
+  findByProject(projectId: ProjectId): Promise<readonly CostRecord[]>;
+}
+export interface WorkHourRepository extends Repository<WorkHour, WorkHourId> {
+  findByProject(projectId: ProjectId): Promise<readonly WorkHour[]>;
+}
+export interface NotificationDeliveryRepository extends Repository<
+  NotificationDelivery,
+  NotificationDeliveryId
+> {
+  findByStatus(status: NotificationStatus): Promise<readonly NotificationDelivery[]>;
+}
+
 export interface ProjectRepository extends Repository<Project, ProjectId> {
   /** All projects belonging to one organization. */
   findByOrganization(orgId: string): Promise<readonly Project[]>;
@@ -133,4 +173,10 @@ export interface Repositories {
   readonly aiActions: AiActionRepository;
   readonly projects: ProjectRepository;
   readonly dailyReports: DailyReportRepository;
+  readonly photos: PhotoRepository;
+  readonly safetyChecks: SafetyCheckRepository;
+  readonly qualityInspections: QualityInspectionRepository;
+  readonly costRecords: CostRecordRepository;
+  readonly workHours: WorkHourRepository;
+  readonly notificationDeliveries: NotificationDeliveryRepository;
 }

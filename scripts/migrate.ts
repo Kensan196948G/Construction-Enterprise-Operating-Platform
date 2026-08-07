@@ -281,10 +281,105 @@ export const MIGRATIONS: readonly Migration[] = [
       CREATE INDEX IF NOT EXISTS idx_daily_reports_status  ON daily_reports (status);
     `,
   },
-];
 
-// ---------------------------------------------------------------------------
-// Argument parsing
+  {
+    version: "010",
+    description: "photos table for photo/document metadata (ServiceHub S-03)",
+    up: `
+      CREATE TABLE IF NOT EXISTS photos (
+        id         TEXT PRIMARY KEY,
+        data       TEXT NOT NULL,
+        org_id     TEXT NOT NULL,
+        project_id TEXT NOT NULL REFERENCES projects(id),
+        category   TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_photos_org     ON photos (org_id);
+      CREATE INDEX IF NOT EXISTS idx_photos_project ON photos (project_id);
+    `,
+  },
+  {
+    version: "011",
+    description: "safety_checks table (ServiceHub S-04)",
+    up: `
+      CREATE TABLE IF NOT EXISTS safety_checks (
+        id         TEXT PRIMARY KEY,
+        data       TEXT NOT NULL,
+        org_id     TEXT NOT NULL,
+        project_id TEXT NOT NULL REFERENCES projects(id),
+        check_date TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_safety_checks_org     ON safety_checks (org_id);
+      CREATE INDEX IF NOT EXISTS idx_safety_checks_project ON safety_checks (project_id);
+      CREATE INDEX IF NOT EXISTS idx_safety_checks_date    ON safety_checks (check_date);
+    `,
+  },
+  {
+    version: "012",
+    description: "quality_inspections table (ServiceHub S-04)",
+    up: `
+      CREATE TABLE IF NOT EXISTS quality_inspections (
+        id              TEXT PRIMARY KEY,
+        data            TEXT NOT NULL,
+        org_id          TEXT NOT NULL,
+        project_id      TEXT NOT NULL REFERENCES projects(id),
+        inspection_date TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_quality_org     ON quality_inspections (org_id);
+      CREATE INDEX IF NOT EXISTS idx_quality_project ON quality_inspections (project_id);
+      CREATE INDEX IF NOT EXISTS idx_quality_date    ON quality_inspections (inspection_date);
+    `,
+  },
+  {
+    version: "013",
+    description: "cost_records table (ServiceHub S-05)",
+    up: `
+      CREATE TABLE IF NOT EXISTS cost_records (
+        id          TEXT PRIMARY KEY,
+        data        TEXT NOT NULL,
+        org_id      TEXT NOT NULL,
+        project_id  TEXT NOT NULL REFERENCES projects(id),
+        record_date TEXT NOT NULL,
+        category    TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_cost_org     ON cost_records (org_id);
+      CREATE INDEX IF NOT EXISTS idx_cost_project ON cost_records (project_id);
+      CREATE INDEX IF NOT EXISTS idx_cost_date    ON cost_records (record_date);
+      CREATE INDEX IF NOT EXISTS idx_cost_category ON cost_records (category);
+    `,
+  },
+  {
+    version: "014",
+    description: "work_hours table (ServiceHub S-05)",
+    up: `
+      CREATE TABLE IF NOT EXISTS work_hours (
+        id         TEXT PRIMARY KEY,
+        data       TEXT NOT NULL,
+        org_id     TEXT NOT NULL,
+        project_id TEXT NOT NULL REFERENCES projects(id),
+        work_date  TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_work_hours_org     ON work_hours (org_id);
+      CREATE INDEX IF NOT EXISTS idx_work_hours_project ON work_hours (project_id);
+      CREATE INDEX IF NOT EXISTS idx_work_hours_date    ON work_hours (work_date);
+    `,
+  },
+  {
+    version: "015",
+    description: "notification_deliveries table (ServiceHub S-09)",
+    up: `
+      CREATE TABLE IF NOT EXISTS notification_deliveries (
+        id     TEXT PRIMARY KEY,
+        data   TEXT NOT NULL,
+        org_id TEXT,
+        user_id TEXT NOT NULL,
+        status TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_notifications_org    ON notification_deliveries (org_id);
+      CREATE INDEX IF NOT EXISTS idx_notifications_user   ON notification_deliveries (user_id);
+      CREATE INDEX IF NOT EXISTS idx_notifications_status ON notification_deliveries (status);
+    `,
+  },
+];
 // ---------------------------------------------------------------------------
 
 function resolveDbPath(): string {

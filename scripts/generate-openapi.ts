@@ -317,6 +317,77 @@ const schemas: { [k: string]: YamlValue } = {
       updatedAt: { type: "string", format: "date-time" },
     },
   },
+
+  Photo: {
+    type: "object",
+    required: ["id", "organizationId", "projectId", "fileName", "originalName", "contentType", "fileSize", "objectKey", "category", "createdAt", "updatedAt"],
+    properties: {
+      id: { type: "string" }, organizationId: { type: "string" }, projectId: { type: "string" },
+      fileName: { type: "string" }, originalName: { type: "string" }, contentType: { type: "string" },
+      fileSize: { type: "integer" }, objectKey: { type: "string" },
+      category: { type: "string", enum: ["general", "progress", "safety", "quality", "handover"] },
+      caption: { type: "string" }, takenAt: { type: "string", format: "date-time" },
+      createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
+    },
+  },
+  SafetyCheck: {
+    type: "object",
+    required: ["id", "organizationId", "projectId", "checkDate", "checkType", "itemsTotal", "itemsOk", "itemsNg", "overallResult", "createdAt", "updatedAt"],
+    properties: {
+      id: { type: "string" }, organizationId: { type: "string" }, projectId: { type: "string" },
+      checkDate: { type: "string", format: "date" },
+      checkType: { type: "string", enum: ["daily", "patrol", "ky", "other"] },
+      itemsTotal: { type: "integer" }, itemsOk: { type: "integer" }, itemsNg: { type: "integer" },
+      overallResult: { type: "string", enum: ["pending", "ok", "ng"] },
+      notes: { type: "string" }, inspectorId: { type: "string" },
+      createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
+    },
+  },
+  QualityInspection: {
+    type: "object",
+    required: ["id", "organizationId", "projectId", "inspectionDate", "inspectionType", "targetItem", "result", "createdAt", "updatedAt"],
+    properties: {
+      id: { type: "string" }, organizationId: { type: "string" }, projectId: { type: "string" },
+      inspectionDate: { type: "string", format: "date" }, inspectionType: { type: "string" },
+      targetItem: { type: "string" }, standardValue: { type: "string" }, measuredValue: { type: "string" },
+      result: { type: "string", enum: ["pending", "pass", "fail"] },
+      notes: { type: "string" }, inspectorId: { type: "string" },
+      createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
+    },
+  },
+  CostRecord: {
+    type: "object",
+    required: ["id", "organizationId", "projectId", "recordDate", "category", "description", "budgetedAmount", "actualAmount", "createdAt", "updatedAt"],
+    properties: {
+      id: { type: "string" }, organizationId: { type: "string" }, projectId: { type: "string" },
+      recordDate: { type: "string", format: "date" }, category: { type: "string" }, description: { type: "string" },
+      budgetedAmount: { type: "number" }, actualAmount: { type: "number" },
+      vendorName: { type: "string" }, invoiceNumber: { type: "string" }, notes: { type: "string" },
+      createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
+    },
+  },
+  WorkHour: {
+    type: "object",
+    required: ["id", "organizationId", "projectId", "workDate", "hours", "createdAt", "updatedAt"],
+    properties: {
+      id: { type: "string" }, organizationId: { type: "string" }, projectId: { type: "string" },
+      workerId: { type: "string" }, workDate: { type: "string", format: "date" }, hours: { type: "number" },
+      workType: { type: "string" }, notes: { type: "string" },
+      createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
+    },
+  },
+  NotificationDelivery: {
+    type: "object",
+    required: ["id", "userId", "eventKey", "channel", "status", "attempts", "createdAt", "updatedAt"],
+    properties: {
+      id: { type: "string" }, organizationId: { type: "string" }, userId: { type: "string" },
+      eventKey: { type: "string" }, channel: { type: "string", enum: ["email", "slack", "webhook"] },
+      status: { type: "string", enum: ["pending", "sent", "failed", "retry"] },
+      subject: { type: "string" }, bodyPreview: { type: "string" }, errorDetail: { type: "string" },
+      failureKind: { type: "string" }, attempts: { type: "integer" }, sentAt: { type: "string", format: "date-time" },
+      createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
+    },
+  },
   AuditEntry: {
     type: "object",
     required: ["id", "at", "actor", "action", "resource", "outcome", "hash"],
@@ -2060,6 +2131,187 @@ const paths: { [k: string]: YamlValue } = {
       },
     },
   },
+
+  "/api/v1/projects/{projectId}/photos": {
+    get: {
+      operationId: "listPhotos",
+      summary: "Paginated list of photos for a project (S-03)",
+      tags: ["Photos"],
+      security: authSecurity,
+      parameters: [
+        { "$ref": "#/components/parameters/limitParam" },
+        { "$ref": "#/components/parameters/offsetParam" },
+      ],
+      responses: {
+        ...jsonResponse(200, paginatedList("photos", "Photo")),
+        ...errorResponses(401, 403, 404),
+      },
+    },
+    post: {
+      operationId: "createPhoto",
+      summary: "Register photo/document metadata (S-03)",
+      tags: ["Photos"],
+      security: authSecurity,
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["fileName", "originalName", "contentType", "fileSize"],
+              properties: {
+                fileName: { type: "string" }, originalName: { type: "string" }, contentType: { type: "string" },
+                fileSize: { type: "integer" }, objectKey: { type: "string" },
+                category: { type: "string", enum: ["general", "progress", "safety", "quality", "handover"] },
+                caption: { type: "string" }, takenAt: { type: "string", format: "date-time" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(201, { type: "object", required: ["photo"], properties: { photo: { $ref: "#/components/schemas/Photo" } } }),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+  },
+  "/api/v1/photos/{id}": {
+    get: {
+      operationId: "getPhoto", summary: "Photo metadata detail", tags: ["Photos"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      responses: { ...jsonResponse(200, { type: "object", required: ["photo"], properties: { photo: { $ref: "#/components/schemas/Photo" } } }), ...errorResponses(401, 403, 404) },
+    },
+    delete: {
+      operationId: "deletePhoto", summary: "Delete photo metadata (audited)", tags: ["Photos"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      responses: { ...jsonResponse(200, { type: "object", properties: { deleted: { type: "boolean" } } }), ...errorResponses(401, 403, 404) },
+    },
+  },
+  "/api/v1/projects/{projectId}/safety-checks": {
+    get: {
+      operationId: "listSafetyChecks", summary: "Paginated list of safety checks for a project (S-04)", tags: ["SafetyChecks"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/limitParam" }, { "$ref": "#/components/parameters/offsetParam" }],
+      responses: { ...jsonResponse(200, paginatedList("safetyChecks", "SafetyCheck")), ...errorResponses(401, 403, 404) },
+    },
+    post: {
+      operationId: "createSafetyCheck", summary: "Create a safety check (S-04)", tags: ["SafetyChecks"], security: authSecurity,
+      requestBody: {
+        required: true,
+        content: { "application/json": { schema: { type: "object", required: ["checkDate"], properties: { checkDate: { type: "string", format: "date" }, checkType: { type: "string", enum: ["daily", "patrol", "ky", "other"] }, itemsTotal: { type: "integer" }, itemsOk: { type: "integer" }, itemsNg: { type: "integer" }, overallResult: { type: "string", enum: ["pending", "ok", "ng"] }, notes: { type: "string" }, inspectorId: { type: "string" } } } } },
+      },
+      responses: { ...jsonResponse(201, { type: "object", required: ["safetyCheck"], properties: { safetyCheck: { $ref: "#/components/schemas/SafetyCheck" } } }), ...errorResponses(400, 401, 403, 404) },
+    },
+  },
+  "/api/v1/safety-checks/{id}": {
+    get: {
+      operationId: "getSafetyCheck", summary: "Safety check detail", tags: ["SafetyChecks"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      responses: { ...jsonResponse(200, { type: "object", required: ["safetyCheck"], properties: { safetyCheck: { $ref: "#/components/schemas/SafetyCheck" } } }), ...errorResponses(401, 403, 404) },
+    },
+    delete: {
+      operationId: "deleteSafetyCheck", summary: "Delete a safety check (audited)", tags: ["SafetyChecks"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      responses: { ...jsonResponse(200, { type: "object", properties: { deleted: { type: "boolean" } } }), ...errorResponses(401, 403, 404) },
+    },
+  },
+  "/api/v1/projects/{projectId}/quality-inspections": {
+    get: {
+      operationId: "listQualityInspections", summary: "Paginated list of quality inspections for a project (S-04)", tags: ["QualityInspections"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/limitParam" }, { "$ref": "#/components/parameters/offsetParam" }],
+      responses: { ...jsonResponse(200, paginatedList("qualityInspections", "QualityInspection")), ...errorResponses(401, 403, 404) },
+    },
+    post: {
+      operationId: "createQualityInspection", summary: "Create a quality inspection (S-04)", tags: ["QualityInspections"], security: authSecurity,
+      requestBody: {
+        required: true,
+        content: { "application/json": { schema: { type: "object", required: ["inspectionDate", "inspectionType", "targetItem"], properties: { inspectionDate: { type: "string", format: "date" }, inspectionType: { type: "string" }, targetItem: { type: "string" }, standardValue: { type: "string" }, measuredValue: { type: "string" }, result: { type: "string", enum: ["pending", "pass", "fail"] }, notes: { type: "string" }, inspectorId: { type: "string" } } } } },
+      },
+      responses: { ...jsonResponse(201, { type: "object", required: ["qualityInspection"], properties: { qualityInspection: { $ref: "#/components/schemas/QualityInspection" } } }), ...errorResponses(400, 401, 403, 404) },
+    },
+  },
+  "/api/v1/quality-inspections/{id}": {
+    get: {
+      operationId: "getQualityInspection", summary: "Quality inspection detail", tags: ["QualityInspections"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      responses: { ...jsonResponse(200, { type: "object", required: ["qualityInspection"], properties: { qualityInspection: { $ref: "#/components/schemas/QualityInspection" } } }), ...errorResponses(401, 403, 404) },
+    },
+    delete: {
+      operationId: "deleteQualityInspection", summary: "Delete a quality inspection (audited)", tags: ["QualityInspections"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      responses: { ...jsonResponse(200, { type: "object", properties: { deleted: { type: "boolean" } } }), ...errorResponses(401, 403, 404) },
+    },
+  },
+  "/api/v1/projects/{projectId}/cost-records": {
+    get: {
+      operationId: "listCostRecords", summary: "Paginated list of cost records for a project (S-05)", tags: ["CostRecords"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/limitParam" }, { "$ref": "#/components/parameters/offsetParam" }],
+      responses: { ...jsonResponse(200, paginatedList("costRecords", "CostRecord")), ...errorResponses(401, 403, 404) },
+    },
+    post: {
+      operationId: "createCostRecord", summary: "Create a cost record (S-05)", tags: ["CostRecords"], security: authSecurity,
+      requestBody: {
+        required: true,
+        content: { "application/json": { schema: { type: "object", required: ["recordDate", "category", "description"], properties: { recordDate: { type: "string", format: "date" }, category: { type: "string" }, description: { type: "string" }, budgetedAmount: { type: "number" }, actualAmount: { type: "number" }, vendorName: { type: "string" }, invoiceNumber: { type: "string" }, notes: { type: "string" } } } } },
+      },
+      responses: { ...jsonResponse(201, { type: "object", required: ["costRecord"], properties: { costRecord: { $ref: "#/components/schemas/CostRecord" } } }), ...errorResponses(400, 401, 403, 404) },
+    },
+  },
+  "/api/v1/cost-records/{id}": {
+    get: {
+      operationId: "getCostRecord", summary: "Cost record detail", tags: ["CostRecords"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      responses: { ...jsonResponse(200, { type: "object", required: ["costRecord"], properties: { costRecord: { $ref: "#/components/schemas/CostRecord" } } }), ...errorResponses(401, 403, 404) },
+    },
+    delete: {
+      operationId: "deleteCostRecord", summary: "Delete a cost record (audited)", tags: ["CostRecords"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      responses: { ...jsonResponse(200, { type: "object", properties: { deleted: { type: "boolean" } } }), ...errorResponses(401, 403, 404) },
+    },
+  },
+  "/api/v1/projects/{projectId}/work-hours": {
+    get: {
+      operationId: "listWorkHours", summary: "Paginated list of work hours for a project (S-05)", tags: ["CostRecords"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/limitParam" }, { "$ref": "#/components/parameters/offsetParam" }],
+      responses: { ...jsonResponse(200, paginatedList("workHours", "WorkHour")), ...errorResponses(401, 403, 404) },
+    },
+    post: {
+      operationId: "createWorkHour", summary: "Create a work hour record (S-05)", tags: ["CostRecords"], security: authSecurity,
+      requestBody: {
+        required: true,
+        content: { "application/json": { schema: { type: "object", required: ["workDate", "hours"], properties: { workerId: { type: "string" }, workDate: { type: "string", format: "date" }, hours: { type: "number" }, workType: { type: "string" }, notes: { type: "string" } } } } },
+      },
+      responses: { ...jsonResponse(201, { type: "object", required: ["workHour"], properties: { workHour: { $ref: "#/components/schemas/WorkHour" } } }), ...errorResponses(400, 401, 403, 404) },
+    },
+  },
+  "/api/v1/work-hours/{id}": {
+    get: {
+      operationId: "getWorkHour", summary: "Work hour detail", tags: ["CostRecords"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      responses: { ...jsonResponse(200, { type: "object", required: ["workHour"], properties: { workHour: { $ref: "#/components/schemas/WorkHour" } } }), ...errorResponses(401, 403, 404) },
+    },
+  },
+  "/api/v1/notifications": {
+    get: {
+      operationId: "listNotifications", summary: "Paginated list of notification deliveries (optional ?status=)", tags: ["Notifications"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/limitParam" }, { "$ref": "#/components/parameters/offsetParam" }, { name: "status", in: "query", schema: { type: "string", enum: ["pending", "sent", "failed", "retry"] } }],
+      responses: { ...jsonResponse(200, paginatedList("notifications", "NotificationDelivery")), ...errorResponses(400, 401, 403) },
+    },
+    post: {
+      operationId: "createNotification", summary: "Create a notification delivery intent (S-09)", tags: ["Notifications"], security: authSecurity,
+      requestBody: {
+        required: true,
+        content: { "application/json": { schema: { type: "object", required: ["userId", "eventKey", "channel"], properties: { organizationId: { type: "string" }, userId: { type: "string" }, eventKey: { type: "string" }, channel: { type: "string", enum: ["email", "slack", "webhook"] }, subject: { type: "string" }, bodyPreview: { type: "string" } } } } },
+      },
+      responses: { ...jsonResponse(201, { type: "object", required: ["notification"], properties: { notification: { $ref: "#/components/schemas/NotificationDelivery" } } }), ...errorResponses(400, 401, 403) },
+    },
+  },
+  "/api/v1/notifications/{id}": {
+    get: {
+      operationId: "getNotification", summary: "Notification delivery detail", tags: ["Notifications"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      responses: { ...jsonResponse(200, { type: "object", required: ["notification"], properties: { notification: { $ref: "#/components/schemas/NotificationDelivery" } } }), ...errorResponses(401, 403, 404) },
+    },
+  },
   "/api/v1/integrations/{service}/{proxyPath}": {
     get: gatewayOperation("get"),
     post: gatewayOperation("post"),
@@ -2101,6 +2353,11 @@ const spec: { [k: string]: YamlValue } = {
     { name: "Workflows",    description: "Workflow templates and CRUD" },
     { name: "WorkflowInstances", description: "Workflow instance runs (Issue→Approval→Audit)" },
     { name: "AiGovernance", description: "AI action governance (integration Y-09)" },
+    { name: "Photos", description: "Photo/document metadata (ServiceHub S-03)" },
+    { name: "SafetyChecks", description: "Safety checks (ServiceHub S-04)" },
+    { name: "QualityInspections", description: "Quality inspections (ServiceHub S-04)" },
+    { name: "CostRecords", description: "Cost records and work hours (ServiceHub S-05)" },
+    { name: "Notifications", description: "Notification deliveries (ServiceHub S-09)" },
     { name: "Projects", description: "Construction project management (ServiceHub S-01)" },
     { name: "DailyReports", description: "Site daily reports (ServiceHub S-02)" },
     { name: "IntegrationGateway", description: "CEOP gateway reverse proxy for integration services (P1)" },
