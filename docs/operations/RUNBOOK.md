@@ -40,6 +40,10 @@
 # 1. シークレット生成（値は Secrets 管理へ。画面・ログ・Git へ出さない）
 openssl rand -hex 32   # CEOP_JWT_SECRET
 
+> 統合ゲートウェイ（P1）を有効化する場合は、起動前に `CEOP_GATEWAY_SERVICES`
+> （JSON 配列）と上流トークン環境変数を設定すること。形式は README
+> 「Integration Gateway API（P1）」参照。設定ミスは起動時 fail-closed となる。
+
 # 2. 環境変数ファイル作成（chmod 600）
 #    .env.example を複製し CEOP_JWT_SECRET / CEOP_SQLITE_FILE 等を設定
 install -m 600 /dev/null /home/kensan/.ceop/.env

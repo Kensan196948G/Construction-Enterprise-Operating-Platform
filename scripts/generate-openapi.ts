@@ -368,6 +368,36 @@ function errorResponses(...codes: number[]): { [k: string]: YamlValue } {
 
 const authSecurity: YamlValue = [{ ApiKeyAuth: [] }, { BearerJwt: [] }];
 
+/** One gateway proxy operation (P1) — authenticated passthrough to an integration service. */
+function gatewayOperation(method: string): YamlValue {
+  return {
+    operationId: `gateway${method.charAt(0).toUpperCase()}${method.slice(1).toLowerCase()}`,
+    summary: `Proxy ${method.toUpperCase()} to an integration service through the CEOP gateway`,
+    tags: ["IntegrationGateway"],
+    security: authSecurity,
+    parameters: [
+      {
+        name: "service",
+        in: "path",
+        required: true,
+        schema: { type: "string" },
+        description: "Registered integration service id",
+      },
+      {
+        name: "proxyPath",
+        in: "path",
+        required: true,
+        schema: { type: "string" },
+        description: "Path forwarded to the upstream service",
+      },
+    ],
+    responses: {
+      ...jsonResponse(200, { type: "object", additionalProperties: true }),
+      ...errorResponses(400, 401, 403, 404, 502, 504),
+    },
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Paths
 // ---------------------------------------------------------------------------
@@ -1486,6 +1516,13 @@ const paths: { [k: string]: YamlValue } = {
       },
     },
   },
+  "/api/v1/integrations/{service}/{proxyPath}": {
+    get: gatewayOperation("get"),
+    post: gatewayOperation("post"),
+    put: gatewayOperation("put"),
+    patch: gatewayOperation("patch"),
+    delete: gatewayOperation("delete"),
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -1519,6 +1556,7 @@ const spec: { [k: string]: YamlValue } = {
     { name: "Governance",   description: "Policy engine, audit log, ABAC evaluation" },
     { name: "Workflows",    description: "Workflow templates and CRUD" },
     { name: "WorkflowInstances", description: "Workflow instance runs (Issue→Approval→Audit)" },
+    { name: "IntegrationGateway", description: "CEOP gateway reverse proxy for integration services (P1)" },
   ],
   paths,
   components: {
