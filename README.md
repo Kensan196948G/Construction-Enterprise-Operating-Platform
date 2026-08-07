@@ -4,7 +4,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-22.13+-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Zero Runtime Deps](https://img.shields.io/badge/runtime%20deps-zero-brightgreen)](package.json)
 [![CI](https://img.shields.io/github/actions/workflow/status/Kensan196948G/Construction-Enterprise-Operating-Platform/ci.yml?label=CI&logo=github)](/.github/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-315%20pass-brightgreen)](src/)
+[![Tests](https://img.shields.io/badge/tests-318%20pass-brightgreen)](src/)
 [![Security](https://img.shields.io/badge/security-hardened-blue)](src/api/middleware/auth.ts)
 [![License](https://img.shields.io/badge/license-proprietary-lightgrey)](LICENSE.md)
 
@@ -15,18 +15,18 @@
 
 ## 📌 概要
 
-| 項目         | 内容                                                                                                                                                                           |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 役割         | 統制・ガバナンス・共通ワークフローの調整基盤                                                                                                                                   |
-| バージョン   | v0.8.1（WebUI ホスティング: デザインバンドル 100% 適用配信・systemd 常駐・Neon アクセスログ。基盤: SQLite 永続化・JWT 認証・監査証跡のテナント分離・CRUD/Workflow/Policy API） |
-| 言語         | TypeScript 5.7（strict / `noUncheckedIndexedAccess` / 例外を投げない設計）                                                                                                     |
-| ランタイム   | Node.js v22.13+（ネイティブ TS 実行・ビルトインテストランナー）                                                                                                                |
-| HTTP サーバ  | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                                                                                                                       |
-| 依存方針     | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）                                                                                               |
-| パッケージ   | pnpm 10.26.2                                                                                                                                                                   |
-| テスト       | 334 tests pass（node:test ビルトインランナー）                                                                                                                                 |
-| コンテナ     | Docker multi-stage build（non-root・HEALTHCHECK 付き）                                                                                                                         |
-| セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限                                                                                              |
+| 項目         | 内容                                                                                                                                                                                            |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 役割         | 統制・ガバナンス・共通ワークフローの調整基盤                                                                                                                                                    |
+| バージョン   | v0.8.2（WebUI ホスティング: デザインバンドル 100% 適用配信・systemd 常駐・Neon アクセスログ。基盤: SQLite 永続化・JWT 認証・監査証跡のテナント分離・CRUD/Workflow/WorkflowInstance/Policy API） |
+| 言語         | TypeScript 5.7（strict / `noUncheckedIndexedAccess` / 例外を投げない設計）                                                                                                                      |
+| ランタイム   | Node.js v22.13+（ネイティブ TS 実行・ビルトインテストランナー）                                                                                                                                 |
+| HTTP サーバ  | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                                                                                                                                        |
+| 依存方針     | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）                                                                                                                |
+| パッケージ   | pnpm 10.26.2                                                                                                                                                                                    |
+| テスト       | 334 tests pass（node:test ビルトインランナー）                                                                                                                                                  |
+| コンテナ     | Docker multi-stage build（non-root・HEALTHCHECK 付き）                                                                                                                                          |
+| セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限                                                                                                               |
 
 ---
 
@@ -192,7 +192,8 @@ CSS/JS は外部アセット（`/api/assets/app.css`・`/api/assets/app.js`）�
 SSR 時の CSP から `unsafe-inline` を撤廃しています。SSR 時に短命 JWT を
 ページへ埋め込み、自動更新 API 呼び出しにも認証が通るよう修正しています。
 `/api/assets/*` は公開 Tunnel のパス分割（`/api/*` → API）で確実に API へ届くため、
-`/assets/*` を WebUI が受ける本番構成でも 404 になりません（v0.8.1）。
+`/assets/*` を WebUI が受ける本番構成でも 404 になりません（v0.8.1）。favicon も
+`/api/assets/favicon.svg` 経由で配信します（v0.8.2）。
 
 > 📌 `*:*` または `*:read` ワイルドカード権限でも `policy:read` / `audit:read` ゲートを通過します。
 
@@ -455,13 +456,13 @@ curl -H "Authorization: Bearer <jwt>" http://localhost:3000/api/v1/dashboard
 
 ## 🚀 本番デプロイ（M8）
 
-### 🌐 本番環境（v0.8.1 稼働中）
+### 🌐 本番環境（v0.8.2 稼働中）
 
 | 項目           | 値                                                                                                           |
 | -------------- | ------------------------------------------------------------------------------------------------------------ |
 | 本番 URL       | https://ceop.mirai-dx-platform.com                                                                           |
 | 形態           | 本機 Docker コンテナ（`docker run`）+ Cloudflare Tunnel（cloudflared-ceop.service）                          |
-| イメージ       | `ceop-platform:v0.8.1`（GHCR: `ghcr.io/kensan196948g/construction-eop:0.8.1`）                               |
+| イメージ       | `ceop-platform:v0.8.2`（GHCR: `ghcr.io/kensan196948g/construction-eop:0.8.2`）                               |
 | 可動エイリアス | `ceop-platform:current`（稼働中バージョンを指す。バックアップ cron が参照）                                  |
 | ホスト         | 192.168.0.185（127.0.0.1:3120 → コンテナ 3000）                                                              |
 | DB             | `/home/kensan/.ceop/data/ceop.db`（SQLite WAL、migration 001〜005 適用済み）                                 |
@@ -613,7 +614,7 @@ bash scripts/webui-deploy.sh
 ## 🧪 テスト実行
 
 ```bash
-# 全テスト実行（315 tests）
+# 全テスト実行（318 tests）
 pnpm run test
 
 # typecheck + lint + test 一括
@@ -665,21 +666,23 @@ node --experimental-strip-types scripts/sqlite-backup.ts /data/ceop.db /backup/c
 
 ## ⚙️ 環境変数
 
-| 変数名                      | 既定値                                       | 説明                                                                                                                            |
-| --------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `PORT`                      | `3000`                                       | HTTP サーバがリッスンする TCP ポート                                                                                            |
-| `NODE_ENV`                  | —                                            | `production` に設定するとデモキーを出力しない                                                                                   |
-| `LOG_LEVEL`                 | `info`                                       | `debug` / `info` / `warn` / `error`                                                                                             |
-| `PLATFORM_NAME`             | `Construction Enterprise Operating Platform` | 起動ログ・UI に表示するプラットフォーム名                                                                                       |
-| `CEOP_JWT_SECRET`           | —（プロセス起動ごと自動生成）                | HS256 JWT 署名用 32 バイト秘密鍵（hex 形式）。`production` では**必須**（未設定で起動失敗）                                     |
-| `CEOP_SQLITE_FILE`          | —（未設定 = 上位モード選択）                 | SQLite DB ファイルパス（例: `/data/ceop.db`）。設定時は SQLite 永続化（最優先）                                                 |
-| `CEOP_DATA_DIR`             | —（未設定 = In-Memory モード）               | ファイル永続化の保存先ディレクトリ。設定時は POSIX-atomic ファイル repo が有効                                                  |
-| `CEOP_SEED_DEMO`            | `false`                                      | `true` のとき起動時にデモデータを投入（In-Memory モードでは常に投入）                                                           |
-| `CEOP_LOG_DEMO_CREDS`       | `false`                                      | `true` のときデモ API キーの認証情報を stderr に出力（**本番では絶対に `false`**）                                              |
-| `CEOP_RATE_LIMIT_MAX`       | `300`                                        | `/api/v1/*` のグローバルレート制限（1 分あたり・実クライアント IP 単位。loopback プロキシ経由時のみ `CF-Connecting-IP` を信頼） |
-| `CEOP_RATE_LIMIT_WINDOW_MS` | `60000`                                      | グローバルレート制限のウィンドウ長（ミリ秒）                                                                                    |
-| `CEOP_CORS_ORIGIN`          | —（未設定 = CORS 無効）                      | 明示した場合のみ `Access-Control-Allow-Origin` を出力（認証 API では `*` 禁止）                                                 |
-| `CEOP_ALERT_WEBHOOK_URL`    | —（未設定 = 通知なし）                       | `scripts/health-probe.sh` が ALERT/RECOVERED 時に JSON POST する Webhook URL（cron/サービス環境に設定・Git には置かない）       |
+| 変数名                         | 既定値                                       | 説明                                                                                                                            |
+| ------------------------------ | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `PORT`                         | `3000`                                       | HTTP サーバがリッスンする TCP ポート                                                                                            |
+| `NODE_ENV`                     | —                                            | `production` に設定するとデモキーを出力しない                                                                                   |
+| `LOG_LEVEL`                    | `info`                                       | `debug` / `info` / `warn` / `error`                                                                                             |
+| `PLATFORM_NAME`                | `Construction Enterprise Operating Platform` | 起動ログ・UI に表示するプラットフォーム名                                                                                       |
+| `CEOP_JWT_SECRET`              | —（プロセス起動ごと自動生成）                | HS256 JWT 署名用 32 バイト秘密鍵（hex 形式）。`production` では**必須**（未設定で起動失敗）                                     |
+| `CEOP_SQLITE_FILE`             | —（未設定 = 上位モード選択）                 | SQLite DB ファイルパス（例: `/data/ceop.db`）。設定時は SQLite 永続化（最優先）                                                 |
+| `CEOP_DATA_DIR`                | —（未設定 = In-Memory モード）               | ファイル永続化の保存先ディレクトリ。設定時は POSIX-atomic ファイル repo が有効                                                  |
+| `CEOP_SEED_DEMO`               | `false`                                      | `true` のとき起動時にデモデータを投入（In-Memory モードでは常に投入）                                                           |
+| `CEOP_LOG_DEMO_CREDS`          | `false`                                      | `true` のときデモ API キーの認証情報を stderr に出力（**本番では絶対に `false`**）                                              |
+| `CEOP_RATE_LIMIT_MAX`          | `300`                                        | `/api/v1/*` のグローバルレート制限（1 分あたり・実クライアント IP 単位。loopback プロキシ経由時のみ `CF-Connecting-IP` を信頼） |
+| `CEOP_RATE_LIMIT_WINDOW_MS`    | `60000`                                      | グローバルレート制限のウィンドウ長（ミリ秒）                                                                                    |
+| `CEOP_GATEWAY_SERVICES`        | —（未設定 = ゲートウェイ無効）               | 統合サービス登録の JSON 配列（P1）。不正な値は起動失敗（fail-closed）                                                           |
+| `CEOP_GATEWAY_<SERVICE>_TOKEN` | —                                            | 上流統合サービスへ渡す Bearer トークン（`upstreamTokenEnv` で指定。Git 非コミット）                                             |
+| `CEOP_CORS_ORIGIN`             | —（未設定 = CORS 無効）                      | 明示した場合のみ `Access-Control-Allow-Origin` を出力（認証 API では `*` 禁止）                                                 |
+| `CEOP_ALERT_WEBHOOK_URL`       | —（未設定 = 通知なし）                       | `scripts/health-probe.sh` が ALERT/RECOVERED 時に JSON POST する Webhook URL（cron/サービス環境に設定・Git には置かない）       |
 
 ### 🗄️ 永続化ティア選択
 

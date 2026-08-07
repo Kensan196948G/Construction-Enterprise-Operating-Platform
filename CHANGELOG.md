@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 ## [Unreleased]
 
+## [0.8.2] - 2026-08-07
+
 ### Added
 
 - **Integration Gateway（P1）** — 統合サービス向けリバースプロキシと統一認証。

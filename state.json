@@ -6,7 +6,7 @@
     "registered_at": "2026-06-25",
     "phase_mode": "maintenance"
   },
-  "goal": "5 リポジトリ統合進行中 — P0 ソース統合（PR #22）+ L-02 ワークフローインスタンス実装（315 テスト pass）。旧リポジトリ削除は全機能移行後の Y/N 判断",
+  "goal": "5 リポジトリ統合進行中 — P0 ソース統合（PR #22）+ L-02 ワークフローインスタンス + favicon（v0.8.2、318 テスト pass）。旧リポジトリ削除は全機能移行後の Y/N 判断",
   "phase": "maintenance",
   "release": {
     "v0_1_0_foundation": "release_ready",
@@ -24,7 +24,7 @@
     "success_rate_target": 0.9,
     "ci_success_rate": 1,
     "test_pass_rate": 1,
-    "test_count": 315,
+    "test_count": 318,
     "security_critical": 0,
     "security_high_resolved": 19,
     "blocker_count": 0
