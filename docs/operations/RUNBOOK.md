@@ -333,3 +333,10 @@ DNS・証明書・Tunnel 自体（UUID / credentials）には一切触れない�
 
 > マイグレーション 022〜024: S-07 compliance_checks / legal_evidence / E-11 notification_templates。
 > email 送信はディスパッチャー実行前に CEOP_SMTP_* を設定（未設定は not-configured 記録）。
+
+## P4 監視スタック（Prometheus / Grafana）
+
+- `GET /metrics` は loopback 3120 で公開済み（`CEOP_METRICS_TOKEN` 任意）。
+- 実機導入: `docker compose --profile monitoring up -d`（`GRAFANA_ADMIN_PASSWORD` 必須・loopback 9090/3001）。
+- Tunnel ingress は `/metrics` を公開しないよう分割すること（`/api/*` のみ API へ）。
+- 確認: `curl http://127.0.0.1:9090/api/v1/targets`・Grafana `http://127.0.0.1:3001`（CEOP Platform ダッシュボード）。

@@ -14,6 +14,7 @@ import { validateApiKey } from "./middleware/auth.ts";
 import type { JwtIssuer } from "./middleware/jwt.ts";
 import { logRequest } from "./middleware/request-logger.ts";
 import { clientIpFromRequest } from "./client-ip.ts";
+import { recordRequest } from "../monitoring/metrics.ts";
 import type { ApiKeyContext, ApiKeyStore, ApiRequest } from "./types.ts";
 
 // ---------------------------------------------------------------------------
@@ -184,6 +185,7 @@ export class Router {
     const query = parseQueryString(search);
 
     const finish = (status: number): void => {
+      recordRequest(method, path, status);
       logRequest(method, path, status, Date.now() - startMs, requestId);
     };
 

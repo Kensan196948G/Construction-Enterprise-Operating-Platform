@@ -105,3 +105,63 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+  # ─── P4 監視スタック（profile: monitoring）────────────────────────────
+  # 既定では起動しない。`--profile monitoring` を付けたときだけ Prometheus +
+  # Grafana が loopback に bind される。実機の Tunnel は /metrics を公開しない
+  # ingress 分割を推奨（RUNBOOK 参照）。
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: ceop-prometheus
+    profiles: ["monitoring"]
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:9090:9090"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./deploy/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ceop-prometheus-data:/prometheus
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: ceop-grafana
+    profiles: ["monitoring"]
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: "${GRAFANA_ADMIN_USER:-admin}"
+      GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD を設定（loopback 限定だが必須）}"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./deploy/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ceop-grafana-data:/var/lib/grafana
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  ceop-prometheus-data:
+  ceop-grafana-data:

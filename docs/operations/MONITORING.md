@@ -8,6 +8,15 @@
 
 ---
 
+
+### Prometheus メトリクス（P4）
+
+- `GET /metrics`（loopback 3120）が `ceop_http_requests_total` と runtime gauges
+  （audit/notifications/ai-actions/workflow-instances/gateway-services）を text format で公開。
+- `CEOP_METRICS_TOKEN` 設定時は Bearer 必須（公開 ingress では `/metrics` を Tunnel 分割で非公開にすること）。
+- 構成資産: `deploy/prometheus/prometheus.yml`・`deploy/grafana/provisioning/`。
+  実機導入は `docker compose --profile monitoring up -d`（loopback 9090/3001・read-only・cap-drop ALL）。
+
 ## 1. 実装済みの監視
 
 | #   | 仕組み              | 実体                                                                                    | 検知できること                                        | 通知                         |
