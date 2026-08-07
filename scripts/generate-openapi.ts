@@ -456,6 +456,38 @@ const schemas: { [k: string]: YamlValue } = {
       createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
     },
   },
+
+  ComplianceCheck: {
+    type: "object",
+    required: ["id", "organizationId", "projectId", "standard", "item", "result", "createdAt", "updatedAt"],
+    properties: {
+      id: { type: "string" }, organizationId: { type: "string" }, projectId: { type: "string" },
+      standard: { type: "string", enum: ["kensetsugyo-ho", "shitauke-ho", "iso-9001", "iso-14001", "iso-45001", "other"] },
+      item: { type: "string" }, result: { type: "string", enum: ["pass", "fail", "pending"] },
+      checkedAt: { type: "string", format: "date" }, notes: { type: "string" },
+      createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
+    },
+  },
+  LegalEvidence: {
+    type: "object",
+    required: ["id", "organizationId", "contractId", "eventType", "description", "occurredAt", "createdAt"],
+    properties: {
+      id: { type: "string" }, organizationId: { type: "string" }, contractId: { type: "string" },
+      eventType: { type: "string" }, description: { type: "string" },
+      evidenceHash: { type: "string" }, occurredAt: { type: "string", format: "date-time" },
+      createdAt: { type: "string", format: "date-time" },
+    },
+  },
+  NotificationTemplate: {
+    type: "object",
+    required: ["id", "templateKey", "subject", "body", "channel", "createdAt", "updatedAt"],
+    properties: {
+      id: { type: "string" }, organizationId: { type: "string" }, templateKey: { type: "string" },
+      subject: { type: "string" }, body: { type: "string" },
+      channel: { type: "string", enum: ["email", "slack", "webhook"] },
+      createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
+    },
+  },
   AuditEntry: {
     type: "object",
     required: ["id", "at", "actor", "action", "resource", "outcome", "hash"],
@@ -2543,6 +2575,86 @@ const paths: { [k: string]: YamlValue } = {
       responses: { ...jsonResponse(200, { type: "object", required: ["notificationPreference"], properties: { notificationPreference: { $ref: "#/components/schemas/NotificationPreference" } } }), ...errorResponses(400, 401, 403, 404) },
     },
   },
+
+  "/api/v1/projects/{projectId}/compliance-checks": {
+    get: {
+      operationId: "listComplianceChecks", summary: "Paginated compliance checks for a project (S-07)", tags: ["Compliance"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/limitParam" }, { "$ref": "#/components/parameters/offsetParam" }],
+      responses: { ...jsonResponse(200, paginatedList("complianceChecks", "ComplianceCheck")), ...errorResponses(401, 403, 404) },
+    },
+    post: {
+      operationId: "createComplianceCheck", summary: "Create a compliance check (S-07)", tags: ["Compliance"], security: authSecurity,
+      requestBody: {
+        required: true,
+        content: { "application/json": { schema: { type: "object", required: ["item"], properties: { standard: { type: "string", enum: ["kensetsugyo-ho", "shitauke-ho", "iso-9001", "iso-14001", "iso-45001", "other"] }, item: { type: "string" }, result: { type: "string", enum: ["pass", "fail", "pending"] }, checkedAt: { type: "string", format: "date" }, notes: { type: "string" } } } } },
+      },
+      responses: { ...jsonResponse(201, { type: "object", required: ["complianceCheck"], properties: { complianceCheck: { $ref: "#/components/schemas/ComplianceCheck" } } }), ...errorResponses(400, 401, 403, 404) },
+    },
+  },
+  "/api/v1/compliance-checks/{id}": {
+    get: {
+      operationId: "getComplianceCheck", summary: "Compliance check detail", tags: ["Compliance"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      responses: { ...jsonResponse(200, { type: "object", required: ["complianceCheck"], properties: { complianceCheck: { $ref: "#/components/schemas/ComplianceCheck" } } }), ...errorResponses(401, 403, 404) },
+    },
+  },
+  "/api/v1/contracts/{contractId}/legal-evidence": {
+    get: {
+      operationId: "listLegalEvidence", summary: "Paginated legal evidence for a contract (S-07)", tags: ["LegalEvidence"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/limitParam" }, { "$ref": "#/components/parameters/offsetParam" }],
+      responses: { ...jsonResponse(200, paginatedList("legalEvidence", "LegalEvidence")), ...errorResponses(401, 403, 404) },
+    },
+    post: {
+      operationId: "createLegalEvidence", summary: "Create legal evidence (S-07)", tags: ["LegalEvidence"], security: authSecurity,
+      requestBody: {
+        required: true,
+        content: { "application/json": { schema: { type: "object", required: ["eventType", "description"], properties: { eventType: { type: "string" }, description: { type: "string" }, evidenceHash: { type: "string" }, occurredAt: { type: "string", format: "date-time" } } } } },
+      },
+      responses: { ...jsonResponse(201, { type: "object", required: ["legalEvidence"], properties: { legalEvidence: { $ref: "#/components/schemas/LegalEvidence" } } }), ...errorResponses(400, 401, 403, 404) },
+    },
+  },
+  "/api/v1/legal-evidence/{id}": {
+    get: {
+      operationId: "getLegalEvidence", summary: "Legal evidence detail", tags: ["LegalEvidence"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      responses: { ...jsonResponse(200, { type: "object", required: ["legalEvidence"], properties: { legalEvidence: { $ref: "#/components/schemas/LegalEvidence" } } }), ...errorResponses(401, 403, 404) },
+    },
+  },
+  "/api/v1/notification-templates": {
+    get: {
+      operationId: "listNotificationTemplates", summary: "Paginated notification templates (optional ?channel=)", tags: ["Notifications"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/limitParam" }, { "$ref": "#/components/parameters/offsetParam" }, { name: "channel", in: "query", schema: { type: "string", enum: ["email", "slack", "webhook"] } }],
+      responses: { ...jsonResponse(200, paginatedList("notificationTemplates", "NotificationTemplate")), ...errorResponses(400, 401, 403) },
+    },
+    post: {
+      operationId: "createNotificationTemplate", summary: "Create a notification template (E-11)", tags: ["Notifications"], security: authSecurity,
+      requestBody: {
+        required: true,
+        content: { "application/json": { schema: { type: "object", required: ["templateKey", "subject", "body"], properties: { templateKey: { type: "string" }, subject: { type: "string" }, body: { type: "string" }, channel: { type: "string", enum: ["email", "slack", "webhook"] } } } } },
+      },
+      responses: { ...jsonResponse(201, { type: "object", required: ["notificationTemplate"], properties: { notificationTemplate: { $ref: "#/components/schemas/NotificationTemplate" } } }), ...errorResponses(400, 401, 403) },
+    },
+  },
+  "/api/v1/notification-templates/{id}": {
+    get: {
+      operationId: "getNotificationTemplate", summary: "Notification template detail", tags: ["Notifications"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      responses: { ...jsonResponse(200, { type: "object", required: ["notificationTemplate"], properties: { notificationTemplate: { $ref: "#/components/schemas/NotificationTemplate" } } }), ...errorResponses(401, 403, 404) },
+    },
+  },
+  "/api/v1/notifications/unread-count": {
+    get: {
+      operationId: "getUnreadNotificationCount", summary: "Unread notification count (E-11)", tags: ["Notifications"], security: authSecurity,
+      responses: { ...jsonResponse(200, { type: "object", required: ["unreadCount"], properties: { unreadCount: { type: "integer" } } }), ...errorResponses(401, 403) },
+    },
+  },
+  "/api/v1/notifications/{id}/read": {
+    patch: {
+      operationId: "markNotificationRead", summary: "Mark a notification as read", tags: ["Notifications"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      responses: { ...jsonResponse(200, { type: "object", required: ["notification"], properties: { notification: { $ref: "#/components/schemas/NotificationDelivery" } } }), ...errorResponses(401, 403, 404) },
+    },
+  },
   "/api/v1/integrations/{service}/{proxyPath}": {
     get: gatewayOperation("get"),
     post: gatewayOperation("post"),
@@ -2595,6 +2707,8 @@ const spec: { [k: string]: YamlValue } = {
     { name: "Documents", description: "Drawings/documents (Enterprise-OS E-03)" },
     { name: "WorkSchedules", description: "Site work schedules (Enterprise-OS E-02)" },
     { name: "PurchaseOrders", description: "Purchase orders / ERP (Enterprise-OS E-05)" },
+    { name: "Compliance", description: "Compliance checks (ServiceHub S-07)" },
+    { name: "LegalEvidence", description: "Legal evidence timeline (ServiceHub S-07)" },
     { name: "Projects", description: "Construction project management (ServiceHub S-01)" },
     { name: "DailyReports", description: "Site daily reports (ServiceHub S-02)" },
     { name: "IntegrationGateway", description: "CEOP gateway reverse proxy for integration services (P1)" },

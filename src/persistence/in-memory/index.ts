@@ -42,6 +42,9 @@ import {
   InMemoryWorkScheduleRepository,
   InMemoryPurchaseOrderRepository,
   InMemoryNotificationPreferenceRepository,
+  InMemoryComplianceCheckRepository,
+  InMemoryLegalEvidenceRepository,
+  InMemoryNotificationTemplateRepository,
 } from "./business-repositories.ts";
 
 /**
@@ -74,5 +77,8 @@ export function createInMemoryRepositories(): Repositories {
     workSchedules: new InMemoryWorkScheduleRepository(),
     purchaseOrders: new InMemoryPurchaseOrderRepository(),
     notificationPreferences: new InMemoryNotificationPreferenceRepository(),
+    complianceChecks: new InMemoryComplianceCheckRepository(),
+    legalEvidences: new InMemoryLegalEvidenceRepository(),
+    notificationTemplates: new InMemoryNotificationTemplateRepository(),
   };
 }

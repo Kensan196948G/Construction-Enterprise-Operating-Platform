@@ -128,6 +128,20 @@ export function registerNotificationRoutes(router: Router, container: AppContain
     writeJson(res, 201, { notification: created.value });
   });
 
+  router.get("/api/v1/notifications/unread-count", async (_req, ctx, res) => {
+    if (!hasPermission(ctx, "notification", "read")) {
+      forbidden(res, "notification:read");
+      return;
+    }
+    const items =
+      ctx?.organizationId !== undefined
+        ? (await repositories.notificationDeliveries.findAll()).filter(
+            (n) => n.organizationId === ctx.organizationId,
+          )
+        : await repositories.notificationDeliveries.findAll();
+    writeJson(res, 200, { unreadCount: items.filter((n) => n.readAt === undefined).length });
+  });
+
   router.get("/api/v1/notifications/:id", async (req, ctx, res) => {
     if (!hasPermission(ctx, "notification", "read")) {
       forbidden(res, "notification:read");
@@ -144,5 +158,35 @@ export function registerNotificationRoutes(router: Router, container: AppContain
       return;
     }
     writeJson(res, 200, { notification });
+  });
+
+  router.patch("/api/v1/notifications/:id/read", async (req, ctx, res) => {
+    if (!hasPermission(ctx, "notification", "write")) {
+      forbidden(res, "notification:write");
+      return;
+    }
+    const notification = await repositories.notificationDeliveries.findById(
+      notificationDeliveryId(req.params["id"] ?? ""),
+    );
+    if (
+      notification === null ||
+      (ctx?.organizationId !== undefined && notification.organizationId !== ctx.organizationId)
+    ) {
+      notFound(res);
+      return;
+    }
+    const updated = {
+      ...notification,
+      readAt: new Date().toISOString() as IsoTimestamp,
+    };
+    await repositories.notificationDeliveries.save(updated);
+    recordAudit(
+      container.auditLog,
+      ctx,
+      "notification:read",
+      `notifications/${notification.id}`,
+      "success",
+    );
+    writeJson(res, 200, { notification: updated });
   });
 }

@@ -24,7 +24,7 @@
 | HTTP サーバ  | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                                                                                                                                        |
 | 依存方針     | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）                                                                                                                |
 | パッケージ   | pnpm 10.26.2                                                                                                                                                                                    |
-| テスト       | 367 tests pass（node:test ビルトインランナー）                                                                                                                                                  |
+| テスト       | 373 tests pass（node:test ビルトインランナー）                                                                                                                                                  |
 | コンテナ     | Docker multi-stage build（non-root・HEALTHCHECK 付き）                                                                                                                                          |
 | セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限                                                                                                               |
 
@@ -656,7 +656,7 @@ node --experimental-strip-types scripts/sqlite-backup.ts /data/ceop.db /backup/c
 | --------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | typecheck | ✅ pass        | strict・`noUncheckedIndexedAccess`・0 error                                                                                                                                                                                                                                                                                                                                                                |
 | lint      | ✅ pass        | ESLint flat config + typescript-eslint・0 warning                                                                                                                                                                                                                                                                                                                                                          |
-| test      | ✅ 367/367     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud + governance-crud + sqlite-audit-log + workflow-crud + workflow-instance + audit-coverage + migrate + rate-limit（CF-IP 分離含む）+ tenant-scope + audit-tenant-scope + jwt-org + webui + client-ip + backup-retention + auth-keys + api-key-repository + web-assets + favicon + ai-actions + device-ingest |
+| test      | ✅ 373/373     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud + governance-crud + sqlite-audit-log + workflow-crud + workflow-instance + audit-coverage + migrate + rate-limit（CF-IP 分離含む）+ tenant-scope + audit-tenant-scope + jwt-org + webui + client-ip + backup-retention + auth-keys + api-key-repository + web-assets + favicon + ai-actions + device-ingest |
 | build     | ✅ pass        | `dist/` に型定義付き出力                                                                                                                                                                                                                                                                                                                                                                                   |
 | CI        | ✅ 設定済み    | `.github/workflows/ci.yml`（push / PR トリガー）                                                                                                                                                                                                                                                                                                                                                           |
 | Docker    | ✅ multi-stage | non-root ユーザー・HEALTHCHECK 付き                                                                                                                                                                                                                                                                                                                                                                        |
@@ -1191,6 +1191,28 @@ migration `016`（knowledge_articles）・`017`（legal_contracts）を追加。
   `not-configured` として失敗記録・email は SMTP 未実装のため同様）
 
 migration `018`（documents）・`019`（work_schedules）・`020`（purchase_orders）・`021`（notification_preferences）を追加。
+
+---
+
+## ⚖️ Compliance / Legal Evidence API（P3 / S-07 残）
+
+コンプライアンスチェック（建設業法・下請法・ISO）と契約の法的証跡タイムラインを管理します。
+
+| エンドポイント                                            | 権限                                   | 説明                                       |
+| --------------------------------------------------------- | -------------------------------------- | ------------------------------------------ |
+| `GET/POST /api/v1/projects/{projectId}/compliance-checks` | `compliance:read` / `compliance:write` | コンプライアンスチェック一覧・作成         |
+| `GET /api/v1/compliance-checks/{id}`                      | `compliance:read`                      | 詳細                                       |
+| `GET/POST /api/v1/contracts/{contractId}/legal-evidence`  | `legal:read` / `legal:write`           | 法的証跡一覧・作成（SHA-256 evidenceHash） |
+| `GET /api/v1/legal-evidence/{id}`                         | `legal:read`                           | 詳細                                       |
+
+## 📮 Notification Templates / Unread / Email（P3 / E-11 残）
+
+- `GET/POST /api/v1/notification-templates`・`GET /:id` — 通知テンプレート（templateKey 一意）
+- `GET /api/v1/notifications/unread-count`・`PATCH /api/v1/notifications/{id}/read` — 未読カウント・既読化
+- **email 実送信**: ディスパッチャーが SMTP（implicit TLS / AUTH PLAIN）で送信
+  （`CEOP_SMTP_HOST/PORT/SECURE/USER/PASSWORD/FROM`。未設定は `not-configured` として失敗記録）
+
+migration `022`（compliance_checks）・`023`（legal_evidence）・`024`（notification_templates）を追加。
 
 ---
 

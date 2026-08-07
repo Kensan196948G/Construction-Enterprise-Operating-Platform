@@ -23,6 +23,16 @@ import type {
   NotificationPreference,
   NotificationPreferenceId,
 } from "../../domain/notification-preference.ts";
+import type {
+  ComplianceCheck,
+  ComplianceCheckId,
+  LegalEvidence,
+  LegalEvidenceId,
+} from "../../domain/compliance.ts";
+import type {
+  NotificationTemplate,
+  NotificationTemplateId,
+} from "../../domain/notification-template.ts";
 
 import type {
   PhotoRepository,
@@ -37,6 +47,9 @@ import type {
   WorkScheduleRepository,
   PurchaseOrderRepository,
   NotificationPreferenceRepository,
+  ComplianceCheckRepository,
+  LegalEvidenceRepository,
+  NotificationTemplateRepository,
 } from "../ports.ts";
 import { BaseSqliteRepository } from "./base-sqlite-repository.ts";
 
@@ -516,5 +529,118 @@ export class SqliteNotificationPreferenceRepository
     );
     const row = stmt.get(userId) as { data: string } | undefined;
     return row !== undefined ? (JSON.parse(row.data) as NotificationPreference) : null;
+  }
+}
+
+export class SqliteComplianceCheckRepository
+  extends BaseSqliteRepository<ComplianceCheck>
+  implements ComplianceCheckRepository
+{
+  constructor(db: unknown) {
+    super(
+      db,
+      "compliance_checks",
+      [
+        "org_id TEXT NOT NULL",
+        "project_id TEXT NOT NULL REFERENCES projects(id)",
+        "standard TEXT NOT NULL",
+        "result TEXT NOT NULL",
+      ],
+      [
+        { name: "idx_compliance_org", columns: ["org_id"] },
+        { name: "idx_compliance_project", columns: ["project_id"] },
+        { name: "idx_compliance_standard", columns: ["standard"] },
+      ],
+      ["org_id", "project_id", "standard", "result"],
+    );
+  }
+  protected override extraValues(c: ComplianceCheck): readonly unknown[] {
+    return [c.organizationId, c.projectId as string, c.standard, c.result];
+  }
+  override async findById(id: ComplianceCheckId): Promise<ComplianceCheck | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: ComplianceCheckId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByProject(projectId: ProjectId): Promise<readonly ComplianceCheck[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare(
+      "SELECT data FROM compliance_checks WHERE project_id = ?",
+    );
+    const rows = stmt.all(projectId as string) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as ComplianceCheck);
+  }
+}
+
+export class SqliteLegalEvidenceRepository
+  extends BaseSqliteRepository<LegalEvidence>
+  implements LegalEvidenceRepository
+{
+  constructor(db: unknown) {
+    super(
+      db,
+      "legal_evidence",
+      [
+        "org_id TEXT NOT NULL",
+        "contract_id TEXT NOT NULL REFERENCES legal_contracts(id)",
+        "event_type TEXT NOT NULL",
+      ],
+      [
+        { name: "idx_legal_evidence_org", columns: ["org_id"] },
+        { name: "idx_legal_evidence_contract", columns: ["contract_id"] },
+      ],
+      ["org_id", "contract_id", "event_type"],
+    );
+  }
+  protected override extraValues(e: LegalEvidence): readonly unknown[] {
+    return [e.organizationId, e.contractId as string, e.eventType];
+  }
+  override async findById(id: LegalEvidenceId): Promise<LegalEvidence | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: LegalEvidenceId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByContract(contractId: ContractId): Promise<readonly LegalEvidence[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM legal_evidence WHERE contract_id = ?");
+    const rows = stmt.all(contractId as string) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as LegalEvidence);
+  }
+}
+
+export class SqliteNotificationTemplateRepository
+  extends BaseSqliteRepository<NotificationTemplate>
+  implements NotificationTemplateRepository
+{
+  constructor(db: unknown) {
+    super(
+      db,
+      "notification_templates",
+      ["org_id TEXT", "template_key TEXT NOT NULL", "channel TEXT NOT NULL"],
+      [
+        { name: "idx_notification_templates_org", columns: ["org_id"] },
+        { name: "idx_notification_templates_key", columns: ["template_key"], unique: true },
+      ],
+      ["org_id", "template_key", "channel"],
+    );
+  }
+  protected override extraValues(tpl: NotificationTemplate): readonly unknown[] {
+    return [tpl.organizationId ?? null, tpl.templateKey, tpl.channel];
+  }
+  override async findById(id: NotificationTemplateId): Promise<NotificationTemplate | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: NotificationTemplateId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByKey(templateKey: string): Promise<NotificationTemplate | null> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare(
+      "SELECT data FROM notification_templates WHERE template_key = ?",
+    );
+    const row = stmt.get(templateKey) as { data: string } | undefined;
+    return row !== undefined ? (JSON.parse(row.data) as NotificationTemplate) : null;
   }
 }

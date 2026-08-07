@@ -23,6 +23,16 @@ import type {
   NotificationPreference,
   NotificationPreferenceId,
 } from "../../domain/notification-preference.ts";
+import type {
+  ComplianceCheck,
+  ComplianceCheckId,
+  LegalEvidence,
+  LegalEvidenceId,
+} from "../../domain/compliance.ts";
+import type {
+  NotificationTemplate,
+  NotificationTemplateId,
+} from "../../domain/notification-template.ts";
 
 import type {
   PhotoRepository,
@@ -37,6 +47,9 @@ import type {
   WorkScheduleRepository,
   PurchaseOrderRepository,
   NotificationPreferenceRepository,
+  ComplianceCheckRepository,
+  LegalEvidenceRepository,
+  NotificationTemplateRepository,
 } from "../ports.ts";
 
 class InMemoryRepo<T extends { id: string }> {
@@ -235,5 +248,50 @@ export class InMemoryNotificationPreferenceRepository
   }
   async findByUserId(userId: string): Promise<NotificationPreference | null> {
     return (await this.findAll()).find((p) => p.userId === userId) ?? null;
+  }
+}
+
+export class InMemoryComplianceCheckRepository
+  extends InMemoryRepo<ComplianceCheck>
+  implements ComplianceCheckRepository
+{
+  override async findById(id: ComplianceCheckId): Promise<ComplianceCheck | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: ComplianceCheckId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByProject(projectId: ProjectId): Promise<readonly ComplianceCheck[]> {
+    return (await this.findAll()).filter((c) => (c.projectId as string) === (projectId as string));
+  }
+}
+export class InMemoryLegalEvidenceRepository
+  extends InMemoryRepo<LegalEvidence>
+  implements LegalEvidenceRepository
+{
+  override async findById(id: LegalEvidenceId): Promise<LegalEvidence | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: LegalEvidenceId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByContract(contractId: ContractId): Promise<readonly LegalEvidence[]> {
+    return (await this.findAll()).filter(
+      (e) => (e.contractId as string) === (contractId as string),
+    );
+  }
+}
+export class InMemoryNotificationTemplateRepository
+  extends InMemoryRepo<NotificationTemplate>
+  implements NotificationTemplateRepository
+{
+  override async findById(id: NotificationTemplateId): Promise<NotificationTemplate | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: NotificationTemplateId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByKey(templateKey: string): Promise<NotificationTemplate | null> {
+    return (await this.findAll()).find((t) => t.templateKey === templateKey) ?? null;
   }
 }

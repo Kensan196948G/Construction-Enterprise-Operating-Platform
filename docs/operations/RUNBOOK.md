@@ -330,3 +330,6 @@ DNS・証明書・Tunnel 自体（UUID / credentials）には一切触れない�
 
 > マイグレーション 018〜021: E-03 documents / E-02 work_schedules / E-05 purchase_orders / E-11 notification_preferences。
 > 通知ディスパッチャー: `node --experimental-strip-types scripts/run-notification-dispatcher.ts`（cron 登録推奨・5分間隔目安）。
+
+> マイグレーション 022〜024: S-07 compliance_checks / legal_evidence / E-11 notification_templates。
+> email 送信はディスパッチャー実行前に CEOP_SMTP_* を設定（未設定は not-configured 記録）。

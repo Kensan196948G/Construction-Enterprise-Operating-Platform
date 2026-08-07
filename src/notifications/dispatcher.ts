@@ -14,10 +14,12 @@ import { request as httpRequest } from "node:http";
 import { request as httpsRequest } from "node:https";
 import type { NotificationDelivery } from "../domain/notification.ts";
 import type { Repositories } from "../persistence/ports.ts";
+import { sendEmail, type SmtpConfig } from "./smtp.ts";
 
 export interface DispatcherConfig {
   readonly webhookUrl?: string | undefined;
   readonly slackWebhookUrl?: string | undefined;
+  readonly smtp?: SmtpConfig | undefined;
   readonly timeoutMs?: number | undefined;
 }
 
@@ -101,12 +103,28 @@ export async function dispatchPendingDeliveries(
 
   for (const delivery of candidates) {
     let url: string | undefined;
+    let smtp: SmtpConfig | undefined;
     if (delivery.channel === "webhook") {
       url = config.webhookUrl;
     } else if (delivery.channel === "slack") {
       url = config.slackWebhookUrl;
+    } else if (delivery.channel === "email") {
+      smtp = config.smtp;
     }
-    if (url === undefined || url === "") {
+    if (delivery.channel === "email" && smtp === undefined) {
+      await repositories.notificationDeliveries.save(
+        updateDelivery(delivery, {
+          status: "failed",
+          failureKind: "not-configured",
+          errorDetail: "SMTP is not configured",
+          attempts: delivery.attempts + 1,
+          updatedAt: nowIso,
+        }),
+      );
+      failed += 1;
+      continue;
+    }
+    if (delivery.channel !== "email" && (url === undefined || url === "")) {
       await repositories.notificationDeliveries.save(
         updateDelivery(delivery, {
           status: "failed",
@@ -120,18 +138,27 @@ export async function dispatchPendingDeliveries(
       continue;
     }
     try {
-      await postJson(
-        url,
-        {
-          id: delivery.id,
-          userId: delivery.userId,
-          eventKey: delivery.eventKey,
-          channel: delivery.channel,
-          subject: delivery.subject ?? "",
-          bodyPreview: delivery.bodyPreview ?? "",
-        },
-        timeoutMs,
-      );
+      if (delivery.channel === "email" && smtp !== undefined) {
+        await sendEmail(
+          smtp,
+          delivery.userId,
+          delivery.subject ?? delivery.eventKey,
+          delivery.bodyPreview ?? "",
+        );
+      } else if (url !== undefined) {
+        await postJson(
+          url,
+          {
+            id: delivery.id,
+            userId: delivery.userId,
+            eventKey: delivery.eventKey,
+            channel: delivery.channel,
+            subject: delivery.subject ?? "",
+            bodyPreview: delivery.bodyPreview ?? "",
+          },
+          timeoutMs,
+        );
+      }
       await repositories.notificationDeliveries.save(
         updateDelivery(delivery, {
           status: "sent",

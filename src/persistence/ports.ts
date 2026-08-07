@@ -33,6 +33,16 @@ import type {
   NotificationPreference,
   NotificationPreferenceId,
 } from "../domain/notification-preference.ts";
+import type {
+  ComplianceCheck,
+  ComplianceCheckId,
+  LegalEvidence,
+  LegalEvidenceId,
+} from "../domain/compliance.ts";
+import type {
+  NotificationTemplate,
+  NotificationTemplateId,
+} from "../domain/notification-template.ts";
 
 import type {
   SafetyCheck,
@@ -180,6 +190,19 @@ export interface NotificationPreferenceRepository extends Repository<
   findByUserId(userId: string): Promise<NotificationPreference | null>;
 }
 
+export interface ComplianceCheckRepository extends Repository<ComplianceCheck, ComplianceCheckId> {
+  findByProject(projectId: ProjectId): Promise<readonly ComplianceCheck[]>;
+}
+export interface LegalEvidenceRepository extends Repository<LegalEvidence, LegalEvidenceId> {
+  findByContract(contractId: ContractId): Promise<readonly LegalEvidence[]>;
+}
+export interface NotificationTemplateRepository extends Repository<
+  NotificationTemplate,
+  NotificationTemplateId
+> {
+  findByKey(templateKey: string): Promise<NotificationTemplate | null>;
+}
+
 export interface ProjectRepository extends Repository<Project, ProjectId> {
   /** All projects belonging to one organization. */
   findByOrganization(orgId: string): Promise<readonly Project[]>;
@@ -224,4 +247,7 @@ export interface Repositories {
   readonly workSchedules: WorkScheduleRepository;
   readonly purchaseOrders: PurchaseOrderRepository;
   readonly notificationPreferences: NotificationPreferenceRepository;
+  readonly complianceChecks: ComplianceCheckRepository;
+  readonly legalEvidences: LegalEvidenceRepository;
+  readonly notificationTemplates: NotificationTemplateRepository;
 }

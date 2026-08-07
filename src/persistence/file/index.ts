@@ -54,6 +54,9 @@ import {
   FileWorkScheduleRepository,
   FilePurchaseOrderRepository,
   FileNotificationPreferenceRepository,
+  FileComplianceCheckRepository,
+  FileLegalEvidenceRepository,
+  FileNotificationTemplateRepository,
 } from "./business-repositories.ts";
 
 // ---------------------------------------------------------------------------
@@ -292,6 +295,12 @@ export async function createFileRepositories(dataDir: string): Promise<Repositor
     notificationPreferences: new FileNotificationPreferenceRepository(
       dataDir,
       "notification-preferences.json",
+    ),
+    complianceChecks: new FileComplianceCheckRepository(dataDir, "compliance-checks.json"),
+    legalEvidences: new FileLegalEvidenceRepository(dataDir, "legal-evidence.json"),
+    notificationTemplates: new FileNotificationTemplateRepository(
+      dataDir,
+      "notification-templates.json",
     ),
   };
 }
