@@ -22,6 +22,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 ### Added
 
+- **Construction Project ドメイン（ServiceHub S-01）** — 工事案件の CRUD API
+  （`GET/POST /api/v1/projects`・`GET/PATCH/DELETE /:id`）。`project:read` /
+  `project:write`・テナントスコープ・監査記録・projectCode 一意。migration `008`。
+- **Daily Report ドメイン（ServiceHub S-02）** — 日報 CRUD と状態遷移
+  （`draft→submitted→approved`）。案件配下の一覧/作成と個別取得/更新/遷移 API。
+  `daily-report:read` / `daily-report:write`・監査記録。migration `009`。
+- テスト 10 件追加（356/356 pass）。
+
 - **Integration Gateway（P1）** — 統合サービス向けリバースプロキシと統一認証。
   `CEOP_GATEWAY_SERVICES` で登録したサービスを `/api/v1/integrations/<service>/*`
   として公開し、CEOP の JWT/API キー認証・権限（`integration:read` /
@@ -37,7 +45,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 - **Device Agent Ingest（統合 D-01〜D-03 / L-05）** — 端末登録・ハートビート・インベントリ受信。
   `POST /api/v1/devices/register` / `/:id/heartbeat` / `/:id/inventory` を追加
   （`device:write`・監査記録・`metadata` は string 値のみ・スキーマ変更不要）。
-- テスト 346/346 pass・verify/build/audit 0。
+- テスト 356/356 pass・verify/build/audit 0。
 
 ## [0.8.2] - 2026-08-07
 

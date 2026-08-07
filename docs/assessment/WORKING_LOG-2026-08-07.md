@@ -191,7 +191,7 @@
 - `src/api/routes/device-ingest.ts`: register / heartbeat / inventory（device:write・監査・クロステナント拒否）
 - 永続化: in-memory / file / SQLite（migration 007 `ai_actions`）・ports に `aiActions` を追加
 - OpenAPI・README・CHANGELOG・FEATURE_INVENTORY（Y-09 / D-01〜D-03 ✅）・RUNBOOK 更新
-- テスト 11 件追加 → **346/346 pass**・verify/build/audit 0
+- テスト 11 件追加 → **356/356 pass**・verify/build/audit 0
 - PR #26（feat/p2-ai-device）
 
 ### v0.9.0 リリース・本番デプロイ（2026-08-07・ユーザー Y 承認）
@@ -208,6 +208,17 @@
   gateway はサービス未登録のため 404（fail-closed・P3 で設定）・WebUI 200/200・公開 API 0.9.0・公開 root 200
 - container health: healthy・ログ異常なし
 - 残課題: CEOP_GATEWAY_SERVICES は P3 統合サービス接続時に設定（現状無効・fail-closed）
+
+### P3: ServiceHub 業務モジュール移植（S-01 案件・S-02 日報・2026-08-07 本セッション追記）
+
+- `src/domain/project.ts`: 案件（projectCode/名称/発注者/現場/工期/予算/管理者/状態）検証
+- `src/domain/daily-report.ts`: 日報（天気/作業員/安全/進捗/課題）と draft→submitted→approved 遷移
+- API: `/api/v1/projects` CRUD + `/api/v1/projects/:projectId/daily-reports` +
+  `/api/v1/daily-reports/:id` + `/transition`（project:read|write / daily-report:read|write・テナント・監査）
+- 永続化: in-memory / file / SQLite（migration 008 projects / 009 daily_reports）
+- OpenAPI・README・CHANGELOG・FEATURE_INVENTORY（S-01/S-02 ✅）・RUNBOOK 更新
+- テスト 10 件追加 → **356/356 pass**・verify/build/audit 0
+- PR #30（feat/p3-servicehub-projects）
 
 ### 次フェーズ
 

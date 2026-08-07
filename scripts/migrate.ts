@@ -247,6 +247,40 @@ export const MIGRATIONS: readonly Migration[] = [
       CREATE INDEX IF NOT EXISTS idx_ai_actions_status ON ai_actions (status);
     `,
   },
+  {
+    version: "008",
+    description: "projects table for construction projects (ServiceHub S-01)",
+    up: `
+      CREATE TABLE IF NOT EXISTS projects (
+        id           TEXT PRIMARY KEY,
+        data         TEXT NOT NULL,
+        org_id       TEXT NOT NULL,
+        project_code TEXT NOT NULL,
+        status       TEXT NOT NULL
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_projects_code   ON projects (project_code);
+      CREATE        INDEX IF NOT EXISTS idx_projects_org    ON projects (org_id);
+      CREATE        INDEX IF NOT EXISTS idx_projects_status ON projects (status);
+    `,
+  },
+  {
+    version: "009",
+    description: "daily_reports table for site daily reports (ServiceHub S-02)",
+    up: `
+      CREATE TABLE IF NOT EXISTS daily_reports (
+        id          TEXT PRIMARY KEY,
+        data        TEXT NOT NULL,
+        org_id      TEXT NOT NULL,
+        project_id  TEXT NOT NULL REFERENCES projects(id),
+        report_date TEXT NOT NULL,
+        status      TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_daily_reports_org     ON daily_reports (org_id);
+      CREATE INDEX IF NOT EXISTS idx_daily_reports_project ON daily_reports (project_id);
+      CREATE INDEX IF NOT EXISTS idx_daily_reports_date    ON daily_reports (report_date);
+      CREATE INDEX IF NOT EXISTS idx_daily_reports_status  ON daily_reports (status);
+    `,
+  },
 ];
 
 // ---------------------------------------------------------------------------
