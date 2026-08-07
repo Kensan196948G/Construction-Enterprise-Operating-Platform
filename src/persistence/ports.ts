@@ -13,6 +13,11 @@ import type { Policy, PolicyId } from "../domain/policy.ts";
 import type { Role, RoleId } from "../domain/role.ts";
 import type { User, UserId } from "../domain/user.ts";
 import type { Workflow, WorkflowId, WorkflowType, WorkflowStatus } from "../domain/workflow.ts";
+import type {
+  WorkflowInstance,
+  WorkflowInstanceId,
+  WorkflowInstanceStatus,
+} from "../domain/workflow-instance.ts";
 
 // ---------------------------------------------------------------------------
 // Generic repository contract
@@ -76,6 +81,16 @@ export interface WorkflowRepository extends Repository<Workflow, WorkflowId> {
   findByStatus(status: WorkflowStatus): Promise<readonly Workflow[]>;
 }
 
+export interface WorkflowInstanceRepository extends Repository<
+  WorkflowInstance,
+  WorkflowInstanceId
+> {
+  /** All instances belonging to one organization. */
+  findByOrganization(orgId: OrganizationId): Promise<readonly WorkflowInstance[]>;
+  /** All instances in a given state. */
+  findByStatus(status: WorkflowInstanceStatus): Promise<readonly WorkflowInstance[]>;
+}
+
 // ---------------------------------------------------------------------------
 // Aggregate: all repositories grouped for DI / factory use
 // ---------------------------------------------------------------------------
@@ -88,4 +103,5 @@ export interface Repositories {
   readonly applications: ApplicationRepository;
   readonly policies: PolicyRepository;
   readonly workflows: WorkflowRepository;
+  readonly workflowInstances: WorkflowInstanceRepository;
 }

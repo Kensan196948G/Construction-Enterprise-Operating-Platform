@@ -138,7 +138,8 @@ export const MIGRATIONS: readonly Migration[] = [
   },
   {
     version: "004",
-    description: "schema consolidation: workflows/revoked_jtis tables + FK constraints on domain tables (v0.6.0)",
+    description:
+      "schema consolidation: workflows/revoked_jtis tables + FK constraints on domain tables (v0.6.0)",
     disableForeignKeys: true,
     up: `
       CREATE TABLE IF NOT EXISTS workflows (
@@ -215,6 +216,21 @@ export const MIGRATIONS: readonly Migration[] = [
     description: "api_keys.organization_id column for tenant-scoped credentials (v0.6.0)",
     up: `
       ALTER TABLE api_keys ADD COLUMN organization_id TEXT;
+    `,
+  },
+  {
+    version: "006",
+    description: "workflow_instances table for Issue→Approval→Audit runs (integration L-02)",
+    up: `
+      CREATE TABLE IF NOT EXISTS workflow_instances (
+        id          TEXT PRIMARY KEY,
+        data        TEXT NOT NULL,
+        workflow_id TEXT NOT NULL,
+        org_id      TEXT NOT NULL REFERENCES organizations(id),
+        status      TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_workflow_instances_org    ON workflow_instances (org_id);
+      CREATE INDEX IF NOT EXISTS idx_workflow_instances_status ON workflow_instances (status);
     `,
   },
 ];

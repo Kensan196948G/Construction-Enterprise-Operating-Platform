@@ -4,7 +4,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-22.13+-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Zero Runtime Deps](https://img.shields.io/badge/runtime%20deps-zero-brightgreen)](package.json)
 [![CI](https://img.shields.io/github/actions/workflow/status/Kensan196948G/Construction-Enterprise-Operating-Platform/ci.yml?label=CI&logo=github)](/.github/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-297%20pass-brightgreen)](src/)
+[![Tests](https://img.shields.io/badge/tests-315%20pass-brightgreen)](src/)
 [![Security](https://img.shields.io/badge/security-hardened-blue)](src/api/middleware/auth.ts)
 [![License](https://img.shields.io/badge/license-proprietary-lightgrey)](LICENSE.md)
 
@@ -24,7 +24,7 @@
 | HTTP サーバ  | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                                                                                                                       |
 | 依存方針     | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）                                                                                               |
 | パッケージ   | pnpm 10.26.2                                                                                                                                                                   |
-| テスト       | 302 tests pass（node:test ビルトインランナー）                                                                                                                                 |
+| テスト       | 315 tests pass（node:test ビルトインランナー）                                                                                                                                 |
 | コンテナ     | Docker multi-stage build（non-root・HEALTHCHECK 付き）                                                                                                                         |
 | セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限                                                                                              |
 
@@ -613,7 +613,7 @@ bash scripts/webui-deploy.sh
 ## 🧪 テスト実行
 
 ```bash
-# 全テスト実行（302 tests）
+# 全テスト実行（315 tests）
 pnpm run test
 
 # typecheck + lint + test 一括
@@ -651,15 +651,15 @@ node --experimental-strip-types scripts/sqlite-backup.ts /data/ceop.db /backup/c
 
 ### 📊 現在の品質状態
 
-| ゲート    | 状態           | 備考                                                                                                                                                                                                                                                                                                                                            |
-| --------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| typecheck | ✅ pass        | strict・`noUncheckedIndexedAccess`・0 error                                                                                                                                                                                                                                                                                                     |
-| lint      | ✅ pass        | ESLint flat config + typescript-eslint・0 warning                                                                                                                                                                                                                                                                                               |
-| test      | ✅ 302/302     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud + governance-crud + sqlite-audit-log + workflow-crud + audit-coverage + migrate + rate-limit（CF-IP 分離含む）+ tenant-scope + audit-tenant-scope + jwt-org + webui + client-ip + backup-retention + auth-keys + api-key-repository + web-assets |
-| build     | ✅ pass        | `dist/` に型定義付き出力                                                                                                                                                                                                                                                                                                                        |
-| CI        | ✅ 設定済み    | `.github/workflows/ci.yml`（push / PR トリガー）                                                                                                                                                                                                                                                                                                |
-| Docker    | ✅ multi-stage | non-root ユーザー・HEALTHCHECK 付き                                                                                                                                                                                                                                                                                                             |
-| security  | ✅ hardened    | timingSafeEqual・ボディ制限・権限ゲート・CSP・API セキュリティヘッダ・監査網羅                                                                                                                                                                                                                                                                  |
+| ゲート    | 状態           | 備考                                                                                                                                                                                                                                                                                                                                                                |
+| --------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| typecheck | ✅ pass        | strict・`noUncheckedIndexedAccess`・0 error                                                                                                                                                                                                                                                                                                                         |
+| lint      | ✅ pass        | ESLint flat config + typescript-eslint・0 warning                                                                                                                                                                                                                                                                                                                   |
+| test      | ✅ 315/315     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud + governance-crud + sqlite-audit-log + workflow-crud + workflow-instance + audit-coverage + migrate + rate-limit（CF-IP 分離含む）+ tenant-scope + audit-tenant-scope + jwt-org + webui + client-ip + backup-retention + auth-keys + api-key-repository + web-assets |
+| build     | ✅ pass        | `dist/` に型定義付き出力                                                                                                                                                                                                                                                                                                                                            |
+| CI        | ✅ 設定済み    | `.github/workflows/ci.yml`（push / PR トリガー）                                                                                                                                                                                                                                                                                                                    |
+| Docker    | ✅ multi-stage | non-root ユーザー・HEALTHCHECK 付き                                                                                                                                                                                                                                                                                                                                 |
+| security  | ✅ hardened    | timingSafeEqual・ボディ制限・権限ゲート・CSP・API セキュリティヘッダ・監査網羅                                                                                                                                                                                                                                                                                      |
 
 ---
 
@@ -888,11 +888,25 @@ gantt
 | `PUT`    | `/api/v1/workflows/:id` | `workflow:write` | ワークフロー更新（mutable フィールドのみ）         |
 | `DELETE` | `/api/v1/workflows/:id` | `workflow:write` | ワークフロー削除                                   |
 
+### 📋 Workflow Instance API（統合 L-02 / Synapse Issue→Approval→Audit）
+
+ワークフローテンプレートからテナント単位の実行インスタンスを生成し、
+承認・却下・取消を監査ログ付きで記録します。
+
+| メソッド | パス                                      | 権限             | 説明                                                                        |
+| -------- | ----------------------------------------- | ---------------- | --------------------------------------------------------------------------- |
+| `GET`    | `/api/v1/workflow-instances`              | `workflow:read`  | インスタンス一覧（ページネーション・`?status=` フィルタ・テナントスコープ） |
+| `POST`   | `/api/v1/workflow-instances`              | `workflow:write` | アクティブなワークフローからインスタンス作成（最初のステップで開始）        |
+| `POST`   | `/api/v1/workflow-instances/:id/decision` | `workflow:write` | 承認/却下（`decision: approve\|reject`・コメント可・監査記録）              |
+| `POST`   | `/api/v1/workflow-instances/:id/cancel`   | `workflow:write` | 保留中インスタンスの取消（監査記録）                                        |
+
+DB スキーマは migration `006`（`workflow_instances` テーブル）で管理します。
+
 ### ワークフロードメイン型
 
 ```typescript
-type WorkflowType = "approval" | "onboarding" | "procurement" | "inspection" | "incident";
-type WorkflowStatus = "draft" | "active" | "suspended" | "archived";
+type WorkflowType = "approval" | "notification" | "task";
+type WorkflowStatus = "draft" | "active" | "suspended" | "retired";
 
 interface WorkflowStep {
   key: string; // ステップ識別子

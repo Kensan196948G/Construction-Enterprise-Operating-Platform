@@ -198,6 +198,33 @@ const schemas: { [k: string]: YamlValue } = {
       },
     },
   },
+  WorkflowInstance: {
+    type: "object",
+    required: [
+      "id",
+      "workflowId",
+      "organizationId",
+      "subject",
+      "stepKey",
+      "stepName",
+      "status",
+      "requestedAt",
+    ],
+    properties: {
+      id: { type: "string" },
+      workflowId: { type: "string" },
+      organizationId: { type: "string" },
+      subject: { type: "string" },
+      stepKey: { type: "string" },
+      stepName: { type: "string" },
+      status: { type: "string", enum: ["pending", "approved", "rejected", "cancelled"] },
+      requestedAt: { type: "string", format: "date-time" },
+      decidedAt: { type: "string", format: "date-time" },
+      decidedBy: { type: "string" },
+      decision: { type: "string", enum: ["approve", "reject"] },
+      comment: { type: "string" },
+    },
+  },
   AuditEntry: {
     type: "object",
     required: ["id", "at", "actor", "action", "resource", "outcome", "hash"],
@@ -1356,6 +1383,109 @@ const paths: { [k: string]: YamlValue } = {
       responses: { "204": { description: "Deleted" }, ...errorResponses(401, 403, 404) },
     },
   },
+
+  // ── Workflow instances (Issue→Approval→Audit / L-02) ────────────────────
+  "/api/v1/workflow-instances": {
+    get: {
+      operationId: "listWorkflowInstances",
+      summary: "Paginated list of workflow instances (optional ?status= filter)",
+      tags: ["WorkflowInstances"],
+      security: authSecurity,
+      parameters: [
+        { "$ref": "#/components/parameters/limitParam" },
+        { "$ref": "#/components/parameters/offsetParam" },
+        {
+          name: "status",
+          in: "query",
+          schema: { type: "string", enum: ["pending", "approved", "rejected", "cancelled"] },
+          description: "Filter by instance status",
+        },
+      ],
+      responses: {
+        ...jsonResponse(200, paginatedList("workflowInstances", "WorkflowInstance")),
+        ...errorResponses(400, 401, 403),
+      },
+    },
+    post: {
+      operationId: "createWorkflowInstance",
+      summary: "Create a workflow instance from an active template",
+      tags: ["WorkflowInstances"],
+      security: authSecurity,
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["workflowId", "subject"],
+              properties: {
+                workflowId: { type: "string" },
+                subject: { type: "string" },
+                organizationId: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(201, {
+          type: "object",
+          required: ["workflowInstance"],
+          properties: { workflowInstance: { $ref: "#/components/schemas/WorkflowInstance" } },
+        }),
+        ...errorResponses(400, 401, 403),
+      },
+    },
+  },
+  "/api/v1/workflow-instances/{id}/decision": {
+    post: {
+      operationId: "decideWorkflowInstance",
+      summary: "Approve or reject a pending workflow instance",
+      tags: ["WorkflowInstances"],
+      security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["decision"],
+              properties: {
+                decision: { type: "string", enum: ["approve", "reject"] },
+                comment: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["workflowInstance"],
+          properties: { workflowInstance: { $ref: "#/components/schemas/WorkflowInstance" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+  },
+  "/api/v1/workflow-instances/{id}/cancel": {
+    post: {
+      operationId: "cancelWorkflowInstance",
+      summary: "Cancel a pending workflow instance",
+      tags: ["WorkflowInstances"],
+      security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["workflowInstance"],
+          properties: { workflowInstance: { $ref: "#/components/schemas/WorkflowInstance" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -1388,6 +1518,7 @@ const spec: { [k: string]: YamlValue } = {
     { name: "Applications", description: "Application registry" },
     { name: "Governance",   description: "Policy engine, audit log, ABAC evaluation" },
     { name: "Workflows",    description: "Workflow templates and CRUD" },
+    { name: "WorkflowInstances", description: "Workflow instance runs (Issue→Approval→Audit)" },
   ],
   paths,
   components: {

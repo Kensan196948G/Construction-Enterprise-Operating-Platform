@@ -20,6 +20,7 @@ import { registerDashboardRoutes } from "./routes/dashboard.ts";
 import { registerWebRoutes } from "./routes/web.ts";
 import { registerEntityCrudRoutes } from "./routes/entity-crud.ts";
 import { registerWorkflowRoutes } from "./routes/workflows.ts";
+import { registerWorkflowInstanceRoutes } from "./routes/workflow-instances.ts";
 import type { AppContainer } from "./types.ts";
 
 export interface ServerConfig {
@@ -67,6 +68,7 @@ export function createServer(config: ServerConfig, container: AppContainer): Ser
   registerDashboardRoutes(router, container);
   registerEntityCrudRoutes(router, container);
   registerWorkflowRoutes(router, container);
+  registerWorkflowInstanceRoutes(router, container);
   registerWebRoutes(router, container);
 
   const server = httpCreateServer((req: IncomingMessage, res: ServerResponse): void => {

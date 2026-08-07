@@ -22,6 +22,11 @@ import type { Role, RoleId } from "../../domain/role.ts";
 import type { User, UserId } from "../../domain/user.ts";
 import type { Workflow, WorkflowId, WorkflowStatus, WorkflowType } from "../../domain/workflow.ts";
 import type {
+  WorkflowInstance,
+  WorkflowInstanceId,
+  WorkflowInstanceStatus,
+} from "../../domain/workflow-instance.ts";
+import type {
   ApplicationRepository,
   DeviceRepository,
   OrganizationRepository,
@@ -30,6 +35,7 @@ import type {
   RoleRepository,
   UserRepository,
   WorkflowRepository,
+  WorkflowInstanceRepository,
 } from "../ports.ts";
 import type { ApiKeyStore } from "../../api/types.ts";
 import { BaseSqliteRepository, openDatabase } from "./base-sqlite-repository.ts";
@@ -317,6 +323,54 @@ class SqliteWorkflowRepository
   }
 }
 
+class SqliteWorkflowInstanceRepository
+  extends BaseSqliteRepository<WorkflowInstance>
+  implements WorkflowInstanceRepository
+{
+  constructor(db: unknown) {
+    super(
+      db,
+      "workflow_instances",
+      [
+        "workflow_id TEXT NOT NULL",
+        "org_id TEXT NOT NULL REFERENCES organizations(id)",
+        "status TEXT NOT NULL",
+      ],
+      [
+        { name: "idx_workflow_instances_org", columns: ["org_id"] },
+        { name: "idx_workflow_instances_status", columns: ["status"] },
+      ],
+      ["workflow_id", "org_id", "status"],
+    );
+  }
+
+  protected override extraValues(w: WorkflowInstance): readonly unknown[] {
+    return [w.workflowId as string, w.organizationId as string, w.status];
+  }
+
+  override async findById(id: WorkflowInstanceId): Promise<WorkflowInstance | null> {
+    return super.findById(id as string);
+  }
+
+  override async delete(id: WorkflowInstanceId): Promise<void> {
+    return super.delete(id as string);
+  }
+
+  async findByOrganization(orgId: string): Promise<readonly WorkflowInstance[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM workflow_instances WHERE org_id = ?");
+    const rows = stmt.all(orgId as string) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as WorkflowInstance);
+  }
+
+  async findByStatus(status: WorkflowInstanceStatus): Promise<readonly WorkflowInstance[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM workflow_instances WHERE status = ?");
+    const rows = stmt.all(status) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as WorkflowInstance);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Factory
 // ---------------------------------------------------------------------------
@@ -338,6 +392,7 @@ export function createSqliteRepositories(dbPath: string): Repositories {
     applications: new SqliteApplicationRepository(db),
     policies: new SqlitePolicyRepository(db),
     workflows: new SqliteWorkflowRepository(db),
+    workflowInstances: new SqliteWorkflowInstanceRepository(db),
   };
 }
 

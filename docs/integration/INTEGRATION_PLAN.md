@@ -26,13 +26,13 @@
 
 ## 2. 統合元の現状サマリ
 
-| リポジトリ | 規模 | スタック | 成熟度 |
-|---|---|---|---|
-| ServiceHub | 14MB・py 183 / tsx 83 | FastAPI + React + Postgres + nginx + Prometheus | 業務実装済み・880+ テスト |
-| Construction-Enterprise-OS | 25MB・py 472 / tsx 122 | Python サービス群 + pnpm + WebUI | モック・設計中心 |
-| Construction-DX-OnePlatform | 16MB・py 569 / tsx 223 | 部門別モジュール + portal + shared 基盤 | モック・設計中心 |
-| Construction-DX-OS | 6MB・py 227 | FastAPI + cdx-agent + SDK + Postgres | 端末基盤実装済み |
-| Synapse-OS | 2.5MB・py 170 | FastAPI マイクロサービス + Next.js | 統制実装済み・396 テスト |
+| リポジトリ                  | 規模                   | スタック                                        | 成熟度                    |
+| --------------------------- | ---------------------- | ----------------------------------------------- | ------------------------- |
+| ServiceHub                  | 14MB・py 183 / tsx 83  | FastAPI + React + Postgres + nginx + Prometheus | 業務実装済み・880+ テスト |
+| Construction-Enterprise-OS  | 25MB・py 472 / tsx 122 | Python サービス群 + pnpm + WebUI                | モック・設計中心          |
+| Construction-DX-OnePlatform | 16MB・py 569 / tsx 223 | 部門別モジュール + portal + shared 基盤         | モック・設計中心          |
+| Construction-DX-OS          | 6MB・py 227            | FastAPI + cdx-agent + SDK + Postgres            | 端末基盤実装済み          |
+| Synapse-OS                  | 2.5MB・py 170          | FastAPI マイクロサービス + Next.js              | 統制実装済み・396 テスト  |
 
 ## 3. ターゲットアーキテクチャ
 
@@ -54,6 +54,7 @@ CEOP API Gateway (認証・認可・監査・レート制限・テナント境�
 ```
 
 方針:
+
 - CEOP のコア（認証・認可・監査・ドメイン）は TypeScript 実装を維持
 - 既存の Python サービスは**統合サービス**として CEOP 配下で稼働させ、
   CEOP Gateway が JWT 検証・権限ゲート・監査記録を一元的に適用
@@ -64,15 +65,15 @@ CEOP API Gateway (認証・認可・監査・レート制限・テナント境�
 
 ## 4. フェーズ計画
 
-| フェーズ | 内容 | 受入条件 | 状態 |
-|---|---|---|---|
-| P0 ソース統合 | 5 リポジトリを `integrations/` へ取り込み、機能インベントリ・統合計画・NOTICE を作成 | 全ソースが CEOP に存在・CI グリーン・秘密情報なし | ✅ 本計画で実施 |
-| P1 ゲートウェイ | CEOP に統合サービス向けリバースプロキシ/アダプタ基盤と統一 JWT 認証を追加 | 統合サービスのエンドポイントが CEOP 認証・監査を通して呼び出せる | 未着手 |
-| P2 ガバナンス移植 | ワークフローインスタンス（Issue→Approval→Audit）・AI ゲートウェイ統制・端末エージェント受信を CEOP コアへ移植 | L-02/L-05/L-07 の API+テスト+監査が CEOP に存在 | 未着手 |
-| P3 業務モジュール移植 | ServiceHub の案件・日報・写真・安全・原価・契約・ITSM と Enterprise-OS/OnePlatform の業務領域を CEOP ドメインへ移植 | 各機能の CRUD+監査+UI+テスト | 未着手 |
-| P4 ポータル・監視統合 | OnePlatform/Enterprise-OS の WebUI を CEOP Portal のモジュールとして統合し、監視（Prometheus/Grafana）を CEOP 運用へ接続 | 全画面が CEOP 配下で閲覧可能 | 未着手 |
-| P5 検証・切替 | 全機能のパリティ検証・本番切替・旧データ移行・運用引継ぎ | FEATURE_INVENTORY 全項目が統合済み | 未着手 |
-| P6 削除判断 | ユーザーに Y/N を提示し、Y の場合のみ旧 5 リポジトリを GitHub から削除 | ユーザー承認・削除後の参照は integrations/ と Git 履歴で可能 | 未着手 |
+| フェーズ              | 内容                                                                                                                     | 受入条件                                                         | 状態            |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------- | --------------- |
+| P0 ソース統合         | 5 リポジトリを `integrations/` へ取り込み、機能インベントリ・統合計画・NOTICE を作成                                     | 全ソースが CEOP に存在・CI グリーン・秘密情報なし                | ✅ 本計画で実施 |
+| P1 ゲートウェイ       | CEOP に統合サービス向けリバースプロキシ/アダプタ基盤と統一 JWT 認証を追加                                                | 統合サービスのエンドポイントが CEOP 認証・監査を通して呼び出せる | 未着手          |
+| P2 ガバナンス移植     | ワークフローインスタンス（Issue→Approval→Audit）・AI ゲートウェイ統制・端末エージェント受信を CEOP コアへ移植            | L-02/L-05/L-07 の API+テスト+監査が CEOP に存在                  | 未着手          |
+| P3 業務モジュール移植 | ServiceHub の案件・日報・写真・安全・原価・契約・ITSM と Enterprise-OS/OnePlatform の業務領域を CEOP ドメインへ移植      | 各機能の CRUD+監査+UI+テスト                                     | 未着手          |
+| P4 ポータル・監視統合 | OnePlatform/Enterprise-OS の WebUI を CEOP Portal のモジュールとして統合し、監視（Prometheus/Grafana）を CEOP 運用へ接続 | 全画面が CEOP 配下で閲覧可能                                     | 未着手          |
+| P5 検証・切替         | 全機能のパリティ検証・本番切替・旧データ移行・運用引継ぎ                                                                 | FEATURE_INVENTORY 全項目が統合済み                               | 未着手          |
+| P6 削除判断           | ユーザーに Y/N を提示し、Y の場合のみ旧 5 リポジトリを GitHub から削除                                                   | ユーザー承認・削除後の参照は integrations/ と Git 履歴で可能     | 未着手          |
 
 ## 5. 優先順位と判断
 
@@ -91,4 +92,3 @@ CEOP API Gateway (認証・認可・監査・レート制限・テナント境�
   ローカル/`integrations/` のスナップショットで保全し、Y/N 確認を実施
 - **監査・テナント**: 全統合機能へ CEOP のテナント境界・監査ログを適用することを
   全フェーズの必須ゲートとする
-
