@@ -315,3 +315,6 @@ curl -fsS https://ceop.mirai-dx-platform.com/health/ready   # 従来経路の復
 ```
 
 DNS・証明書・Tunnel 自体（UUID / credentials）には一切触れない。変更は ingress ルールのみで、rollback は設定ファイルの復元 + サービス再起動で完結する（所要 10 秒程度）。
+
+> マイグレーション 007（`ai_actions`）: AI ゲートウェイ統制（Y-09）で追加。
+> 本番 DB へは `node --experimental-strip-types scripts/migrate.ts --db <CEOP_SQLITE_FILE>` で適用（既存 006 まで適用済みの場合は 007 のみ実行）。

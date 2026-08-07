@@ -145,6 +145,9 @@ const schemas: { [k: string]: YamlValue } = {
       organizationId: { type: "string" },
       kind: { type: "string", enum: ["tablet", "phone", "kiosk", "sensor", "laptop"] },
       status: { type: "string", enum: ["provisioned", "active", "lost", "retired"] },
+      assignedUserId: { type: "string" },
+      lastSeenAt: { type: "string", format: "date-time" },
+      metadata: { type: "object", additionalProperties: { type: "string" } },
     },
   },
   Application: {
@@ -223,6 +226,33 @@ const schemas: { [k: string]: YamlValue } = {
       decidedBy: { type: "string" },
       decision: { type: "string", enum: ["approve", "reject"] },
       comment: { type: "string" },
+    },
+  },
+  AiAction: {
+    type: "object",
+    required: [
+      "id",
+      "requester",
+      "model",
+      "purpose",
+      "promptHash",
+      "status",
+      "createdAt",
+      "updatedAt",
+    ],
+    properties: {
+      id: { type: "string" },
+      requester: { type: "string" },
+      organizationId: { type: "string" },
+      model: { type: "string" },
+      purpose: { type: "string" },
+      promptHash: { type: "string", description: "SHA-256 hex of the prompt payload" },
+      status: { type: "string", enum: ["pending", "approved", "rejected"] },
+      createdAt: { type: "string", format: "date-time" },
+      updatedAt: { type: "string", format: "date-time" },
+      decidedBy: { type: "string" },
+      decidedAt: { type: "string", format: "date-time" },
+      decisionNote: { type: "string" },
     },
   },
   AuditEntry: {
@@ -1516,6 +1546,184 @@ const paths: { [k: string]: YamlValue } = {
       },
     },
   },
+  "/api/v1/ai-actions": {
+    get: {
+      operationId: "listAiActions",
+      summary: "Paginated list of governed AI actions (optional ?status= filter)",
+      tags: ["AiGovernance"],
+      security: authSecurity,
+      parameters: [
+        { "$ref": "#/components/parameters/limitParam" },
+        { "$ref": "#/components/parameters/offsetParam" },
+        {
+          name: "status",
+          in: "query",
+          schema: { type: "string", enum: ["pending", "approved", "rejected"] },
+          description: "Filter by action status",
+        },
+      ],
+      responses: {
+        ...jsonResponse(200, paginatedList("aiActions", "AiAction")),
+        ...errorResponses(400, 401, 403),
+      },
+    },
+    post: {
+      operationId: "createAiAction",
+      summary: "Create a pending governed AI action request",
+      tags: ["AiGovernance"],
+      security: authSecurity,
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["model", "purpose", "promptHash"],
+              properties: {
+                model: { type: "string" },
+                purpose: { type: "string" },
+                promptHash: { type: "string" },
+                organizationId: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(201, {
+          type: "object",
+          required: ["aiAction"],
+          properties: { aiAction: { $ref: "#/components/schemas/AiAction" } },
+        }),
+        ...errorResponses(400, 401, 403),
+      },
+    },
+  },
+  "/api/v1/ai-actions/{id}/decision": {
+    post: {
+      operationId: "decideAiAction",
+      summary: "Approve or reject a pending AI action",
+      tags: ["AiGovernance"],
+      security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["decision"],
+              properties: {
+                decision: { type: "string", enum: ["approved", "rejected"] },
+                note: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["aiAction"],
+          properties: { aiAction: { $ref: "#/components/schemas/AiAction" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+  },
+  "/api/v1/devices/register": {
+    post: {
+      operationId: "registerDevice",
+      summary: "D-01: register a field device agent",
+      tags: ["Devices"],
+      security: authSecurity,
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["kind"],
+              properties: {
+                id: { type: "string" },
+                organizationId: { type: "string" },
+                kind: { type: "string", enum: ["tablet", "phone", "kiosk", "sensor", "laptop"] },
+                status: { type: "string", enum: ["provisioned", "active", "lost", "retired"] },
+                metadata: { type: "object", additionalProperties: { type: "string" } },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(201, {
+          type: "object",
+          required: ["device"],
+          properties: { device: { $ref: "#/components/schemas/Device" } },
+        }),
+        ...errorResponses(400, 401, 403),
+      },
+    },
+  },
+  "/api/v1/devices/{id}/heartbeat": {
+    post: {
+      operationId: "deviceHeartbeat",
+      summary: "D-02: report device liveness",
+      tags: ["Devices"],
+      security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      requestBody: {
+        required: false,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                status: { type: "string", enum: ["provisioned", "active", "lost", "retired"] },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["device"],
+          properties: { device: { $ref: "#/components/schemas/Device" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+  },
+  "/api/v1/devices/{id}/inventory": {
+    post: {
+      operationId: "deviceInventory",
+      summary: "D-03: report device inventory/telemetry",
+      tags: ["Devices"],
+      security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["metadata"],
+              properties: { metadata: { type: "object", additionalProperties: { type: "string" } } },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["device"],
+          properties: { device: { $ref: "#/components/schemas/Device" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+  },
   "/api/v1/integrations/{service}/{proxyPath}": {
     get: gatewayOperation("get"),
     post: gatewayOperation("post"),
@@ -1556,6 +1764,7 @@ const spec: { [k: string]: YamlValue } = {
     { name: "Governance",   description: "Policy engine, audit log, ABAC evaluation" },
     { name: "Workflows",    description: "Workflow templates and CRUD" },
     { name: "WorkflowInstances", description: "Workflow instance runs (Issue→Approval→Audit)" },
+    { name: "AiGovernance", description: "AI action governance (integration Y-09)" },
     { name: "IntegrationGateway", description: "CEOP gateway reverse proxy for integration services (P1)" },
   ],
   paths,

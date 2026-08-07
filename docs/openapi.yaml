@@ -52,6 +52,9 @@ tags:
     name: WorkflowInstances
     description: Workflow instance runs (Issue→Approval→Audit)
   - 
+    name: AiGovernance
+    description: AI action governance (integration Y-09)
+  - 
     name: IntegrationGateway
     description: CEOP gateway reverse proxy for integration services (P1)
 paths:
@@ -2649,6 +2652,401 @@ Tenant scoping matches `GET /api/v1/governance/audit`. Each row carries `sequenc
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/ai-actions:
+    get:
+      operationId: listAiActions
+      summary: Paginated list of governed AI actions (optional ?status= filter)
+      tags:
+        - AiGovernance
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/limitParam"
+        - 
+          $ref: "#/components/parameters/offsetParam"
+        - 
+          name: status
+          in: query
+          schema:
+            type: string
+            enum:
+              - pending
+              - approved
+              - rejected
+          description: Filter by action status
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - aiActions
+                  - count
+                  - total
+                  - limit
+                  - offset
+                properties:
+                  aiActions:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AiAction"
+                  count:
+                    type: integer
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createAiAction
+      summary: Create a pending governed AI action request
+      tags:
+        - AiGovernance
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - model
+                - purpose
+                - promptHash
+              properties:
+                model:
+                  type: string
+                purpose:
+                  type: string
+                promptHash:
+                  type: string
+                organizationId:
+                  type: string
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - aiAction
+                properties:
+                  aiAction:
+                    $ref: "#/components/schemas/AiAction"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/ai-actions/{id}/decision:
+    post:
+      operationId: decideAiAction
+      summary: Approve or reject a pending AI action
+      tags:
+        - AiGovernance
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - decision
+              properties:
+                decision:
+                  type: string
+                  enum:
+                    - approved
+                    - rejected
+                note:
+                  type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - aiAction
+                properties:
+                  aiAction:
+                    $ref: "#/components/schemas/AiAction"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/devices/register:
+    post:
+      operationId: registerDevice
+      summary: "D-01: register a field device agent"
+      tags:
+        - Devices
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - kind
+              properties:
+                id:
+                  type: string
+                organizationId:
+                  type: string
+                kind:
+                  type: string
+                  enum:
+                    - tablet
+                    - phone
+                    - kiosk
+                    - sensor
+                    - laptop
+                status:
+                  type: string
+                  enum:
+                    - provisioned
+                    - active
+                    - lost
+                    - retired
+                metadata:
+                  type: object
+                  additionalProperties:
+                    type: string
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - device
+                properties:
+                  device:
+                    $ref: "#/components/schemas/Device"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/devices/{id}/heartbeat:
+    post:
+      operationId: deviceHeartbeat
+      summary: "D-02: report device liveness"
+      tags:
+        - Devices
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum:
+                    - provisioned
+                    - active
+                    - lost
+                    - retired
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - device
+                properties:
+                  device:
+                    $ref: "#/components/schemas/Device"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/devices/{id}/inventory:
+    post:
+      operationId: deviceInventory
+      summary: "D-03: report device inventory/telemetry"
+      tags:
+        - Devices
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - metadata
+              properties:
+                metadata:
+                  type: object
+                  additionalProperties:
+                    type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - device
+                properties:
+                  device:
+                    $ref: "#/components/schemas/Device"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /api/v1/integrations/{service}/{proxyPath}:
     get:
       operationId: gatewayGet
@@ -3141,6 +3539,15 @@ components:
             - active
             - lost
             - retired
+        assignedUserId:
+          type: string
+        lastSeenAt:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
     Application:
       type: object
       required:
@@ -3286,6 +3693,50 @@ components:
             - approve
             - reject
         comment:
+          type: string
+    AiAction:
+      type: object
+      required:
+        - id
+        - requester
+        - model
+        - purpose
+        - promptHash
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        requester:
+          type: string
+        organizationId:
+          type: string
+        model:
+          type: string
+        purpose:
+          type: string
+        promptHash:
+          type: string
+          description: SHA-256 hex of the prompt payload
+        status:
+          type: string
+          enum:
+            - pending
+            - approved
+            - rejected
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        decidedBy:
+          type: string
+        decidedAt:
+          type: string
+          format: date-time
+        decisionNote:
           type: string
     AuditEntry:
       type: object
