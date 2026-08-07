@@ -24,3 +24,14 @@
 `CEOP_ALERT_WEBHOOK_URL` 設定時には JSON POST も行いますが、実際の届け先
 （PagerDuty / Slack / メール）と資格情報が決まっていません。
 通知先と資格情報が確定した時点で、日次のログ確認 3 項目は自動化に置き換えます。
+
+## 実行記録（2026-08-07）
+
+| 日時 (JST) | 内容 | 結果 |
+| --- | --- | --- |
+| 16:49 | v0.9.0 tag + Release workflow（GHCR 0.9.0・GitHub Release） | ✅ success |
+| 16:50 | 事前バックアップ ceop-predeploy-v0.9.0-20260807T074959Z.db（184KB） | ✅ |
+| 16:50 | migration 007（ai_actions）本番適用・テーブル検証 | ✅ |
+| 16:51 | コンテナ差し替え ceop-platform:v0.9.0（旧 v0.8.3 は ceop-platform-prev-v0803 保持） | ✅ healthy |
+| 16:51 | スモーク: /health・/ready・info=0.9.0・protected 401・WebUI・公開 URL | ✅ 全 PASS |
+| 16:51 | ゲートウェイ: CEOP_GATEWAY_SERVICES 未設定（P3 で設定・fail-closed） | ✅ 想定どおり |
