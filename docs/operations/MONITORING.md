@@ -63,6 +63,29 @@ cron から `curl` を 1 回叩くだけでは連続失敗を表現できませ�
 
 動作確認は `scripts/health-probe.test.ts`（`pnpm run test` に含まれる）で自動検証しています。
 
+### WebUI（ceop-webui / port 3130）の監視
+
+WebUI 配信サービスにも liveness エンドポイントがあります。
+
+```bash
+curl -fsS http://127.0.0.1:3130/healthz
+# → {"status":"ok","service":"ceop-webui","version":"0.7.0",...}
+```
+
+- `scripts/webui-deploy.sh` はデプロイ直後に `/healthz` を最大 10 秒ポーリングし、
+  失敗した場合は非 0 で終了します（デプロイ時の検証は自動）。
+- 常時監視の cron 外形プローブは **未設定**（API 側 #2 と異なる）。LAN 内配信のみの
+  現段階では systemd の `Restart=on-failure` とデプロイ時検証で運用し、
+  Tunnel 経由の公開（Approval PR）と同時に health-probe.sh の対象へ追加します。
+- アクセス動向は Neon `ceop-production` の `webui_access_log` テーブルで確認できます
+  （ページヒットのみ記録。アセット単位のヒットは記録しません）。
+
+```sql
+-- 直近のアクセス概況
+SELECT date_trunc('hour', occurred_at) AS hour, count(*) AS hits
+FROM webui_access_log GROUP BY 1 ORDER BY 1 DESC LIMIT 24;
+```
+
 ---
 
 ## 2. 未実装（目標設計）

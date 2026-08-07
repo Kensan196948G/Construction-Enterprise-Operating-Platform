@@ -202,3 +202,44 @@ docker inspect ceop-platform --format '{{index .Config.Labels "com.docker.compos
 | ログローテーション | 10 MiB × 3 | **無制限**（`/etc/docker/daemon.json` 未設定） |
 
 これらは compose 切替、または `docker run` に同等オプションを追加することで解消する。切替まではリスクとして受容している（単一ホスト・LAN 内・Tunnel 経由のみの公開のため）。
+
+## 7. WebUI（ceop-webui.service / port 3130）
+
+デザインバンドル配信専用の systemd サービス。API コンテナ（3120）とは独立しており、片方の障害はもう片方に波及しない。
+
+| 項目 | 値 |
+|---|---|
+| unit | `ceop-webui.service`（正本: `deploy/systemd/ceop-webui.service`） |
+| listen | `0.0.0.0:3130`（LAN: `http://192.168.0.185:3130/`） |
+| 環境変数 | `/home/kensan/.ceop/webui.env`（chmod 600・git 管理外・Neon 接続文字列を含む） |
+| 配信ルート | `/home/kensan/.ceop/webui/current/webui-dist` |
+| アプリ本体 | `/home/kensan/.ceop/webui/current/app`（rsync 反映） |
+| ヘルス | `GET http://127.0.0.1:3130/healthz` |
+| アクセスログ | Neon `ceop-production` / `webui_access_log`（ページヒットのみ） |
+
+### 日常操作
+
+```bash
+systemctl status ceop-webui.service
+journalctl -u ceop-webui.service -n 50 --no-pager
+sudo systemctl restart ceop-webui.service
+```
+
+### 更新デプロイ
+
+```bash
+cd <repo>
+bash scripts/webui-deploy.sh
+# verify → rsync → バンドル展開（510 assets）→ unit 更新 → restart → /healthz 確認 まで自動
+```
+
+### 注意事項
+
+- ExecStart は nvm 管理の Node を**絶対パスで固定**している
+  （`/home/kensan/.nvm/versions/node/v25.2.1/bin/node`）。`nvm install` で
+  バージョンを上げた場合は unit の ExecStart も更新して `daemon-reload` が必要。
+- Neon 側障害時もアクセスログは fire-and-forget で破棄されるだけで、配信自体は継続する。
+- デザイン正本は `webui/CEOP Platform.html`。差し替え時はファイルを置き換えて
+  `webui-deploy.sh` を再実行する（展開先は再生成されるため手編集しない）。
+- `https://ceop.mirai-dx-platform.com` 配下への公開（Tunnel ingress パス分割）は
+  production route 変更のため Approval PR での承認後に実施する。

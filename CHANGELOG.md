@@ -6,26 +6,33 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 ## [Unreleased]
 
-### Fixed
-
-- **HEAD メソッドが全ルートで 404（G-27 / P2）** — `Router.#match` がメソッドを
-  厳密一致で照合していたため、`/health` を含む全ルートが HEAD に 404 を返していた。
-  多くの死活監視・ロードバランサは既定で HEAD をプローブに使うため、
-  正常稼働中のサービスが停止と誤判定されうる状態だった（GET 200 / HEAD 404 を実測）。
-  `#match` に HEAD→GET フォールバックを追加。`node:http` は HEAD 応答の本文だけを
-  抑止しヘッダ（`Content-Length` 含む）は保持するため、ハンドラ側の変更は不要で
-  RFC 9110 の定義どおりの意味論になる。認証も GET と同一に継承されるため、
-  保護ルートへの HEAD は 401 のまま。POST 専用ルートへはフォールバックしない。
-  併せて監査エクスポートの記録に `method` を追加した。HEAD はルートに到達するが
-  本文は破棄されるため、これが無いと実際には配信されていない持ち出しを
-  「成功した配信」として証跡に残してしまう
-- `docker-compose.prod.yml` を実運用トポロジ（bind mount / `container_name: ceop-platform` /
-  loopback bind / `CEOP_IMAGE` 必須）へ整合。従来の named volume・`latest`・`0.0.0.0` 公開は、
-  compose 操作が実機に効かない、あるいは空 DB の 2 台目を LAN 公開で起動させる乖離だった
-- バックアップ cron のイメージ参照をバージョン固定タグから可動エイリアス
-  `ceop-platform:current` へ変更（旧イメージ prune で静かに失敗する問題）
+## [0.7.0] - 2026-08-07
 
 ### Added
+
+- **WebUI（デザインバンドル 100% 適用の静的 SPA ホスティング・v0.7.0）** — ユーザー提供の
+  デザイン成果物 `webui/CEOP Platform.html`（自己展開型 `__bundler` HTML、8.7MB、
+  React 18 UMD + IBM Plex フォント 507 個を内包）を改変せずそのまま配信する構成。
+  - `src/webui/unpack.ts` + `scripts/webui-unpack.ts` — gzip+base64 マニフェストを
+    展開し、UUID 参照を `assets/<uuid>.<ext>` へ書き換えて `webui/dist/`（gitignore 済）
+    に静的ファイル化するビルドステップ。デザイン HTML が唯一の正本
+  - `src/webui/server.ts` — 依存ゼロ（node:http）の静的サーバ。パストラバーサル防御、
+    GET/HEAD のみ許可、`/healthz`、セキュリティヘッダ一式、UUID アセットの
+    immutable キャッシュ + シェル文書の no-cache。CSP は `script-src 'self' 'unsafe-eval'`
+    （デザインランタイムが `text/x-dc` ソースを `new Function` でコンパイルするため。
+    本体 API とは別プロセスに隔離）
+  - `src/webui/access-log.ts` — Neon PostgreSQL（`ceop-production` プロジェクト、
+    additive な `webui_access_log` テーブル）へ SQL-over-HTTP でアクセスログを
+    バッチ記録。ドライバ依存なし・fire-and-forget（Neon 障害が配信を止めない）。
+    アセットヒットは記録対象外
+  - `deploy/systemd/ceop-webui.service` + `scripts/webui-deploy.sh` — systemd 常駐化
+    （hardening: ProtectSystem=strict / ProtectHome=read-only / NoNewPrivileges）と
+    ワンコマンドデプロイ。`0.0.0.0:3130` で待受け、LAN URL `http://192.168.0.185:3130/`
+  - テスト 14 件追加（277/277 pass）：展開の合成バンドル検証、トラバーサル 4 系統、
+    キャッシュ/MIME/HEAD/405/400、アクセスログのバッチ INSERT 形状
+- 公開 URL `https://ceop.mirai-dx-platform.com` 配下への WebUI ルーティング
+  （Cloudflare Tunnel ingress のパス分割）は production route 変更のため
+  **別途 Approval PR** で扱う（本 PR には含まない）
 
 - **監査証跡エクスポート API（L-01 / P2）** — `GET /api/v1/governance/audit/export`
   （`?format=csv|json&limit=1000&offset=0`、limit 最大 10000）。監査人へ証跡を
@@ -59,6 +66,25 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
   スナップショット順序の反転という 5 種の変異をすべて検出することを確認済み
 - compose にコンテナハードニングを追加（read_only rootfs + tmpfs、`cap_drop: ALL`、
   no-new-privileges、cpu/memory/pids 制限、ログローテーション）。v0.6.2 イメージで実機起動検証済み
+
+### Fixed
+
+- **HEAD メソッドが全ルートで 404（G-27 / P2）** — `Router.#match` がメソッドを
+  厳密一致で照合していたため、`/health` を含む全ルートが HEAD に 404 を返していた。
+  多くの死活監視・ロードバランサは既定で HEAD をプローブに使うため、
+  正常稼働中のサービスが停止と誤判定されうる状態だった（GET 200 / HEAD 404 を実測）。
+  `#match` に HEAD→GET フォールバックを追加。`node:http` は HEAD 応答の本文だけを
+  抑止しヘッダ（`Content-Length` 含む）は保持するため、ハンドラ側の変更は不要で
+  RFC 9110 の定義どおりの意味論になる。認証も GET と同一に継承されるため、
+  保護ルートへの HEAD は 401 のまま。POST 専用ルートへはフォールバックしない。
+  併せて監査エクスポートの記録に `method` を追加した。HEAD はルートに到達するが
+  本文は破棄されるため、これが無いと実際には配信されていない持ち出しを
+  「成功した配信」として証跡に残してしまう
+- `docker-compose.prod.yml` を実運用トポロジ（bind mount / `container_name: ceop-platform` /
+  loopback bind / `CEOP_IMAGE` 必須）へ整合。従来の named volume・`latest`・`0.0.0.0` 公開は、
+  compose 操作が実機に効かない、あるいは空 DB の 2 台目を LAN 公開で起動させる乖離だった
+- バックアップ cron のイメージ参照をバージョン固定タグから可動エイリアス
+  `ceop-platform:current` へ変更（旧イメージ prune で静かに失敗する問題）
 
 ### Changed
 
