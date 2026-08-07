@@ -360,11 +360,11 @@
       },
       "production": {
         "url": "https://ceop.mirai-dx-platform.com",
-        "version": "0.6.2",
-        "method": "docker run（compose 管理外。Labels に com.docker.compose.* なしで確認）",
-        "predeploy_backup": "/home/kensan/.ceop/backups/ceop-predeploy-v0.6.2-20260807T002436Z.db",
-        "rollback_ready": "旧コンテナを ceop-platform-v061 として rename 保持 + ceop-platform:v0.6.1 イメージ保持",
-        "smoke": "PASS — token 200 (expiresIn=3600) / 主要 9 API 200 / /dashboard・/governance 200 CSP:set / 無効資格情報・資格情報なし 401"
+        "version": "0.8.0",
+        "method": "docker run（compose 管理外。hardening: read-only / cap-drop ALL / no-new-privileges / cpus=1 / mem=256m / pids=128 / log rotate 10m×3）",
+        "predeploy_backup": "/home/kensan/.ceop/backups/ceop-predeploy-v0.8.0-20260807T055524Z.db",
+        "rollback_ready": "旧コンテナを ceop-platform-prev として rename 保持 + ceop-platform:v0.6.2 イメージ保持 + ceop-predeploy-v0.6.2 バックアップ",
+        "smoke": "PASS — token 200 / dashboard 200 / audit list 200 / audit export 200 / auth keys 200 / delete missing 404 / HEAD health 200 / 無効資格情報・資格情報なし 401 / WebUI healthz 0.8.0 / LAN 直アクセス拒否"
       },
       "verify": {
         "format_check": "PASS",

@@ -74,9 +74,10 @@ curl -fsS http://127.0.0.1:3130/healthz
 
 - `scripts/webui-deploy.sh` はデプロイ直後に `/healthz` を最大 10 秒ポーリングし、
   失敗した場合は非 0 で終了します（デプロイ時の検証は自動）。
-- 常時監視の cron 外形プローブは **未設定**（API 側 #2 と異なる）。v0.8.0 デプロイ時に
-  `https://ceop.mirai-dx-platform.com/healthz` への外形プローブを cron へ追加予定。
-  それまでは systemd の `Restart=on-failure`・デプロイ時検証・アクセスログで運用します。
+- 常時監視の cron 外形プローブは **設定済み（2026-08-07）**。API 側 #2 と同じ
+  `health-probe.sh` を `https://ceop.mirai-dx-platform.com/healthz` 対象で 5 分間隔実行し、
+  `/home/kensan/.ceop/webui-health.log` に記録します（systemd の `Restart=on-failure`・
+  デプロイ時検証・Neon アクセスログと併用）。
 - アクセス動向は Neon `ceop-production` の `webui_access_log` テーブルで確認できます
   （ページヒットのみ記録。アセット単位のヒットは記録しません）。
 

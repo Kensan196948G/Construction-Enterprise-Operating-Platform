@@ -34,8 +34,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 ### Fixed
 
 - **本番 API コンテナのバージョン乖離（G-29）** — 公開環境が v0.6.2 のままで
-  HEAD 対応・監査エクスポートが未配信だった。v0.8.0 として本 PR でリリースし、
-  RUNBOOK §3 の更新手順でデプロイ（デプロイ後に `/api/v1/info` 等で実測確認）
+  HEAD 対応・監査エクスポートが未配信だった。v0.8.0 としてリリースし本番デプロイ済み
+  （2026-08-07）。`/api/v1/info` = 0.8.0・HEAD `/health` 200・監査エクスポート 200・
+  認証込みスモーク・ネガティブ制御 401 を実測確認
 - **監査イベントのテナント属性欠落（G-32）** — `auth:token` と
   `governance:evaluate` が解決済み context の `organizationId` を metadata に
   持たない経路を修正し、組織スコープの監査閲覧から不可視にならないようにした
