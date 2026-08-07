@@ -14,22 +14,22 @@
 
 ## 2. 実行環境・アクセス情報（2026-08-07 時点）
 
-| 項目           | 値 / 状態                                                                                               |
-| -------------- | ------------------------------------------------------------------------------------------------------- |
-| リポジトリ     | `Kensan196948G/Construction-Enterprise-Operating-Platform`                                              |
-| ブランチ       | main + 作業ツリー（v0.8.0 実装中）。PR 用ブランチ `feat/production-hardening-r3` を作成予定             |
+| 項目           | 値 / 状態                                                                                                                           |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| リポジトリ     | `Kensan196948G/Construction-Enterprise-Operating-Platform`                                                                          |
+| ブランチ       | main + 作業ツリー（v0.8.0 実装中）。PR 用ブランチ `feat/production-hardening-r3` を作成予定                                         |
 | 未コミット差分 | `.claude/START_PROMPT.md`（変更）・`.claude/skills/verify-app/SKILL.md`（追加）＝ユーザー変更として保護。それ以外は v0.8.0 実装差分 |
-| 本番 URL       | https://ceop.mirai-dx-platform.com（API v0.6.2 / WebUI v0.7.1 を確認 2026-08-07）                       |
-| 本番ホスト     | 192.168.0.185（docker run + cloudflared tunnel + systemd ceop-webui）                                   |
-| gh auth        | Kensan196948G で認証済み（repo/workflow/gist/read:org）                                                 |
-| CI             | main 最新 success（#16）・未解決 PR/Issue なし                                                          |
+| 本番 URL       | https://ceop.mirai-dx-platform.com（API v0.6.2 / WebUI v0.7.1 を確認 2026-08-07）                                                   |
+| 本番ホスト     | 192.168.0.185（docker run + cloudflared tunnel + systemd ceop-webui）                                                               |
+| gh auth        | Kensan196948G で認証済み（repo/workflow/gist/read:org）                                                                             |
+| CI             | main 最新 success（#16）・未解決 PR/Issue なし                                                                                      |
 
 ## 3. Plugins / Skills / MCP 対応表
 
 | 目的                           | 利用可能なもの                            | 使用可否         | 使用結果・未使用理由                                                                                                                        |
 | ------------------------------ | ----------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | GitHub（PR/Issue/CI/リリース） | gh CLI・GitHub MCP（app UI リソース）     | ✅ gh CLI を使用 | 認証・branch protection・CI・release を確認                                                                                                 |
-| セキュリティ監査               | codex-security skills（security-scan 等） | ✅ 使用予定      | スキル手順に沿って phasing 実施（後述）                                                                                                     |
+| セキュリティ監査               | codex-security skills（security-scan 等） | ◯ 評価のみ       | security-scan は subagent 必須の多段スキャンのためスロット上限で実行不可。既存 scan-20260806（全指摘解決済み）+ v0.8.0 実装のコード/テストレビューで代替（exhaustive 相当とは主張しない） |
 | 検証ループ                     | verify-app（ユーザー .claude/skills）     | ✅ 準用          | 実装後の verify/build/audit ゲートとして使用                                                                                                |
 | 知識グラフ                     | memory://knowledge-graph（MCP リソース）  | ◯ 参照可         | 構造化検索ツールが本セッションに無いため、必要時のみ参照                                                                                    |
 | Cloudflare                     | cloudflare 系 skills                      | 未使用           | 本セッションに Cloudflare MCP ツール/資格情報が露出していない。Tunnel は実機 systemd で稼働中。変更時は local cloudflared + docs 経由で実施 |
@@ -85,7 +85,7 @@
 2. ✅ タグ v0.8.0 → Release workflow 成功（GHCR イメージ・GitHub Release 作成）
 3. ✅ 事前バックアップ: `/home/kensan/.ceop/backups/ceop-predeploy-v0.8.0-20260807T055524Z.db`
    （※ GHCR pull はトークンに read:packages が無く不可。main e8b171b からローカル再現ビルドで
-    `ceop-platform:v0.8.0` を作成しデプロイ。Release の公開物はワークフロー成功を根拠に記録）
+   `ceop-platform:v0.8.0` を作成しデプロイ。Release の公開物はワークフロー成功を根拠に記録）
 4. ✅ migration 0 件適用（スキーマ変更なし・冪等確認）
 5. ✅ コンテナ差し替え: 旧 `ceop-platform` → `ceop-platform-prev`（停止・保持）、
    新 `ceop-platform` = v0.8.0（read-only / cap-drop ALL / no-new-privileges / cpus=1 / mem=256m /
@@ -98,3 +98,13 @@
 8. ✅ 本番 cron: 02:15 backup / 02:16 retention（14 日）/ 5 分間隔 API probe / 5 分間隔 WebUI probe。
    retention 手動実行 0 件削除・WebUI probe 初回 OK を確認。crontab バックアップ保存済み
 9. ⏳ Webhook 宛先（CEOP_ALERT_WEBHOOK_URL）は未設定 — 通知先決定後に設定（残課題）
+
+## 8. 完了監査（2026-08-07）
+
+- P0: ゼロ（依存監査 0・認証認可・監査・レート制限・ヘッダ・FK 確認済み）
+- P1: 解消（G-29 本番 v0.8.0 デプロイ・実測確認。既存 P1 は v0.6.x で解消済み）
+- 選定機能: API キー管理 API / リクエスト ID / CF-IP 分離 / HSTS / バックアップ保持 / Webhook 通知 / OpenAPI 整合 / 監査テナント / WebUI loopback / UUID 防御 / ヘルス拡充 — すべて実装・テスト・本番確認済み
+- CI: PR #17・#18 全チェック成功、main CI success
+- 本番: API/WebUI v0.8.0・ヘルス/スモーク/ネガティブ制御 実測済み・rollback 準備あり
+- 監視・運用: API/WebUI 外形プローブ 5 分間隔・バックアップ+保持 cron・Runbook/台帳更新済み
+- 残課題（管理可能）: Webhook 宛先設定、Cloudflare エッジ HSTS、オフサイトバックアップ、四半期復元試験、SLI 計測、CSP nonce、SSO/OIDC、AI ゲートウェイ
