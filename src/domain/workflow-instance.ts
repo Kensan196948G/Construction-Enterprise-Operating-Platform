@@ -45,6 +45,9 @@ export interface WorkflowInstance {
   readonly decidedBy?: string;
   readonly decision?: WorkflowDecision;
   readonly comment?: string;
+  /** Integration link (e.g. "daily-report" + its id) for workflow-triggered actions. */
+  readonly resourceType?: string | undefined;
+  readonly resourceId?: string | undefined;
 }
 
 export interface CreateWorkflowInstanceInput {
@@ -55,6 +58,8 @@ export interface CreateWorkflowInstanceInput {
   readonly stepKey: string;
   readonly stepName: string;
   readonly requestedAt: string;
+  readonly resourceType?: string | undefined;
+  readonly resourceId?: string | undefined;
 }
 
 export interface DecideWorkflowInstanceInput {
@@ -76,6 +81,16 @@ export function createWorkflowInstance(
     .nonEmpty(input.stepKey, "stepKey")
     .nonEmpty(input.stepName, "stepName")
     .nonEmpty(input.requestedAt, "requestedAt")
+    .require(
+      input.resourceType === undefined || input.resourceType.trim().length > 0,
+      "resourceType",
+      "resourceType must be a non-empty string when present",
+    )
+    .require(
+      input.resourceId === undefined || input.resourceId.trim().length > 0,
+      "resourceId",
+      "resourceId must be a non-empty string when present",
+    )
     .build();
   if (issues.length > 0) {
     return err(issues);
@@ -89,6 +104,8 @@ export function createWorkflowInstance(
     stepName: input.stepName,
     status: "pending",
     requestedAt: input.requestedAt as IsoTimestamp,
+    ...(input.resourceType !== undefined ? { resourceType: input.resourceType } : {}),
+    ...(input.resourceId !== undefined ? { resourceId: input.resourceId } : {}),
   });
 }
 

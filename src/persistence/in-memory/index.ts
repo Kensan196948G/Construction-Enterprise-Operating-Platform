@@ -36,6 +36,8 @@ import {
   InMemoryCostRecordRepository,
   InMemoryWorkHourRepository,
   InMemoryNotificationDeliveryRepository,
+  InMemoryKnowledgeRepository,
+  InMemoryContractRepository,
 } from "./business-repositories.ts";
 
 /**
@@ -62,5 +64,7 @@ export function createInMemoryRepositories(): Repositories {
     costRecords: new InMemoryCostRecordRepository(),
     workHours: new InMemoryWorkHourRepository(),
     notificationDeliveries: new InMemoryNotificationDeliveryRepository(),
+    knowledgeArticles: new InMemoryKnowledgeRepository(),
+    contracts: new InMemoryContractRepository(),
   };
 }

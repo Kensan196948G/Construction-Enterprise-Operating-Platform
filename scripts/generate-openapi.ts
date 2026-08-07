@@ -388,6 +388,31 @@ const schemas: { [k: string]: YamlValue } = {
       createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
     },
   },
+
+  KnowledgeArticle: {
+    type: "object",
+    required: ["id", "organizationId", "title", "content", "category", "tags", "isPublished", "viewCount", "aiGenerated", "createdAt", "updatedAt"],
+    properties: {
+      id: { type: "string" }, organizationId: { type: "string" }, title: { type: "string" }, content: { type: "string" },
+      category: { type: "string", enum: ["general", "faq", "incident", "contract", "safety"] },
+      tags: { type: "array", items: { type: "string" } }, isPublished: { type: "boolean" }, viewCount: { type: "integer" },
+      rating: { type: "number" }, aiGenerated: { type: "boolean" }, aiActionId: { type: "string" },
+      createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
+    },
+  },
+  Contract: {
+    type: "object",
+    required: ["id", "organizationId", "projectId", "contractType", "contractNumber", "title", "aiRiskScore", "status", "createdAt", "updatedAt"],
+    properties: {
+      id: { type: "string" }, organizationId: { type: "string" }, projectId: { type: "string" },
+      contractType: { type: "string", enum: ["prime", "subcontract", "other"] }, contractNumber: { type: "string" }, title: { type: "string" },
+      party: { type: "string" }, periodStart: { type: "string", format: "date" }, periodEnd: { type: "string", format: "date" },
+      amount: { type: "number" }, description: { type: "string" }, documentUrl: { type: "string" },
+      aiRiskScore: { type: "string", enum: ["pending", "low", "medium", "high"] },
+      status: { type: "string", enum: ["draft", "active", "completed", "terminated"] },
+      createdAt: { type: "string", format: "date-time" }, updatedAt: { type: "string", format: "date-time" },
+    },
+  },
   AuditEntry: {
     type: "object",
     required: ["id", "at", "actor", "action", "resource", "outcome", "hash"],
@@ -2312,6 +2337,81 @@ const paths: { [k: string]: YamlValue } = {
       responses: { ...jsonResponse(200, { type: "object", required: ["notification"], properties: { notification: { $ref: "#/components/schemas/NotificationDelivery" } } }), ...errorResponses(401, 403, 404) },
     },
   },
+
+  "/api/v1/knowledge": {
+    get: {
+      operationId: "listKnowledge", summary: "Paginated knowledge articles (optional ?category= & ?q=)", tags: ["Knowledge"], security: authSecurity,
+      parameters: [
+        { "$ref": "#/components/parameters/limitParam" }, { "$ref": "#/components/parameters/offsetParam" },
+        { name: "category", in: "query", schema: { type: "string", enum: ["general", "faq", "incident", "contract", "safety"] } },
+        { name: "q", in: "query", schema: { type: "string" } },
+      ],
+      responses: { ...jsonResponse(200, paginatedList("knowledgeArticles", "KnowledgeArticle")), ...errorResponses(400, 401, 403) },
+    },
+    post: {
+      operationId: "createKnowledge", summary: "Create a knowledge article (S-06; AI-generated requires approved aiActionId)", tags: ["Knowledge"], security: authSecurity,
+      requestBody: {
+        required: true,
+        content: { "application/json": { schema: { type: "object", required: ["title", "content"], properties: { organizationId: { type: "string" }, title: { type: "string" }, content: { type: "string" }, category: { type: "string", enum: ["general", "faq", "incident", "contract", "safety"] }, tags: { type: "array", items: { type: "string" } }, isPublished: { type: "boolean" }, aiGenerated: { type: "boolean" }, aiActionId: { type: "string" } } } } },
+      },
+      responses: { ...jsonResponse(201, { type: "object", required: ["knowledgeArticle"], properties: { knowledgeArticle: { $ref: "#/components/schemas/KnowledgeArticle" } } }), ...errorResponses(400, 401, 403) },
+    },
+  },
+  "/api/v1/knowledge/{id}": {
+    get: {
+      operationId: "getKnowledge", summary: "Knowledge article detail", tags: ["Knowledge"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      responses: { ...jsonResponse(200, { type: "object", required: ["knowledgeArticle"], properties: { knowledgeArticle: { $ref: "#/components/schemas/KnowledgeArticle" } } }), ...errorResponses(401, 403, 404) },
+    },
+    delete: {
+      operationId: "deleteKnowledge", summary: "Delete a knowledge article (audited)", tags: ["Knowledge"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      responses: { ...jsonResponse(200, { type: "object", properties: { deleted: { type: "boolean" } } }), ...errorResponses(401, 403, 404) },
+    },
+  },
+  "/api/v1/projects/{projectId}/contracts": {
+    get: {
+      operationId: "listContracts", summary: "Paginated list of contracts for a project (S-07)", tags: ["Contracts"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/limitParam" }, { "$ref": "#/components/parameters/offsetParam" }],
+      responses: { ...jsonResponse(200, paginatedList("contracts", "Contract")), ...errorResponses(401, 403, 404) },
+    },
+    post: {
+      operationId: "createContract", summary: "Create a legal contract (S-07)", tags: ["Contracts"], security: authSecurity,
+      requestBody: {
+        required: true,
+        content: { "application/json": { schema: { type: "object", required: ["contractNumber", "title"], properties: { contractType: { type: "string", enum: ["prime", "subcontract", "other"] }, contractNumber: { type: "string" }, title: { type: "string" }, party: { type: "string" }, periodStart: { type: "string", format: "date" }, periodEnd: { type: "string", format: "date" }, amount: { type: "number" }, description: { type: "string" }, documentUrl: { type: "string" }, aiRiskScore: { type: "string", enum: ["pending", "low", "medium", "high"] }, status: { type: "string", enum: ["draft", "active", "completed", "terminated"] } } } } },
+      },
+      responses: { ...jsonResponse(201, { type: "object", required: ["contract"], properties: { contract: { $ref: "#/components/schemas/Contract" } } }), ...errorResponses(400, 401, 403, 404) },
+    },
+  },
+  "/api/v1/contracts/{id}": {
+    get: {
+      operationId: "getContract", summary: "Contract detail", tags: ["Contracts"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      responses: { ...jsonResponse(200, { type: "object", required: ["contract"], properties: { contract: { $ref: "#/components/schemas/Contract" } } }), ...errorResponses(401, 403, 404) },
+    },
+  },
+  "/api/v1/itsm/incidents": {
+    get: {
+      operationId: "listItsmIncidents", summary: "List ITSM incidents through the adapter (S-08)", tags: ["Itsm"], security: authSecurity,
+      responses: { ...jsonResponse(200, { type: "object", properties: { incidents: { type: "array", items: { type: "object" } } } }), ...errorResponses(401, 403) },
+    },
+    post: {
+      operationId: "createItsmIncident", summary: "Create an ITSM incident through the adapter (S-08)", tags: ["Itsm"], security: authSecurity,
+      requestBody: {
+        required: true,
+        content: { "application/json": { schema: { type: "object", required: ["title", "severity"], properties: { title: { type: "string" }, severity: { type: "string", enum: ["low", "medium", "high", "critical"] } } } } },
+      },
+      responses: { ...jsonResponse(201, { type: "object", properties: { incident: { type: "object" } } }), ...errorResponses(400, 401, 403) },
+    },
+  },
+  "/api/v1/itsm/incidents/{id}": {
+    get: {
+      operationId: "getItsmIncident", summary: "ITSM incident detail", tags: ["Itsm"], security: authSecurity,
+      parameters: [{ "$ref": "#/components/parameters/idPath" }],
+      responses: { ...jsonResponse(200, { type: "object", properties: { incident: { type: "object" } } }), ...errorResponses(401, 403, 404) },
+    },
+  },
   "/api/v1/integrations/{service}/{proxyPath}": {
     get: gatewayOperation("get"),
     post: gatewayOperation("post"),
@@ -2358,6 +2458,9 @@ const spec: { [k: string]: YamlValue } = {
     { name: "QualityInspections", description: "Quality inspections (ServiceHub S-04)" },
     { name: "CostRecords", description: "Cost records and work hours (ServiceHub S-05)" },
     { name: "Notifications", description: "Notification deliveries (ServiceHub S-09)" },
+    { name: "Knowledge", description: "Knowledge articles (ServiceHub S-06)" },
+    { name: "Contracts", description: "Legal contracts (ServiceHub S-07)" },
+    { name: "Itsm", description: "ITSM adapter (ServiceHub S-08)" },
     { name: "Projects", description: "Construction project management (ServiceHub S-01)" },
     { name: "DailyReports", description: "Site daily reports (ServiceHub S-02)" },
     { name: "IntegrationGateway", description: "CEOP gateway reverse proxy for integration services (P1)" },

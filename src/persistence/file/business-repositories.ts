@@ -11,7 +11,11 @@ import type {
   NotificationDeliveryId,
   NotificationStatus,
 } from "../../domain/notification.ts";
+
 import type { ProjectId } from "../../domain/project.ts";
+import type { KnowledgeArticle, KnowledgeId } from "../../domain/knowledge.ts";
+import type { Contract, ContractId } from "../../domain/contract.ts";
+
 import type {
   PhotoRepository,
   SafetyCheckRepository,
@@ -19,6 +23,8 @@ import type {
   CostRecordRepository,
   WorkHourRepository,
   NotificationDeliveryRepository,
+  KnowledgeRepository,
+  ContractRepository,
 } from "../ports.ts";
 import { BaseFileRepository } from "./base-file-repository.ts";
 
@@ -101,5 +107,40 @@ export class FileNotificationDeliveryRepository
   }
   async findByStatus(status: NotificationStatus): Promise<readonly NotificationDelivery[]> {
     return (await this.findAll()).filter((n) => n.status === status);
+  }
+}
+
+export class FileKnowledgeRepository
+  extends BaseFileRepository<KnowledgeArticle>
+  implements KnowledgeRepository
+{
+  override async findById(id: KnowledgeId): Promise<KnowledgeArticle | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: KnowledgeId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByOrganization(orgId: string): Promise<readonly KnowledgeArticle[]> {
+    return (await this.findAll()).filter((k) => k.organizationId === orgId);
+  }
+  async findByCategory(category: string): Promise<readonly KnowledgeArticle[]> {
+    return (await this.findAll()).filter((k) => k.category === category);
+  }
+}
+export class FileContractRepository
+  extends BaseFileRepository<Contract>
+  implements ContractRepository
+{
+  override async findById(id: ContractId): Promise<Contract | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: ContractId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByProject(projectId: ProjectId): Promise<readonly Contract[]> {
+    return (await this.findAll()).filter((c) => (c.projectId as string) === (projectId as string));
+  }
+  async findByNumber(contractNumber: string): Promise<Contract | null> {
+    return (await this.findAll()).find((c) => c.contractNumber === contractNumber) ?? null;
   }
 }

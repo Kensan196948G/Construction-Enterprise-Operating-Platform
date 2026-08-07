@@ -16,6 +16,7 @@ import {
   updateDailyReport,
 } from "../../domain/daily-report.ts";
 import { projectId } from "../../domain/project.ts";
+import { createWorkflowInstance } from "../../domain/workflow-instance.ts";
 import { parsePagination, paginate } from "../pagination.ts";
 import { recordAudit } from "../audit.ts";
 import type { Router } from "../router.ts";
@@ -225,6 +226,22 @@ export function registerDailyReportRoutes(router: Router, container: AppContaine
       return;
     }
     await repositories.dailyReports.save(transitioned.value);
+    if (transitioned.value.status === "submitted") {
+      const instance = createWorkflowInstance({
+        id: `wf-${randomUUID()}`,
+        workflowId: "workflow-daily-report-approval",
+        organizationId: report.organizationId,
+        subject: ctx?.subject ?? "system",
+        stepKey: "approve",
+        stepName: "日報承認",
+        requestedAt: nowTs(),
+        resourceType: "daily-report",
+        resourceId: report.id as string,
+      });
+      if (instance.ok) {
+        await repositories.workflowInstances.save(instance.value);
+      }
+    }
     recordAudit(
       container.auditLog,
       ctx,

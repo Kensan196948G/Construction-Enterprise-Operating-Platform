@@ -324,3 +324,6 @@ DNS・証明書・Tunnel 自体（UUID / credentials）には一切触れない�
 
 > マイグレーション 010〜015: S-03 photos / S-04 safety_checks+quality_inspections / S-05 cost_records+work_hours / S-09 notification_deliveries。
 > 本番適用は `scripts/migrate.ts`（既存 DB は 010〜015 のみ追加実行）。
+
+> マイグレーション 016/017: S-06 knowledge_articles / S-07 legal_contracts。
+> 本番適用は `scripts/migrate.ts`（既存 DB は 016/017 のみ追加実行）。

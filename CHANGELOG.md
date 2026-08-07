@@ -22,11 +22,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 ### Added
 
+- **Knowledge（ServiceHub S-06 / AI Gateway 連携）** — ナレッジ記事 API（`knowledge:read|write`・監査）。
+  AI 生成記事は承認済み AI アクション（aiActionId）必須で AI Gateway の承認トレイルに接続。migration `016`。
+- **Contract（ServiceHub S-07 LegalOps）** — 契約 API（`contract:read|write`・監査・契約番号一意）。migration `017`。
+- **ITSM Adapter（ServiceHub S-08）** — `ItsmPort` を CEOP 認証/監査の背後で公開（`itsm:read|write`）。
+- **日報承認ワークフロー連携** — 日報 submitted 時にワークフローインスタンスを自動作成し、
+  承認で日報を approved へ自動遷移（監査 `daily-report:workflow-approved`）。
+- テスト 4 件追加（365/365 pass）。
+
 - **Photo/Document（ServiceHub S-03）** — 写真・資料メタデータ API（`photo:read|write`・監査）。migration `010`。
 - **Safety/Quality（ServiceHub S-04）** — 安全点検・品質検査 API（`safety:read|write` / `quality:read|write`・監査）。migration `011/012`。
 - **Cost/Work Hour（ServiceHub S-05）** — 原価記録・工数 API（`cost:read|write`・監査）。migration `013/014`。
 - **Notification（ServiceHub S-09）** — 通知配信意図 API（`notification:read|write`・pending 管理）。migration `015`。
-- テスト 5 件追加（361/361 pass）。
+- テスト 5 件追加（365/365 pass）。
 
 - **Construction Project ドメイン（ServiceHub S-01）** — 工事案件の CRUD API
   （`GET/POST /api/v1/projects`・`GET/PATCH/DELETE /:id`）。`project:read` /
@@ -34,7 +42,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 - **Daily Report ドメイン（ServiceHub S-02）** — 日報 CRUD と状態遷移
   （`draft→submitted→approved`）。案件配下の一覧/作成と個別取得/更新/遷移 API。
   `daily-report:read` / `daily-report:write`・監査記録。migration `009`。
-- テスト 10 件追加（361/361 pass）。
+- テスト 10 件追加（365/365 pass）。
 
 - **Integration Gateway（P1）** — 統合サービス向けリバースプロキシと統一認証。
   `CEOP_GATEWAY_SERVICES` で登録したサービスを `/api/v1/integrations/<service>/*`
@@ -51,7 +59,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 - **Device Agent Ingest（統合 D-01〜D-03 / L-05）** — 端末登録・ハートビート・インベントリ受信。
   `POST /api/v1/devices/register` / `/:id/heartbeat` / `/:id/inventory` を追加
   （`device:write`・監査記録・`metadata` は string 値のみ・スキーマ変更不要）。
-- テスト 361/361 pass・verify/build/audit 0。
+- テスト 365/365 pass・verify/build/audit 0。
 
 ## [0.8.2] - 2026-08-07
 

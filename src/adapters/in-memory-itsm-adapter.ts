@@ -29,6 +29,10 @@ export class InMemoryItsmAdapter implements ItsmPort {
     return Promise.resolve(inc !== undefined ? { ...inc } : null);
   }
 
+  listIncidents(): Promise<readonly Incident[]> {
+    return Promise.resolve(Array.from(this.#incidents.values()).map((inc) => ({ ...inc })));
+  }
+
   /** Expose current incident count — useful in tests. */
   get size(): number {
     return this.#incidents.size;

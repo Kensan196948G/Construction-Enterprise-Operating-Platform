@@ -31,6 +31,7 @@ export interface Incident {
 export interface ItsmPort {
   createIncident(input: Omit<Incident, "id" | "status">): Promise<Incident>;
   getIncident(id: string): Promise<Incident | null>;
+  listIncidents(): Promise<readonly Incident[]>;
 }
 
 /** Integrated Management System — compliance controls (ISO / J-SOX). */

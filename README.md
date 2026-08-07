@@ -24,7 +24,7 @@
 | HTTP サーバ  | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                                                                                                                                        |
 | 依存方針     | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）                                                                                                                |
 | パッケージ   | pnpm 10.26.2                                                                                                                                                                                    |
-| テスト       | 361 tests pass（node:test ビルトインランナー）                                                                                                                                                  |
+| テスト       | 365 tests pass（node:test ビルトインランナー）                                                                                                                                                  |
 | コンテナ     | Docker multi-stage build（non-root・HEALTHCHECK 付き）                                                                                                                                          |
 | セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限                                                                                                               |
 
@@ -656,7 +656,7 @@ node --experimental-strip-types scripts/sqlite-backup.ts /data/ceop.db /backup/c
 | --------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | typecheck | ✅ pass        | strict・`noUncheckedIndexedAccess`・0 error                                                                                                                                                                                                                                                                                                                                                                |
 | lint      | ✅ pass        | ESLint flat config + typescript-eslint・0 warning                                                                                                                                                                                                                                                                                                                                                          |
-| test      | ✅ 361/361     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud + governance-crud + sqlite-audit-log + workflow-crud + workflow-instance + audit-coverage + migrate + rate-limit（CF-IP 分離含む）+ tenant-scope + audit-tenant-scope + jwt-org + webui + client-ip + backup-retention + auth-keys + api-key-repository + web-assets + favicon + ai-actions + device-ingest |
+| test      | ✅ 365/365     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud + governance-crud + sqlite-audit-log + workflow-crud + workflow-instance + audit-coverage + migrate + rate-limit（CF-IP 分離含む）+ tenant-scope + audit-tenant-scope + jwt-org + webui + client-ip + backup-retention + auth-keys + api-key-repository + web-assets + favicon + ai-actions + device-ingest |
 | build     | ✅ pass        | `dist/` に型定義付き出力                                                                                                                                                                                                                                                                                                                                                                                   |
 | CI        | ✅ 設定済み    | `.github/workflows/ci.yml`（push / PR トリガー）                                                                                                                                                                                                                                                                                                                                                           |
 | Docker    | ✅ multi-stage | non-root ユーザー・HEALTHCHECK 付き                                                                                                                                                                                                                                                                                                                                                                        |
@@ -1112,6 +1112,47 @@ migration `009`（`daily_reports` テーブル）を追加。
 | `GET /api/v1/notifications/{id}` | `notification:read`  | 詳細                            |
 
 migration `010`（photos）・`011/012`（safety/quality）・`013/014`（cost/work-hours）・`015`（notifications）を追加。
+
+---
+
+## 🧠 Knowledge API（P3 / S-06・AI Gateway 連携）
+
+ナレッジ記事を管理します。**AI 生成記事（`aiGenerated: true`）は承認済み AI アクション
+（`aiActionId`）が必須**で、AI Gateway の承認・監査トレイルに接続されます。
+
+| エンドポイント                      | 権限                                 | 説明                                         |
+| ----------------------------------- | ------------------------------------ | -------------------------------------------- |
+| `GET /api/v1/knowledge`             | `knowledge:read`                     | 一覧（`?category=`・`?q=` 検索）             |
+| `POST /api/v1/knowledge`            | `knowledge:write`                    | 記事作成（AI生成は承認済み aiActionId 必須） |
+| `GET/DELETE /api/v1/knowledge/{id}` | `knowledge:read` / `knowledge:write` | 詳細・削除                                   |
+
+## 📜 Contract API（P3 / S-07 LegalOps）
+
+契約（元請/下請）を案件配下で管理します。
+
+| エンドポイント                                    | 権限                               | 説明                           |
+| ------------------------------------------------- | ---------------------------------- | ------------------------------ |
+| `GET/POST /api/v1/projects/{projectId}/contracts` | `contract:read` / `contract:write` | 契約一覧・作成（契約番号一意） |
+| `GET /api/v1/contracts/{id}`                      | `contract:read`                    | 詳細                           |
+
+## 🎫 ITSM Adapter API（P3 / S-08）
+
+ITSM ポート（`ItsmPort`）を CEOP 認証・監査の背後で公開します（既定は in-memory アダプタ）。
+
+| エンドポイント                    | 権限         | 説明                                         |
+| --------------------------------- | ------------ | -------------------------------------------- |
+| `GET /api/v1/itsm/incidents`      | `itsm:read`  | インシデント一覧                             |
+| `POST /api/v1/itsm/incidents`     | `itsm:write` | インシデント作成（low/medium/high/critical） |
+| `GET /api/v1/itsm/incidents/{id}` | `itsm:read`  | 詳細                                         |
+
+## ✅ 日報承認ワークフロー連携
+
+日報を `submitted` に遷移すると、`workflow-daily-report-approval` の
+ワークフローインスタンス（`resourceType=daily-report`）が自動作成されます。
+承認（`approve`）されると日報は `approved` へ自動遷移し、監査に
+`daily-report:workflow-approved` が記録されます。
+
+migration `016`（knowledge_articles）・`017`（legal_contracts）を追加。
 
 ---
 

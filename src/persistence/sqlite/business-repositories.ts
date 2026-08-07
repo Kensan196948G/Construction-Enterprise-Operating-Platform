@@ -11,7 +11,11 @@ import type {
   NotificationDeliveryId,
   NotificationStatus,
 } from "../../domain/notification.ts";
+
 import type { ProjectId } from "../../domain/project.ts";
+import type { KnowledgeArticle, KnowledgeId } from "../../domain/knowledge.ts";
+import type { Contract, ContractId } from "../../domain/contract.ts";
+
 import type {
   PhotoRepository,
   SafetyCheckRepository,
@@ -19,6 +23,8 @@ import type {
   CostRecordRepository,
   WorkHourRepository,
   NotificationDeliveryRepository,
+  KnowledgeRepository,
+  ContractRepository,
 } from "../ports.ts";
 import { BaseSqliteRepository } from "./base-sqlite-repository.ts";
 
@@ -245,5 +251,92 @@ export class SqliteNotificationDeliveryRepository
     );
     const rows = stmt.all(status) as { data: string }[];
     return rows.map((r) => JSON.parse(r.data) as NotificationDelivery);
+  }
+}
+
+export class SqliteKnowledgeRepository
+  extends BaseSqliteRepository<KnowledgeArticle>
+  implements KnowledgeRepository
+{
+  constructor(db: unknown) {
+    super(
+      db,
+      "knowledge_articles",
+      ["org_id TEXT NOT NULL", "category TEXT NOT NULL"],
+      [
+        { name: "idx_knowledge_org", columns: ["org_id"] },
+        { name: "idx_knowledge_category", columns: ["category"] },
+      ],
+      ["org_id", "category"],
+    );
+  }
+  protected override extraValues(k: KnowledgeArticle): readonly unknown[] {
+    return [k.organizationId, k.category];
+  }
+  override async findById(id: KnowledgeId): Promise<KnowledgeArticle | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: KnowledgeId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByOrganization(orgId: string): Promise<readonly KnowledgeArticle[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM knowledge_articles WHERE org_id = ?");
+    const rows = stmt.all(orgId) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as KnowledgeArticle);
+  }
+  async findByCategory(category: string): Promise<readonly KnowledgeArticle[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM knowledge_articles WHERE category = ?");
+    const rows = stmt.all(category) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as KnowledgeArticle);
+  }
+}
+
+export class SqliteContractRepository
+  extends BaseSqliteRepository<Contract>
+  implements ContractRepository
+{
+  constructor(db: unknown) {
+    super(
+      db,
+      "legal_contracts",
+      [
+        "org_id TEXT NOT NULL",
+        "project_id TEXT NOT NULL REFERENCES projects(id)",
+        "contract_number TEXT NOT NULL",
+        "status TEXT NOT NULL",
+      ],
+      [
+        { name: "idx_contracts_org", columns: ["org_id"] },
+        { name: "idx_contracts_project", columns: ["project_id"] },
+        { name: "idx_contracts_number", columns: ["contract_number"], unique: true },
+        { name: "idx_contracts_status", columns: ["status"] },
+      ],
+      ["org_id", "project_id", "contract_number", "status"],
+    );
+  }
+  protected override extraValues(c: Contract): readonly unknown[] {
+    return [c.organizationId, c.projectId as string, c.contractNumber, c.status];
+  }
+  override async findById(id: ContractId): Promise<Contract | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: ContractId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByProject(projectId: ProjectId): Promise<readonly Contract[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM legal_contracts WHERE project_id = ?");
+    const rows = stmt.all(projectId as string) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as Contract);
+  }
+  async findByNumber(contractNumber: string): Promise<Contract | null> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare(
+      "SELECT data FROM legal_contracts WHERE contract_number = ?",
+    );
+    const row = stmt.get(contractNumber) as { data: string } | undefined;
+    return row !== undefined ? (JSON.parse(row.data) as Contract) : null;
   }
 }

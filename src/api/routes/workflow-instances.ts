@@ -28,6 +28,7 @@ import type { Router } from "../router.ts";
 import { writeJson } from "../router.ts";
 import { canAccessOrganization, hasPermission } from "./governance.ts";
 import type { AppContainer } from "../types.ts";
+import { dailyReportId, transitionDailyReport } from "../../domain/daily-report.ts";
 
 // ---------------------------------------------------------------------------
 // Body helpers
@@ -207,6 +208,32 @@ export function registerWorkflowInstanceRoutes(router: Router, container: AppCon
       return;
     }
     await repositories.workflowInstances.save(result.value);
+    if (
+      result.value.status === "approved" &&
+      result.value.resourceType === "daily-report" &&
+      result.value.resourceId !== undefined
+    ) {
+      const report = await repositories.dailyReports.findById(
+        dailyReportId(result.value.resourceId),
+      );
+      if (report !== null && report.status === "submitted") {
+        const approved = transitionDailyReport(
+          report,
+          "approved",
+          new Date().toISOString() as IsoTimestamp,
+        );
+        if (approved.ok) {
+          await repositories.dailyReports.save(approved.value);
+          recordAudit(
+            container.auditLog,
+            ctx,
+            "daily-report:workflow-approved",
+            `daily-reports/${report.id}`,
+            "success",
+          );
+        }
+      }
+    }
     recordAudit(container.auditLog, ctx, "workflow-instance:decision", result.value.id, "success", {
       decision: result.value.decision ?? "",
       stepKey: result.value.stepKey,
