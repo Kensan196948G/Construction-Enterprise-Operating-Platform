@@ -124,7 +124,12 @@ test("auth-keys: revoke deletes the key, blocks its credential, and is audited",
   });
   assert.equal(tokenBefore.status, 200);
 
-  const del = await apiReq("DELETE", baseUrl, `/api/v1/auth/keys/${targetKey.key}`, `${admin.key}:${admin.secret}`);
+  const del = await apiReq(
+    "DELETE",
+    baseUrl,
+    `/api/v1/auth/keys/${targetKey.key}`,
+    `${admin.key}:${admin.secret}`,
+  );
   assert.equal(del.status, 200);
   assert.deepEqual(del.body, { revoked: true, keyId: targetKey.key });
 

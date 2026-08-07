@@ -37,8 +37,22 @@ test("api-key-repository: lists key metadata newest-first without the secret has
       "INSERT INTO api_keys (key_id, subject, permissions, secret_hash, created_at, organization_id) " +
         "VALUES (?, ?, ?, ?, ?, ?)",
     );
-    insert.run("key-1", "alice", JSON.stringify(["application:read"]), "never-shown", "2026-08-07T00:00:00Z", null);
-    insert.run("key-2", "bob", JSON.stringify(["device:read", "device:write"]), "never-shown", "2026-08-07T01:00:00Z", "org-a");
+    insert.run(
+      "key-1",
+      "alice",
+      JSON.stringify(["application:read"]),
+      "never-shown",
+      "2026-08-07T00:00:00Z",
+      null,
+    );
+    insert.run(
+      "key-2",
+      "bob",
+      JSON.stringify(["device:read", "device:write"]),
+      "never-shown",
+      "2026-08-07T01:00:00Z",
+      "org-a",
+    );
     db.close();
 
     const repo = createSqliteApiKeyRepository(dbPath);
@@ -51,7 +65,11 @@ test("api-key-repository: lists key metadata newest-first without the secret has
     );
     assert.equal(keys[0]?.organizationId, "org-a");
     const serialized = JSON.stringify(keys);
-    assert.doesNotMatch(serialized, /secret|hash/i, "secret hashes must never leave the repository");
+    assert.doesNotMatch(
+      serialized,
+      /secret|hash/i,
+      "secret hashes must never leave the repository",
+    );
     assert.ok(keys.every((k) => k.createdAt !== undefined));
   } finally {
     await cleanup();
