@@ -233,6 +233,20 @@ export const MIGRATIONS: readonly Migration[] = [
       CREATE INDEX IF NOT EXISTS idx_workflow_instances_status ON workflow_instances (status);
     `,
   },
+  {
+    version: "007",
+    description: "ai_actions table for AI gateway governance (integration Y-09)",
+    up: `
+      CREATE TABLE IF NOT EXISTS ai_actions (
+        id     TEXT PRIMARY KEY,
+        data   TEXT NOT NULL,
+        org_id TEXT,
+        status TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_ai_actions_org    ON ai_actions (org_id);
+      CREATE INDEX IF NOT EXISTS idx_ai_actions_status ON ai_actions (status);
+    `,
+  },
 ];
 
 // ---------------------------------------------------------------------------

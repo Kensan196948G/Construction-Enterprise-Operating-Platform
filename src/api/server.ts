@@ -22,6 +22,8 @@ import { registerEntityCrudRoutes } from "./routes/entity-crud.ts";
 import { registerWorkflowRoutes } from "./routes/workflows.ts";
 import { registerWorkflowInstanceRoutes } from "./routes/workflow-instances.ts";
 import { registerGatewayRoutes } from "./routes/gateway.ts";
+import { registerAiActionRoutes } from "./routes/ai-actions.ts";
+import { registerDeviceIngestRoutes } from "./routes/device-ingest.ts";
 import type { GatewayService } from "../domain/gateway-service.ts";
 import type { AppContainer } from "./types.ts";
 
@@ -76,6 +78,8 @@ export function createServer(config: ServerConfig, container: AppContainer): Ser
   if (config.gatewayServices !== undefined) {
     registerGatewayRoutes(router, container, config.gatewayServices);
   }
+  registerAiActionRoutes(router, container);
+  registerDeviceIngestRoutes(router, container);
   registerWebRoutes(router, container);
 
   const server = httpCreateServer((req: IncomingMessage, res: ServerResponse): void => {

@@ -26,6 +26,7 @@ import type {
   WorkflowInstanceId,
   WorkflowInstanceStatus,
 } from "../../domain/workflow-instance.ts";
+import type { AiAction, AiActionId, AiActionStatus } from "../../domain/ai-action.ts";
 import type {
   ApplicationRepository,
   DeviceRepository,
@@ -36,6 +37,7 @@ import type {
   UserRepository,
   WorkflowRepository,
   WorkflowInstanceRepository,
+  AiActionRepository,
 } from "../ports.ts";
 import type { ApiKeyStore } from "../../api/types.ts";
 import { BaseSqliteRepository, openDatabase } from "./base-sqlite-repository.ts";
@@ -371,13 +373,57 @@ class SqliteWorkflowInstanceRepository
   }
 }
 
+class SqliteAiActionRepository
+  extends BaseSqliteRepository<AiAction>
+  implements AiActionRepository
+{
+  constructor(db: unknown) {
+    super(
+      db,
+      "ai_actions",
+      ["org_id TEXT", "status TEXT NOT NULL"],
+      [
+        { name: "idx_ai_actions_org", columns: ["org_id"] },
+        { name: "idx_ai_actions_status", columns: ["status"] },
+      ],
+      ["org_id", "status"],
+    );
+  }
+
+  protected override extraValues(a: AiAction): readonly unknown[] {
+    return [a.organizationId ?? null, a.status];
+  }
+
+  override async findById(id: AiActionId): Promise<AiAction | null> {
+    return super.findById(id as string);
+  }
+
+  override async delete(id: AiActionId): Promise<void> {
+    return super.delete(id as string);
+  }
+
+  async findByOrganization(orgId: string): Promise<readonly AiAction[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM ai_actions WHERE org_id = ?");
+    const rows = stmt.all(orgId) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as AiAction);
+  }
+
+  async findByStatus(status: AiActionStatus): Promise<readonly AiAction[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM ai_actions WHERE status = ?");
+    const rows = stmt.all(status) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as AiAction);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Factory
 // ---------------------------------------------------------------------------
 
 /**
  * Open (or create) a SQLite database at `dbPath` and return a fully-wired
- * `Repositories` aggregate. The database is shared across all seven repositories
+ * `Repositories` aggregate. The database is shared across all repositories
  * so they participate in the same WAL journal.
  */
 export function createSqliteRepositories(dbPath: string): Repositories {
@@ -393,6 +439,7 @@ export function createSqliteRepositories(dbPath: string): Repositories {
     policies: new SqlitePolicyRepository(db),
     workflows: new SqliteWorkflowRepository(db),
     workflowInstances: new SqliteWorkflowInstanceRepository(db),
+    aiActions: new SqliteAiActionRepository(db),
   };
 }
 
