@@ -4,7 +4,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-22.13+-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Zero Runtime Deps](https://img.shields.io/badge/runtime%20deps-zero-brightgreen)](package.json)
 [![CI](https://img.shields.io/github/actions/workflow/status/Kensan196948G/Construction-Enterprise-Operating-Platform/ci.yml?label=CI&logo=github)](/.github/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-277%20pass-brightgreen)](src/)
+[![Tests](https://img.shields.io/badge/tests-297%20pass-brightgreen)](src/)
 [![Security](https://img.shields.io/badge/security-hardened-blue)](src/api/middleware/auth.ts)
 [![License](https://img.shields.io/badge/license-proprietary-lightgrey)](LICENSE.md)
 
@@ -18,13 +18,13 @@
 | 項目         | 内容                                                                                                                                                                           |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | 役割         | 統制・ガバナンス・共通ワークフローの調整基盤                                                                                                                                   |
-| バージョン   | v0.7.1（WebUI ホスティング: デザインバンドル 100% 適用配信・systemd 常駐・Neon アクセスログ。基盤: SQLite 永続化・JWT 認証・監査証跡のテナント分離・CRUD/Workflow/Policy API） |
+| バージョン   | v0.8.0（WebUI ホスティング: デザインバンドル 100% 適用配信・systemd 常駐・Neon アクセスログ。基盤: SQLite 永続化・JWT 認証・監査証跡のテナント分離・CRUD/Workflow/Policy API） |
 | 言語         | TypeScript 5.7（strict / `noUncheckedIndexedAccess` / 例外を投げない設計）                                                                                                     |
 | ランタイム   | Node.js v22.13+（ネイティブ TS 実行・ビルトインテストランナー）                                                                                                                |
 | HTTP サーバ  | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                                                                                                                       |
 | 依存方針     | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）                                                                                               |
 | パッケージ   | pnpm 10.26.2                                                                                                                                                                   |
-| テスト       | 277 tests pass（node:test ビルトインランナー）                                                                                                                                 |
+| テスト       | 297 tests pass（node:test ビルトインランナー）                                                                                                                                 |
 | コンテナ     | Docker multi-stage build（non-root・HEALTHCHECK 付き）                                                                                                                         |
 | セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限                                                                                              |
 
@@ -44,7 +44,7 @@ flowchart TD
             APIGateway["🔀 Router\nrouter.ts\n1MiB body limit\nremoteAddress"]
             AuthMW["🔐 Auth Middleware\nAPI Key: HMAC-SHA256\nJWT: HS256 timingSafeEqual"]
             JwtMW["🎫 JWT Issuer\njwt.ts\n1h expiry・jti replay guard"]
-            RateLimiter["⏱ Rate Limiter\nsliding-window per socket IP\nauth: 10 req/min・API 全体: 300 req/min"]
+            RateLimiter["⏱ Rate Limiter\nsliding-window per client IP\nauth: 10 req/min・API 全体: 300 req/min"]
             WebSSR["🖥️ SSR Renderer\nweb/renderer.ts\nCSP Headers"]
             APIGateway --> AuthMW
             APIGateway --> RateLimiter
@@ -133,7 +133,7 @@ src/
 │   ├── middleware/
 │   │   ├── auth.ts         … API key 検証（HMAC-SHA256 + timingSafeEqual）
 │   │   ├── jwt.ts          … HS256 JWT 発行・検証（createJwtIssuer・1h 有効期限）
-│   │   ├── rate-limiter.ts … スライディングウィンドウ（auth 10 / API 全体 300 req/min・per socket IP）
+│   │   ├── rate-limiter.ts … スライディングウィンドウ（auth 10 / API 全体 300 req/min・per client IP）
 │   │   └── request-logger.ts
 │   ├── routes/    … health / auth / governance / dashboard / entity-crud / web
 │   └── types.ts   … AppContainer・ApiKeyContext・ApiRequest（remoteAddress）型
@@ -159,11 +159,11 @@ examples/
 | -------- | -------------------- | ----------------------------------------------------------------------------------------------- |
 | `GET`    | `/health`            | ライブネスプローブ。`{ status, timestamp, uptime }`                                             |
 | `GET`    | `/health/ready`      | レディネスプローブ。永続化層を確認して `{ status, storage, timestamp }`                         |
-| `GET`    | `/api/v1/info`       | ビルド情報。`{ name, version, environment }`                                                    |
+| `GET`    | `/api/v1/info`       | ビルド情報。`{ name, version, environment, nodeVersion }`                                       |
 | `GET`    | `/`                  | `/dashboard` へ 302 リダイレクト（認証不要）                                                    |
 | `POST`   | `/api/v1/auth/token` | API キーを JWT に交換。`{ credential: "keyId:secret" }` → `{ token, expiresIn: 3600, subject }` |
 
-> ⏱ `/api/v1/auth/token` はレート制限あり（**10 req/min per socket IP**）。超過時は `429 Too Many Requests` + `X-RateLimit-*` ヘッダ。
+> ⏱ `/api/v1/auth/token` はレート制限あり（**10 req/min per 実クライアント IP**）。超過時は `429 Too Many Requests` + `X-RateLimit-*` ヘッダ。
 
 ### 🔐 認証必須エンドポイント — ダッシュボード・統制（`Bearer keyId:secret`）
 
@@ -181,6 +181,8 @@ examples/
 | `GET`    | `/api/v1/governance/audit/export` | `audit:export`      | 監査証跡のファイル出力（`?format=csv\|json&limit=1000&offset=0`、limit 最大 10000）。テナントスコープは上と同一。`sequence`/`previousHash`/`hash` を含み受領側でチェーン再検証可能。**拒否も監査記録される** |
 | `POST`   | `/api/v1/governance/evaluate`     | 認証のみ            | アクセス評価。評価結果は監査ログへ自動記録                                                                                                                                                                   |
 | `POST`   | `/api/v1/auth/revoke`             | `auth:write`        | 現在の JWT を失効（ログアウト）。JWT Bearer 必須                                                                                                                                                             |
+| `GET`    | `/api/v1/auth/keys`               | `auth:write`        | API キー一覧（メタデータのみ・秘密ハッシュは返却しない）。**プラットフォームレベル資格情報のみ**                                                                                                             |
+| `DELETE` | `/api/v1/auth/keys/:keyId`        | `auth:write`        | API キーを失効・削除（監査記録・即時認証不能）。**プラットフォームレベル資格情報のみ**                                                                                                                       |
 
 ### 🎨 WebUI デザイン（v0.6.1）
 
@@ -451,13 +453,13 @@ curl -H "Authorization: Bearer <jwt>" http://localhost:3000/api/v1/dashboard
 
 ## 🚀 本番デプロイ（M8）
 
-### 🌐 本番環境（v0.6.2 稼働中）
+### 🌐 本番環境（v0.8.0 デプロイ予定 — RUNBOOK §3）
 
 | 項目           | 値                                                                                                           |
 | -------------- | ------------------------------------------------------------------------------------------------------------ |
 | 本番 URL       | https://ceop.mirai-dx-platform.com                                                                           |
 | 形態           | 本機 Docker コンテナ（`docker run`）+ Cloudflare Tunnel（cloudflared-ceop.service）                          |
-| イメージ       | `ceop-platform:v0.6.2`（GHCR: `ghcr.io/kensan196948g/construction-eop:0.6.2`）                               |
+| イメージ       | `ceop-platform:v0.8.0`（GHCR: `ghcr.io/kensan196948g/construction-eop:0.8.0`）                               |
 | 可動エイリアス | `ceop-platform:current`（稼働中バージョンを指す。バックアップ cron が参照）                                  |
 | ホスト         | 192.168.0.185（127.0.0.1:3120 → コンテナ 3000）                                                              |
 | DB             | `/home/kensan/.ceop/data/ceop.db`（SQLite WAL、migration 001〜005 適用済み）                                 |
@@ -572,14 +574,14 @@ curl -H "Authorization: Bearer <keyId>:<secret>" http://localhost:3000/api/v1/da
 **改変なし（100% 適用）** で配信する専用の静的サーバーです。本体 API（port 3120）とは
 別プロセス・別ポートで動作します。
 
-| 項目            | 値                                                            |
-| --------------- | ------------------------------------------------------------- |
-| 🌐 LAN URL      | `http://192.168.0.185:3130/`                                  |
-| ❤️ ヘルス       | `GET /healthz` → `{"status":"ok","service":"ceop-webui",...}` |
-| ⚙️ systemd      | `ceop-webui.service`（`deploy/systemd/` に定義）              |
-| 🔧 環境変数     | `/home/kensan/.ceop/webui.env`（chmod 600、git 管理外）       |
-| 🗄️ アクセスログ | Neon PostgreSQL `ceop-production` / `webui_access_log`        |
-| 📦 デザイン正本 | `webui/CEOP Platform.html`（`__bundler` 自己展開形式）        |
+| 項目            | 値                                                                         |
+| --------------- | -------------------------------------------------------------------------- |
+| 🌐 公開 URL     | `https://ceop.mirai-dx-platform.com/`（Tunnel 経由。loopback のみ listen） |
+| ❤️ ヘルス       | `GET /healthz` → `{"status":"ok","service":"ceop-webui",...}`              |
+| ⚙️ systemd      | `ceop-webui.service`（`deploy/systemd/` に定義）                           |
+| 🔧 環境変数     | `/home/kensan/.ceop/webui.env`（chmod 600、git 管理外）                    |
+| 🗄️ アクセスログ | Neon PostgreSQL `ceop-production` / `webui_access_log`                     |
+| 📦 デザイン正本 | `webui/CEOP Platform.html`（`__bundler` 自己展開形式）                     |
 
 ```bash
 # デザインバンドルを webui/dist/ に展開（gitignore 済）
@@ -595,20 +597,21 @@ bash scripts/webui-deploy.sh
 - `scripts/webui-unpack.ts` が gzip+base64 マニフェスト（510 アセット）を展開し、
   UUID 参照を `assets/<uuid>.<ext>` へ書き換えます
 - `src/webui/server.ts` は依存ゼロ（node:http）。パストラバーサル防御、GET/HEAD 限定、
-  UUID アセットの immutable キャッシュ、セキュリティヘッダ一式を実装
+  UUID アセットの immutable キャッシュ、セキュリティヘッダ一式（HSTS 含む）、
+  `X-Request-Id`、loopback bind（`CEOP_WEBUI_HOST` 既定 `127.0.0.1`）を実装
 - CSP は `script-src 'self' 'unsafe-eval'`（デザインランタイムが `text/x-dc` ソースを
   `new Function` でコンパイルするため。本体 API の CSP には影響しません）
 - アクセスログは Neon の SQL-over-HTTP へ fire-and-forget でバッチ送信（Neon 障害時も
   配信は継続、アセットヒットは記録対象外）
 - `https://ceop.mirai-dx-platform.com` 配下への公開（Tunnel ingress パス分割）は
-  production route 変更のため **Approval PR** で別途承認後に実施
+  **適用済み**（PR #14）。経路変更時は Approval PR で承認後に実施
 
 ---
 
 ## 🧪 テスト実行
 
 ```bash
-# 全テスト実行（277 tests）
+# 全テスト実行（297 tests）
 pnpm run test
 
 # typecheck + lint + test 一括
@@ -646,34 +649,35 @@ node --experimental-strip-types scripts/sqlite-backup.ts /data/ceop.db /backup/c
 
 ### 📊 現在の品質状態
 
-| ゲート    | 状態           | 備考                                                                                                                                                                                                                                                                                              |
-| --------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| typecheck | ✅ pass        | strict・`noUncheckedIndexedAccess`・0 error                                                                                                                                                                                                                                                       |
-| lint      | ✅ pass        | ESLint flat config + typescript-eslint・0 warning                                                                                                                                                                                                                                                 |
-| test      | ✅ 277/277     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud (34) + governance-crud (26) + sqlite-audit-log (9) + workflow-crud (26) + audit-coverage (3) + migrate (2) + rate-limit (1) + tenant-scope (3) + audit-tenant-scope (5) + jwt-org (2) + webui (14) |
-| build     | ✅ pass        | `dist/` に型定義付き出力                                                                                                                                                                                                                                                                          |
-| CI        | ✅ 設定済み    | `.github/workflows/ci.yml`（push / PR トリガー）                                                                                                                                                                                                                                                  |
-| Docker    | ✅ multi-stage | non-root ユーザー・HEALTHCHECK 付き                                                                                                                                                                                                                                                               |
-| security  | ✅ hardened    | timingSafeEqual・ボディ制限・権限ゲート・CSP・API セキュリティヘッダ・監査網羅                                                                                                                                                                                                                    |
+| ゲート    | 状態           | 備考                                                                                                                                                                                                                                                                                                                               |
+| --------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| typecheck | ✅ pass        | strict・`noUncheckedIndexedAccess`・0 error                                                                                                                                                                                                                                                                                        |
+| lint      | ✅ pass        | ESLint flat config + typescript-eslint・0 warning                                                                                                                                                                                                                                                                                  |
+| test      | ✅ 297/297     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud + governance-crud + sqlite-audit-log + workflow-crud + audit-coverage + migrate + rate-limit（CF-IP 分離含む）+ tenant-scope + audit-tenant-scope + jwt-org + webui + client-ip + backup-retention + auth-keys + api-key-repository |
+| build     | ✅ pass        | `dist/` に型定義付き出力                                                                                                                                                                                                                                                                                                           |
+| CI        | ✅ 設定済み    | `.github/workflows/ci.yml`（push / PR トリガー）                                                                                                                                                                                                                                                                                   |
+| Docker    | ✅ multi-stage | non-root ユーザー・HEALTHCHECK 付き                                                                                                                                                                                                                                                                                                |
+| security  | ✅ hardened    | timingSafeEqual・ボディ制限・権限ゲート・CSP・API セキュリティヘッダ・監査網羅                                                                                                                                                                                                                                                     |
 
 ---
 
 ## ⚙️ 環境変数
 
-| 変数名                      | 既定値                                       | 説明                                                                                        |
-| --------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `PORT`                      | `3000`                                       | HTTP サーバがリッスンする TCP ポート                                                        |
-| `NODE_ENV`                  | —                                            | `production` に設定するとデモキーを出力しない                                               |
-| `LOG_LEVEL`                 | `info`                                       | `debug` / `info` / `warn` / `error`                                                         |
-| `PLATFORM_NAME`             | `Construction Enterprise Operating Platform` | 起動ログ・UI に表示するプラットフォーム名                                                   |
-| `CEOP_JWT_SECRET`           | —（プロセス起動ごと自動生成）                | HS256 JWT 署名用 32 バイト秘密鍵（hex 形式）。`production` では**必須**（未設定で起動失敗） |
-| `CEOP_SQLITE_FILE`          | —（未設定 = 上位モード選択）                 | SQLite DB ファイルパス（例: `/data/ceop.db`）。設定時は SQLite 永続化（最優先）             |
-| `CEOP_DATA_DIR`             | —（未設定 = In-Memory モード）               | ファイル永続化の保存先ディレクトリ。設定時は POSIX-atomic ファイル repo が有効              |
-| `CEOP_SEED_DEMO`            | `false`                                      | `true` のとき起動時にデモデータを投入（In-Memory モードでは常に投入）                       |
-| `CEOP_LOG_DEMO_CREDS`       | `false`                                      | `true` のときデモ API キーの認証情報を stderr に出力（**本番では絶対に `false`**）          |
-| `CEOP_RATE_LIMIT_MAX`       | `300`                                        | `/api/v1/*` のグローバルレート制限（1 分あたり・socket IP 単位）                            |
-| `CEOP_RATE_LIMIT_WINDOW_MS` | `60000`                                      | グローバルレート制限のウィンドウ長（ミリ秒）                                                |
-| `CEOP_CORS_ORIGIN`          | —（未設定 = CORS 無効）                      | 明示した場合のみ `Access-Control-Allow-Origin` を出力（認証 API では `*` 禁止）             |
+| 変数名                      | 既定値                                       | 説明                                                                                                                            |
+| --------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `PORT`                      | `3000`                                       | HTTP サーバがリッスンする TCP ポート                                                                                            |
+| `NODE_ENV`                  | —                                            | `production` に設定するとデモキーを出力しない                                                                                   |
+| `LOG_LEVEL`                 | `info`                                       | `debug` / `info` / `warn` / `error`                                                                                             |
+| `PLATFORM_NAME`             | `Construction Enterprise Operating Platform` | 起動ログ・UI に表示するプラットフォーム名                                                                                       |
+| `CEOP_JWT_SECRET`           | —（プロセス起動ごと自動生成）                | HS256 JWT 署名用 32 バイト秘密鍵（hex 形式）。`production` では**必須**（未設定で起動失敗）                                     |
+| `CEOP_SQLITE_FILE`          | —（未設定 = 上位モード選択）                 | SQLite DB ファイルパス（例: `/data/ceop.db`）。設定時は SQLite 永続化（最優先）                                                 |
+| `CEOP_DATA_DIR`             | —（未設定 = In-Memory モード）               | ファイル永続化の保存先ディレクトリ。設定時は POSIX-atomic ファイル repo が有効                                                  |
+| `CEOP_SEED_DEMO`            | `false`                                      | `true` のとき起動時にデモデータを投入（In-Memory モードでは常に投入）                                                           |
+| `CEOP_LOG_DEMO_CREDS`       | `false`                                      | `true` のときデモ API キーの認証情報を stderr に出力（**本番では絶対に `false`**）                                              |
+| `CEOP_RATE_LIMIT_MAX`       | `300`                                        | `/api/v1/*` のグローバルレート制限（1 分あたり・実クライアント IP 単位。loopback プロキシ経由時のみ `CF-Connecting-IP` を信頼） |
+| `CEOP_RATE_LIMIT_WINDOW_MS` | `60000`                                      | グローバルレート制限のウィンドウ長（ミリ秒）                                                                                    |
+| `CEOP_CORS_ORIGIN`          | —（未設定 = CORS 無効）                      | 明示した場合のみ `Access-Control-Allow-Origin` を出力（認証 API では `*` 禁止）                                                 |
+| `CEOP_ALERT_WEBHOOK_URL`    | —（未設定 = 通知なし）                       | `scripts/health-probe.sh` が ALERT/RECOVERED 時に JSON POST する Webhook URL（cron/サービス環境に設定・Git には置かない）       |
 
 ### 🗄️ 永続化ティア選択
 
@@ -735,7 +739,7 @@ sequenceDiagram
     participant J as JWT Issuer (HS256)
 
     C->>R: POST /api/v1/auth/token { credential }
-    R->>RL: check(socket.remoteAddress)
+    R->>RL: check(resolved client IP)
     alt レート制限超過
         RL-->>C: 429 Too Many Requests + X-RateLimit-*
     else 制限内
@@ -756,31 +760,33 @@ sequenceDiagram
 
 ### 🛡️ セキュリティ強化一覧
 
-| カテゴリ                                     | 実装内容                                                                                                                                                                                       | ファイル                                                 |
-| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| タイミング攻撃対策                           | HMAC ハッシュ比較を `timingSafeEqual` で実施                                                                                                                                                   | `middleware/auth.ts`                                     |
-| JWT 署名・検証                               | HS256（`node:crypto` HMAC-SHA256）・jti replay guard・1h 有効期限・`iat < exp` 検証                                                                                                            | `middleware/jwt.ts`                                      |
-| レート制限（Credential-Stuffing 対策）       | sliding-window 10 req/min を **socket.remoteAddress** でキー（X-Forwarded-For 非信頼）                                                                                                         | `middleware/rate-limiter.ts`                             |
-| グローバル API レート制限（v0.6.0）          | `/api/v1/*` 全体を per-socket-IP で制限（既定 300 req/min、`CEOP_RATE_LIMIT_MAX`/`CEOP_RATE_LIMIT_WINDOW_MS` で調整可）                                                                        | `api/server.ts`                                          |
-| DoS 防止                                     | リクエストボディを **1 MiB** で打ち切り（`req.destroy` 即断）                                                                                                                                  | `router.ts`                                              |
-| 監査ログ権限                                 | `GET /api/v1/governance/audit` に `audit:read` 権限チェック                                                                                                                                    | `routes/governance.ts`                                   |
-| ポリシー一覧権限                             | `GET /api/v1/governance/policies` に `policy:read` 権限チェック                                                                                                                                | `routes/governance.ts`                                   |
-| 監査失敗の可視化                             | 監査イベント生成失敗を `console.error` でログ（サイレント廃棄を廃止）                                                                                                                          | `routes/governance.ts`                                   |
-| CSP ヘッダ                                   | SSR ページに `Content-Security-Policy: default-src 'self'` を付与                                                                                                                              | `routes/web.ts`                                          |
-| 秘密情報のログ漏洩防止                       | デモキーログを `NODE_ENV !== production` 条件で制限                                                                                                                                            | `app.ts`                                                 |
-| 監査アクター詐称防止                         | 評価 API の `actor` を認証済み `ctx.subject` から取得（リクエストボディ不使用）                                                                                                                | `routes/governance.ts`                                   |
-| 監査網羅（v0.6.0）                           | CRUD・Policy/Workflow 変更・トークン発行/失効を監査ログへ記録（actor は認証済み subject）                                                                                                      | `api/audit.ts` + routes                                  |
-| テナント分離（v0.6.0）                       | API キー/JWT に `organizationId` を持ち、組織スコープ認証情報は自組織の entity のみ参照・変更可能（他組織は 404 で非公開）                                                                     | `api/routes/*` + `dashboard.ts`                          |
-| 監査ログのテナント分離                       | 監査イベントに解決済み context のテナントを付与し、`GET /governance/audit` とダッシュボード監査カウンタを自組織へ絞込み（属性なしエントリは非表示＝fail-closed）。グローバル資格情報は全体可視 | `api/audit.ts` + `routes/governance.ts` + `dashboard.ts` |
-| 監査証跡の一括持ち出し制御                   | 一括出力は `audit:read` と分離した `audit:export` 権限を要求（wildcard `audit:*` は両方を満たす）。**拒否も監査記録**。自身の出力イベントは出力範囲の確定後に記録するため payload に混入しない | `routes/governance.ts`                                   |
-| CSV 数式インジェクション対策                 | エクスポート値の先頭が `=` `+` `-` `@` TAB CR の場合にアポストロフィを付与し、表計算ソフトでの実行を無効化（値自体は改変しない）。RFC 4180 引用符処理とは別レイヤーで両方適用                  | `api/csv.ts`                                             |
-| 権限昇格防止（v0.6.0）                       | ロール作成/更新・ユーザーへのロール割当は「自身が保有する権限の範囲内」のみ許可                                                                                                                | `api/routes/governance.ts`                               |
-| JWT 失効 API（v0.6.0）                       | `POST /api/v1/auth/revoke` で現在の JWT を失効し、以後の認証を拒否                                                                                                                             | `routes/auth.ts`                                         |
-| API レスポンスセキュリティヘッダ（v0.6.0）   | JSON 応答に `X-Content-Type-Options: nosniff` / `X-Frame-Options: DENY` / `Referrer-Policy: no-referrer` / `Cache-Control: no-store`                                                           | `router.ts`                                              |
-| HSTS（M14）                                  | SSR ページに `Strict-Transport-Security: max-age=63072000; includeSubDomains` を付与                                                                                                           | `routes/web.ts`                                          |
-| CORS opt-in（M14）                           | `CEOP_CORS_ORIGIN` 環境変数 or `corsOrigin` 設定が明示された場合のみ CORS ヘッダを出力（デフォルト非出力）                                                                                     | `api/server.ts`                                          |
-| JWT 無効化永続化（M14）                      | `RevocationStore` ポート（in-memory / SQLite 差し替え可）で `jti` を永続的に無効化。`CEOP_SQLITE_FILE` 設定時は自動で SQLite backing に切り替わる                                              | `persistence/sqlite/revocation-store.ts`                 |
-| SQLite FK 制約（M14 + v0.6.0 migration 004） | users/devices/applications は `REFERENCES organizations(id)`、organizations.parent_id は自己参照 FK。マイグレーション 004 で既存 DB を再構築して適用                                           | `scripts/migrate.ts`                                     |
+| カテゴリ                                     | 実装内容                                                                                                                                                                                       | ファイル                                                      |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| タイミング攻撃対策                           | HMAC ハッシュ比較を `timingSafeEqual` で実施                                                                                                                                                   | `middleware/auth.ts`                                          |
+| JWT 署名・検証                               | HS256（`node:crypto` HMAC-SHA256）・jti replay guard・1h 有効期限・`iat < exp` 検証                                                                                                            | `middleware/jwt.ts`                                           |
+| レート制限（Credential-Stuffing 対策）       | sliding-window 10 req/min。loopback プロキシ経由時のみ `CF-Connecting-IP` を信頼（非 loopback は無視）                                                                                         | `middleware/rate-limiter.ts` + `api/client-ip.ts`             |
+| グローバル API レート制限（v0.6.0）          | `/api/v1/*` 全体を実クライアント IP 単位で制限（既定 300 req/min、`CEOP_RATE_LIMIT_MAX`/`CEOP_RATE_LIMIT_WINDOW_MS` で調整可）                                                                 | `api/server.ts`                                               |
+| DoS 防止                                     | リクエストボディを **1 MiB** で打ち切り（`req.destroy` 即断）                                                                                                                                  | `router.ts`                                                   |
+| 監査ログ権限                                 | `GET /api/v1/governance/audit` に `audit:read` 権限チェック                                                                                                                                    | `routes/governance.ts`                                        |
+| ポリシー一覧権限                             | `GET /api/v1/governance/policies` に `policy:read` 権限チェック                                                                                                                                | `routes/governance.ts`                                        |
+| 監査失敗の可視化                             | 監査イベント生成失敗を `console.error` でログ（サイレント廃棄を廃止）                                                                                                                          | `routes/governance.ts`                                        |
+| CSP ヘッダ                                   | SSR ページに `Content-Security-Policy: default-src 'self'` を付与                                                                                                                              | `routes/web.ts`                                               |
+| 秘密情報のログ漏洩防止                       | デモキーログを `NODE_ENV !== production` 条件で制限                                                                                                                                            | `app.ts`                                                      |
+| 監査アクター詐称防止                         | 評価 API の `actor` を認証済み `ctx.subject` から取得（リクエストボディ不使用）                                                                                                                | `routes/governance.ts`                                        |
+| 監査網羅（v0.6.0）                           | CRUD・Policy/Workflow 変更・トークン発行/失効を監査ログへ記録（actor は認証済み subject）                                                                                                      | `api/audit.ts` + routes                                       |
+| テナント分離（v0.6.0）                       | API キー/JWT に `organizationId` を持ち、組織スコープ認証情報は自組織の entity のみ参照・変更可能（他組織は 404 で非公開）                                                                     | `api/routes/*` + `dashboard.ts`                               |
+| 監査ログのテナント分離                       | 監査イベントに解決済み context のテナントを付与し、`GET /governance/audit` とダッシュボード監査カウンタを自組織へ絞込み（属性なしエントリは非表示＝fail-closed）。グローバル資格情報は全体可視 | `api/audit.ts` + `routes/governance.ts` + `dashboard.ts`      |
+| 監査証跡の一括持ち出し制御                   | 一括出力は `audit:read` と分離した `audit:export` 権限を要求（wildcard `audit:*` は両方を満たす）。**拒否も監査記録**。自身の出力イベントは出力範囲の確定後に記録するため payload に混入しない | `routes/governance.ts`                                        |
+| CSV 数式インジェクション対策                 | エクスポート値の先頭が `=` `+` `-` `@` TAB CR の場合にアポストロフィを付与し、表計算ソフトでの実行を無効化（値自体は改変しない）。RFC 4180 引用符処理とは別レイヤーで両方適用                  | `api/csv.ts`                                                  |
+| 権限昇格防止（v0.6.0）                       | ロール作成/更新・ユーザーへのロール割当は「自身が保有する権限の範囲内」のみ許可                                                                                                                | `api/routes/governance.ts`                                    |
+| JWT 失効 API（v0.6.0）                       | `POST /api/v1/auth/revoke` で現在の JWT を失効し、以後の認証を拒否                                                                                                                             | `routes/auth.ts`                                              |
+| API レスポンスセキュリティヘッダ（v0.6.0）   | JSON/添付応答に `X-Content-Type-Options: nosniff` / `X-Frame-Options: DENY` / `Referrer-Policy: no-referrer` / `Cache-Control: no-store` / HSTS / `X-Request-Id`                               | `router.ts`                                                   |
+| HSTS（v0.8.0 全応答化）                      | API（JSON・添付・SSR・静的アセット・WebUI）に `Strict-Transport-Security: max-age=63072000; includeSubDomains` を付与                                                                          | `router.ts` + `routes/web.ts` + `webui/server.ts`             |
+| リクエスト相関 ID（v0.8.0）                  | 全 API/WebUI 応答に `X-Request-Id`（UUID）を付与し、アクセスログへ出力（SEC-010 解消）                                                                                                         | `router.ts` + `webui/server.ts`                               |
+| API キー管理 API（v0.8.0）                   | `GET /api/v1/auth/keys` / `DELETE /api/v1/auth/keys/:keyId`。`auth:write` + プラットフォームレベル資格情報のみ・秘密ハッシュ非返却・失効は監査記録（SEC-013 解消）                             | `routes/auth.ts` + `persistence/sqlite/api-key-repository.ts` |
+| CORS opt-in（M14）                           | `CEOP_CORS_ORIGIN` 環境変数 or `corsOrigin` 設定が明示された場合のみ CORS ヘッダを出力（デフォルト非出力）                                                                                     | `api/server.ts`                                               |
+| JWT 無効化永続化（M14）                      | `RevocationStore` ポート（in-memory / SQLite 差し替え可）で `jti` を永続的に無効化。`CEOP_SQLITE_FILE` 設定時は自動で SQLite backing に切り替わる                                              | `persistence/sqlite/revocation-store.ts`                      |
+| SQLite FK 制約（M14 + v0.6.0 migration 004） | users/devices/applications は `REFERENCES organizations(id)`、organizations.parent_id は自己参照 FK。マイグレーション 004 で既存 DB を再構築して適用                                           | `scripts/migrate.ts`                                          |
 
 ### ⚖️ ポリシーエンジン（Governance Core）
 

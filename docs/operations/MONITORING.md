@@ -74,9 +74,9 @@ curl -fsS http://127.0.0.1:3130/healthz
 
 - `scripts/webui-deploy.sh` はデプロイ直後に `/healthz` を最大 10 秒ポーリングし、
   失敗した場合は非 0 で終了します（デプロイ時の検証は自動）。
-- 常時監視の cron 外形プローブは **未設定**（API 側 #2 と異なる）。LAN 内配信のみの
-  現段階では systemd の `Restart=on-failure` とデプロイ時検証で運用し、
-  Tunnel 経由の公開（Approval PR）と同時に health-probe.sh の対象へ追加します。
+- 常時監視の cron 外形プローブは **未設定**（API 側 #2 と異なる）。v0.8.0 デプロイ時に
+  `https://ceop.mirai-dx-platform.com/healthz` への外形プローブを cron へ追加予定。
+  それまでは systemd の `Restart=on-failure`・デプロイ時検証・アクセスログで運用します。
 - アクセス動向は Neon `ceop-production` の `webui_access_log` テーブルで確認できます
   （ページヒットのみ記録。アセット単位のヒットは記録しません）。
 
@@ -94,7 +94,7 @@ FROM webui_access_log GROUP BY 1 ORDER BY 1 DESC LIMIT 24;
 
 | 項目                                    | 現状                                                                 | 必要なもの                                                                                                               |
 | --------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| 通知経路（PagerDuty / Slack / メール）  | **未実装**。ALERT はログと終了コードにしか出ない                     | 通知先の決定と資格情報（Secrets 管理が必要）                                                                             |
+| 通知経路（PagerDuty / Slack / メール）  | **プローブ側は実装済み**（`CEOP_ALERT_WEBHOOK_URL` 設定時に ALERT/RECOVERED を JSON POST）。通知先の決定と資格情報の設定は未実施 | 通知先の決定と `CEOP_ALERT_WEBHOOK_URL` の設定（Secrets 管理が必要）                                                     |
 | アラートダッシュボード                  | **存在しない**                                                       | メトリクス収集基盤の導入が前提                                                                                           |
 | レイテンシ SLI（p95）                   | **未計測**                                                           | リクエストごとの所要時間の収集・集計                                                                                     |
 | エラー率 SLI                            | **未計測**                                                           | 5xx 比率の集計                                                                                                           |

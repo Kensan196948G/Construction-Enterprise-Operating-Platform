@@ -6,7 +6,7 @@
     "registered_at": "2026-06-25",
     "phase_mode": "maintenance"
   },
-  "goal": "v0.6.2 本番運用継続 — HEAD 対応（G-27）と外形監視の実効化（G-28）を本線へ反映し、263 テスト pass・CI グリーン・本番 ceop.mirai-dx-platform.com を稼働維持",
+  "goal": "v0.8.0 本番運用継続 — HSTS・リクエストID・CF-Connecting-IP 分離・監査テナント補完・OpenAPI 整合・バックアップ保持自動化・API キー管理・Webhook 通知を本線へ反映し、297 テスト pass・CI グリーン・本番 ceop.mirai-dx-platform.com を稼働維持",
   "phase": "maintenance",
   "release": {
     "v0_1_0_foundation": "release_ready",
@@ -14,6 +14,7 @@
     "v0_3_0_jwt_persistence": "release_ready",
     "v0_4_0_security_hardening": "release_ready",
     "v0_5_0_m8_production_deploy": "release_ready",
+    "v0_8_0_production_hardening": "release_ready",
     "production_deploy": "completed",
     "judged_by": "CTO",
     "judged_at": "2026-08-06"
@@ -22,9 +23,9 @@
     "success_rate_target": 0.9,
     "ci_success_rate": 1,
     "test_pass_rate": 1,
-    "test_count": 263,
+    "test_count": 297,
     "security_critical": 0,
-    "security_high_resolved": 17,
+    "security_high_resolved": 19,
     "blocker_count": 0
   },
   "execution": {
@@ -55,7 +56,8 @@
     "M14_security_hardening_r2": "completed",
     "M15_ci_pnpm_fix": "completed",
     "M16_coderabbit_all16_fixes": "completed",
-    "v0_6_0_production_readiness": "completed"
+    "v0_6_0_production_readiness": "completed",
+    "v0_8_0_production_hardening": "completed"
   },
   "completed_issues": [
     "v0.6.0: version unification (src/version.ts + guard test, package.json/info/OpenAPI/UI/Docker 0.6.0)",
@@ -145,6 +147,20 @@
     "PR #11 merged (db689ac): 監査証跡エクスポート + CSV 数式対策 + compose ハードニング一式を main へ反映",
     "G-27 (P2): Router.#match に HEAD→GET フォールバックを追加し、/health を含む全ルートの HEAD 404 を解消。ルータ層に初のテスト 6 件（変異 3 種検証済み）。監査エクスポート記録へ method を追加し、本文未配信の HEAD プローブを『成功した配信』として証跡に残さないようにした",
     "G-28 (P2): scripts/health-probe.sh — 連続失敗カウンタ付き外形プローブ（WARN→ALERT 閾値 3・RECOVERED 遷移・成功も必ず記録・状態ファイル破損時は fail-open）。シェルスクリプトを node:test から execFile で 5 テスト固定。MONITORING.md を『実装済み／未実装（目標設計）／当面の手順』3 章へ再構成し、HEALTHCHECK が unless-stopped では誰にも通知しない事実と、失敗時のみ書くログは cron 停止と無障害を判別できない事実を明文化。OPERATIONS_LEDGER を実行可能なコマンドと判定基準へ置換"
+    ,
+    "v0.8.0: HSTS を API JSON/添付/SSR/静的アセット/WebUI 全応答へ適用（G-22 解消）",
+    "v0.8.0: X-Request-Id（UUID）を API/WebUI 応答と API アクセスログへ追加（SEC-010 解消）",
+    "v0.8.0: loopback peer 限定で CF-Connecting-IP を信頼し実クライアント IP 単位のレート制限/アクセスログへ分離（G-25 解消）",
+    "v0.8.0: scripts/backup-retention.ts（既定 14 日・predeploy/crontest 保護）を追加（G-24 自動化）",
+    "v0.8.0: OpenAPI enum/ページネーションキー/limit 上限/Workflow スキーマをドメイン実装へ整合し openapi:check を verify に統合（G-30 解消）",
+    "v0.8.0: auth:token / governance:evaluate の監査イベントへ解決済みテナントを付与（G-32 解消・回帰テスト 2 件）",
+    "v0.8.0: WebUI 既定 bind を 127.0.0.1 へ変更し LAN 直アクセスを遮断（G-31 解消）",
+    "v0.8.0: API/WebUI サーバに headersTimeout/requestTimeout/keepAliveTimeout を設定（slowloris 対策）",
+    "v0.8.0: 本番 docker run に read_only/cap_drop/no-new-privileges/リソース制限/ログローテーションを適用（G-23 解消）",
+    "v0.8.0: API キー管理 API（GET/DELETE /api/v1/auth/keys・SQLite 永続化・監査記録・組織スコープ拒否）を追加（SEC-013 解消）",
+    "v0.8.0: health-probe.sh に Webhook 通知（CEOP_ALERT_WEBHOOK_URL・ALERT/RECOVERED・配送失敗記録）を追加（G-28 通知経路実装）",
+    "v0.8.0: WebUI 展開時のマニフェスト UUID 形式検証でパストラバーサルを防御",
+    "v0.8.0: /api/v1/info に environment/nodeVersion を追加"
   ],
   "blocked_issues": [],
   "learning": {
@@ -174,17 +190,15 @@
   },
   "notes": {
     "remote": "https://github.com/Kensan196948G/Construction-Enterprise-Operating-Platform (PRIVATE)",
-    "branch": "feat/production-hardening (base: feat/platform-foundation)",
+    "branch": "feat/production-hardening-r3 (base: main)",
     "next_actions": [
-      "G-22 (P2): 本番応答に HSTS が無い。Cloudflare エッジ設定のため Approval PR 対象",
-      "G-23 (P2): 本番 docker run に read_only/cap_drop/no-new-privileges/リソース制限/ログローテーションが未適用。compose 切替は停止を伴うため別 PR で計画",
-      "G-24 (P3): バックアップ世代の自動削除が未実装・オフサイトコピー無し（運用台帳で手動管理中）",
-      "G-25 (P3): 全トラフィックが Tunnel 経由 loopback のため per-IP レート制限が実質単一バケット",
       "アラート通知経路（PagerDuty/Slack/メール）の決定と実装 — 検知は health-probe.sh で実装済み、伝達先が未決定（Secrets 必要のため確定時は Approval 対象になりうる）",
-      "マージ後: 本番 crontab の日次 curl（30 2 * * *）を */5 の scripts/health-probe.sh へ差し替え、health.log に OK 行が届くことを確認",
+      "アラート通知先 URL（CEOP_ALERT_WEBHOOK_URL）の決定と設定 — health-probe.sh の Webhook 送信は v0.8.0 で実装済み",
+      "Cloudflare エッジでの HSTS 設定（アプリ層は v0.8.0 で対応済み。エッジ側は推奨）",
+      "オフサイトバックアップ（rclone/S3 等）と四半期復元試験",
       "初期安定化監視の継続（health/ready・ログ・エラー率）と運用台帳の運用開始",
       "四半期バックアップ復元試験（未実施）と権限棚卸し",
-      "P3 バックログ（CSP nonce 化、リクエスト ID、SSO、実アダプタ接続等）"
+      "P3 バックログ（CSP nonce 化、SSO/OIDC、実アダプタ接続、AI ゲートウェイ）"
     ],
     "v060_verify": {
       "all_tests": "226/226 pass",
@@ -360,6 +374,26 @@
         "build": "PASS",
         "dependency_audit": "PASS — 0 件",
         "openapi_drift": "PASS"
+      },
+      "protected_user_changes": [
+        ".claude/START_PROMPT.md (modified)",
+        ".claude/skills/ (untracked)"
+      ],
+      "known_env_issue": "ローカルの GITHUB_TOKEN 環境変数が無効。gh/git remote 操作は `env -u GITHUB_TOKEN` 経由が必須"
+    },
+    "session_2026_08_07_production_hardening": {
+      "focus": "v0.8.0 本番運用化 — HSTS・リクエストID・CF-IP 分離・監査テナント補完・OpenAPI 整合・バックアップ保持自動化・API キー管理・Webhook 通知・本番 API 更新",
+      "branches": [
+        "feat/production-hardening-r3"
+      ],
+      "verify": {
+        "format_check": "PASS",
+        "typecheck": "PASS",
+        "lint": "PASS",
+        "test": "297/297 PASS",
+        "build": "PASS",
+        "dependency_audit": "PASS — pnpm audit --audit-level=high 0 件",
+        "openapi_drift": "PASS — openapi:check を verify に統合"
       },
       "protected_user_changes": [
         ".claude/START_PROMPT.md (modified)",
