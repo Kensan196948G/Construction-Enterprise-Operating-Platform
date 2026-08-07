@@ -21,6 +21,8 @@ import { registerWebRoutes } from "./routes/web.ts";
 import { registerEntityCrudRoutes } from "./routes/entity-crud.ts";
 import { registerWorkflowRoutes } from "./routes/workflows.ts";
 import { registerWorkflowInstanceRoutes } from "./routes/workflow-instances.ts";
+import { registerGatewayRoutes } from "./routes/gateway.ts";
+import type { GatewayService } from "../domain/gateway-service.ts";
 import type { AppContainer } from "./types.ts";
 
 export interface ServerConfig {
@@ -29,6 +31,8 @@ export interface ServerConfig {
   readonly corsOrigin?: string;
   /** Optional global API rate limit (per socket IP). Defaults from env or 300 req/min. */
   readonly rateLimit?: { readonly maxRequests: number; readonly windowMs: number };
+  /** Integration services to expose through the CEOP gateway (P1). */
+  readonly gatewayServices?: readonly GatewayService[];
 }
 
 export function createServer(config: ServerConfig, container: AppContainer): Server {
@@ -69,6 +73,9 @@ export function createServer(config: ServerConfig, container: AppContainer): Ser
   registerEntityCrudRoutes(router, container);
   registerWorkflowRoutes(router, container);
   registerWorkflowInstanceRoutes(router, container);
+  if (config.gatewayServices !== undefined) {
+    registerGatewayRoutes(router, container, config.gatewayServices);
+  }
   registerWebRoutes(router, container);
 
   const server = httpCreateServer((req: IncomingMessage, res: ServerResponse): void => {

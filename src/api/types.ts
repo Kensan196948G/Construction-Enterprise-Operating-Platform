@@ -11,6 +11,7 @@ import type { Repositories } from "../persistence/ports.ts";
 import type { ApiKeyRepository } from "../persistence/sqlite/api-key-repository.ts";
 import type { IAuditLog } from "../governance/audit-log.ts";
 import type { JwtIssuer } from "./middleware/jwt.ts";
+import type { GatewayService } from "../domain/gateway-service.ts";
 
 // ---------------------------------------------------------------------------
 // Request / response shapes
@@ -95,4 +96,6 @@ export interface AppContainer {
   readonly storageTier?: "in-memory" | "file" | "sqlite";
   /** Optional JWT issuer/verifier — when present, Bearer JWT tokens are accepted. */
   readonly jwtIssuer?: JwtIssuer;
+  /** Validated integration gateway service registrations (P1). */
+  readonly gatewayServices?: readonly GatewayService[];
 }
