@@ -69,7 +69,9 @@ export function cleanBackups(
       unlinkSync(path);
       deleted.push(path);
     } catch (e) {
-      console.error(`[backup-retention] failed to delete ${path}: ${e instanceof Error ? e.message : String(e)}`);
+      console.error(
+        `[backup-retention] failed to delete ${path}: ${e instanceof Error ? e.message : String(e)}`,
+      );
       failed.push(path);
     }
   }
@@ -95,7 +97,9 @@ function main(): void {
   for (const path of deleted) {
     console.error(`[backup-retention] deleted ${path}`);
   }
-  console.error(`[backup-retention] deleted ${deleted.length} snapshot(s), ${failed.length} failure(s)`);
+  console.error(
+    `[backup-retention] deleted ${deleted.length} snapshot(s), ${failed.length} failure(s)`,
+  );
   if (failed.length > 0) process.exit(2);
 }
 
