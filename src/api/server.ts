@@ -33,6 +33,10 @@ import { registerNotificationRoutes } from "./routes/notifications.ts";
 import { registerKnowledgeRoutes } from "./routes/knowledge.ts";
 import { registerContractRoutes } from "./routes/contracts.ts";
 import { registerItsmRoutes } from "./routes/itsm.ts";
+import { registerDocumentRoutes } from "./routes/documents.ts";
+import { registerWorkScheduleRoutes } from "./routes/work-schedules.ts";
+import { registerPurchaseOrderRoutes } from "./routes/purchase-orders.ts";
+import { registerNotificationPreferenceRoutes } from "./routes/notification-preferences.ts";
 import type { GatewayService } from "../domain/gateway-service.ts";
 import type { AppContainer } from "./types.ts";
 
@@ -98,6 +102,10 @@ export function createServer(config: ServerConfig, container: AppContainer): Ser
   registerKnowledgeRoutes(router, container);
   registerContractRoutes(router, container);
   registerItsmRoutes(router, container);
+  registerDocumentRoutes(router, container);
+  registerWorkScheduleRoutes(router, container);
+  registerPurchaseOrderRoutes(router, container);
+  registerNotificationPreferenceRoutes(router, container);
   registerWebRoutes(router, container);
 
   const server = httpCreateServer((req: IncomingMessage, res: ServerResponse): void => {

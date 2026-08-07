@@ -26,6 +26,14 @@ import type { Photo, PhotoId } from "../domain/photo.ts";
 import type { KnowledgeArticle, KnowledgeId } from "../domain/knowledge.ts";
 import type { Contract, ContractId } from "../domain/contract.ts";
 
+import type { Document, DocumentId } from "../domain/document.ts";
+import type { WorkSchedule, WorkScheduleId } from "../domain/work-schedule.ts";
+import type { PurchaseOrder, PurchaseOrderId } from "../domain/purchase-order.ts";
+import type {
+  NotificationPreference,
+  NotificationPreferenceId,
+} from "../domain/notification-preference.ts";
+
 import type {
   SafetyCheck,
   SafetyCheckId,
@@ -154,6 +162,24 @@ export interface ContractRepository extends Repository<Contract, ContractId> {
   findByNumber(contractNumber: string): Promise<Contract | null>;
 }
 
+export interface DocumentRepository extends Repository<Document, DocumentId> {
+  findByOrganization(orgId: string): Promise<readonly Document[]>;
+  findByProject(projectId: ProjectId): Promise<readonly Document[]>;
+}
+export interface WorkScheduleRepository extends Repository<WorkSchedule, WorkScheduleId> {
+  findByProject(projectId: ProjectId): Promise<readonly WorkSchedule[]>;
+}
+export interface PurchaseOrderRepository extends Repository<PurchaseOrder, PurchaseOrderId> {
+  findByProject(projectId: ProjectId): Promise<readonly PurchaseOrder[]>;
+  findByNumber(orderNumber: string): Promise<PurchaseOrder | null>;
+}
+export interface NotificationPreferenceRepository extends Repository<
+  NotificationPreference,
+  NotificationPreferenceId
+> {
+  findByUserId(userId: string): Promise<NotificationPreference | null>;
+}
+
 export interface ProjectRepository extends Repository<Project, ProjectId> {
   /** All projects belonging to one organization. */
   findByOrganization(orgId: string): Promise<readonly Project[]>;
@@ -194,4 +220,8 @@ export interface Repositories {
   readonly notificationDeliveries: NotificationDeliveryRepository;
   readonly knowledgeArticles: KnowledgeRepository;
   readonly contracts: ContractRepository;
+  readonly documents: DocumentRepository;
+  readonly workSchedules: WorkScheduleRepository;
+  readonly purchaseOrders: PurchaseOrderRepository;
+  readonly notificationPreferences: NotificationPreferenceRepository;
 }

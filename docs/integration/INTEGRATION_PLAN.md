@@ -70,7 +70,7 @@ CEOP API Gateway (認証・認可・監査・レート制限・テナント境�
 | P0 ソース統合         | 5 リポジトリを `integrations/` へ取り込み、機能インベントリ・統合計画・NOTICE を作成                                     | 全ソースが CEOP に存在・CI グリーン・秘密情報なし                | ✅ 本計画で実施 |
 | P1 ゲートウェイ       | CEOP に統合サービス向けリバースプロキシ/アダプタ基盤と統一 JWT 認証を追加                                                | 統合サービスのエンドポイントが CEOP 認証・監査を通して呼び出せる | 🔨 実装済み（PR #24 マージで ✅） |
 | P2 ガバナンス移植     | ワークフローインスタンス（Issue→Approval→Audit）・AI ゲートウェイ統制・端末エージェント受信を CEOP コアへ移植            | L-02/L-05/L-07 の API+テスト+監査が CEOP に存在                  | ✅ 実装済み（PR #26） |
-| P3 業務モジュール移植 | ServiceHub の案件・日報・写真・安全・原価・契約・ITSM と Enterprise-OS/OnePlatform の業務領域を CEOP ドメインへ移植      | 各機能の CRUD+監査+UI+テスト                                     | 🔨 進行中（S-01〜S-09 実装済み・日報承認WF連携済み・PR #30/#31/#32） |
+| P3 業務モジュール移植 | ServiceHub の案件・日報・写真・安全・原価・契約・ITSM と Enterprise-OS/OnePlatform の業務領域を CEOP ドメインへ移植      | 各機能の CRUD+監査+UI+テスト                                     | 🔨 進行中（S-01〜S-09 + E-02/E-03/E-05/E-11 実装済み・PR #30〜#33） |
 | P4 ポータル・監視統合 | OnePlatform/Enterprise-OS の WebUI を CEOP Portal のモジュールとして統合し、監視（Prometheus/Grafana）を CEOP 運用へ接続 | 全画面が CEOP 配下で閲覧可能                                     | 未着手          |
 | P5 検証・切替         | 全機能のパリティ検証・本番切替・旧データ移行・運用引継ぎ                                                                 | FEATURE_INVENTORY 全項目が統合済み                               | 未着手          |
 | P6 削除判断           | ユーザーに Y/N を提示し、Y の場合のみ旧 5 リポジトリを GitHub から削除                                                   | ユーザー承認・削除後の参照は integrations/ と Git 履歴で可能     | 未着手          |

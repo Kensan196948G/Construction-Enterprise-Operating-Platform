@@ -13,8 +13,16 @@ import type {
 } from "../../domain/notification.ts";
 
 import type { ProjectId } from "../../domain/project.ts";
-import type { KnowledgeArticle, KnowledgeId } from "../../domain/knowledge.ts";
 import type { Contract, ContractId } from "../../domain/contract.ts";
+import type { KnowledgeArticle, KnowledgeId } from "../../domain/knowledge.ts";
+
+import type { Document, DocumentId } from "../../domain/document.ts";
+import type { WorkSchedule, WorkScheduleId } from "../../domain/work-schedule.ts";
+import type { PurchaseOrder, PurchaseOrderId } from "../../domain/purchase-order.ts";
+import type {
+  NotificationPreference,
+  NotificationPreferenceId,
+} from "../../domain/notification-preference.ts";
 
 import type {
   PhotoRepository,
@@ -25,6 +33,10 @@ import type {
   NotificationDeliveryRepository,
   KnowledgeRepository,
   ContractRepository,
+  DocumentRepository,
+  WorkScheduleRepository,
+  PurchaseOrderRepository,
+  NotificationPreferenceRepository,
 } from "../ports.ts";
 import { BaseFileRepository } from "./base-file-repository.ts";
 
@@ -142,5 +154,68 @@ export class FileContractRepository
   }
   async findByNumber(contractNumber: string): Promise<Contract | null> {
     return (await this.findAll()).find((c) => c.contractNumber === contractNumber) ?? null;
+  }
+}
+
+export class FileDocumentRepository
+  extends BaseFileRepository<Document>
+  implements DocumentRepository
+{
+  override async findById(id: DocumentId): Promise<Document | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: DocumentId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByOrganization(orgId: string): Promise<readonly Document[]> {
+    return (await this.findAll()).filter((d) => d.organizationId === orgId);
+  }
+  async findByProject(projectId: ProjectId): Promise<readonly Document[]> {
+    return (await this.findAll()).filter((d) => (d.projectId ?? "") === (projectId as string));
+  }
+}
+export class FileWorkScheduleRepository
+  extends BaseFileRepository<WorkSchedule>
+  implements WorkScheduleRepository
+{
+  override async findById(id: WorkScheduleId): Promise<WorkSchedule | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: WorkScheduleId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByProject(projectId: ProjectId): Promise<readonly WorkSchedule[]> {
+    return (await this.findAll()).filter((s) => (s.projectId as string) === (projectId as string));
+  }
+}
+export class FilePurchaseOrderRepository
+  extends BaseFileRepository<PurchaseOrder>
+  implements PurchaseOrderRepository
+{
+  override async findById(id: PurchaseOrderId): Promise<PurchaseOrder | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: PurchaseOrderId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByProject(projectId: ProjectId): Promise<readonly PurchaseOrder[]> {
+    return (await this.findAll()).filter((o) => (o.projectId as string) === (projectId as string));
+  }
+  async findByNumber(orderNumber: string): Promise<PurchaseOrder | null> {
+    return (await this.findAll()).find((o) => o.orderNumber === orderNumber) ?? null;
+  }
+}
+export class FileNotificationPreferenceRepository
+  extends BaseFileRepository<NotificationPreference>
+  implements NotificationPreferenceRepository
+{
+  override async findById(id: NotificationPreferenceId): Promise<NotificationPreference | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: NotificationPreferenceId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByUserId(userId: string): Promise<NotificationPreference | null> {
+    return (await this.findAll()).find((p) => p.userId === userId) ?? null;
   }
 }

@@ -79,6 +79,15 @@ tags:
     name: Itsm
     description: ITSM adapter (ServiceHub S-08)
   - 
+    name: Documents
+    description: Drawings/documents (Enterprise-OS E-03)
+  - 
+    name: WorkSchedules
+    description: Site work schedules (Enterprise-OS E-02)
+  - 
+    name: PurchaseOrders
+    description: Purchase orders / ERP (Enterprise-OS E-05)
+  - 
     name: Projects
     description: Construction project management (ServiceHub S-01)
   - 
@@ -5550,6 +5559,716 @@ Tenant scoping matches `GET /api/v1/governance/audit`. Each row carries `sequenc
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/documents:
+    get:
+      operationId: listDocuments
+      summary: Paginated documents (optional ?type=)
+      tags:
+        - Documents
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/limitParam"
+        - 
+          $ref: "#/components/parameters/offsetParam"
+        - 
+          name: type
+          in: query
+          schema:
+            type: string
+            enum:
+              - drawing
+              - contract
+              - safety
+              - quality
+              - other
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - documents
+                  - count
+                  - total
+                  - limit
+                  - offset
+                properties:
+                  documents:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Document"
+                  count:
+                    type: integer
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createDocument
+      summary: Create a drawing/document (E-03)
+      tags:
+        - Documents
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+              properties:
+                organizationId:
+                  type: string
+                projectId:
+                  type: string
+                title:
+                  type: string
+                documentType:
+                  type: string
+                  enum:
+                    - drawing
+                    - contract
+                    - safety
+                    - quality
+                    - other
+                revision:
+                  type: integer
+                status:
+                  type: string
+                  enum:
+                    - draft
+                    - review
+                    - approved
+                    - issued
+                    - archived
+                fileUrl:
+                  type: string
+                fileSize:
+                  type: integer
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - document
+                properties:
+                  document:
+                    $ref: "#/components/schemas/Document"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/documents/{id}:
+    get:
+      operationId: getDocument
+      summary: Document detail
+      tags:
+        - Documents
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - document
+                properties:
+                  document:
+                    $ref: "#/components/schemas/Document"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteDocument
+      summary: Delete a document (audited)
+      tags:
+        - Documents
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted:
+                    type: boolean
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/projects/{projectId}/work-schedules:
+    get:
+      operationId: listWorkSchedules
+      summary: Paginated work schedules for a project (E-02)
+      tags:
+        - WorkSchedules
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/limitParam"
+        - 
+          $ref: "#/components/parameters/offsetParam"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - workSchedules
+                  - count
+                  - total
+                  - limit
+                  - offset
+                properties:
+                  workSchedules:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/WorkSchedule"
+                  count:
+                    type: integer
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createWorkSchedule
+      summary: Create a work schedule (E-02)
+      tags:
+        - WorkSchedules
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - workDate
+                - title
+              properties:
+                workDate:
+                  type: string
+                  format: date
+                title:
+                  type: string
+                assignee:
+                  type: string
+                status:
+                  type: string
+                  enum:
+                    - planned
+                    - in_progress
+                    - completed
+                    - cancelled
+                notes:
+                  type: string
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - workSchedule
+                properties:
+                  workSchedule:
+                    $ref: "#/components/schemas/WorkSchedule"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/work-schedules/{id}:
+    get:
+      operationId: getWorkSchedule
+      summary: Work schedule detail
+      tags:
+        - WorkSchedules
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - workSchedule
+                properties:
+                  workSchedule:
+                    $ref: "#/components/schemas/WorkSchedule"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/projects/{projectId}/purchase-orders:
+    get:
+      operationId: listPurchaseOrders
+      summary: Paginated purchase orders for a project (E-05)
+      tags:
+        - PurchaseOrders
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/limitParam"
+        - 
+          $ref: "#/components/parameters/offsetParam"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - purchaseOrders
+                  - count
+                  - total
+                  - limit
+                  - offset
+                properties:
+                  purchaseOrders:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PurchaseOrder"
+                  count:
+                    type: integer
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createPurchaseOrder
+      summary: Create a purchase order (E-05)
+      tags:
+        - PurchaseOrders
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - orderNumber
+                - supplier
+                - item
+                - quantity
+                - unitPrice
+              properties:
+                orderNumber:
+                  type: string
+                supplier:
+                  type: string
+                item:
+                  type: string
+                quantity:
+                  type: number
+                unitPrice:
+                  type: number
+                status:
+                  type: string
+                  enum:
+                    - draft
+                    - issued
+                    - approved
+                    - received
+                    - cancelled
+                notes:
+                  type: string
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - purchaseOrder
+                properties:
+                  purchaseOrder:
+                    $ref: "#/components/schemas/PurchaseOrder"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/purchase-orders/{id}:
+    get:
+      operationId: getPurchaseOrder
+      summary: Purchase order detail
+      tags:
+        - PurchaseOrders
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - purchaseOrder
+                properties:
+                  purchaseOrder:
+                    $ref: "#/components/schemas/PurchaseOrder"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/notification-preferences/{userId}:
+    get:
+      operationId: getNotificationPreference
+      summary: Notification preference for a user (E-11)
+      tags:
+        - Notifications
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - notificationPreference
+                properties:
+                  notificationPreference:
+                    $ref: "#/components/schemas/NotificationPreference"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: upsertNotificationPreference
+      summary: Create or update a notification preference
+      tags:
+        - Notifications
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                emailEnabled:
+                  type: boolean
+                slackEnabled:
+                  type: boolean
+                slackWebhookUrl:
+                  type: string
+                events:
+                  type: object
+                  additionalProperties:
+                    type: boolean
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - notificationPreference
+                properties:
+                  notificationPreference:
+                    $ref: "#/components/schemas/NotificationPreference"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /api/v1/integrations/{service}/{proxyPath}:
     get:
       operationId: gatewayGet
@@ -6732,6 +7451,182 @@ components:
             - active
             - completed
             - terminated
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    Document:
+      type: object
+      required:
+        - id
+        - organizationId
+        - title
+        - documentType
+        - revision
+        - status
+        - tags
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        organizationId:
+          type: string
+        projectId:
+          type: string
+        title:
+          type: string
+        documentType:
+          type: string
+          enum:
+            - drawing
+            - contract
+            - safety
+            - quality
+            - other
+        revision:
+          type: integer
+        status:
+          type: string
+          enum:
+            - draft
+            - review
+            - approved
+            - issued
+            - archived
+        fileUrl:
+          type: string
+        fileSize:
+          type: integer
+        tags:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    WorkSchedule:
+      type: object
+      required:
+        - id
+        - organizationId
+        - projectId
+        - workDate
+        - title
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        organizationId:
+          type: string
+        projectId:
+          type: string
+        workDate:
+          type: string
+          format: date
+        title:
+          type: string
+        assignee:
+          type: string
+        status:
+          type: string
+          enum:
+            - planned
+            - in_progress
+            - completed
+            - cancelled
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    PurchaseOrder:
+      type: object
+      required:
+        - id
+        - organizationId
+        - projectId
+        - orderNumber
+        - supplier
+        - item
+        - quantity
+        - unitPrice
+        - amount
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        organizationId:
+          type: string
+        projectId:
+          type: string
+        orderNumber:
+          type: string
+        supplier:
+          type: string
+        item:
+          type: string
+        quantity:
+          type: number
+        unitPrice:
+          type: number
+        amount:
+          type: number
+        status:
+          type: string
+          enum:
+            - draft
+            - issued
+            - approved
+            - received
+            - cancelled
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    NotificationPreference:
+      type: object
+      required:
+        - id
+        - userId
+        - emailEnabled
+        - slackEnabled
+        - events
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        organizationId:
+          type: string
+        userId:
+          type: string
+        emailEnabled:
+          type: boolean
+        slackEnabled:
+          type: boolean
+        slackWebhookUrl:
+          type: string
+        events:
+          type: object
+          additionalProperties:
+            type: boolean
         createdAt:
           type: string
           format: date-time

@@ -50,6 +50,10 @@ import {
   FileNotificationDeliveryRepository,
   FileKnowledgeRepository,
   FileContractRepository,
+  FileDocumentRepository,
+  FileWorkScheduleRepository,
+  FilePurchaseOrderRepository,
+  FileNotificationPreferenceRepository,
 } from "./business-repositories.ts";
 
 // ---------------------------------------------------------------------------
@@ -282,5 +286,12 @@ export async function createFileRepositories(dataDir: string): Promise<Repositor
     ),
     knowledgeArticles: new FileKnowledgeRepository(dataDir, "knowledge-articles.json"),
     contracts: new FileContractRepository(dataDir, "contracts.json"),
+    documents: new FileDocumentRepository(dataDir, "documents.json"),
+    workSchedules: new FileWorkScheduleRepository(dataDir, "work-schedules.json"),
+    purchaseOrders: new FilePurchaseOrderRepository(dataDir, "purchase-orders.json"),
+    notificationPreferences: new FileNotificationPreferenceRepository(
+      dataDir,
+      "notification-preferences.json",
+    ),
   };
 }
