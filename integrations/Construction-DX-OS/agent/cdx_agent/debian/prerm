@@ -1,0 +1,32 @@
+#!/bin/sh
+# prerm — pre-removal script for cdx-agent
+
+set -e
+
+case "$1" in
+    remove|purge)
+        # Stop and disable timers before removal
+        if command -v systemctl > /dev/null 2>&1; then
+            systemctl stop cdx-agent.timer cdx-agent-inventory.timer 2>/dev/null || true
+            systemctl disable cdx-agent.timer cdx-agent-inventory.timer 2>/dev/null || true
+        fi
+
+        # Remove AppArmor profile from enforcement
+        if command -v apparmor_parser > /dev/null 2>&1 && \
+           [ -f /etc/apparmor.d/usr.bin.cdx-agent ]; then
+            apparmor_parser -R /etc/apparmor.d/usr.bin.cdx-agent 2>/dev/null || true
+        fi
+        ;;
+
+    upgrade|deconfigure|failed-upgrade)
+        ;;
+
+    *)
+        echo "prerm: unrecognised argument '$1'" >&2
+        exit 1
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0

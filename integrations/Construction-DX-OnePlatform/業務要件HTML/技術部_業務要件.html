@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>技術部_業務要件 | みらい建設工業 統合建設DX基盤</title>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
+
+  :root {
+    --bg:               #ffffff;
+    --bg-surface:       #f8fafc;
+    --bg-card:          #ffffff;
+    --text:             #1e293b;
+    --text-secondary:   #64748b;
+    --text-muted:       #94a3b8;
+    --accent:           #2563eb;
+    --accent-light:     #dbeafe;
+    --accent2:          #0ea5e9;
+    --accent3:          #7c3aed;
+    --accent-red:       #f43f5e;
+    --border:           #e2e8f0;
+    --border-light:     #f1f5f9;
+    --shadow:           0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-lg:        0 4px 16px rgba(0,0,0,0.06);
+    --header-bg:        #ffffff;
+    --header-text:      #0f172a;
+    --header-sub:       #475569;
+    --header-shadow:    0 1px 4px rgba(0,0,0,0.08), 0 1px 0 #e2e8f0;
+    --header-border:    #e2e8f0;
+    --nav-link:         #475569;
+    --nav-hover-bg:     rgba(37,99,235,0.08);
+    --nav-active-bg:    rgba(37,99,235,0.12);
+    --nav-active-text:  #2563eb;
+    --table-head-bg:    linear-gradient(135deg, #2563eb, #0ea5e9);
+    --table-head-text:  #ffffff;
+    --table-stripe:     #f8fafc;
+    --table-hover:      #eff6ff;
+    --code-bg:          #f1f5f9;
+    --code-color:       #2563eb;
+    --pre-bg:           #1e293b;
+    --pre-color:        #e2e8f0;
+    --section-bg:       #f0f9ff;
+    --quote-bg:         #fef2f2;
+    --quote-border:     #f43f5e;
+    --toggle-bg:        #e2e8f0;
+    --toggle-dot:       #ffffff;
+    --toggle-active-bg: #334155;
+    --toggle-active-dot:#f59e0b;
+    --btn-bg:           #2563eb;
+    --btn-text:         #ffffff;
+    --btn-hover:        #1d4ed8;
+  }
+
+  [data-theme="dark"] {
+    --bg:               #0f172a;
+    --bg-surface:       #1e293b;
+    --bg-card:          #1e293b;
+    --text:             #e2e8f0;
+    --text-secondary:   #94a3b8;
+    --text-muted:       #64748b;
+    --accent:           #60a5fa;
+    --accent-light:     #1e3a5f;
+    --accent2:          #38bdf8;
+    --accent3:          #a78bfa;
+    --accent-red:       #fb7185;
+    --border:           #334155;
+    --border-light:     #1e293b;
+    --shadow:           0 1px 3px rgba(0,0,0,0.3);
+    --shadow-lg:        0 4px 16px rgba(0,0,0,0.4);
+    --header-bg:        #0f172a;
+    --header-text:      #f1f5f9;
+    --header-sub:       #94a3b8;
+    --header-shadow:    0 1px 0 #1e293b, 0 4px 16px rgba(0,0,0,0.5);
+    --header-border:    #334155;
+    --nav-link:         rgba(255,255,255,0.7);
+    --nav-hover-bg:     rgba(255,255,255,0.1);
+    --nav-active-bg:    rgba(255,255,255,0.15);
+    --nav-active-text:  #60a5fa;
+    --table-head-bg:    linear-gradient(135deg, #1e3a5f, #0c4a6e);
+    --table-head-text:  #e2e8f0;
+    --table-stripe:     #1a2536;
+    --table-hover:      #253347;
+    --code-bg:          #334155;
+    --code-color:       #60a5fa;
+    --pre-bg:           #0b1120;
+    --pre-color:        #94a3b8;
+    --section-bg:       #172033;
+    --quote-bg:         #2a1520;
+    --quote-border:     #fb7185;
+    --toggle-bg:        #334155;
+    --toggle-dot:       #f59e0b;
+    --toggle-active-bg: #334155;
+    --toggle-active-dot:#f59e0b;
+    --btn-bg:           #2563eb;
+    --btn-text:         #ffffff;
+    --btn-hover:        #3b82f6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Noto Sans JP', 'Meiryo', 'Hiragino Sans', sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.85;
+    transition: background 0.35s, color 0.35s;
+  }
+
+  /* ── Header ── */
+  .header-bar {
+    background: var(--header-bg);
+    padding: 22px 36px 16px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: var(--header-shadow);
+    display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+    transition: background 0.35s, box-shadow 0.35s;
+    border-bottom: 1px solid var(--header-border);
+  }
+  .header-main { flex: 1; min-width: 280px; }
+  .header-bar h1 {
+    font-size: 1.55em; font-weight: 700; letter-spacing: 0.04em;
+    color: var(--header-text);
+    transition: color 0.35s;
+  }
+  .header-bar .subtitle {
+    font-size: 0.82em; margin-top: 3px;
+    color: var(--header-sub);
+    font-weight: 400; letter-spacing: 0.02em;
+    transition: color 0.35s;
+  }
+  .header-nav {
+    width: 100%; margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid var(--header-border);
+    display: flex; flex-wrap: wrap; gap: 3px;
+    transition: border-color 0.35s;
+  }
+  .header-nav a {
+    color: var(--nav-link); text-decoration: none;
+    padding: 4px 11px; border-radius: 6px;
+    font-size: 0.76em; transition: all 0.2s;
+  }
+  .header-nav a:hover { background: var(--nav-hover-bg); color: var(--nav-active-text); }
+  .header-nav a.active { background: var(--nav-active-bg); color: var(--nav-active-text); font-weight: 600; }
+
+  /* ── Toggle ── */
+  .toggle-wrap { display: flex; align-items: center; flex-shrink: 0; gap: 7px; }
+  .theme-label { font-size: 0.72em; color: var(--text-secondary); white-space: nowrap; transition: color 0.35s; }
+  .theme-toggle {
+    position: relative; width: 52px; height: 26px;
+    background: var(--toggle-bg); border-radius: 13px;
+    cursor: pointer; border: 2px solid var(--border);
+    outline: none; transition: all 0.3s;
+  }
+  .theme-toggle::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--accent);
+    transition: transform 0.3s, background 0.3s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+  [data-theme="dark"] .theme-toggle { background: var(--toggle-active-bg); border-color: #475569; }
+  [data-theme="dark"] .theme-toggle::after { transform: translateX(26px); background: var(--toggle-active-dot); }
+
+  /* ── Container ── */
+  .container { max-width: 1140px; margin: 28px auto; padding: 0 24px; }
+
+  /* ── Cards ── */
+  .content, .idx-card {
+    background: var(--bg-card); border-radius: 14px;
+    padding: 36px 42px; box-shadow: var(--shadow-lg);
+    margin: 20px 0; border: 1px solid var(--border-light);
+    transition: background 0.35s, border 0.35s, box-shadow 0.35s;
+  }
+
+  /* ── Typography ── */
+  h1 { color: var(--accent); font-size: 1.65em; margin: 28px 0 14px; padding-bottom: 10px; border-bottom: 3px solid var(--accent); }
+  h2 {
+    color: var(--text); font-size: 1.3em; margin: 26px 0 12px;
+    padding: 10px 0 10px 16px;
+    border-left: 4px solid var(--accent2);
+    background: var(--section-bg); border-radius: 0 8px 8px 0;
+    transition: background 0.35s;
+  }
+  h3 { color: var(--accent); font-size: 1.1em; margin: 20px 0 10px; }
+  h4 { color: var(--accent3); font-size: 1.0em; margin: 16px 0 8px; }
+  p { margin: 8px 0; text-align: justify; }
+  strong { color: var(--accent); }
+  ul, ol { margin: 8px 0 8px 24px; }
+  li { margin: 4px 0; }
+  a { color: var(--accent); transition: color 0.2s; }
+  a:hover { color: var(--accent2); }
+  hr { border: none; height: 1px; background: var(--border); margin: 24px 0; }
+
+  /* ── Tables ── */
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.91em; }
+  thead { background: var(--table-head-bg); color: var(--table-head-text); }
+  th { padding: 12px 16px; text-align: left; font-weight: 500; white-space: nowrap; }
+  td { padding: 10px 16px; border-bottom: 1px solid var(--border); transition: background 0.2s; }
+  tbody tr:nth-child(even) { background: var(--table-stripe); }
+  tbody tr:hover { background: var(--table-hover); }
+
+  /* ── Code ── */
+  code { background: var(--code-bg); padding: 2px 7px; border-radius: 5px; font-size: 0.9em; color: var(--code-color); transition: background 0.35s; }
+  pre { background: var(--pre-bg); color: var(--pre-color); padding: 20px; border-radius: 10px; overflow-x: auto; margin: 16px 0; font-size: 0.87em; line-height: 1.65; transition: background 0.35s; }
+  pre code { background: none; color: inherit; padding: 0; }
+
+  /* ── Misc ── */
+  blockquote { border-left: 4px solid var(--quote-border); padding: 12px 20px; margin: 16px 0; background: var(--quote-bg); border-radius: 0 8px 8px 0; transition: background 0.35s; }
+  .footer { text-align: center; padding: 32px; color: var(--text-muted); font-size: 0.83em; }
+
+  /* ── Index ── */
+  .dept-badge {
+    display: inline-block; padding: 2px 12px; border-radius: 20px;
+    font-size: 0.82em; font-weight: 500;
+    background: var(--accent-light); color: var(--accent);
+    transition: all 0.35s;
+  }
+  .btn-open {
+    display: inline-block; padding: 7px 22px; border-radius: 8px;
+    font-size: 0.84em; font-weight: 500;
+    background: var(--btn-bg); color: var(--btn-text);
+    text-decoration: none; transition: all 0.2s;
+  }
+  .btn-open:hover { background: var(--btn-hover); color: var(--btn-text); transform: translateY(-1px); }
+  .stats-bar { display: flex; gap: 16px; flex-wrap: wrap; margin: 20px 0 28px; }
+  .stat-chip {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 20px; border-radius: 10px;
+    background: var(--bg-surface); border: 1px solid var(--border);
+    font-size: 0.88em; transition: all 0.35s;
+  }
+  .stat-chip .num { font-size: 1.4em; font-weight: 700; color: var(--accent); }
+
+  @media print {
+    .header-bar { position: static; }
+    body { background: #fff !important; color: #000 !important; }
+    .content, .idx-card { box-shadow: none; border: 1px solid #ccc; }
+    .toggle-wrap { display: none; }
+  }
+</style>
+<script>
+  (function(){
+    var s = localStorage.getItem('mirai-dx-theme');
+    if(s==='dark') document.documentElement.setAttribute('data-theme','dark');
+  })();
+</script>
+
+</head>
+<body>
+<div class="header-bar">
+  <div class="header-main">
+    <h1>みらい建設工業 統合建設DX基盤</h1>
+    <div class="subtitle">Construction DX One Platform &mdash; 技術部_業務要件</div>
+  </div>
+  <div class="toggle-wrap">
+  <span class="theme-label">Light / Dark</span>
+  <button class="theme-toggle" onclick="toggleTheme()" aria-label="テーマ切替"></button>
+</div>
+  <div class="header-nav"><a href="index.html" style="font-weight:600;">一覧</a><a href="経営企画部_業務要件.html">経営企画部</a><a href="営業第一部_業務要件.html">営業第一部</a><a href="営業第二部_業務要件.html">営業第二部</a><a href="ソリューション営業本部_業務要件.html">ソリューション営業本部</a><a href="施工本部_工事部_業務要件.html">施工本部_工事部</a><a href="技術部_業務要件.html" class="active">技術部</a><a href="研究開発部_業務要件.html">研究開発部</a><a href="品質環境部_業務要件.html">品質環境部</a><a href="安全管理部_業務要件.html">安全管理部</a><a href="人事部_業務要件.html">人事部</a><a href="経理部_業務要件.html">経理部</a><a href="総務部_業務要件.html">総務部</a><a href="購買部_業務要件.html">購買部</a><a href="船舶事業部_業務要件.html">船舶事業部</a><a href="IT-DX部門_業務要件.html">IT-DX部門</a><a href="統合データ基盤_業務要件.html">統合データ基盤</a></div>
+</div>
+<div class="container">
+  <div class="content"><h1 id="_1">技術部 業務要件書</h1>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>文書ID</td>
+<td>BIZ-GIJ-001</td>
+</tr>
+<tr>
+<td>版数</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>作成日</td>
+<td>2026年5月16日</td>
+</tr>
+<tr>
+<td>対象部署</td>
+<td>技術本部 技術部</td>
+</tr>
+<tr>
+<td>対象システム</td>
+<td>Technical Knowledge &amp; BIM Platform</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1">1. 部署概要</h2>
+<h3 id="11">1.1 組織上の位置づけ</h3>
+<p>技術部は技術本部に属し、全社の施工技術の標準化・技術支援・技術資料管理を担う。施工現場への技術指導、発注者への技術提案支援、施工標準の策定が主要業務。</p>
+<h3 id="12">1.2 部署ミッション</h3>
+<ul>
+<li>施工技術の標準化と品質向上</li>
+<li>技術ナレッジの蓄積・共有（属人化の解消）</li>
+<li>施工現場への技術支援・指導</li>
+<li>営業本部への技術提案支援</li>
+<li>新工法・新技術の評価・導入推進</li>
+</ul>
+<hr />
+<h2 id="2">2. 業務要件（詳細）</h2>
+<h3 id="21">2.1 技術資料管理</h3>
+<h4 id="211">2.1.1 管理対象文書</h4>
+<table>
+<thead>
+<tr>
+<th>文書種別</th>
+<th>件数（想定）</th>
+<th>更新頻度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>施工要領書</td>
+<td>200～300件</td>
+<td>年次改訂</td>
+</tr>
+<tr>
+<td>施工標準</td>
+<td>50～100件</td>
+<td>必要時改訂</td>
+</tr>
+<tr>
+<td>技術報告書</td>
+<td>年50～100件</td>
+<td>作成時</td>
+</tr>
+<tr>
+<td>国交省通達・基準</td>
+<td>多数</td>
+<td>都度</td>
+</tr>
+<tr>
+<td>メーカー技術資料</td>
+<td>多数</td>
+<td>都度</td>
+</tr>
+<tr>
+<td>学会論文</td>
+<td>年10～20件</td>
+<td>作成時</td>
+</tr>
+</tbody>
+</table>
+<h4 id="212">2.1.2 管理要件</h4>
+<ul>
+<li>文書の分類体系（工種→技術分野→文書種別の3階層）</li>
+<li>バージョン管理（改訂履歴の完全保持）</li>
+<li>全文検索（日本語形態素解析対応）</li>
+<li>タグ管理（工種・工法・材料・地域等の多軸分類）</li>
+<li>SharePoint Onlineとの同期（既存文書資産の活用）</li>
+<li>アクセス権管理（部外秘文書の保護）</li>
+</ul>
+<hr />
+<h3 id="22-ai">2.2 AI施工ナレッジ検索</h3>
+<h4 id="221">2.2.1 業務目的</h4>
+<p>ベテラン技術者の退職に伴う技術ノウハウの喪失を防ぎ、若手技術者でも過去の施工知見に迅速にアクセスできる環境を構築する。</p>
+<h4 id="222">2.2.2 検索シナリオ例</h4>
+<table>
+<thead>
+<tr>
+<th>質問例</th>
+<th>期待される回答</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>「過去の港湾工事で地盤改良した事例を教えて」</td>
+<td>該当工事の一覧、採用工法、地質条件、施工結果の要約</td>
+</tr>
+<tr>
+<td>「軟弱地盤でのケーソン据付の注意点は」</td>
+<td>過去の施工要領書・技術報告書からの要約回答</td>
+</tr>
+<tr>
+<td>「コンクリート温度ひび割れの対策工法は」</td>
+<td>採用事例、効果、コストの比較情報</td>
+</tr>
+<tr>
+<td>「潮位差が大きい場所での施工方法は」</td>
+<td>類似条件の過去工事事例と施工手順</td>
+</tr>
+</tbody>
+</table>
+<h4 id="223-ai">2.2.3 AI検索の精度要件</h4>
+<ul>
+<li>適合率（Precision）：80%以上（上位5件中4件以上が関連文書）</li>
+<li>再現率（Recall）：70%以上（関連文書の70%以上を検索結果に含む）</li>
+<li>回答には必ず出典（文書名・ページ）を表示</li>
+<li>回答に対するフィードバック機能（正確/不正確の評価）</li>
+</ul>
+<hr />
+<h3 id="23-cad">2.3 CAD図面管理</h3>
+<h4 id="231">2.3.1 管理要件</h4>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>対応形式</td>
+<td>DWG/DXF/PDF/SFC/P21</td>
+</tr>
+<tr>
+<td>図面番号管理</td>
+<td>工事番号-図面種別-連番の体系</td>
+</tr>
+<tr>
+<td>版管理</td>
+<td>設計変更に伴う改訂管理</td>
+</tr>
+<tr>
+<td>検索</td>
+<td>図面番号・工事名・工種・図面種別</td>
+</tr>
+<tr>
+<td>プレビュー</td>
+<td>Webブラウザ上での図面プレビュー</td>
+</tr>
+<tr>
+<td>比較機能</td>
+<td>2つの版の差分比較表示</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="24">2.4 土質データ管理</h3>
+<h4 id="241">2.4.1 業務要件</h4>
+<ul>
+<li>全社のボーリングデータをDB管理</li>
+<li>GIS上での地質情報の可視化（ボーリング位置を地図表示）</li>
+<li>類似地盤条件の検索（地域・N値・土質区分で検索）</li>
+<li>地質断面図の自動生成支援</li>
+<li>周辺ボーリングデータの自動表示（半径指定検索）</li>
+</ul>
+<h4 id="242">2.4.2 データ項目</h4>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ボーリング位置</td>
+<td>緯度・経度（GIS座標）</td>
+</tr>
+<tr>
+<td>掘削深度</td>
+<td>最大掘削深度</td>
+</tr>
+<tr>
+<td>柱状図データ</td>
+<td>深度ごとの土質区分・N値</td>
+</tr>
+<tr>
+<td>地下水位</td>
+<td>地下水位の観測値</td>
+</tr>
+<tr>
+<td>室内試験結果</td>
+<td>一軸圧縮・三軸圧縮・圧密等</td>
+</tr>
+<tr>
+<td>調査年月</td>
+<td>データの時期</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3">3. 外部連携要件</h2>
+<table>
+<thead>
+<tr>
+<th>連携先</th>
+<th>連携内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>施工本部</td>
+<td>技術問い合わせ・技術支援記録</td>
+</tr>
+<tr>
+<td>営業本部</td>
+<td>技術提案書ベースの提供</td>
+</tr>
+<tr>
+<td>安全品質本部</td>
+<td>施工標準の共有</td>
+</tr>
+<tr>
+<td>SharePoint Online</td>
+<td>文書の同期・共有</td>
+</tr>
+<tr>
+<td>国土地理院</td>
+<td>地図データ</td>
+</tr>
+</tbody>
+</table></div>
+  <div class="footer">&copy; 2026 みらい建設工業 IT-DX部門 &nbsp;|&nbsp; 統合建設DX基盤 業務要件書</div>
+</div>
+
+<script>
+function toggleTheme(){
+  var h=document.documentElement, d=h.getAttribute('data-theme')==='dark';
+  if(d){h.removeAttribute('data-theme');localStorage.setItem('mirai-dx-theme','light');}
+  else{h.setAttribute('data-theme','dark');localStorage.setItem('mirai-dx-theme','dark');}
+}
+</script>
+
+</body></html>

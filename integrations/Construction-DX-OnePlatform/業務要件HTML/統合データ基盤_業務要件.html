@@ -1,0 +1,1545 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>統合データ基盤_業務要件 | みらい建設工業 統合建設DX基盤</title>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
+
+  :root {
+    --bg:               #ffffff;
+    --bg-surface:       #f8fafc;
+    --bg-card:          #ffffff;
+    --text:             #1e293b;
+    --text-secondary:   #64748b;
+    --text-muted:       #94a3b8;
+    --accent:           #2563eb;
+    --accent-light:     #dbeafe;
+    --accent2:          #0ea5e9;
+    --accent3:          #7c3aed;
+    --accent-red:       #f43f5e;
+    --border:           #e2e8f0;
+    --border-light:     #f1f5f9;
+    --shadow:           0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-lg:        0 4px 16px rgba(0,0,0,0.06);
+    --header-bg:        #ffffff;
+    --header-text:      #0f172a;
+    --header-sub:       #475569;
+    --header-shadow:    0 1px 4px rgba(0,0,0,0.08), 0 1px 0 #e2e8f0;
+    --header-border:    #e2e8f0;
+    --nav-link:         #475569;
+    --nav-hover-bg:     rgba(37,99,235,0.08);
+    --nav-active-bg:    rgba(37,99,235,0.12);
+    --nav-active-text:  #2563eb;
+    --table-head-bg:    linear-gradient(135deg, #2563eb, #0ea5e9);
+    --table-head-text:  #ffffff;
+    --table-stripe:     #f8fafc;
+    --table-hover:      #eff6ff;
+    --code-bg:          #f1f5f9;
+    --code-color:       #2563eb;
+    --pre-bg:           #1e293b;
+    --pre-color:        #e2e8f0;
+    --section-bg:       #f0f9ff;
+    --quote-bg:         #fef2f2;
+    --quote-border:     #f43f5e;
+    --toggle-bg:        #e2e8f0;
+    --toggle-dot:       #ffffff;
+    --toggle-active-bg: #334155;
+    --toggle-active-dot:#f59e0b;
+    --btn-bg:           #2563eb;
+    --btn-text:         #ffffff;
+    --btn-hover:        #1d4ed8;
+  }
+
+  [data-theme="dark"] {
+    --bg:               #0f172a;
+    --bg-surface:       #1e293b;
+    --bg-card:          #1e293b;
+    --text:             #e2e8f0;
+    --text-secondary:   #94a3b8;
+    --text-muted:       #64748b;
+    --accent:           #60a5fa;
+    --accent-light:     #1e3a5f;
+    --accent2:          #38bdf8;
+    --accent3:          #a78bfa;
+    --accent-red:       #fb7185;
+    --border:           #334155;
+    --border-light:     #1e293b;
+    --shadow:           0 1px 3px rgba(0,0,0,0.3);
+    --shadow-lg:        0 4px 16px rgba(0,0,0,0.4);
+    --header-bg:        #0f172a;
+    --header-text:      #f1f5f9;
+    --header-sub:       #94a3b8;
+    --header-shadow:    0 1px 0 #1e293b, 0 4px 16px rgba(0,0,0,0.5);
+    --header-border:    #334155;
+    --nav-link:         rgba(255,255,255,0.7);
+    --nav-hover-bg:     rgba(255,255,255,0.1);
+    --nav-active-bg:    rgba(255,255,255,0.15);
+    --nav-active-text:  #60a5fa;
+    --table-head-bg:    linear-gradient(135deg, #1e3a5f, #0c4a6e);
+    --table-head-text:  #e2e8f0;
+    --table-stripe:     #1a2536;
+    --table-hover:      #253347;
+    --code-bg:          #334155;
+    --code-color:       #60a5fa;
+    --pre-bg:           #0b1120;
+    --pre-color:        #94a3b8;
+    --section-bg:       #172033;
+    --quote-bg:         #2a1520;
+    --quote-border:     #fb7185;
+    --toggle-bg:        #334155;
+    --toggle-dot:       #f59e0b;
+    --toggle-active-bg: #334155;
+    --toggle-active-dot:#f59e0b;
+    --btn-bg:           #2563eb;
+    --btn-text:         #ffffff;
+    --btn-hover:        #3b82f6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Noto Sans JP', 'Meiryo', 'Hiragino Sans', sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.85;
+    transition: background 0.35s, color 0.35s;
+  }
+
+  /* ── Header ── */
+  .header-bar {
+    background: var(--header-bg);
+    padding: 22px 36px 16px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: var(--header-shadow);
+    display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+    transition: background 0.35s, box-shadow 0.35s;
+    border-bottom: 1px solid var(--header-border);
+  }
+  .header-main { flex: 1; min-width: 280px; }
+  .header-bar h1 {
+    font-size: 1.55em; font-weight: 700; letter-spacing: 0.04em;
+    color: var(--header-text);
+    transition: color 0.35s;
+  }
+  .header-bar .subtitle {
+    font-size: 0.82em; margin-top: 3px;
+    color: var(--header-sub);
+    font-weight: 400; letter-spacing: 0.02em;
+    transition: color 0.35s;
+  }
+  .header-nav {
+    width: 100%; margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid var(--header-border);
+    display: flex; flex-wrap: wrap; gap: 3px;
+    transition: border-color 0.35s;
+  }
+  .header-nav a {
+    color: var(--nav-link); text-decoration: none;
+    padding: 4px 11px; border-radius: 6px;
+    font-size: 0.76em; transition: all 0.2s;
+  }
+  .header-nav a:hover { background: var(--nav-hover-bg); color: var(--nav-active-text); }
+  .header-nav a.active { background: var(--nav-active-bg); color: var(--nav-active-text); font-weight: 600; }
+
+  /* ── Toggle ── */
+  .toggle-wrap { display: flex; align-items: center; flex-shrink: 0; gap: 7px; }
+  .theme-label { font-size: 0.72em; color: var(--text-secondary); white-space: nowrap; transition: color 0.35s; }
+  .theme-toggle {
+    position: relative; width: 52px; height: 26px;
+    background: var(--toggle-bg); border-radius: 13px;
+    cursor: pointer; border: 2px solid var(--border);
+    outline: none; transition: all 0.3s;
+  }
+  .theme-toggle::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--accent);
+    transition: transform 0.3s, background 0.3s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+  [data-theme="dark"] .theme-toggle { background: var(--toggle-active-bg); border-color: #475569; }
+  [data-theme="dark"] .theme-toggle::after { transform: translateX(26px); background: var(--toggle-active-dot); }
+
+  /* ── Container ── */
+  .container { max-width: 1140px; margin: 28px auto; padding: 0 24px; }
+
+  /* ── Cards ── */
+  .content, .idx-card {
+    background: var(--bg-card); border-radius: 14px;
+    padding: 36px 42px; box-shadow: var(--shadow-lg);
+    margin: 20px 0; border: 1px solid var(--border-light);
+    transition: background 0.35s, border 0.35s, box-shadow 0.35s;
+  }
+
+  /* ── Typography ── */
+  h1 { color: var(--accent); font-size: 1.65em; margin: 28px 0 14px; padding-bottom: 10px; border-bottom: 3px solid var(--accent); }
+  h2 {
+    color: var(--text); font-size: 1.3em; margin: 26px 0 12px;
+    padding: 10px 0 10px 16px;
+    border-left: 4px solid var(--accent2);
+    background: var(--section-bg); border-radius: 0 8px 8px 0;
+    transition: background 0.35s;
+  }
+  h3 { color: var(--accent); font-size: 1.1em; margin: 20px 0 10px; }
+  h4 { color: var(--accent3); font-size: 1.0em; margin: 16px 0 8px; }
+  p { margin: 8px 0; text-align: justify; }
+  strong { color: var(--accent); }
+  ul, ol { margin: 8px 0 8px 24px; }
+  li { margin: 4px 0; }
+  a { color: var(--accent); transition: color 0.2s; }
+  a:hover { color: var(--accent2); }
+  hr { border: none; height: 1px; background: var(--border); margin: 24px 0; }
+
+  /* ── Tables ── */
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.91em; }
+  thead { background: var(--table-head-bg); color: var(--table-head-text); }
+  th { padding: 12px 16px; text-align: left; font-weight: 500; white-space: nowrap; }
+  td { padding: 10px 16px; border-bottom: 1px solid var(--border); transition: background 0.2s; }
+  tbody tr:nth-child(even) { background: var(--table-stripe); }
+  tbody tr:hover { background: var(--table-hover); }
+
+  /* ── Code ── */
+  code { background: var(--code-bg); padding: 2px 7px; border-radius: 5px; font-size: 0.9em; color: var(--code-color); transition: background 0.35s; }
+  pre { background: var(--pre-bg); color: var(--pre-color); padding: 20px; border-radius: 10px; overflow-x: auto; margin: 16px 0; font-size: 0.87em; line-height: 1.65; transition: background 0.35s; }
+  pre code { background: none; color: inherit; padding: 0; }
+
+  /* ── Misc ── */
+  blockquote { border-left: 4px solid var(--quote-border); padding: 12px 20px; margin: 16px 0; background: var(--quote-bg); border-radius: 0 8px 8px 0; transition: background 0.35s; }
+  .footer { text-align: center; padding: 32px; color: var(--text-muted); font-size: 0.83em; }
+
+  /* ── Index ── */
+  .dept-badge {
+    display: inline-block; padding: 2px 12px; border-radius: 20px;
+    font-size: 0.82em; font-weight: 500;
+    background: var(--accent-light); color: var(--accent);
+    transition: all 0.35s;
+  }
+  .btn-open {
+    display: inline-block; padding: 7px 22px; border-radius: 8px;
+    font-size: 0.84em; font-weight: 500;
+    background: var(--btn-bg); color: var(--btn-text);
+    text-decoration: none; transition: all 0.2s;
+  }
+  .btn-open:hover { background: var(--btn-hover); color: var(--btn-text); transform: translateY(-1px); }
+  .stats-bar { display: flex; gap: 16px; flex-wrap: wrap; margin: 20px 0 28px; }
+  .stat-chip {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 20px; border-radius: 10px;
+    background: var(--bg-surface); border: 1px solid var(--border);
+    font-size: 0.88em; transition: all 0.35s;
+  }
+  .stat-chip .num { font-size: 1.4em; font-weight: 700; color: var(--accent); }
+
+  @media print {
+    .header-bar { position: static; }
+    body { background: #fff !important; color: #000 !important; }
+    .content, .idx-card { box-shadow: none; border: 1px solid #ccc; }
+    .toggle-wrap { display: none; }
+  }
+</style>
+<script>
+  (function(){
+    var s = localStorage.getItem('mirai-dx-theme');
+    if(s==='dark') document.documentElement.setAttribute('data-theme','dark');
+  })();
+</script>
+
+</head>
+<body>
+<div class="header-bar">
+  <div class="header-main">
+    <h1>みらい建設工業 統合建設DX基盤</h1>
+    <div class="subtitle">Construction DX One Platform &mdash; 統合データ基盤_業務要件</div>
+  </div>
+  <div class="toggle-wrap">
+  <span class="theme-label">Light / Dark</span>
+  <button class="theme-toggle" onclick="toggleTheme()" aria-label="テーマ切替"></button>
+</div>
+  <div class="header-nav"><a href="index.html" style="font-weight:600;">一覧</a><a href="経営企画部_業務要件.html">経営企画部</a><a href="営業第一部_業務要件.html">営業第一部</a><a href="営業第二部_業務要件.html">営業第二部</a><a href="ソリューション営業本部_業務要件.html">ソリューション営業本部</a><a href="施工本部_工事部_業務要件.html">施工本部_工事部</a><a href="技術部_業務要件.html">技術部</a><a href="研究開発部_業務要件.html">研究開発部</a><a href="品質環境部_業務要件.html">品質環境部</a><a href="安全管理部_業務要件.html">安全管理部</a><a href="人事部_業務要件.html">人事部</a><a href="経理部_業務要件.html">経理部</a><a href="総務部_業務要件.html">総務部</a><a href="購買部_業務要件.html">購買部</a><a href="船舶事業部_業務要件.html">船舶事業部</a><a href="IT-DX部門_業務要件.html">IT-DX部門</a><a href="統合データ基盤_業務要件.html" class="active">統合データ基盤</a></div>
+</div>
+<div class="container">
+  <div class="content"><h1 id="_1">統合データ基盤 業務要件定義書</h1>
+<h2 id="_2">文書情報</h2>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>文書ID</td>
+<td>BIZ-CDL-001</td>
+</tr>
+<tr>
+<td>版数</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>作成日</td>
+<td>2026-05-16</td>
+</tr>
+<tr>
+<td>部門</td>
+<td>統合データ基盤（横断組織）</td>
+</tr>
+<tr>
+<td>システム名</td>
+<td>Construction DataLake &amp; Digital Twin Platform</td>
+</tr>
+<tr>
+<td>対象</td>
+<td>全社データ統合・分析・デジタルツイン基盤</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1">1. 部門概要と業務範囲</h2>
+<h3 id="11">1.1 統合データ基盤の位置づけ</h3>
+<p>統合データ基盤は、全社11部門のシステムから生成されるデータを一元的に収集・蓄積・加工・提供する横断的なデータプラットフォームである。各部門システムが「業務の実行」を担うのに対し、本基盤は「データの流通と価値創出」を担う。</p>
+<h3 id="12">1.2 業務範囲</h3>
+<ul>
+<li><strong>データ収集・統合</strong>: 全社システムからのデータ収集、ETLパイプライン運用</li>
+<li><strong>データガバナンス</strong>: データ品質管理、メタデータ管理、アクセス制御</li>
+<li><strong>データカタログ</strong>: 全社データ資産の可視化・検索・利活用促進</li>
+<li><strong>マスタデータ管理（MDM）</strong>: 全社共通マスタの一元管理・配信</li>
+<li><strong>データ分析基盤</strong>: BI・AI/ML向けデータマート提供</li>
+<li><strong>MLOps</strong>: AI/MLモデルのライフサイクル管理</li>
+<li><strong>デジタルツイン</strong>: 建設現場・インフラの3Dデジタルモデル運用</li>
+<li><strong>API Gateway</strong>: 全社データAPIの統合管理・提供</li>
+<li><strong>データレイク運用</strong>: ストレージ階層管理、コスト最適化</li>
+</ul>
+<hr />
+<h2 id="2-etl">2. ETLパイプライン運用業務</h2>
+<h3 id="21">2.1 データ収集パイプライン管理</h3>
+<h4 id="211">2.1.1 業務概要</h4>
+<p>全社11部門のシステムからデータを定期的・リアルタイムに収集し、データレイクに蓄積する。</p>
+<h4 id="212">2.1.2 データソース一覧</h4>
+<table>
+<thead>
+<tr>
+<th>ソースシステム</th>
+<th>データ種別</th>
+<th>取得方式</th>
+<th>頻度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>経営ダッシュボード</td>
+<td>KPI集計値、予算実績</td>
+<td>REST API</td>
+<td>日次</td>
+</tr>
+<tr>
+<td>建設CRM</td>
+<td>案件情報、入札データ</td>
+<td>CDC (Change Data Capture)</td>
+<td>リアルタイム</td>
+</tr>
+<tr>
+<td>施工管理システム</td>
+<td>工程・原価・写真・IoTセンサー</td>
+<td>Kafka Stream</td>
+<td>リアルタイム</td>
+</tr>
+<tr>
+<td>安全品質ガバナンス</td>
+<td>ヒヤリハット、パトロール、NCR</td>
+<td>REST API</td>
+<td>日次</td>
+</tr>
+<tr>
+<td>技術ナレッジBIM基盤</td>
+<td>技術文書、BIM/CIMモデル</td>
+<td>ファイル連携（S3互換）</td>
+<td>イベント駆動</td>
+</tr>
+<tr>
+<td>企業運営基盤</td>
+<td>会計データ、人事データ、契約</td>
+<td>バッチETL（dbt）</td>
+<td>日次</td>
+</tr>
+<tr>
+<td>調達資材管理</td>
+<td>発注・在庫・単価データ</td>
+<td>CDC</td>
+<td>リアルタイム</td>
+</tr>
+<tr>
+<td>船舶運航管理</td>
+<td>AIS/GPS位置情報、燃料データ</td>
+<td>MQTT/Kafka</td>
+<td>リアルタイム</td>
+</tr>
+<tr>
+<td>ITSM基盤</td>
+<td>インシデント、CMDB、ログ</td>
+<td>REST API / Syslog</td>
+<td>リアルタイム</td>
+</tr>
+<tr>
+<td>DeskNet's NEO</td>
+<td>ワークフロー承認データ</td>
+<td>REST API連携</td>
+<td>イベント駆動</td>
+</tr>
+<tr>
+<td>IoTセンサー</td>
+<td>温湿度、振動、粉塵、騒音</td>
+<td>MQTT → Kafka</td>
+<td>リアルタイム</td>
+</tr>
+<tr>
+<td>外部データ</td>
+<td>気象、地図、CCUS、CORINS</td>
+<td>REST API</td>
+<td>定期バッチ</td>
+</tr>
+</tbody>
+</table>
+<h4 id="213-etl">2.1.3 ETLパイプライン設計要件</h4>
+<ul>
+<li><strong>オーケストレーション</strong>: Apache Airflow によるDAG管理</li>
+<li>DAG定義はGitリポジトリで管理（GitOps）</li>
+<li>依存関係の自動解決、リトライポリシー設定</li>
+<li>SLA監視（遅延アラート自動通知）</li>
+<li><strong>データ変換</strong>: dbt (Data Build Tool) による変換レイヤー</li>
+<li>Bronze層（Raw）→ Silver層（Cleansed）→ Gold層（Aggregated）の3層モデル</li>
+<li>dbtテスト（not_null, unique, accepted_values, relationships）自動実行</li>
+<li>dbt docsによる変換ロジックのドキュメント自動生成</li>
+<li><strong>ストリーム処理</strong>: Apache Kafka + Kafka Streams</li>
+<li>IoTセンサーデータのリアルタイム処理</li>
+<li>CDC（Debezium）によるDB変更のリアルタイム連携</li>
+<li>Schema Registry（Avro/Protobuf）によるスキーマ管理</li>
+</ul>
+<h4 id="214">2.1.4 パイプライン監視要件</h4>
+<table>
+<thead>
+<tr>
+<th>監視項目</th>
+<th>閾値</th>
+<th>アラート先</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DAG実行失敗</td>
+<td>1回以上</td>
+<td>Slack + メール即時通知</td>
+</tr>
+<tr>
+<td>DAG遅延</td>
+<td>SLA超過10分以上</td>
+<td>Slack通知</td>
+</tr>
+<tr>
+<td>データ品質テスト失敗</td>
+<td>dbtテスト1件以上失敗</td>
+<td>Slack + Jiraチケット自動起票</td>
+</tr>
+<tr>
+<td>Kafkaコンシューマーラグ</td>
+<td>10,000メッセージ以上</td>
+<td>Grafanaアラート</td>
+</tr>
+<tr>
+<td>ストレージ使用量</td>
+<td>80%以上</td>
+<td>週次レポート + アラート</td>
+</tr>
+<tr>
+<td>ETL処理時間</td>
+<td>前回比200%以上</td>
+<td>自動調査トリガー</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3">3. データガバナンス業務</h2>
+<h3 id="31">3.1 データ品質管理</h3>
+<h4 id="311">3.1.1 品質ルール定義</h4>
+<table>
+<thead>
+<tr>
+<th>品質次元</th>
+<th>チェック内容</th>
+<th>自動化方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>完全性（Completeness）</td>
+<td>必須フィールドのNULL率</td>
+<td>dbt test + Great Expectations</td>
+</tr>
+<tr>
+<td>一意性（Uniqueness）</td>
+<td>主キー重複チェック</td>
+<td>dbt unique test</td>
+</tr>
+<tr>
+<td>正確性（Accuracy）</td>
+<td>値域チェック、フォーマット検証</td>
+<td>Great Expectations Suite</td>
+</tr>
+<tr>
+<td>一貫性（Consistency）</td>
+<td>テーブル間整合性、外部キー参照</td>
+<td>dbt relationships test</td>
+</tr>
+<tr>
+<td>適時性（Timeliness）</td>
+<td>データ鮮度（最終更新からの経過時間）</td>
+<td>カスタムSQLチェック</td>
+</tr>
+<tr>
+<td>妥当性（Validity）</td>
+<td>ビジネスルール適合性</td>
+<td>カスタムバリデーション</td>
+</tr>
+</tbody>
+</table>
+<h4 id="312">3.1.2 データ品質スコアリング</h4>
+<ul>
+<li>各データセットに対して品質スコア（0-100）を自動算出</li>
+<li>スコア70未満のデータセットは利用制限（警告表示）</li>
+<li>スコア50未満のデータセットは利用停止（自動遮断）</li>
+<li>月次データ品質レポートを全社配信</li>
+</ul>
+<h4 id="313">3.1.3 データリネージ管理</h4>
+<ul>
+<li>dbt + OpenLineage によるデータ変換の系譜追跡</li>
+<li>ソースからBIレポートまでのEnd-to-Endリネージ可視化</li>
+<li>カラムレベルのリネージ追跡</li>
+<li>影響分析（上流変更時の下流影響範囲特定）</li>
+</ul>
+<h3 id="32">3.2 データアクセス制御</h3>
+<h4 id="321">3.2.1 アクセスポリシー</h4>
+<table>
+<thead>
+<tr>
+<th>レベル</th>
+<th>対象データ</th>
+<th>アクセス権限</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>公開（Public）</td>
+<td>気象データ、公共工事情報</td>
+<td>全社員参照可</td>
+</tr>
+<tr>
+<td>社内限定（Internal）</td>
+<td>工程データ、技術文書</td>
+<td>社員のみ参照可</td>
+</tr>
+<tr>
+<td>部門限定（Confidential）</td>
+<td>原価データ、人事データ</td>
+<td>所属部門のみ</td>
+</tr>
+<tr>
+<td>機密（Restricted）</td>
+<td>経営戦略、入札価格</td>
+<td>特定権限者のみ</td>
+</tr>
+</tbody>
+</table>
+<h4 id="322">3.2.2 アクセス制御実装</h4>
+<ul>
+<li>Entra ID グループベースのRBAC（Role-Based Access Control）</li>
+<li>Apache Ranger によるデータレイクレベルの細粒度アクセス制御</li>
+<li>カラムレベルマスキング（個人情報、原価情報）</li>
+<li>行レベルセキュリティ（部門・プロジェクト単位）</li>
+<li>アクセスログの完全記録・監査対応</li>
+</ul>
+<h3 id="33">3.3 データ保持・廃棄ポリシー</h3>
+<table>
+<thead>
+<tr>
+<th>データ分類</th>
+<th>保持期間</th>
+<th>廃棄方式</th>
+<th>根拠法令</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>会計データ</td>
+<td>10年</td>
+<td>論理削除後物理削除</td>
+<td>電子帳簿保存法</td>
+</tr>
+<tr>
+<td>契約データ</td>
+<td>10年</td>
+<td>論理削除後物理削除</td>
+<td>建設業法</td>
+</tr>
+<tr>
+<td>施工記録</td>
+<td>永年</td>
+<td>アーカイブ（Cold Storage）</td>
+<td>品確法</td>
+</tr>
+<tr>
+<td>安全記録</td>
+<td>5年</td>
+<td>論理削除後物理削除</td>
+<td>労働安全衛生法</td>
+</tr>
+<tr>
+<td>人事データ</td>
+<td>退職後5年</td>
+<td>完全削除（暗号鍵破棄）</td>
+<td>個人情報保護法</td>
+</tr>
+<tr>
+<td>IoTセンサー（Raw）</td>
+<td>1年</td>
+<td>自動削除（TTL）</td>
+<td>社内規定</td>
+</tr>
+<tr>
+<td>IoTセンサー（集計済）</td>
+<td>5年</td>
+<td>Cold Storageへ移行</td>
+<td>社内規定</td>
+</tr>
+<tr>
+<td>BIM/CIMモデル</td>
+<td>永年</td>
+<td>Glacier互換ストレージ</td>
+<td>i-Construction要件</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4">4. データカタログ管理業務</h2>
+<h3 id="41">4.1 メタデータ管理</h3>
+<h4 id="411">4.1.1 管理対象メタデータ</h4>
+<ul>
+<li><strong>技術メタデータ</strong>: テーブル定義、カラム型、パーティション情報、インデックス</li>
+<li><strong>ビジネスメタデータ</strong>: データオーナー、説明、分類タグ、利用用途</li>
+<li><strong>運用メタデータ</strong>: 更新頻度、最終更新日時、データ件数、サイズ</li>
+<li><strong>品質メタデータ</strong>: 品質スコア、テスト結果、異常検知履歴</li>
+</ul>
+<h4 id="412">4.1.2 データカタログ機能要件</h4>
+<ul>
+<li><strong>全文検索</strong>: Elasticsearch + Kuromoji による日本語対応検索</li>
+<li><strong>タグ分類</strong>: 部門タグ、業務タグ、機密レベルタグの付与・検索</li>
+<li><strong>データプレビュー</strong>: サンプルデータ（最大100行）の即座表示</li>
+<li><strong>利用状況可視化</strong>: データセットごとのアクセス頻度・利用者数ダッシュボード</li>
+<li><strong>データリクエスト</strong>: 新規データ要求のワークフロー管理</li>
+<li><strong>用語集（Glossary）</strong>: 全社共通のビジネス用語定義管理</li>
+</ul>
+<h4 id="413">4.1.3 自動メタデータ収集</h4>
+<ul>
+<li>dbt manifest.json からのテーブル・カラム情報自動取得</li>
+<li>Airflow DAG定義からのパイプライン情報自動取得</li>
+<li>PostgreSQL information_schema からのスキーマ情報自動同期</li>
+<li>Kafka Schema Registry からのイベントスキーマ自動取得</li>
+</ul>
+<h3 id="42">4.2 データセット公開管理</h3>
+<h4 id="421">4.2.1 公開フロー</h4>
+<ol>
+<li>データオーナーが公開申請（メタデータ・品質基準入力）</li>
+<li>データスチュワードがレビュー（品質スコア確認、アクセス制御設定）</li>
+<li>承認後、データカタログに自動登録</li>
+<li>利用者への通知（Slack/メール）</li>
+</ol>
+<h4 id="422">4.2.2 データセット評価</h4>
+<ul>
+<li>利用者によるレーティング（5段階）</li>
+<li>利用者コメント・改善要望の収集</li>
+<li>人気データセットランキング（月次）</li>
+<li>未利用データセットの定期レビュー・廃止検討</li>
+</ul>
+<hr />
+<h2 id="5-mdm">5. マスタデータ管理（MDM）業務</h2>
+<h3 id="51">5.1 全社共通マスタ一覧</h3>
+<table>
+<thead>
+<tr>
+<th>マスタ名</th>
+<th>管理部門</th>
+<th>レコード規模</th>
+<th>更新頻度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>社員マスタ</td>
+<td>人事部</td>
+<td>約500件</td>
+<td>日次</td>
+</tr>
+<tr>
+<td>組織マスタ</td>
+<td>総務部</td>
+<td>約50件</td>
+<td>月次</td>
+</tr>
+<tr>
+<td>工事マスタ</td>
+<td>施工本部</td>
+<td>約200件/年</td>
+<td>随時</td>
+</tr>
+<tr>
+<td>顧客マスタ</td>
+<td>営業本部</td>
+<td>約3,000件</td>
+<td>随時</td>
+</tr>
+<tr>
+<td>協力会社マスタ</td>
+<td>購買部</td>
+<td>約500件</td>
+<td>随時</td>
+</tr>
+<tr>
+<td>資材マスタ</td>
+<td>購買部</td>
+<td>約10,000件</td>
+<td>随時</td>
+</tr>
+<tr>
+<td>勘定科目マスタ</td>
+<td>経理部</td>
+<td>約300件</td>
+<td>年次</td>
+</tr>
+<tr>
+<td>船舶マスタ</td>
+<td>船舶事業部</td>
+<td>約30件</td>
+<td>随時</td>
+</tr>
+<tr>
+<td>拠点マスタ</td>
+<td>総務部</td>
+<td>約20件</td>
+<td>年次</td>
+</tr>
+<tr>
+<td>資格マスタ</td>
+<td>人事部</td>
+<td>約200件</td>
+<td>年次</td>
+</tr>
+</tbody>
+</table>
+<h3 id="52-mdm">5.2 MDM運用要件</h3>
+<h4 id="521">5.2.1 マスタ同期方式</h4>
+<ul>
+<li><strong>Golden Record方式</strong>: 各ソースシステムのデータを統合し、信頼性の高い単一レコードを生成</li>
+<li><strong>双方向同期</strong>: マスタ変更は管理部門から配信、各システムのローカル変更は承認後マスタへ反映</li>
+<li><strong>同期プロトコル</strong>: REST API（プル型）+ Kafkaイベント（プッシュ型）の併用</li>
+<li><strong>競合解決</strong>: タイムスタンプベース + 管理部門優先ルール</li>
+</ul>
+<h4 id="522">5.2.2 マスタ変更管理</h4>
+<ul>
+<li>変更申請 → 管理部門承認 → テスト環境反映 → 本番反映の4段階フロー</li>
+<li>全変更履歴の完全保持（temporal table）</li>
+<li>変更影響分析（依存システム一覧の自動表示）</li>
+<li>大量変更時のバッチ処理対応（CSV一括インポート）</li>
+</ul>
+<h4 id="523">5.2.3 名寄せ・データクレンジング</h4>
+<ul>
+<li>協力会社マスタの名寄せ（類似名称の統合提案、AI支援）</li>
+<li>住所正規化（日本郵便APIとの連携）</li>
+<li>電話番号フォーマット統一</li>
+<li>法人番号（13桁）との照合による企業情報精度向上</li>
+</ul>
+<hr />
+<h2 id="6">6. データ分析基盤業務</h2>
+<h3 id="61-bi">6.1 BIデータマート提供</h3>
+<h4 id="611">6.1.1 データマート一覧</h4>
+<table>
+<thead>
+<tr>
+<th>データマート名</th>
+<th>利用部門</th>
+<th>主要KPI</th>
+<th>更新頻度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>経営KPIマート</td>
+<td>経営企画部</td>
+<td>売上、利益率、受注残</td>
+<td>日次</td>
+</tr>
+<tr>
+<td>施工原価マート</td>
+<td>施工本部・経理部</td>
+<td>工事別原価、出来高</td>
+<td>日次</td>
+</tr>
+<tr>
+<td>安全品質マート</td>
+<td>安全品質環境本部</td>
+<td>災害件数、品質不適合率</td>
+<td>日次</td>
+</tr>
+<tr>
+<td>営業パイプラインマート</td>
+<td>営業本部</td>
+<td>案件数、受注確度、受注金額</td>
+<td>リアルタイム</td>
+</tr>
+<tr>
+<td>人材配置マート</td>
+<td>人事部・施工本部</td>
+<td>稼働率、資格保有者配置</td>
+<td>日次</td>
+</tr>
+<tr>
+<td>調達分析マート</td>
+<td>購買部</td>
+<td>発注金額、単価推移、在庫回転率</td>
+<td>日次</td>
+</tr>
+<tr>
+<td>船舶運航マート</td>
+<td>船舶事業部</td>
+<td>稼働率、燃費、航行距離</td>
+<td>リアルタイム</td>
+</tr>
+<tr>
+<td>ESG/SDGsマート</td>
+<td>経営企画部</td>
+<td>CO2排出量、廃棄物量、女性比率</td>
+<td>月次</td>
+</tr>
+</tbody>
+</table>
+<h4 id="612-bi">6.1.2 セルフサービスBI要件</h4>
+<ul>
+<li><strong>BIツール</strong>: Grafana（運用系）+ Metabase（業務系）の二本立て</li>
+<li><strong>ダッシュボードテンプレート</strong>: 部門別標準ダッシュボードの事前定義</li>
+<li><strong>アドホック分析</strong>: 業務ユーザーがSQLなしでドラッグ&amp;ドロップ分析可能</li>
+<li><strong>レポート自動配信</strong>: PDF/Excel形式で定期配信（メール/Slack）</li>
+<li><strong>モバイル対応</strong>: PWAによる現場からのダッシュボード参照</li>
+</ul>
+<h3 id="62-aiml">6.2 AI/ML向けデータ提供</h3>
+<h4 id="621-feature-store">6.2.1 特徴量ストア（Feature Store）</h4>
+<ul>
+<li>全社AI/MLモデルで使用する特徴量の一元管理</li>
+<li>オンライン特徴量（リアルタイム推論用）: Redis</li>
+<li>オフライン特徴量（学習用）: PostgreSQL + Parquet</li>
+<li>特徴量バージョニング、リネージ追跡</li>
+<li>特徴量の再利用促進（カタログ化）</li>
+</ul>
+<h4 id="622">6.2.2 学習データセット管理</h4>
+<ul>
+<li>モデル学習用データセットのバージョン管理（DVC互換）</li>
+<li>アノテーションデータの管理（画像ラベリング結果等）</li>
+<li>データセット分割（train/validation/test）の再現性保証</li>
+<li>データバイアス検出・公平性チェック</li>
+</ul>
+<hr />
+<h2 id="7-mlops">7. MLOps業務</h2>
+<h3 id="71">7.1 モデルライフサイクル管理</h3>
+<h4 id="711-aiml">7.1.1 全社AI/MLモデル一覧</h4>
+<table>
+<thead>
+<tr>
+<th>モデル名</th>
+<th>利用部門</th>
+<th>モデル種別</th>
+<th>推論方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>工事利益予測モデル</td>
+<td>経営企画部</td>
+<td>XGBoost/LightGBM</td>
+<td>バッチ推論（日次）</td>
+</tr>
+<tr>
+<td>受注確度予測モデル</td>
+<td>営業本部</td>
+<td>ロジスティック回帰/RF</td>
+<td>リアルタイム推論</td>
+</tr>
+<tr>
+<td>安全危険度予測モデル</td>
+<td>安全品質環境本部</td>
+<td>ニューラルネット</td>
+<td>リアルタイム推論</td>
+</tr>
+<tr>
+<td>映像解析（不安全行動検知）</td>
+<td>安全品質環境本部</td>
+<td>YOLOv8</td>
+<td>エッジ推論</td>
+</tr>
+<tr>
+<td>AI資材価格予測</td>
+<td>購買部</td>
+<td>時系列モデル（Prophet）</td>
+<td>バッチ推論（週次）</td>
+</tr>
+<tr>
+<td>技術文書RAG</td>
+<td>技術本部</td>
+<td>Azure OpenAI + Embedding</td>
+<td>リアルタイム推論</td>
+</tr>
+<tr>
+<td>AI提案書生成</td>
+<td>営業本部</td>
+<td>Azure OpenAI GPT-4o</td>
+<td>リアルタイム推論</td>
+</tr>
+<tr>
+<td>地盤データ分析</td>
+<td>技術本部</td>
+<td>クラスタリング + 回帰</td>
+<td>バッチ推論</td>
+</tr>
+<tr>
+<td>燃費最適化モデル</td>
+<td>船舶事業部</td>
+<td>強化学習</td>
+<td>リアルタイム推論</td>
+</tr>
+<tr>
+<td>AIヘルプデスク</td>
+<td>IT-DX部門</td>
+<td>Azure OpenAI + RAG</td>
+<td>リアルタイム推論</td>
+</tr>
+</tbody>
+</table>
+<h4 id="712-mlops">7.1.2 MLOpsパイプライン要件</h4>
+<ul>
+<li><strong>実験管理</strong>: MLflow によるパラメータ・メトリクス・アーティファクト追跡</li>
+<li><strong>モデル登録</strong>: MLflow Model Registry によるバージョン管理</li>
+<li><strong>モデルステージ</strong>: Staging → Production → Archived の3段階</li>
+<li><strong>自動再学習</strong>: データドリフト検出時の自動再学習トリガー</li>
+<li><strong>A/Bテスト</strong>: 新モデルの段階的ロールアウト（カナリアデプロイ）</li>
+<li><strong>モデル監視</strong>: 推論精度、レイテンシ、データドリフトの継続的監視</li>
+</ul>
+<h4 id="713">7.1.3 モデルガバナンス</h4>
+<ul>
+<li>モデルカード（目的、学習データ、性能指標、制約事項）の必須記載</li>
+<li>公平性・バイアス評価レポートの作成</li>
+<li>モデル利用の監査ログ記録</li>
+<li>AI利用ガイドラインへの準拠チェック</li>
+</ul>
+<h3 id="72-azure-openai">7.2 Azure OpenAI運用管理</h3>
+<h4 id="721-llm">7.2.1 LLM利用管理</h4>
+<ul>
+<li>APIキーのローテーション管理（90日サイクル）</li>
+<li>利用量モニタリング（トークン数、APIコール数、コスト）</li>
+<li>レート制限管理（部門別クォータ設定）</li>
+<li>プロンプトテンプレートのバージョン管理</li>
+<li>RAG用ベクトルDBのインデックス管理（pgvector）</li>
+</ul>
+<h4 id="722-llm">7.2.2 LLMセキュリティ</h4>
+<ul>
+<li>プロンプトインジェクション対策（入力サニタイズ）</li>
+<li>出力フィルタリング（個人情報、機密情報の漏洩防止）</li>
+<li>利用ログの完全記録（監査対応）</li>
+<li>社内データのみを参照するクローズド環境での運用</li>
+</ul>
+<hr />
+<h2 id="8">8. デジタルツイン運用業務</h2>
+<h3 id="81-3d">8.1 3Dモデル管理</h3>
+<h4 id="811">8.1.1 デジタルツイン対象</h4>
+<table>
+<thead>
+<tr>
+<th>対象</th>
+<th>モデル形式</th>
+<th>データソース</th>
+<th>更新頻度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>施工現場</td>
+<td>IFC (BIM) + 点群</td>
+<td>BIMモデル + ドローン測量</td>
+<td>週次</td>
+</tr>
+<tr>
+<td>インフラ構造物</td>
+<td>CIM (IFC/LandXML)</td>
+<td>CIMモデル + IoTセンサー</td>
+<td>リアルタイム</td>
+</tr>
+<tr>
+<td>船舶</td>
+<td>3Dモデル (glTF)</td>
+<td>AIS/GPS + センサー</td>
+<td>リアルタイム</td>
+</tr>
+<tr>
+<td>事務所・設備</td>
+<td>BIM (IFC)</td>
+<td>設備台帳 + IoT</td>
+<td>月次</td>
+</tr>
+</tbody>
+</table>
+<h4 id="812-3d">8.1.2 3Dビューア要件</h4>
+<ul>
+<li><strong>Webビューア</strong>: IFC.js + Three.js によるブラウザベース3D表示</li>
+<li><strong>地理空間統合</strong>: CesiumJS による地球規模の3Dマップ上への配置</li>
+<li><strong>IoTオーバーレイ</strong>: センサーデータのリアルタイム3D重畳表示</li>
+<li><strong>時系列再生</strong>: 施工進捗のタイムラプス表示（4Dシミュレーション）</li>
+<li><strong>AR連携</strong>: モバイルデバイスでのAR表示（WebXR）</li>
+<li><strong>オフライン対応</strong>: PWAによるモデルのローカルキャッシュ</li>
+</ul>
+<h4 id="813">8.1.3 デジタルツインデータフロー</h4>
+<div class="codehilite"><pre><span></span><code>IoTセンサー → MQTT → Kafka → リアルタイム処理 → TimescaleDB
+                                                      ↓
+BIM/CIMモデル → S3互換ストレージ → モデル変換（IFC→glTF）→ CDN配信
+                                                      ↓
+CesiumJS/Three.js ← REST API ← PostGIS（空間クエリ）← 統合ビュー
+</code></pre></div>
+
+<h3 id="82">8.2 シミュレーション・予測</h3>
+<h4 id="821">8.2.1 シミュレーション機能</h4>
+<ul>
+<li><strong>施工シミュレーション</strong>: 工程計画に基づく4D施工シミュレーション</li>
+<li><strong>安全シミュレーション</strong>: 重機動線・作業員動線の干渉チェック</li>
+<li><strong>環境影響シミュレーション</strong>: 騒音・振動・粉塵の拡散予測</li>
+<li><strong>構造解析連携</strong>: FEMモデルとの連携による応力解析結果の3D表示</li>
+<li><strong>洪水・災害シミュレーション</strong>: 地形データ+気象データによるリスク可視化</li>
+</ul>
+<hr />
+<h2 id="9-api-gateway">9. API Gateway管理業務</h2>
+<h3 id="91-api">9.1 API管理要件</h3>
+<h4 id="911-api-gateway">9.1.1 API Gateway機能</h4>
+<ul>
+<li><strong>認証・認可</strong>: OAuth 2.0 / JWT（Entra ID連携）</li>
+<li><strong>レート制限</strong>: 部門別・アプリケーション別のAPI呼び出し制限</li>
+<li><strong>APIバージョニング</strong>: URL パスベース（/api/v1/, /api/v2/）</li>
+<li><strong>APIドキュメント</strong>: OpenAPI 3.0仕様の自動生成・公開</li>
+<li><strong>ヘルスチェック</strong>: 各バックエンドサービスの死活監視</li>
+<li><strong>キャッシュ</strong>: 高頻度リクエストのレスポンスキャッシュ（Redis）</li>
+</ul>
+<h4 id="912-api">9.1.2 API一覧管理</h4>
+<table>
+<thead>
+<tr>
+<th>API カテゴリ</th>
+<th>エンドポイント例</th>
+<th>利用部門</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>マスタデータAPI</td>
+<td>/api/v1/masters/{type}</td>
+<td>全部門</td>
+</tr>
+<tr>
+<td>施工データAPI</td>
+<td>/api/v1/construction/{project_id}</td>
+<td>施工本部</td>
+</tr>
+<tr>
+<td>安全データAPI</td>
+<td>/api/v1/safety/{site_id}</td>
+<td>安全品質環境本部</td>
+</tr>
+<tr>
+<td>分析データAPI</td>
+<td>/api/v1/analytics/{mart_name}</td>
+<td>経営企画部</td>
+</tr>
+<tr>
+<td>空間データAPI</td>
+<td>/api/v1/spatial/query</td>
+<td>技術本部</td>
+</tr>
+<tr>
+<td>AI推論API</td>
+<td>/api/v1/ml/predict/{model_name}</td>
+<td>全部門</td>
+</tr>
+<tr>
+<td>IoTデータAPI</td>
+<td>/api/v1/iot/{device_id}/telemetry</td>
+<td>施工本部・船舶事業部</td>
+</tr>
+<tr>
+<td>文書検索API</td>
+<td>/api/v1/search/documents</td>
+<td>全部門</td>
+</tr>
+</tbody>
+</table>
+<h4 id="913-api">9.1.3 API利用分析</h4>
+<ul>
+<li>APIエンドポイント別の呼び出し回数・レイテンシ追跡</li>
+<li>エラー率モニタリング（4xx/5xx）</li>
+<li>利用者別のAPI消費量レポート</li>
+<li>非推奨API（Deprecated）の利用状況追跡・移行促進</li>
+</ul>
+<h3 id="92-api">9.2 外部連携API管理</h3>
+<h4 id="921-api">9.2.1 外部API連携先</h4>
+<table>
+<thead>
+<tr>
+<th>連携先</th>
+<th>用途</th>
+<th>プロトコル</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CCUS（建設キャリアアップシステム）</td>
+<td>技能者情報連携</td>
+<td>REST API</td>
+</tr>
+<tr>
+<td>CORINS（工事実績情報）</td>
+<td>工事実績登録</td>
+<td>SOAP/REST</td>
+</tr>
+<tr>
+<td>国土交通省 電子納品</td>
+<td>成果物提出</td>
+<td>ファイル連携</td>
+</tr>
+<tr>
+<td>気象庁API</td>
+<td>気象データ取得</td>
+<td>REST API</td>
+</tr>
+<tr>
+<td>国土地理院</td>
+<td>地図データ取得</td>
+<td>WMS/WMTS</td>
+</tr>
+<tr>
+<td>日本郵便</td>
+<td>住所正規化</td>
+<td>REST API</td>
+</tr>
+<tr>
+<td>HENNGE</td>
+<td>SSO認証連携</td>
+<td>SAML/OIDC</td>
+</tr>
+<tr>
+<td>Azure OpenAI</td>
+<td>AI推論</td>
+<td>REST API</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="10">10. データレイクストレージ運用業務</h2>
+<h3 id="101">10.1 ストレージ階層管理</h3>
+<h4 id="1011">10.1.1 ストレージ階層設計</h4>
+<table>
+<thead>
+<tr>
+<th>階層</th>
+<th>用途</th>
+<th>ストレージ種別</th>
+<th>アクセス頻度</th>
+<th>コスト</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Hot</td>
+<td>直近1ヶ月のアクティブデータ</td>
+<td>SSD（NVMe）</td>
+<td>高頻度</td>
+<td>高</td>
+</tr>
+<tr>
+<td>Warm</td>
+<td>1ヶ月〜1年のデータ</td>
+<td>HDD（RAID）</td>
+<td>中頻度</td>
+<td>中</td>
+</tr>
+<tr>
+<td>Cold</td>
+<td>1年〜5年のアーカイブ</td>
+<td>オブジェクトストレージ</td>
+<td>低頻度</td>
+<td>低</td>
+</tr>
+<tr>
+<td>Archive</td>
+<td>5年以上の長期保管</td>
+<td>Glacier互換</td>
+<td>極低頻度</td>
+<td>最低</td>
+</tr>
+</tbody>
+</table>
+<h4 id="1012">10.1.2 ライフサイクルポリシー</h4>
+<ul>
+<li>データ分類に基づく自動階層移行ルール</li>
+<li>アクセス頻度に基づく動的階層最適化</li>
+<li>保持期間超過データの自動アーカイブ/削除</li>
+<li>ストレージコスト月次レポート</li>
+</ul>
+<h3 id="102">10.2 バックアップ・災害復旧</h3>
+<h4 id="1021">10.2.1 バックアップ要件</h4>
+<table>
+<thead>
+<tr>
+<th>対象</th>
+<th>バックアップ方式</th>
+<th>頻度</th>
+<th>保持期間</th>
+<th>RPO</th>
+<th>RTO</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PostgreSQL</td>
+<td>WALアーカイブ + ベースバックアップ</td>
+<td>継続的 + 日次</td>
+<td>30世代</td>
+<td>5分</td>
+<td>1時間</td>
+</tr>
+<tr>
+<td>TimescaleDB</td>
+<td>連続アーカイブ</td>
+<td>継続的</td>
+<td>14日</td>
+<td>5分</td>
+<td>2時間</td>
+</tr>
+<tr>
+<td>Elasticsearch</td>
+<td>スナップショット</td>
+<td>日次</td>
+<td>7世代</td>
+<td>24時間</td>
+<td>4時間</td>
+</tr>
+<tr>
+<td>オブジェクトストレージ</td>
+<td>クロスリージョンレプリケーション</td>
+<td>リアルタイム</td>
+<td>N/A</td>
+<td>0</td>
+<td>即時</td>
+</tr>
+<tr>
+<td>Kafka</td>
+<td>ミラーメーカー</td>
+<td>リアルタイム</td>
+<td>7日</td>
+<td>数秒</td>
+<td>30分</td>
+</tr>
+<tr>
+<td>BIM/CIMモデル</td>
+<td>バージョン管理 + 差分バックアップ</td>
+<td>日次</td>
+<td>永年</td>
+<td>24時間</td>
+<td>8時間</td>
+</tr>
+</tbody>
+</table>
+<h4 id="1022">10.2.2 災害復旧計画</h4>
+<ul>
+<li>DR環境は別リージョン（Azure East Japan ⇔ West Japan）</li>
+<li>重要データ（PostgreSQL、Kafka）はリアルタイムレプリケーション</li>
+<li>年2回のDR訓練実施（フェイルオーバー・フェイルバック）</li>
+<li>RTOに基づく復旧優先順位の定義</li>
+</ul>
+<hr />
+<h2 id="11_1">11. 非機能要件</h2>
+<h3 id="111">11.1 性能要件</h3>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>要件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ETLバッチ処理時間</td>
+<td>日次フルロード：2時間以内</td>
+</tr>
+<tr>
+<td>ストリーム処理レイテンシ</td>
+<td>End-to-End：5秒以内</td>
+</tr>
+<tr>
+<td>API応答時間</td>
+<td>95パーセンタイル：500ms以内</td>
+</tr>
+<tr>
+<td>BIクエリ応答</td>
+<td>標準ダッシュボード：3秒以内</td>
+</tr>
+<tr>
+<td>3Dモデルロード</td>
+<td>初回ロード：10秒以内（100MBモデル）</td>
+</tr>
+<tr>
+<td>同時API接続数</td>
+<td>500接続以上</td>
+</tr>
+<tr>
+<td>データレイク総容量</td>
+<td>初年度：5TB、5年後：50TB想定</td>
+</tr>
+</tbody>
+</table>
+<h3 id="112">11.2 可用性要件</h3>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>要件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>システム稼働率</td>
+<td>99.9%（月間停止43分以内）</td>
+</tr>
+<tr>
+<td>計画停止</td>
+<td>月1回、日曜深夜2:00-6:00</td>
+</tr>
+<tr>
+<td>データ損失許容</td>
+<td>RPO: 5分（重要データ）、24時間（参照データ）</td>
+</tr>
+<tr>
+<td>復旧時間</td>
+<td>RTO: 1時間（コアサービス）、4時間（分析基盤）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="113">11.3 セキュリティ要件</h3>
+<ul>
+<li>保存データの暗号化（AES-256）</li>
+<li>通信の暗号化（TLS 1.3）</li>
+<li>アクセスログの3年間保持</li>
+<li>個人情報のマスキング・匿名化処理</li>
+<li>データ持ち出し制御（DLP）</li>
+<li>定期脆弱性診断（四半期）</li>
+</ul>
+<hr />
+<h2 id="12_1">12. 運用体制</h2>
+<h3 id="121">12.1 役割定義</h3>
+<table>
+<thead>
+<tr>
+<th>役割</th>
+<th>責任</th>
+<th>担当</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>データプラットフォームオーナー</td>
+<td>基盤全体の方針策定・予算管理</td>
+<td>IT-DX部門長</td>
+</tr>
+<tr>
+<td>データエンジニア</td>
+<td>ETLパイプライン開発・運用</td>
+<td>IT-DX部門（2名）</td>
+</tr>
+<tr>
+<td>データスチュワード</td>
+<td>データ品質管理・カタログ管理</td>
+<td>各部門兼任（11名）</td>
+</tr>
+<tr>
+<td>MLエンジニア</td>
+<td>AI/MLモデル開発・MLOps</td>
+<td>IT-DX部門（1名）</td>
+</tr>
+<tr>
+<td>インフラエンジニア</td>
+<td>基盤インフラ運用・監視</td>
+<td>IT-DX部門（1名）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="122-sla">12.2 SLA定義</h3>
+<table>
+<thead>
+<tr>
+<th>サービス</th>
+<th>SLA</th>
+<th>測定方法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>データ鮮度（日次バッチ）</td>
+<td>営業日9:00までに前日データ反映</td>
+<td>Airflow DAG完了時刻</td>
+</tr>
+<tr>
+<td>データ鮮度（リアルタイム）</td>
+<td>5分以内のデータ反映</td>
+<td>Kafkaコンシューマーラグ</td>
+</tr>
+<tr>
+<td>API可用性</td>
+<td>99.9%</td>
+<td>Uptime監視</td>
+</tr>
+<tr>
+<td>データカタログ更新</td>
+<td>新データセット登録から24時間以内</td>
+<td>カタログ更新ログ</td>
+</tr>
+<tr>
+<td>インシデント対応</td>
+<td>P1: 30分以内、P2: 2時間以内</td>
+<td>チケット応答時間</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="13">13. 導入ロードマップ</h2>
+<h3 id="phase-10-6">Phase 1（0-6ヶ月）: 基盤構築</h3>
+<ul>
+<li>データレイク基盤構築（PostgreSQL + TimescaleDB + S3互換）</li>
+<li>ETLパイプライン基盤（Airflow + dbt）構築</li>
+<li>施工管理・安全品質・ITSMデータの統合</li>
+<li>全社共通マスタ管理の開始</li>
+<li>API Gateway基本機能の構築</li>
+</ul>
+<h3 id="phase-26-12">Phase 2（6-12ヶ月）: 分析基盤拡充</h3>
+<ul>
+<li>BIダッシュボード基盤（Grafana + Metabase）構築</li>
+<li>残部門データの統合（営業、購買、経理、人事）</li>
+<li>データカタログの運用開始</li>
+<li>MLOps基盤（MLflow）構築</li>
+<li>Feature Store の構築・運用開始</li>
+</ul>
+<h3 id="phase-312-18">Phase 3（12-18ヶ月）: 高度化</h3>
+<ul>
+<li>デジタルツイン基盤（CesiumJS）構築</li>
+<li>AI/MLモデルの本格運用（予測モデル群）</li>
+<li>リアルタイムストリーム処理の全面展開</li>
+<li>外部データ連携の拡充（CCUS、CORINS等）</li>
+<li>データガバナンス成熟度評価・改善</li>
+</ul>
+<hr />
+<h2 id="14">14. 他部門システムとの連携要件</h2>
+<h3 id="141">14.1 データフロー全体像</h3>
+<div class="codehilite"><pre><span></span><code>┌─────────────────────────────────────────────────────────────┐
+│                    統合データ基盤                              │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
+│  │ Data Lake │  │ Feature  │  │ Digital  │  │   API    │   │
+│  │ (Bronze/  │  │  Store   │  │  Twin    │  │ Gateway  │   │
+│  │Silver/Gold)│  │          │  │          │  │          │   │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘   │
+│       │              │              │              │         │
+│  ┌────┴──────────────┴──────────────┴──────────────┴─────┐  │
+│  │              Kafka Event Bus / REST API                │  │
+│  └───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬─────────┘  │
+└──────┼───┼───┼───┼───┼───┼───┼───┼───┼───┼───┼─────────────┘
+       │   │   │   │   │   │   │   │   │   │   │
+     経営 営業 ソリ 施工 技術 安全 管理 購買 船舶 ITSM 外部
+     企画 本部 ュー 本部 本部 品質 本部 部  事業 DX  連携
+     部       ショ          環境      部  部門
+              ン           本部
+</code></pre></div>
+
+<h3 id="142">14.2 部門別連携仕様</h3>
+<table>
+<thead>
+<tr>
+<th>連携元部門</th>
+<th>提供データ</th>
+<th>受領データ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>経営企画部</td>
+<td>KPI目標値</td>
+<td>全社集計KPI、AI予測値</td>
+</tr>
+<tr>
+<td>営業本部</td>
+<td>案件・入札データ</td>
+<td>受注確度予測、顧客分析</td>
+</tr>
+<tr>
+<td>ソリューション営業本部</td>
+<td>DXソリューション実績</td>
+<td>技術トレンド分析</td>
+</tr>
+<tr>
+<td>施工本部</td>
+<td>工程・原価・IoTデータ</td>
+<td>利益予測、安全アラート</td>
+</tr>
+<tr>
+<td>技術本部</td>
+<td>技術文書、BIMモデル</td>
+<td>RAG検索結果、地盤分析</td>
+</tr>
+<tr>
+<td>安全品質環境本部</td>
+<td>安全・品質・環境データ</td>
+<td>危険度予測、NCR分析</td>
+</tr>
+<tr>
+<td>管理本部</td>
+<td>会計・人事・契約データ</td>
+<td>人材配置最適化、コスト分析</td>
+</tr>
+<tr>
+<td>購買部</td>
+<td>発注・在庫データ</td>
+<td>価格予測、発注最適化</td>
+</tr>
+<tr>
+<td>船舶事業部</td>
+<td>運航・燃料データ</td>
+<td>燃費最適化、航路分析</td>
+</tr>
+<tr>
+<td>IT-DX部門</td>
+<td>インシデント・CMDBデータ</td>
+<td>障害予測、セキュリティ分析</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>以上</em></p></div>
+  <div class="footer">&copy; 2026 みらい建設工業 IT-DX部門 &nbsp;|&nbsp; 統合建設DX基盤 業務要件書</div>
+</div>
+
+<script>
+function toggleTheme(){
+  var h=document.documentElement, d=h.getAttribute('data-theme')==='dark';
+  if(d){h.removeAttribute('data-theme');localStorage.setItem('mirai-dx-theme','light');}
+  else{h.setAttribute('data-theme','dark');localStorage.setItem('mirai-dx-theme','dark');}
+}
+</script>
+
+</body></html>

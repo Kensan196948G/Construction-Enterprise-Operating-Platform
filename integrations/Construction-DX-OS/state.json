@@ -1,0 +1,115 @@
+{
+  "project": {
+    "name": "Construction-DX-OS",
+    "registration_date": "2026-04-10",
+    "start_date": "2026-04-10",
+    "release_deadline": "2026-10-10",
+    "duration_months": 6,
+    "phase_mode": "development"
+  },
+  "goal": "Construction-DX-OS 本番リリース (v1.0)",
+  "phase": "Verify",
+  "loop": 93,
+  "kpi": {
+    "success_rate_target": 0.9,
+    "ci_success_rate": 1,
+    "test_pass_rate": 1,
+    "test_count": 380,
+    "security_critical": 0,
+    "blocker_count": 0,
+    "coverage": 0.9551
+  },
+  "execution": {
+    "max_duration_minutes": 300,
+    "repair_count": 0,
+    "max_repair": 3,
+    "same_error_limit": 2,
+    "phase": "Improve",
+    "last_session_summary": "Loop 93 (P1 CI hotfix x2, 同一ブランチ/PR #54): (1) Issue 0057 — starlette 1.3.1 が TestClient で StarletteDeprecationWarning (UserWarning 派生) を発し filterwarnings=['error'] が collection エラー化 → security scan FAILURE。category 不一致が原因。pyproject.toml に message 一致 ignore を追加し security scan green 化を確認 (使い捨て venv: フィルタなし=1 error/あり=1 passed)。(2) Issue 0058 — fakeredis>=2.36 で ZRANGE WITHSCORES の Lua 応答形が flat→nested に変化し rate_limit_redis.py の oldest[2] が nil → 算術エラー → cdx-server 3.11/3.12 FAILURE。Lua 内 type 判定 + nil 防御ガードで両応答形に対応。使い捨て venv (fakeredis[lua] 2.36.1) 対照検証 (修正なし=5 failed/あり=10 passed)。両 fix を同一ブランチ (fix/0057-...) で Draft PR #54。CI 全ジョブ green 確定 (cdx-server 3.11/3.12 + security scan を含む全 pass / mergeable, run 27516650897)、Draft のまま人間 merge 待ち (Human Final Decision Boundary)。診断裏取り: #51=全 pass(drift 前 run)、#52/#53=cdx-server 3.11/3.12 + security scan の 3 ジョブのみ fail で #54 の修正対象 2 系統と完全一致 → #54 を main へ入れれば #52/#53 は rebase のみで green 化する。",
+    "current_session_start_at": "2026-06-15T00:18:40.943Z",
+    "last_trigger": "cron",
+    "last_cron_session_id": "20260614-062412-CMDB-DocKit",
+    "session_pause_reason": "user_directive: 本日は基盤設計確認のみ。来週よりWindowsプラットフォームで実装開始。",
+    "next_platform": "Windows",
+    "user_authorized_session_end": true,
+    "user_authorized_session_end_reason": "CTO（ユーザー）が本日の作業範囲を基盤設計確認のみと明示。基盤設計 100% 完了を確認後、ユーザー権限でセッション終了を承認。次フェーズ(Windows実装)は次回セッションで継続。",
+    "last_stop_at": "2026-06-15T00:16:16.480Z"
+  },
+  "automation": {
+    "auto_issue_generation": true,
+    "self_evolution": true
+  },
+  "stable": {
+    "consecutive_success": 5,
+    "target_n": 3,
+    "stable_achieved": true
+  },
+  "completed_issues": [
+    "0031 (test coverage — 98.76% achieved)",
+    "0035 (iso_builds router coverage — 99% achieved)",
+    "0039 (admin SPA — resolved via 0043/PR#38)",
+    "0043 (admin SPA prebuild — PR#38 merged)",
+    "0045 (CHANGELOG v0.1.0 — PR#39)",
+    "0046 (production hardening — PR#39)",
+    "0047 (E2E in CI — ledger drift fixed Loop 89, ジョブは PR#40 以前から CI green)",
+    "0048 (dashboard API — ledger drift fixed Loop 89, 実装は PR#40 完了済み)",
+    "0050 (Production Go-Live Checklist — PR #44 verified)",
+    "0052 (serial-scan DB queue永続化 — PR #43)",
+    "0053 (health liveness/readiness 分離 — PR #47)",
+    "GMSV0002 serial-scan pipeline (PR #41)",
+    "CI pipeline exitcode fix + PYSEC-2025-183 ignore (PR #41)",
+    "serial-scan Prometheus metrics CDX_SERIAL_SCAN_TOTAL (PR #44)",
+    "pytest-asyncio deprecation warning抑止 (PR #45)",
+    "0056 (mock WebUI + 非エンジニア向け README 再構成 — Loop 92, PR #53 MERGED to main 2026-06-15)",
+    "0057 (starlette httpx2 StarletteDeprecationWarning filterwarnings 修正 — Loop 93, PR #54 pending human merge)",
+    "0058 (fakeredis>=2.36 ZRANGE WITHSCORES nested 応答形 Lua 修正 — Loop 93, PR #54 pending human merge)"
+  ],
+  "blocked_issues": [
+    "0042 (PXE Phase 4.1-4.5 — hardware required)",
+    "0044 (PXE Phase 4.6 rehearsal — hardware required)",
+    "0051 (GMSV0002 実機SMB+easyocr — hardware required)"
+  ],
+  "open_issues": [],
+  "next_loop_candidates": [
+    "0027 (Grafana dashboard JSON seed — monitoring)",
+    "Runbook / 障害対応手順 (本番リリース必須)",
+    "Backup/Restore 手順とテスト (本番リリース必須)",
+    "API reference docs (ReDoc 公開) — ユーザー向け"
+  ],
+  "learning": {
+    "failure_patterns": [
+      "conftest.py と test file の CDX_SERVER_URL デフォルトが異なるとテストが別サーバーを参照する",
+      "| tail -N がパイプ exit code を隠蔽し CI 失敗を見逃す原因になる",
+      "state.json などの housekeeping コミットも CLAUDE.md §10 で branch + PR が必須 (main 直接push禁止)",
+      "ledger drift: Issue が実装完了済みなのに claudeos/issues/*.md の status が open のまま残るパターン (Loop 89 で 0047/0048 を発見)"
+    ],
+    "success_patterns": [
+      "Issue closure: verify acceptance criteria against actual code state before marking done",
+      "Production Docker: use expose not ports for internal services",
+      "disputed CVE は --ignore-vuln + コメント文書化で次 fix リリースを待つ",
+      "Storage Protocol gate: isinstance(storage, X) で DB と in-memory のデュアルパスを単一ルーターで管理",
+      "Prometheus metrics は labels (event x backend) で bounded cardinality を保ちつつ運用可視性を確保",
+      "Health probe 分離: /health/live は依存サービスを見ない (pod restart loop 防止)、/health/ready は deep check (LB 切替)。後方互換のため /health 旧 endpoint は legacy で残す non-breaking 設計"
+    ]
+  },
+  "quality_gates": {
+    "lint": {
+      "warning_threshold": 10,
+      "error_threshold": 0
+    },
+    "coverage": {
+      "line_min": 70,
+      "changed_files_min": 80
+    }
+  },
+  "dreaming": {
+    "patterns": [],
+    "curated_memories": [],
+    "recurring_mistakes": [],
+    "last_dreaming_run": null,
+    "dreaming_enabled": false
+  },
+  "compact": {
+    "last_pre_compact_at": "2026-06-15T00:17:17.430Z"
+  }
+}

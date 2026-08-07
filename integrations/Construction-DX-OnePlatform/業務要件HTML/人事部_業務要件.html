@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>人事部_業務要件 | みらい建設工業 統合建設DX基盤</title>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
+
+  :root {
+    --bg:               #ffffff;
+    --bg-surface:       #f8fafc;
+    --bg-card:          #ffffff;
+    --text:             #1e293b;
+    --text-secondary:   #64748b;
+    --text-muted:       #94a3b8;
+    --accent:           #2563eb;
+    --accent-light:     #dbeafe;
+    --accent2:          #0ea5e9;
+    --accent3:          #7c3aed;
+    --accent-red:       #f43f5e;
+    --border:           #e2e8f0;
+    --border-light:     #f1f5f9;
+    --shadow:           0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-lg:        0 4px 16px rgba(0,0,0,0.06);
+    --header-bg:        #ffffff;
+    --header-text:      #0f172a;
+    --header-sub:       #475569;
+    --header-shadow:    0 1px 4px rgba(0,0,0,0.08), 0 1px 0 #e2e8f0;
+    --header-border:    #e2e8f0;
+    --nav-link:         #475569;
+    --nav-hover-bg:     rgba(37,99,235,0.08);
+    --nav-active-bg:    rgba(37,99,235,0.12);
+    --nav-active-text:  #2563eb;
+    --table-head-bg:    linear-gradient(135deg, #2563eb, #0ea5e9);
+    --table-head-text:  #ffffff;
+    --table-stripe:     #f8fafc;
+    --table-hover:      #eff6ff;
+    --code-bg:          #f1f5f9;
+    --code-color:       #2563eb;
+    --pre-bg:           #1e293b;
+    --pre-color:        #e2e8f0;
+    --section-bg:       #f0f9ff;
+    --quote-bg:         #fef2f2;
+    --quote-border:     #f43f5e;
+    --toggle-bg:        #e2e8f0;
+    --toggle-dot:       #ffffff;
+    --toggle-active-bg: #334155;
+    --toggle-active-dot:#f59e0b;
+    --btn-bg:           #2563eb;
+    --btn-text:         #ffffff;
+    --btn-hover:        #1d4ed8;
+  }
+
+  [data-theme="dark"] {
+    --bg:               #0f172a;
+    --bg-surface:       #1e293b;
+    --bg-card:          #1e293b;
+    --text:             #e2e8f0;
+    --text-secondary:   #94a3b8;
+    --text-muted:       #64748b;
+    --accent:           #60a5fa;
+    --accent-light:     #1e3a5f;
+    --accent2:          #38bdf8;
+    --accent3:          #a78bfa;
+    --accent-red:       #fb7185;
+    --border:           #334155;
+    --border-light:     #1e293b;
+    --shadow:           0 1px 3px rgba(0,0,0,0.3);
+    --shadow-lg:        0 4px 16px rgba(0,0,0,0.4);
+    --header-bg:        #0f172a;
+    --header-text:      #f1f5f9;
+    --header-sub:       #94a3b8;
+    --header-shadow:    0 1px 0 #1e293b, 0 4px 16px rgba(0,0,0,0.5);
+    --header-border:    #334155;
+    --nav-link:         rgba(255,255,255,0.7);
+    --nav-hover-bg:     rgba(255,255,255,0.1);
+    --nav-active-bg:    rgba(255,255,255,0.15);
+    --nav-active-text:  #60a5fa;
+    --table-head-bg:    linear-gradient(135deg, #1e3a5f, #0c4a6e);
+    --table-head-text:  #e2e8f0;
+    --table-stripe:     #1a2536;
+    --table-hover:      #253347;
+    --code-bg:          #334155;
+    --code-color:       #60a5fa;
+    --pre-bg:           #0b1120;
+    --pre-color:        #94a3b8;
+    --section-bg:       #172033;
+    --quote-bg:         #2a1520;
+    --quote-border:     #fb7185;
+    --toggle-bg:        #334155;
+    --toggle-dot:       #f59e0b;
+    --toggle-active-bg: #334155;
+    --toggle-active-dot:#f59e0b;
+    --btn-bg:           #2563eb;
+    --btn-text:         #ffffff;
+    --btn-hover:        #3b82f6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Noto Sans JP', 'Meiryo', 'Hiragino Sans', sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.85;
+    transition: background 0.35s, color 0.35s;
+  }
+
+  /* ── Header ── */
+  .header-bar {
+    background: var(--header-bg);
+    padding: 22px 36px 16px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: var(--header-shadow);
+    display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+    transition: background 0.35s, box-shadow 0.35s;
+    border-bottom: 1px solid var(--header-border);
+  }
+  .header-main { flex: 1; min-width: 280px; }
+  .header-bar h1 {
+    font-size: 1.55em; font-weight: 700; letter-spacing: 0.04em;
+    color: var(--header-text);
+    transition: color 0.35s;
+  }
+  .header-bar .subtitle {
+    font-size: 0.82em; margin-top: 3px;
+    color: var(--header-sub);
+    font-weight: 400; letter-spacing: 0.02em;
+    transition: color 0.35s;
+  }
+  .header-nav {
+    width: 100%; margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid var(--header-border);
+    display: flex; flex-wrap: wrap; gap: 3px;
+    transition: border-color 0.35s;
+  }
+  .header-nav a {
+    color: var(--nav-link); text-decoration: none;
+    padding: 4px 11px; border-radius: 6px;
+    font-size: 0.76em; transition: all 0.2s;
+  }
+  .header-nav a:hover { background: var(--nav-hover-bg); color: var(--nav-active-text); }
+  .header-nav a.active { background: var(--nav-active-bg); color: var(--nav-active-text); font-weight: 600; }
+
+  /* ── Toggle ── */
+  .toggle-wrap { display: flex; align-items: center; flex-shrink: 0; gap: 7px; }
+  .theme-label { font-size: 0.72em; color: var(--text-secondary); white-space: nowrap; transition: color 0.35s; }
+  .theme-toggle {
+    position: relative; width: 52px; height: 26px;
+    background: var(--toggle-bg); border-radius: 13px;
+    cursor: pointer; border: 2px solid var(--border);
+    outline: none; transition: all 0.3s;
+  }
+  .theme-toggle::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--accent);
+    transition: transform 0.3s, background 0.3s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+  [data-theme="dark"] .theme-toggle { background: var(--toggle-active-bg); border-color: #475569; }
+  [data-theme="dark"] .theme-toggle::after { transform: translateX(26px); background: var(--toggle-active-dot); }
+
+  /* ── Container ── */
+  .container { max-width: 1140px; margin: 28px auto; padding: 0 24px; }
+
+  /* ── Cards ── */
+  .content, .idx-card {
+    background: var(--bg-card); border-radius: 14px;
+    padding: 36px 42px; box-shadow: var(--shadow-lg);
+    margin: 20px 0; border: 1px solid var(--border-light);
+    transition: background 0.35s, border 0.35s, box-shadow 0.35s;
+  }
+
+  /* ── Typography ── */
+  h1 { color: var(--accent); font-size: 1.65em; margin: 28px 0 14px; padding-bottom: 10px; border-bottom: 3px solid var(--accent); }
+  h2 {
+    color: var(--text); font-size: 1.3em; margin: 26px 0 12px;
+    padding: 10px 0 10px 16px;
+    border-left: 4px solid var(--accent2);
+    background: var(--section-bg); border-radius: 0 8px 8px 0;
+    transition: background 0.35s;
+  }
+  h3 { color: var(--accent); font-size: 1.1em; margin: 20px 0 10px; }
+  h4 { color: var(--accent3); font-size: 1.0em; margin: 16px 0 8px; }
+  p { margin: 8px 0; text-align: justify; }
+  strong { color: var(--accent); }
+  ul, ol { margin: 8px 0 8px 24px; }
+  li { margin: 4px 0; }
+  a { color: var(--accent); transition: color 0.2s; }
+  a:hover { color: var(--accent2); }
+  hr { border: none; height: 1px; background: var(--border); margin: 24px 0; }
+
+  /* ── Tables ── */
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.91em; }
+  thead { background: var(--table-head-bg); color: var(--table-head-text); }
+  th { padding: 12px 16px; text-align: left; font-weight: 500; white-space: nowrap; }
+  td { padding: 10px 16px; border-bottom: 1px solid var(--border); transition: background 0.2s; }
+  tbody tr:nth-child(even) { background: var(--table-stripe); }
+  tbody tr:hover { background: var(--table-hover); }
+
+  /* ── Code ── */
+  code { background: var(--code-bg); padding: 2px 7px; border-radius: 5px; font-size: 0.9em; color: var(--code-color); transition: background 0.35s; }
+  pre { background: var(--pre-bg); color: var(--pre-color); padding: 20px; border-radius: 10px; overflow-x: auto; margin: 16px 0; font-size: 0.87em; line-height: 1.65; transition: background 0.35s; }
+  pre code { background: none; color: inherit; padding: 0; }
+
+  /* ── Misc ── */
+  blockquote { border-left: 4px solid var(--quote-border); padding: 12px 20px; margin: 16px 0; background: var(--quote-bg); border-radius: 0 8px 8px 0; transition: background 0.35s; }
+  .footer { text-align: center; padding: 32px; color: var(--text-muted); font-size: 0.83em; }
+
+  /* ── Index ── */
+  .dept-badge {
+    display: inline-block; padding: 2px 12px; border-radius: 20px;
+    font-size: 0.82em; font-weight: 500;
+    background: var(--accent-light); color: var(--accent);
+    transition: all 0.35s;
+  }
+  .btn-open {
+    display: inline-block; padding: 7px 22px; border-radius: 8px;
+    font-size: 0.84em; font-weight: 500;
+    background: var(--btn-bg); color: var(--btn-text);
+    text-decoration: none; transition: all 0.2s;
+  }
+  .btn-open:hover { background: var(--btn-hover); color: var(--btn-text); transform: translateY(-1px); }
+  .stats-bar { display: flex; gap: 16px; flex-wrap: wrap; margin: 20px 0 28px; }
+  .stat-chip {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 20px; border-radius: 10px;
+    background: var(--bg-surface); border: 1px solid var(--border);
+    font-size: 0.88em; transition: all 0.35s;
+  }
+  .stat-chip .num { font-size: 1.4em; font-weight: 700; color: var(--accent); }
+
+  @media print {
+    .header-bar { position: static; }
+    body { background: #fff !important; color: #000 !important; }
+    .content, .idx-card { box-shadow: none; border: 1px solid #ccc; }
+    .toggle-wrap { display: none; }
+  }
+</style>
+<script>
+  (function(){
+    var s = localStorage.getItem('mirai-dx-theme');
+    if(s==='dark') document.documentElement.setAttribute('data-theme','dark');
+  })();
+</script>
+
+</head>
+<body>
+<div class="header-bar">
+  <div class="header-main">
+    <h1>みらい建設工業 統合建設DX基盤</h1>
+    <div class="subtitle">Construction DX One Platform &mdash; 人事部_業務要件</div>
+  </div>
+  <div class="toggle-wrap">
+  <span class="theme-label">Light / Dark</span>
+  <button class="theme-toggle" onclick="toggleTheme()" aria-label="テーマ切替"></button>
+</div>
+  <div class="header-nav"><a href="index.html" style="font-weight:600;">一覧</a><a href="経営企画部_業務要件.html">経営企画部</a><a href="営業第一部_業務要件.html">営業第一部</a><a href="営業第二部_業務要件.html">営業第二部</a><a href="ソリューション営業本部_業務要件.html">ソリューション営業本部</a><a href="施工本部_工事部_業務要件.html">施工本部_工事部</a><a href="技術部_業務要件.html">技術部</a><a href="研究開発部_業務要件.html">研究開発部</a><a href="品質環境部_業務要件.html">品質環境部</a><a href="安全管理部_業務要件.html">安全管理部</a><a href="人事部_業務要件.html" class="active">人事部</a><a href="経理部_業務要件.html">経理部</a><a href="総務部_業務要件.html">総務部</a><a href="購買部_業務要件.html">購買部</a><a href="船舶事業部_業務要件.html">船舶事業部</a><a href="IT-DX部門_業務要件.html">IT-DX部門</a><a href="統合データ基盤_業務要件.html">統合データ基盤</a></div>
+</div>
+<div class="container">
+  <div class="content"><h1 id="_1">人事部 業務要件書</h1>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>文書ID</td>
+<td>BIZ-JIN-001</td>
+</tr>
+<tr>
+<td>版数</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>作成日</td>
+<td>2026年5月16日</td>
+</tr>
+<tr>
+<td>対象部署</td>
+<td>管理本部 人事部</td>
+</tr>
+<tr>
+<td>対象システム</td>
+<td>Corporate Operation Platform</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1">1. 部署概要</h2>
+<h3 id="11">1.1 組織上の位置づけ</h3>
+<p>人事部は管理本部に属し、全社の人事管理・労務管理・教育訓練・健康管理を担う。建設業特有の技能資格管理、建設キャリアアップシステム（CCUS）連携、働き方改革への対応が重要。</p>
+<h3 id="12">1.2 部署ミッション</h3>
+<ul>
+<li>適正な人材配置（技術者の現場配置最適化）</li>
+<li>技能資格の取得促進と管理</li>
+<li>教育訓練体系の構築・運用</li>
+<li>労務管理（36協定遵守・働き方改革）</li>
+<li>健康管理（特殊健康診断を含む）</li>
+<li>人材採用・定着率向上</li>
+</ul>
+<hr />
+<h2 id="2">2. 業務要件（詳細）</h2>
+<h3 id="21">2.1 人材配置管理</h3>
+<h4 id="211">2.1.1 技術者配置の制約条件</h4>
+<p>建設業法に基づき、以下の技術者配置が必要：</p>
+<table>
+<thead>
+<tr>
+<th>技術者区分</th>
+<th>配置要件</th>
+<th>制約</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>監理技術者</td>
+<td>発注者から直接請負った工事で下請金額4,500万円以上</td>
+<td>専任義務（原則1工事1人）</td>
+</tr>
+<tr>
+<td>主任技術者</td>
+<td>全ての建設工事</td>
+<td>専任義務あり/なし（金額による）</td>
+</tr>
+<tr>
+<td>現場代理人</td>
+<td>発注者が要求する場合</td>
+<td>常駐義務</td>
+</tr>
+</tbody>
+</table>
+<h4 id="212">2.1.2 配置管理の業務要件</h4>
+<table>
+<thead>
+<tr>
+<th>要件</th>
+<th>詳細</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>技術者一覧</td>
+<td>全社の技術者の資格・実績・現在の配置状況</td>
+</tr>
+<tr>
+<td>配置シミュレーション</td>
+<td>今後の受注見込みに対する技術者配置のシミュレーション</td>
+</tr>
+<tr>
+<td>空き技術者検索</td>
+<td>工事完了予定に基づく配置可能な技術者の検索</td>
+</tr>
+<tr>
+<td>配置表</td>
+<td>プロジェクト×技術者のマトリクス表示</td>
+</tr>
+<tr>
+<td>専任確認</td>
+<td>監理技術者の専任義務の充足確認</td>
+</tr>
+<tr>
+<td>CORINS連携</td>
+<td>工事実績情報の技術者紐づけ</td>
+</tr>
+</tbody>
+</table>
+<h4 id="213-ai">2.1.3 AI人材配置最適化（将来対応）</h4>
+<ul>
+<li>技術者の資格・経験・適性と案件要件のマッチング</li>
+<li>通勤距離・転勤回数等の制約条件を考慮した最適配置提案</li>
+<li>将来の受注予測に基づく技術者需給ギャップの予測</li>
+</ul>
+<hr />
+<h3 id="22">2.2 技能資格管理</h3>
+<h4 id="221">2.2.1 管理対象資格（主要なもの）</h4>
+<table>
+<thead>
+<tr>
+<th>資格名</th>
+<th>関連法規</th>
+<th>更新要件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1級土木施工管理技士</td>
+<td>建設業法</td>
+<td>なし（終身）</td>
+</tr>
+<tr>
+<td>2級土木施工管理技士</td>
+<td>建設業法</td>
+<td>なし（終身）</td>
+</tr>
+<tr>
+<td>技術士（建設部門）</td>
+<td>技術士法</td>
+<td>なし（終身）</td>
+</tr>
+<tr>
+<td>監理技術者資格者証</td>
+<td>建設業法</td>
+<td>5年ごと更新</td>
+</tr>
+<tr>
+<td>第一種衛生管理者</td>
+<td>労働安全衛生法</td>
+<td>なし</td>
+</tr>
+<tr>
+<td>潜水士</td>
+<td>労働安全衛生法</td>
+<td>なし</td>
+</tr>
+<tr>
+<td>玉掛け技能講習</td>
+<td>労働安全衛生法</td>
+<td>なし</td>
+</tr>
+<tr>
+<td>クレーン運転士</td>
+<td>労働安全衛生法</td>
+<td>なし</td>
+</tr>
+<tr>
+<td>酸素欠乏危険作業主任者</td>
+<td>労働安全衛生法</td>
+<td>なし</td>
+</tr>
+<tr>
+<td>足場の組立て等作業主任者</td>
+<td>労働安全衛生法</td>
+<td>なし</td>
+</tr>
+<tr>
+<td>RCCM</td>
+<td>建設コンサルタント</td>
+<td>4年ごと更新</td>
+</tr>
+</tbody>
+</table>
+<h4 id="222">2.2.2 管理要件</h4>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>資格マスタ</td>
+<td>全資格の一覧（名称・取得条件・有効期限・更新要件）</td>
+</tr>
+<tr>
+<td>取得状況</td>
+<td>従業員ごとの保有資格一覧</td>
+</tr>
+<tr>
+<td>証明書管理</td>
+<td>資格証のスキャンデータ保管</td>
+</tr>
+<tr>
+<td>有効期限管理</td>
+<td>更新が必要な資格の期限管理とアラート</td>
+</tr>
+<tr>
+<td>取得計画</td>
+<td>年度ごとの資格取得目標と進捗管理</td>
+</tr>
+<tr>
+<td>費用管理</td>
+<td>受験料・講習費用の管理</td>
+</tr>
+</tbody>
+</table>
+<h4 id="223-ccus">2.2.3 CCUS（建設キャリアアップシステム）連携</h4>
+<ul>
+<li>CCUSカード情報との連携</li>
+<li>就業履歴データの取込</li>
+<li>技能レベル（レベル1～4）の管理</li>
+<li>保有資格のCCUS登録状況確認</li>
+</ul>
+<hr />
+<h3 id="23">2.3 教育訓練管理</h3>
+<h4 id="231">2.3.1 教育訓練体系</h4>
+<table>
+<thead>
+<tr>
+<th>教育区分</th>
+<th>対象</th>
+<th>頻度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>階層別研修</td>
+<td>新入社員/中堅/管理職</td>
+<td>年次</td>
+</tr>
+<tr>
+<td>技術研修</td>
+<td>技術者</td>
+<td>年数回</td>
+</tr>
+<tr>
+<td>安全教育</td>
+<td>全従業員</td>
+<td>月次</td>
+</tr>
+<tr>
+<td>資格取得講座</td>
+<td>受験者</td>
+<td>受験前</td>
+</tr>
+<tr>
+<td>コンプライアンス研修</td>
+<td>全従業員</td>
+<td>年次</td>
+</tr>
+<tr>
+<td>情報セキュリティ研修</td>
+<td>全従業員</td>
+<td>年次</td>
+</tr>
+<tr>
+<td>OJT</td>
+<td>新入社員/配属者</td>
+<td>随時</td>
+</tr>
+</tbody>
+</table>
+<h4 id="232">2.3.2 管理要件</h4>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>研修カレンダー</td>
+<td>年間教育訓練計画のカレンダー管理</td>
+</tr>
+<tr>
+<td>受講管理</td>
+<td>誰がどの研修を受講したか</td>
+</tr>
+<tr>
+<td>未受講管理</td>
+<td>必須研修の未受講者の検知とリマインダー</td>
+</tr>
+<tr>
+<td>教材管理</td>
+<td>研修教材のDB管理</td>
+</tr>
+<tr>
+<td>効果測定</td>
+<td>研修後テスト・アンケートの管理</td>
+</tr>
+<tr>
+<td>費用管理</td>
+<td>教育訓練費用の管理</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="24">2.4 労務管理</h3>
+<h4 id="241">2.4.1 勤怠管理</h4>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>出退勤記録</td>
+<td>ICカード/Webからの打刻</td>
+</tr>
+<tr>
+<td>残業管理</td>
+<td>残業時間の集計・36協定チェック</td>
+</tr>
+<tr>
+<td>休暇管理</td>
+<td>有給休暇の付与・取得・残日数管理</td>
+</tr>
+<tr>
+<td>振替休日</td>
+<td>休日出勤と振替休日の管理</td>
+</tr>
+<tr>
+<td>現場勤務</td>
+<td>現場常駐者の勤怠管理（施工管理システム連携）</td>
+</tr>
+</tbody>
+</table>
+<h4 id="242-36">2.4.2 36協定チェック要件</h4>
+<table>
+<thead>
+<tr>
+<th>チェック項目</th>
+<th>基準</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>月間残業時間</td>
+<td>45時間以内（特別条項適用時：月100時間未満）</td>
+</tr>
+<tr>
+<td>年間残業時間</td>
+<td>360時間以内（特別条項適用時：720時間以内）</td>
+</tr>
+<tr>
+<td>2～6ヶ月平均</td>
+<td>80時間以内</td>
+</tr>
+<tr>
+<td>特別条項の適用回数</td>
+<td>年6回以内</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>上限に近づいた場合の自動アラート</li>
+<li>月間35時間超過で注意通知</li>
+<li>月間40時間超過で警告通知</li>
+<li>月間45時間超過で部門長・人事部に緊急通知</li>
+</ul>
+<h4 id="243-2024">2.4.3 建設業の2024年問題対応</h4>
+<ul>
+<li>2024年4月から建設業にも時間外労働の上限規制適用済</li>
+<li>上限規制の遵守状況ダッシュボード</li>
+<li>月次での遵守状況レポート自動生成</li>
+</ul>
+<hr />
+<h3 id="25">2.5 健康管理</h3>
+<h4 id="251">2.5.1 健康診断管理</h4>
+<table>
+<thead>
+<tr>
+<th>健診種別</th>
+<th>対象者</th>
+<th>頻度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>一般定期健診</td>
+<td>全従業員</td>
+<td>年1回</td>
+</tr>
+<tr>
+<td>特殊健康診断</td>
+<td>有機溶剤/特定化学物質/じん肺/高気圧等</td>
+<td>年2回</td>
+</tr>
+<tr>
+<td>海外派遣時健診</td>
+<td>海外赴任者</td>
+<td>派遣前後</td>
+</tr>
+<tr>
+<td>生活習慣病予防健診</td>
+<td>35歳以上</td>
+<td>年1回</td>
+</tr>
+</tbody>
+</table>
+<h4 id="252">2.5.2 管理要件</h4>
+<ul>
+<li>健診結果の一元管理（産業医との情報共有）</li>
+<li>要再検査・要精密検査者のフォローアップ管理</li>
+<li>有所見率の統計分析</li>
+<li>ストレスチェック（年1回）の実施・結果管理</li>
+<li>長時間労働者への面接指導記録</li>
+</ul>
+<hr />
+<h2 id="3-entra-id">3. Entra ID連携要件</h2>
+<ul>
+<li>従業員マスタとEntra IDユーザーの同期</li>
+<li>入社時のEntra IDアカウント自動作成</li>
+<li>退職時のEntra IDアカウント自動無効化</li>
+<li>部署異動時のグループメンバーシップ自動更新</li>
+<li>役職変更時のアクセス権限自動更新</li>
+</ul></div>
+  <div class="footer">&copy; 2026 みらい建設工業 IT-DX部門 &nbsp;|&nbsp; 統合建設DX基盤 業務要件書</div>
+</div>
+
+<script>
+function toggleTheme(){
+  var h=document.documentElement, d=h.getAttribute('data-theme')==='dark';
+  if(d){h.removeAttribute('data-theme');localStorage.setItem('mirai-dx-theme','light');}
+  else{h.setAttribute('data-theme','dark');localStorage.setItem('mirai-dx-theme','dark');}
+}
+</script>
+
+</body></html>

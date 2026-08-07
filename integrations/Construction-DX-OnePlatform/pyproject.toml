@@ -1,0 +1,20 @@
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+exclude = ["__pycache__", ".venv", "venv", "node_modules", "build", "dist"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "N", "C4", "SIM"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = false
+warn_return_any = true
+warn_unused_ignores = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -q --strict-markers"
+filterwarnings = ["ignore::DeprecationWarning"]

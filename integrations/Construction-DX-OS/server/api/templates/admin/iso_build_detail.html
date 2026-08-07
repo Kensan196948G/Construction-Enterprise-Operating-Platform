@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}ISO Build {{ job.id[:8] }} — cdx-server Admin{% endblock %}
+{% block content %}
+<a href="/admin/iso-builder" class="back-link">← ジョブ一覧へ戻る</a>
+
+<div class="card">
+  <h2>📦 Build Job <code>{{ job.id }}</code></h2>
+  <table style="width: auto; margin-top: 0.5rem;">
+    <tbody>
+      <tr><th>Profile</th><td>{{ job.profile }}</td></tr>
+      <tr><th>Status</th>
+        <td>
+          {% if job.status == "succeeded" %}
+            <span class="badge badge-ok">{{ job.status }}</span>
+          {% elif job.status == "failed" %}
+            <span class="badge badge-error">{{ job.status }}</span>
+          {% elif job.status == "cancelled" %}
+            <span class="badge badge-degraded">{{ job.status }}</span>
+          {% else %}
+            <span class="badge" style="background:#3b82f6;color:#fff">{{ job.status }}</span>
+          {% endif %}
+        </td>
+      </tr>
+      <tr><th>Git Ref</th><td><code>{{ job.git_ref }}</code></td></tr>
+      <tr><th>Requested By</th><td>{{ job.requested_by }}</td></tr>
+      <tr><th>Created At</th><td>{{ job.created_at.strftime("%Y-%m-%d %H:%M:%S UTC") }}</td></tr>
+      <tr><th>Started At</th><td>{% if job.started_at %}{{ job.started_at.strftime("%Y-%m-%d %H:%M:%S UTC") }}{% else %}—{% endif %}</td></tr>
+      <tr><th>Finished At</th><td>{% if job.finished_at %}{{ job.finished_at.strftime("%Y-%m-%d %H:%M:%S UTC") }}{% else %}—{% endif %}</td></tr>
+      <tr><th>ISO Path</th><td>{% if job.iso_path %}<code>{{ job.iso_path }}</code>{% else %}—{% endif %}</td></tr>
+      <tr><th>ISO SHA256</th><td>{% if job.iso_sha256 %}<code style="font-size:0.75rem;">{{ job.iso_sha256 }}</code>{% else %}—{% endif %}</td></tr>
+      <tr><th>ISO Size</th><td>{% if job.iso_size_bytes %}{{ "{:,}".format(job.iso_size_bytes) }} bytes{% else %}—{% endif %}</td></tr>
+      <tr><th>Log Path</th><td>{% if job.log_path %}<code>{{ job.log_path }}</code>{% else %}—{% endif %}</td></tr>
+      {% if job.error_message %}
+      <tr><th>Error</th><td><pre style="white-space:pre-wrap; color:#dc2626;">{{ job.error_message }}</pre></td></tr>
+      {% endif %}
+      {% if job.notes %}
+      <tr><th>Notes</th><td>{{ job.notes }}</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+
+  <div style="margin-top: 1rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
+    {% if job.status == "succeeded" and job.iso_path %}
+    <a href="/api/v1/iso-builds/{{ job.id }}/download"
+       style="display:inline-block; padding:0.5rem 1.25rem; background:#2563eb; color:#fff;
+              border-radius:4px; text-decoration:none; font-weight:600;">
+      ⬇ ISOをダウンロード
+    </a>
+    <span style="font-size:0.8rem; color:#6b7280; align-self:center;">
+      ※ presigned URL（1時間有効）にリダイレクトします
+    </span>
+    {% endif %}
+    {% if cancellable %}
+    <form method="post" action="/admin/iso-builder/{{ job.id }}/cancel"
+          onsubmit="return confirm('このビルドジョブをキャンセルします。よろしいですか?');"
+          style="margin:0;">
+      <button type="submit" style="padding:0.5rem 1rem; background:#dc2626; color:#fff; border:none; border-radius:4px; cursor:pointer;">
+        🛑 ビルドをキャンセル
+      </button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+{% if job.status in ("queued", "running") %}
+<div class="card" id="log-card">
+  <h2>📋 ビルドログ (リアルタイム)</h2>
+  <div id="log-status" style="font-size:0.85rem; color:#6b7280; margin-bottom:0.5rem;">接続中...</div>
+  <pre id="log-output" style="background:#0f172a; color:#e2e8f0; padding:1rem; border-radius:6px;
+       min-height:8rem; max-height:30rem; overflow-y:auto; font-size:0.78rem; white-space:pre-wrap;"></pre>
+  <script nonce="{{ request.state.csp_nonce if request.state.csp_nonce is defined else '' }}">
+    (function() {
+      const jobId = {{ job.id | tojson }};
+      const out = document.getElementById('log-output');
+      const statusEl = document.getElementById('log-status');
+      const es = new EventSource('/api/v1/iso-builds/' + jobId + '/log');
+
+      es.addEventListener('log', function(e) {
+        out.textContent += e.data + '\n';
+        out.scrollTop = out.scrollHeight;
+      });
+      es.addEventListener('status', function(e) {
+        statusEl.textContent = 'ステータス: ' + e.data;
+      });
+      es.addEventListener('ping', function(e) {
+        statusEl.textContent = 'ステータス: ' + e.data + ' (ログ待機中...)';
+      });
+      es.addEventListener('done', function(e) {
+        statusEl.textContent = '完了: ' + e.data;
+        es.close();
+        setTimeout(function() { location.reload(); }, 1500);
+      });
+      es.addEventListener('error', function(e) {
+        statusEl.textContent = '接続エラー — ページを再読込してください。';
+        es.close();
+      });
+      es.addEventListener('timeout', function(e) {
+        statusEl.textContent = 'ストリームタイムアウト。';
+        es.close();
+      });
+    })();
+  </script>
+</div>
+{% endif %}
+
+<div class="card">
+  <h2>🧾 監査ログ ({{ audit | length }} 件)</h2>
+  {% if audit %}
+  <table>
+    <thead>
+      <tr>
+        <th>At (UTC)</th>
+        <th>Actor</th>
+        <th>Action</th>
+        <th>Request ID</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for a in audit %}
+      <tr>
+        <td>{{ a.at.strftime("%Y-%m-%d %H:%M:%S") }}</td>
+        <td>{{ a.actor }}</td>
+        <td>{{ a.action }}</td>
+        <td>{% if a.request_id %}<code style="font-size:0.75rem;">{{ a.request_id }}</code>{% else %}—{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">監査ログはありません。</p>
+  {% endif %}
+</div>
+{% endblock %}

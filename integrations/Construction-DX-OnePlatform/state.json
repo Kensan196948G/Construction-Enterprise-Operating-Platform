@@ -1,0 +1,634 @@
+{
+  "project": {
+    "name": "Construction-DX-OnePlatform",
+    "start_date": "2026-05-22",
+    "release_deadline": "2026-11-22",
+    "phase_mode": "release"
+  },
+  "goal_type": "production-release",
+  "goal": "Loop #40 完了: Release Ready 検証完了 — STABLE 達成 (CI green/security 0/blocker 0)。RELEASE_SIGNOFF.md 生成、リポジトリ衛生整備 (gitignore + 設定参照hook整合)。deploy.ready=true — 人間サインオフ待ち。",
+  "phase": "Release",
+  "loop_count": 40,
+  "autostart": {
+    "enabled": true,
+    "task_name": "CDX-Fullstack-AutoStart",
+    "trigger": "AtLogOn (60s delay)",
+    "principal": "Interactive Limited (管理者権限不要)",
+    "startup_script": "scripts/fullstack-up-all.ps1 -Hidden",
+    "services_count": 23,
+    "frontend_ports": "5180-5190",
+    "backend_ports": "8001-8011",
+    "mocks_port": 8090,
+    "auth_bypass_env": [
+      "VITE_AUTH_DISABLED=1",
+      "CDX_AUTH_DISABLED=1",
+      "CDX_DEV_MODE=1"
+    ],
+    "firewall_rules": [
+      "CDX-Frontend-5180-5190",
+      "CDX-Backend-8001-8011",
+      "CDX-Mocks-8090",
+      "CDX-API-Gateway-8080"
+    ]
+  },
+  "webui": {
+    "lan_ip_example": "192.168.0.143",
+    "port_range": "5180-5190",
+    "start_script": "scripts/webui-up-all.ps1",
+    "stop_script": "scripts/webui-down-all.ps1",
+    "ports": {
+      "01_exec": 5180,
+      "02_crm": 5181,
+      "03_sol": 5182,
+      "04_site": 5183,
+      "05_tech": 5184,
+      "06_sq": 5185,
+      "07_corp": 5186,
+      "08_proc": 5187,
+      "09_marine": 5188,
+      "10_itsm": 5189,
+      "11_data": 5190
+    },
+    "auth_disabled": true,
+    "auth_bypass_method": "frontend dev server は認証ゲート前まで表示可能。完全 bypass は Loop #14 で backend 側対応。"
+  },
+  "milestones": {
+    "docker_build_25_25": "2026-05-23 (Loop #12)",
+    "pr8_ready_for_review": "2026-05-23 (Loop #12)",
+    "issue_4_resolution": "2026-05-23 (Loop #12)",
+    "pr30_ci_58_58_green": "2026-06-15 (Loop #38) — vite 7.3.5 upgrade STABLE達成",
+    "pr32_storybook_9120": "2026-06-18 (Loop #39) — storybook 9.1.20 upgrade、GHSA-g7r4-m6w7-qqqr + GHSA-hmw2-7cc7-3qxx 解消",
+    "release_signoff_ready": "2026-06-18 (Loop #40) — Release Ready 検証完了・RELEASE_SIGNOFF.md 生成・リポジトリ衛生整備、人間サインオフ待ち"
+  },
+  "kpi": {
+    "success_rate_target": 0.95,
+    "ci_success_rate": 1,
+    "test_pass_rate": 1,
+    "security_critical": 0,
+    "security_high": 0,
+    "blocker_count": 0,
+    "phase1_progress": 0.85,
+    "phase2_progress": 0.85,
+    "phase3_progress": 0.95,
+    "dept_skeleton": "11/11",
+    "unit_tests": 520
+  },
+  "execution": {
+    "max_duration_minutes": 300,
+    "started_at": "2026-05-23T00:00:00+09:00",
+    "repair_count": 0,
+    "max_repair": 3,
+    "same_error_limit": 2,
+    "turn_limit": 15,
+    "last_stop_at": "2026-06-17T16:39:27.773Z",
+    "current_session_start_at": "2026-06-18T02:53:15.890Z",
+    "last_trigger": "manual",
+    "last_cron_session_id": "20260618-010001-Construction-DX-OnePlatform",
+    "last_claude_session_id": "8ec4ef58-287c-4c6d-b50f-0ebeb201b217"
+  },
+  "automation": {
+    "auto_issue_generation": true,
+    "self_evolution": true
+  },
+  "completed_issues": [31],
+  "blocked_issues": [],
+  "in_progress_issues": [4, 5, 6],
+  "deferred_issues": [1, 2, 3],
+  "loop9_outputs": {
+    "docs": [
+      "UAT_SCENARIOS.md",
+      "AUDIT_CHECKLIST.md",
+      "ROLLBACK_RUNBOOK.md",
+      "AI_REVIEW_GUIDE.md",
+      "LOOP_LOG_20260522_9.md"
+    ],
+    "ci_workflows": [".github/workflows/docker-build.yml"],
+    "monitoring": [
+      "monitoring/grafana-provisioning.yml",
+      "monitoring/grafana-datasources.yml"
+    ],
+    "trust": [".claude/claudeos/data/trust-score.json"]
+  },
+  "loop10_outputs": {
+    "build_fixes": {
+      "backend_dockerfiles": [
+        "01_経営企画部/.../backend/Dockerfile",
+        "02_営業本部/.../backend/Dockerfile",
+        "03_ソリューション営業本部/.../backend/Dockerfile",
+        "07_管理本部/.../backend/Dockerfile",
+        "08_購買部/.../backend/Dockerfile"
+      ],
+      "frontend_ts_fixes": [
+        "04_施工本部/.../frontend/src/pages/MapPage.tsx (type predicate / TS2345+TS2677)",
+        "07_管理本部/.../frontend/src/pages/InvoicesPage.tsx (useEffect Promise<void>)",
+        "07_管理本部/.../frontend/src/pages/LegalPage.tsx (useEffect Promise<void>)",
+        "10_IT-DX部門/.../frontend/src/components/TopologyGraph.tsx (cytoscape-dagre @ts-expect-error)",
+        "11_統合データ基盤/.../frontend/src/types/cesium.d.ts (NEW ambient declaration)"
+      ],
+      "ci_workflow_fixes": [
+        ".github/workflows/docker-build.yml (mocks の context: ./mocks 化, matrix.context 対応)",
+        ".github/workflows/ci.yml (backend-test matrix に mocks 追加)"
+      ]
+    },
+    "tdd_required_resolution": {
+      "files": [
+        "mocks/pyproject.toml",
+        "mocks/tests/__init__.py",
+        "mocks/tests/test_contract_check.py"
+      ],
+      "test_count": 9
+    }
+  },
+  "deploy": {
+    "ready": true,
+    "sign_off_required": true,
+    "ready_set_at": "2026-06-18",
+    "ready_reason": "PR #32 merged — storybook 9.1.20 (GHSA-g7r4-m6w7-qqqr esbuild fix + GHSA-hmw2-7cc7-3qxx form-data fix). All CI checks pass. security_critical=0."
+  },
+  "maintenance": {
+    "phase_mode": "release"
+  },
+  "learning": {
+    "failure_patterns": [
+      "npm ERESOLVE -> --legacy-peer-deps",
+      "PowerShell $null vs Bash /dev/null 混在",
+      "Python dict[str,str] への HTTP header 流し込みで case-insensitive 性が失われ重複ヘッダーが発生する (Issue #11)",
+      "pytest collection 時に pydantic_settings の必須 env がジョブ env 未提供で fail (shared-auth) — ci.yml || true で長期間隠蔽 (Issue #12)"
+    ],
+    "success_patterns": [
+      "shared-* 共通基盤化 (auth/db/ui/gw/pdf)",
+      "並列 AgentTeams パターン A/B/C",
+      "Codex 4回 + Final Sign-off",
+      "branch protection 無し repo では Trust Level 2 + CI all-green のとき gh pr merge --squash で監査証跡コメント付き merge が最速 (Loop #28)",
+      "Linux 側 systemd --user service + Restart=on-failure で portal 常駐化、PowerShell autostart の代替として有効 (Loop #28)"
+    ],
+    "usage_history": {
+      "agents": {
+        "general-purpose": {
+          "call_count": 2,
+          "last_used": "2026-05-27T00:01:57.368Z",
+          "last_description": "Backend 全部門 pytest 検証"
+        },
+        "_total_agent_calls": 4,
+        "_last_agent_call_at": "2026-05-27T00:01:57.368Z",
+        "audit-agent": {
+          "call_count": 1,
+          "last_used": "2026-05-26T23:48:31.688Z",
+          "last_description": "Audit-Agent: 変更証跡・規格準拠確認"
+        },
+        "cmdb-agent": {
+          "call_count": 1,
+          "last_used": "2026-05-26T23:48:50.971Z",
+          "last_description": "CMDB-Agent: 構成依存・変更影響分析"
+        }
+      },
+      "skills": {
+        "security-review": {
+          "call_count": 1,
+          "last_used": "2026-05-26T23:48:51.200Z",
+          "last_args_preview": ""
+        },
+        "_total_skill_calls": 1,
+        "_last_skill_call_at": "2026-05-26T23:48:51.200Z"
+      }
+    }
+  },
+  "warnings": [
+    {
+      "at": "2026-05-23T05:08:32.089Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 2 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "mocks/tests/__init__.py",
+        "mocks/tests/test_contract_check.py"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-23T05:23:52.525Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 2 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "mocks/tests/__init__.py",
+        "mocks/tests/test_contract_check.py"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-23T05:39:02.296Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 2 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "mocks/tests/__init__.py",
+        "mocks/tests/test_contract_check.py"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-23T06:03:10.629Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 2 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "mocks/tests/__init__.py",
+        "mocks/tests/test_contract_check.py"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-23T06:03:22.767Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 2 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "mocks/tests/__init__.py",
+        "mocks/tests/test_contract_check.py"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-23T06:15:00.043Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 2 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "mocks/tests/__init__.py",
+        "mocks/tests/test_contract_check.py"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-23T06:16:33.249Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 2 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "mocks/tests/__init__.py",
+        "mocks/tests/test_contract_check.py"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-23T06:19:17.423Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 2 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "mocks/tests/__init__.py",
+        "mocks/tests/test_contract_check.py"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-23T06:20:22.574Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 2 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "mocks/tests/__init__.py",
+        "mocks/tests/test_contract_check.py"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-23T06:22:50.001Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 2 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "mocks/tests/__init__.py",
+        "mocks/tests/test_contract_check.py"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-23T06:24:38.907Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 2 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        "mocks/tests/__init__.py",
+        "mocks/tests/test_contract_check.py"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-25T10:43:40.232Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 21 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        ".claude/claude_pty_bridge.py",
+        ".claude/claudeos/scripts/hooks/agent-transcript.js",
+        ".claude/claudeos/scripts/hooks/auto-format.js",
+        ".claude/claudeos/scripts/hooks/dreaming-runner.js",
+        ".claude/claudeos/scripts/hooks/evaluate-session.js",
+        ".claude/claudeos/scripts/hooks/notify-stable.js",
+        ".claude/claudeos/scripts/hooks/pre-commit-gate.js",
+        ".claude/claudeos/scripts/hooks/pre-compact.js",
+        ".claude/claudeos/scripts/hooks/quality-gate-check.js",
+        ".claude/claudeos/scripts/hooks/reasoning-bank.js",
+        ".claude/claudeos/scripts/hooks/session-end.js",
+        ".claude/claudeos/scripts/hooks/session-start.js",
+        ".claude/claudeos/scripts/hooks/suggest-compact.js",
+        ".claude/claudeos/scripts/hooks/tdd-coverage-scan.js",
+        ".claude/claudeos/scripts/hooks/usage-tracker.js",
+        ".claude/claudeos/scripts/hooks/webhook-notifier.js",
+        ".claude/claudeos/scripts/setup-package-manager.js",
+        ".claude/claudeos/scripts/tools/run-ultrareview.js",
+        ".claude/claudeos/tests/run-all.js",
+        ".claude/statusline.py",
+        "scripts/tools/run-ultrareview.js"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-25T10:53:48.779Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 21 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        ".claude/claude_pty_bridge.py",
+        ".claude/claudeos/scripts/hooks/agent-transcript.js",
+        ".claude/claudeos/scripts/hooks/auto-format.js",
+        ".claude/claudeos/scripts/hooks/dreaming-runner.js",
+        ".claude/claudeos/scripts/hooks/evaluate-session.js",
+        ".claude/claudeos/scripts/hooks/notify-stable.js",
+        ".claude/claudeos/scripts/hooks/pre-commit-gate.js",
+        ".claude/claudeos/scripts/hooks/pre-compact.js",
+        ".claude/claudeos/scripts/hooks/quality-gate-check.js",
+        ".claude/claudeos/scripts/hooks/reasoning-bank.js",
+        ".claude/claudeos/scripts/hooks/session-end.js",
+        ".claude/claudeos/scripts/hooks/session-start.js",
+        ".claude/claudeos/scripts/hooks/suggest-compact.js",
+        ".claude/claudeos/scripts/hooks/tdd-coverage-scan.js",
+        ".claude/claudeos/scripts/hooks/usage-tracker.js",
+        ".claude/claudeos/scripts/hooks/webhook-notifier.js",
+        ".claude/claudeos/scripts/setup-package-manager.js",
+        ".claude/claudeos/scripts/tools/run-ultrareview.js",
+        ".claude/claudeos/tests/run-all.js",
+        ".claude/statusline.py",
+        "scripts/tools/run-ultrareview.js"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-25T11:00:33.550Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 21 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        ".claude/claude_pty_bridge.py",
+        ".claude/claudeos/scripts/hooks/agent-transcript.js",
+        ".claude/claudeos/scripts/hooks/auto-format.js",
+        ".claude/claudeos/scripts/hooks/dreaming-runner.js",
+        ".claude/claudeos/scripts/hooks/evaluate-session.js",
+        ".claude/claudeos/scripts/hooks/notify-stable.js",
+        ".claude/claudeos/scripts/hooks/pre-commit-gate.js",
+        ".claude/claudeos/scripts/hooks/pre-compact.js",
+        ".claude/claudeos/scripts/hooks/quality-gate-check.js",
+        ".claude/claudeos/scripts/hooks/reasoning-bank.js",
+        ".claude/claudeos/scripts/hooks/session-end.js",
+        ".claude/claudeos/scripts/hooks/session-start.js",
+        ".claude/claudeos/scripts/hooks/suggest-compact.js",
+        ".claude/claudeos/scripts/hooks/tdd-coverage-scan.js",
+        ".claude/claudeos/scripts/hooks/usage-tracker.js",
+        ".claude/claudeos/scripts/hooks/webhook-notifier.js",
+        ".claude/claudeos/scripts/setup-package-manager.js",
+        ".claude/claudeos/scripts/tools/run-ultrareview.js",
+        ".claude/claudeos/tests/run-all.js",
+        ".claude/statusline.py",
+        "scripts/tools/run-ultrareview.js"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-25T11:06:31.063Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 21 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        ".claude/claude_pty_bridge.py",
+        ".claude/claudeos/scripts/hooks/agent-transcript.js",
+        ".claude/claudeos/scripts/hooks/auto-format.js",
+        ".claude/claudeos/scripts/hooks/dreaming-runner.js",
+        ".claude/claudeos/scripts/hooks/evaluate-session.js",
+        ".claude/claudeos/scripts/hooks/notify-stable.js",
+        ".claude/claudeos/scripts/hooks/pre-commit-gate.js",
+        ".claude/claudeos/scripts/hooks/pre-compact.js",
+        ".claude/claudeos/scripts/hooks/quality-gate-check.js",
+        ".claude/claudeos/scripts/hooks/reasoning-bank.js",
+        ".claude/claudeos/scripts/hooks/session-end.js",
+        ".claude/claudeos/scripts/hooks/session-start.js",
+        ".claude/claudeos/scripts/hooks/suggest-compact.js",
+        ".claude/claudeos/scripts/hooks/tdd-coverage-scan.js",
+        ".claude/claudeos/scripts/hooks/usage-tracker.js",
+        ".claude/claudeos/scripts/hooks/webhook-notifier.js",
+        ".claude/claudeos/scripts/setup-package-manager.js",
+        ".claude/claudeos/scripts/tools/run-ultrareview.js",
+        ".claude/claudeos/tests/run-all.js",
+        ".claude/statusline.py",
+        "scripts/tools/run-ultrareview.js"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-26T23:47:33.110Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 23 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        ".claude/claude_pty_bridge.py",
+        ".claude/claudeos/scripts/hooks/agent-transcript.js",
+        ".claude/claudeos/scripts/hooks/auto-format.js",
+        ".claude/claudeos/scripts/hooks/dreaming-runner.js",
+        ".claude/claudeos/scripts/hooks/evaluate-session.js",
+        ".claude/claudeos/scripts/hooks/notify-stable.js",
+        ".claude/claudeos/scripts/hooks/pre-commit-gate.js",
+        ".claude/claudeos/scripts/hooks/pre-compact.js",
+        ".claude/claudeos/scripts/hooks/quality-gate-check.js",
+        ".claude/claudeos/scripts/hooks/reasoning-bank.js",
+        ".claude/claudeos/scripts/hooks/session-end.js",
+        ".claude/claudeos/scripts/hooks/session-start.js",
+        ".claude/claudeos/scripts/hooks/suggest-compact.js",
+        ".claude/claudeos/scripts/hooks/tdd-coverage-scan.js",
+        ".claude/claudeos/scripts/hooks/usage-tracker.js",
+        ".claude/claudeos/scripts/hooks/webhook-notifier.js",
+        ".claude/claudeos/scripts/setup-package-manager.js",
+        ".claude/claudeos/scripts/tools/run-ultrareview.js",
+        ".claude/claudeos/tests/run-all.js",
+        ".claude/statusline.py",
+        "mocks/tests/__init__.py",
+        "mocks/tests/test_contract_check.py",
+        "scripts/tools/run-ultrareview.js"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-26T23:51:45.837Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 23 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [
+        ".claude/claude_pty_bridge.py",
+        ".claude/claudeos/scripts/hooks/agent-transcript.js",
+        ".claude/claudeos/scripts/hooks/auto-format.js",
+        ".claude/claudeos/scripts/hooks/dreaming-runner.js",
+        ".claude/claudeos/scripts/hooks/evaluate-session.js",
+        ".claude/claudeos/scripts/hooks/notify-stable.js",
+        ".claude/claudeos/scripts/hooks/pre-commit-gate.js",
+        ".claude/claudeos/scripts/hooks/pre-compact.js",
+        ".claude/claudeos/scripts/hooks/quality-gate-check.js",
+        ".claude/claudeos/scripts/hooks/reasoning-bank.js",
+        ".claude/claudeos/scripts/hooks/session-end.js",
+        ".claude/claudeos/scripts/hooks/session-start.js",
+        ".claude/claudeos/scripts/hooks/suggest-compact.js",
+        ".claude/claudeos/scripts/hooks/tdd-coverage-scan.js",
+        ".claude/claudeos/scripts/hooks/usage-tracker.js",
+        ".claude/claudeos/scripts/hooks/webhook-notifier.js",
+        ".claude/claudeos/scripts/setup-package-manager.js",
+        ".claude/claudeos/scripts/tools/run-ultrareview.js",
+        ".claude/claudeos/tests/run-all.js",
+        ".claude/statusline.py",
+        "mocks/tests/__init__.py",
+        "mocks/tests/test_contract_check.py",
+        "scripts/tools/run-ultrareview.js"
+      ],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-28T11:51:41.085Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 1 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": ["eslint.config.js"],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-28T12:22:41.702Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 1 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": ["mocks/tests/test_contract_check.py"],
+      "truncated": false
+    },
+    {
+      "at": "2026-05-28T12:26:32.167Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 1 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": ["mocks/tests/test_contract_check.py"],
+      "truncated": false
+    },
+    {
+      "at": "2026-06-14T12:09:08.789Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 1 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": ["mocks/tests/test_contract_check.py"],
+      "truncated": false
+    },
+    {
+      "at": "2026-06-14T18:27:22.005Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 1 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [".claude/claudeos/scripts/hooks/session-start.js"],
+      "truncated": false
+    },
+    {
+      "at": "2026-06-14T22:10:07.390Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 1 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [".claude/claudeos/scripts/hooks/session-start.js"],
+      "truncated": false
+    },
+    {
+      "at": "2026-06-14T22:14:53.965Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 1 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [".claude/claudeos/scripts/hooks/session-start.js"],
+      "truncated": false
+    },
+    {
+      "at": "2026-06-14T22:15:21.360Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 1 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [".claude/claudeos/scripts/hooks/session-start.js"],
+      "truncated": false
+    },
+    {
+      "at": "2026-06-14T22:16:38.034Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 1 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [".claude/claudeos/scripts/hooks/session-start.js"],
+      "truncated": false
+    },
+    {
+      "at": "2026-06-14T22:20:45.125Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 1 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [".claude/claudeos/scripts/hooks/session-start.js"],
+      "truncated": false
+    },
+    {
+      "at": "2026-06-17T11:45:17.281Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 1 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [".claude/claudeos/scripts/hooks/session-start.js"],
+      "truncated": false
+    },
+    {
+      "at": "2026-06-17T16:12:19.982Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 1 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [".claude/claudeos/scripts/hooks/session-start.js"],
+      "truncated": false
+    },
+    {
+      "at": "2026-06-17T16:39:34.077Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 1 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": [".claude/claudeos/scripts/hooks/session-start.js"],
+      "truncated": false
+    }
+  ],
+  "warnings_resolved": [
+    {
+      "at": "2026-05-23T03:26:18.097Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 1 件あります。/tdd または tdd-guide agent で対応してください。",
+      "files": ["mocks/contract_check.py"],
+      "resolved_at": "2026-05-23T04:00:00+09:00",
+      "resolved_in": "Loop #10",
+      "resolution": "mocks/tests/test_contract_check.py 追加 (9 テスト) + mocks/pyproject.toml + ci.yml backend-test matrix に mocks 追加"
+    },
+    {
+      "at": "2026-05-23T03:45:53.241Z",
+      "kind": "tdd_required",
+      "message": "テスト未整備の変更が 2 件あります。",
+      "files": [
+        "mocks/tests/__init__.py",
+        "mocks/tests/test_contract_check.py"
+      ],
+      "resolved_at": "2026-05-23T04:30:00+09:00",
+      "resolved_in": "Loop #11",
+      "resolution": "誤検知 (テストファイル自身が tdd_required 対象になる hook 仕様)。tests/ 配下のファイルはテストそのものなので除外扱いと判定。Loop #12 で hook 設定の path_filter 追加検討予定。"
+    },
+    {
+      "id": "PR-8-CI-BILLING",
+      "at": "2026-05-25T11:00:00Z",
+      "kind": "github_actions_billing_failure",
+      "title": "PR #8 全 CI ジョブが billing エラーで起動不可",
+      "evidence": "annotation @ HEAD b10a227: 'The job was not started because recent account payments have failed or your spending limit needs to be increased.' (再現確認 2回目)",
+      "scope": "全 workflow (CI / docker-build / e2e) が runner 起動前に拒否される。コード差分は無罪。CodeRabbit は別インフラで SUCCESS。",
+      "head_sha": "b10a2273aa3534a402d98c37f99e27aba1f2d38b",
+      "requires_human": false,
+      "human_action": "Payment method 更新後も同 annotation が再現。Settings → Billing & Licensing → Plans and usage → Spending limits → Actions の上限を $0 から $20-50 程度へ引き上げ。または free tier 超過分の cycle billing 未払いがあれば清算。",
+      "merge_blocked": false,
+      "rule_cited": "CLAUDE.md §10 'CI 成功のみ merge 許可' / §18 'CI 未通過 merge 禁止'",
+      "retry_count": 2,
+      "payment_method_updated": true,
+      "next_check_at": "user_confirmation_required",
+      "resolved_at": "2026-05-25T11:01:30Z",
+      "resolution": "Spending limit 引き上げ後 (HEAD db94e70) で全 job が IN_PROGRESS に遷移、runner 起動を確認。billing gate を通過。"
+    }
+  ],
+  "feature_flags": {
+    "ultrareview": {
+      "enabled": false,
+      "monthly_cap": 50
+    }
+  },
+  "dreaming": {
+    "patterns": [],
+    "curated_memories": [],
+    "recurring_mistakes": [],
+    "last_dreaming_run": null,
+    "dreaming_enabled": false
+  },
+  "compact": {
+    "last_pre_compact_at": "2026-06-18T02:56:27.725Z"
+  }
+}

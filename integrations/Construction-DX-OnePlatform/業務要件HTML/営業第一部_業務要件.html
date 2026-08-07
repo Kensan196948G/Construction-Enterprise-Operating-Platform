@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>営業第一部_業務要件 | みらい建設工業 統合建設DX基盤</title>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
+
+  :root {
+    --bg:               #ffffff;
+    --bg-surface:       #f8fafc;
+    --bg-card:          #ffffff;
+    --text:             #1e293b;
+    --text-secondary:   #64748b;
+    --text-muted:       #94a3b8;
+    --accent:           #2563eb;
+    --accent-light:     #dbeafe;
+    --accent2:          #0ea5e9;
+    --accent3:          #7c3aed;
+    --accent-red:       #f43f5e;
+    --border:           #e2e8f0;
+    --border-light:     #f1f5f9;
+    --shadow:           0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-lg:        0 4px 16px rgba(0,0,0,0.06);
+    --header-bg:        #ffffff;
+    --header-text:      #0f172a;
+    --header-sub:       #475569;
+    --header-shadow:    0 1px 4px rgba(0,0,0,0.08), 0 1px 0 #e2e8f0;
+    --header-border:    #e2e8f0;
+    --nav-link:         #475569;
+    --nav-hover-bg:     rgba(37,99,235,0.08);
+    --nav-active-bg:    rgba(37,99,235,0.12);
+    --nav-active-text:  #2563eb;
+    --table-head-bg:    linear-gradient(135deg, #2563eb, #0ea5e9);
+    --table-head-text:  #ffffff;
+    --table-stripe:     #f8fafc;
+    --table-hover:      #eff6ff;
+    --code-bg:          #f1f5f9;
+    --code-color:       #2563eb;
+    --pre-bg:           #1e293b;
+    --pre-color:        #e2e8f0;
+    --section-bg:       #f0f9ff;
+    --quote-bg:         #fef2f2;
+    --quote-border:     #f43f5e;
+    --toggle-bg:        #e2e8f0;
+    --toggle-dot:       #ffffff;
+    --toggle-active-bg: #334155;
+    --toggle-active-dot:#f59e0b;
+    --btn-bg:           #2563eb;
+    --btn-text:         #ffffff;
+    --btn-hover:        #1d4ed8;
+  }
+
+  [data-theme="dark"] {
+    --bg:               #0f172a;
+    --bg-surface:       #1e293b;
+    --bg-card:          #1e293b;
+    --text:             #e2e8f0;
+    --text-secondary:   #94a3b8;
+    --text-muted:       #64748b;
+    --accent:           #60a5fa;
+    --accent-light:     #1e3a5f;
+    --accent2:          #38bdf8;
+    --accent3:          #a78bfa;
+    --accent-red:       #fb7185;
+    --border:           #334155;
+    --border-light:     #1e293b;
+    --shadow:           0 1px 3px rgba(0,0,0,0.3);
+    --shadow-lg:        0 4px 16px rgba(0,0,0,0.4);
+    --header-bg:        #0f172a;
+    --header-text:      #f1f5f9;
+    --header-sub:       #94a3b8;
+    --header-shadow:    0 1px 0 #1e293b, 0 4px 16px rgba(0,0,0,0.5);
+    --header-border:    #334155;
+    --nav-link:         rgba(255,255,255,0.7);
+    --nav-hover-bg:     rgba(255,255,255,0.1);
+    --nav-active-bg:    rgba(255,255,255,0.15);
+    --nav-active-text:  #60a5fa;
+    --table-head-bg:    linear-gradient(135deg, #1e3a5f, #0c4a6e);
+    --table-head-text:  #e2e8f0;
+    --table-stripe:     #1a2536;
+    --table-hover:      #253347;
+    --code-bg:          #334155;
+    --code-color:       #60a5fa;
+    --pre-bg:           #0b1120;
+    --pre-color:        #94a3b8;
+    --section-bg:       #172033;
+    --quote-bg:         #2a1520;
+    --quote-border:     #fb7185;
+    --toggle-bg:        #334155;
+    --toggle-dot:       #f59e0b;
+    --toggle-active-bg: #334155;
+    --toggle-active-dot:#f59e0b;
+    --btn-bg:           #2563eb;
+    --btn-text:         #ffffff;
+    --btn-hover:        #3b82f6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Noto Sans JP', 'Meiryo', 'Hiragino Sans', sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.85;
+    transition: background 0.35s, color 0.35s;
+  }
+
+  /* ── Header ── */
+  .header-bar {
+    background: var(--header-bg);
+    padding: 22px 36px 16px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: var(--header-shadow);
+    display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+    transition: background 0.35s, box-shadow 0.35s;
+    border-bottom: 1px solid var(--header-border);
+  }
+  .header-main { flex: 1; min-width: 280px; }
+  .header-bar h1 {
+    font-size: 1.55em; font-weight: 700; letter-spacing: 0.04em;
+    color: var(--header-text);
+    transition: color 0.35s;
+  }
+  .header-bar .subtitle {
+    font-size: 0.82em; margin-top: 3px;
+    color: var(--header-sub);
+    font-weight: 400; letter-spacing: 0.02em;
+    transition: color 0.35s;
+  }
+  .header-nav {
+    width: 100%; margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid var(--header-border);
+    display: flex; flex-wrap: wrap; gap: 3px;
+    transition: border-color 0.35s;
+  }
+  .header-nav a {
+    color: var(--nav-link); text-decoration: none;
+    padding: 4px 11px; border-radius: 6px;
+    font-size: 0.76em; transition: all 0.2s;
+  }
+  .header-nav a:hover { background: var(--nav-hover-bg); color: var(--nav-active-text); }
+  .header-nav a.active { background: var(--nav-active-bg); color: var(--nav-active-text); font-weight: 600; }
+
+  /* ── Toggle ── */
+  .toggle-wrap { display: flex; align-items: center; flex-shrink: 0; gap: 7px; }
+  .theme-label { font-size: 0.72em; color: var(--text-secondary); white-space: nowrap; transition: color 0.35s; }
+  .theme-toggle {
+    position: relative; width: 52px; height: 26px;
+    background: var(--toggle-bg); border-radius: 13px;
+    cursor: pointer; border: 2px solid var(--border);
+    outline: none; transition: all 0.3s;
+  }
+  .theme-toggle::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--accent);
+    transition: transform 0.3s, background 0.3s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+  [data-theme="dark"] .theme-toggle { background: var(--toggle-active-bg); border-color: #475569; }
+  [data-theme="dark"] .theme-toggle::after { transform: translateX(26px); background: var(--toggle-active-dot); }
+
+  /* ── Container ── */
+  .container { max-width: 1140px; margin: 28px auto; padding: 0 24px; }
+
+  /* ── Cards ── */
+  .content, .idx-card {
+    background: var(--bg-card); border-radius: 14px;
+    padding: 36px 42px; box-shadow: var(--shadow-lg);
+    margin: 20px 0; border: 1px solid var(--border-light);
+    transition: background 0.35s, border 0.35s, box-shadow 0.35s;
+  }
+
+  /* ── Typography ── */
+  h1 { color: var(--accent); font-size: 1.65em; margin: 28px 0 14px; padding-bottom: 10px; border-bottom: 3px solid var(--accent); }
+  h2 {
+    color: var(--text); font-size: 1.3em; margin: 26px 0 12px;
+    padding: 10px 0 10px 16px;
+    border-left: 4px solid var(--accent2);
+    background: var(--section-bg); border-radius: 0 8px 8px 0;
+    transition: background 0.35s;
+  }
+  h3 { color: var(--accent); font-size: 1.1em; margin: 20px 0 10px; }
+  h4 { color: var(--accent3); font-size: 1.0em; margin: 16px 0 8px; }
+  p { margin: 8px 0; text-align: justify; }
+  strong { color: var(--accent); }
+  ul, ol { margin: 8px 0 8px 24px; }
+  li { margin: 4px 0; }
+  a { color: var(--accent); transition: color 0.2s; }
+  a:hover { color: var(--accent2); }
+  hr { border: none; height: 1px; background: var(--border); margin: 24px 0; }
+
+  /* ── Tables ── */
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.91em; }
+  thead { background: var(--table-head-bg); color: var(--table-head-text); }
+  th { padding: 12px 16px; text-align: left; font-weight: 500; white-space: nowrap; }
+  td { padding: 10px 16px; border-bottom: 1px solid var(--border); transition: background 0.2s; }
+  tbody tr:nth-child(even) { background: var(--table-stripe); }
+  tbody tr:hover { background: var(--table-hover); }
+
+  /* ── Code ── */
+  code { background: var(--code-bg); padding: 2px 7px; border-radius: 5px; font-size: 0.9em; color: var(--code-color); transition: background 0.35s; }
+  pre { background: var(--pre-bg); color: var(--pre-color); padding: 20px; border-radius: 10px; overflow-x: auto; margin: 16px 0; font-size: 0.87em; line-height: 1.65; transition: background 0.35s; }
+  pre code { background: none; color: inherit; padding: 0; }
+
+  /* ── Misc ── */
+  blockquote { border-left: 4px solid var(--quote-border); padding: 12px 20px; margin: 16px 0; background: var(--quote-bg); border-radius: 0 8px 8px 0; transition: background 0.35s; }
+  .footer { text-align: center; padding: 32px; color: var(--text-muted); font-size: 0.83em; }
+
+  /* ── Index ── */
+  .dept-badge {
+    display: inline-block; padding: 2px 12px; border-radius: 20px;
+    font-size: 0.82em; font-weight: 500;
+    background: var(--accent-light); color: var(--accent);
+    transition: all 0.35s;
+  }
+  .btn-open {
+    display: inline-block; padding: 7px 22px; border-radius: 8px;
+    font-size: 0.84em; font-weight: 500;
+    background: var(--btn-bg); color: var(--btn-text);
+    text-decoration: none; transition: all 0.2s;
+  }
+  .btn-open:hover { background: var(--btn-hover); color: var(--btn-text); transform: translateY(-1px); }
+  .stats-bar { display: flex; gap: 16px; flex-wrap: wrap; margin: 20px 0 28px; }
+  .stat-chip {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 20px; border-radius: 10px;
+    background: var(--bg-surface); border: 1px solid var(--border);
+    font-size: 0.88em; transition: all 0.35s;
+  }
+  .stat-chip .num { font-size: 1.4em; font-weight: 700; color: var(--accent); }
+
+  @media print {
+    .header-bar { position: static; }
+    body { background: #fff !important; color: #000 !important; }
+    .content, .idx-card { box-shadow: none; border: 1px solid #ccc; }
+    .toggle-wrap { display: none; }
+  }
+</style>
+<script>
+  (function(){
+    var s = localStorage.getItem('mirai-dx-theme');
+    if(s==='dark') document.documentElement.setAttribute('data-theme','dark');
+  })();
+</script>
+
+</head>
+<body>
+<div class="header-bar">
+  <div class="header-main">
+    <h1>みらい建設工業 統合建設DX基盤</h1>
+    <div class="subtitle">Construction DX One Platform &mdash; 営業第一部_業務要件</div>
+  </div>
+  <div class="toggle-wrap">
+  <span class="theme-label">Light / Dark</span>
+  <button class="theme-toggle" onclick="toggleTheme()" aria-label="テーマ切替"></button>
+</div>
+  <div class="header-nav"><a href="index.html" style="font-weight:600;">一覧</a><a href="経営企画部_業務要件.html">経営企画部</a><a href="営業第一部_業務要件.html" class="active">営業第一部</a><a href="営業第二部_業務要件.html">営業第二部</a><a href="ソリューション営業本部_業務要件.html">ソリューション営業本部</a><a href="施工本部_工事部_業務要件.html">施工本部_工事部</a><a href="技術部_業務要件.html">技術部</a><a href="研究開発部_業務要件.html">研究開発部</a><a href="品質環境部_業務要件.html">品質環境部</a><a href="安全管理部_業務要件.html">安全管理部</a><a href="人事部_業務要件.html">人事部</a><a href="経理部_業務要件.html">経理部</a><a href="総務部_業務要件.html">総務部</a><a href="購買部_業務要件.html">購買部</a><a href="船舶事業部_業務要件.html">船舶事業部</a><a href="IT-DX部門_業務要件.html">IT-DX部門</a><a href="統合データ基盤_業務要件.html">統合データ基盤</a></div>
+</div>
+<div class="container">
+  <div class="content"><h1 id="_1">営業第一部 業務要件書</h1>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>文書ID</td>
+<td>BIZ-EIG1-001</td>
+</tr>
+<tr>
+<td>版数</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>作成日</td>
+<td>2026年5月16日</td>
+</tr>
+<tr>
+<td>対象部署</td>
+<td>営業本部 営業第一部</td>
+</tr>
+<tr>
+<td>対象システム</td>
+<td>Construction CRM &amp; Bid Management</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1">1. 部署概要</h2>
+<h3 id="11">1.1 組織上の位置づけ</h3>
+<p>営業第一部は営業本部に属し、主に官公庁発注の港湾・海上工事を中心とした公共工事の受注活動を担う。国土交通省・地方整備局・港湾空港技術研究所等の発注機関との関係構築、入札対応、技術提案書作成が主要業務である。</p>
+<h3 id="12">1.2 部署ミッション</h3>
+<ul>
+<li>港湾・海上工事分野の公共工事受注目標の達成</li>
+<li>発注機関との信頼関係構築・維持</li>
+<li>総合評価方式入札における高得点の獲得</li>
+<li>技術提案書の品質向上</li>
+</ul>
+<h3 id="13">1.3 主要メンバー構成</h3>
+<table>
+<thead>
+<tr>
+<th>役職</th>
+<th>人数（想定）</th>
+<th>主な業務</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>部長</td>
+<td>1名</td>
+<td>受注戦略策定、主要発注者対応</td>
+</tr>
+<tr>
+<td>課長</td>
+<td>2名</td>
+<td>入札管理、提案書統括</td>
+</tr>
+<tr>
+<td>営業担当</td>
+<td>4～6名</td>
+<td>発注者訪問、情報収集、日報作成</td>
+</tr>
+<tr>
+<td>入札事務</td>
+<td>1～2名</td>
+<td>入札書類作成、手続き管理</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2">2. 現行業務フロー</h2>
+<h3 id="21">2.1 案件情報収集業務</h3>
+<div class="codehilite"><pre><span></span><code>国交省等の発注見通し公表（年2回）
+    ↓
+発注情報の収集・整理（官報・入札情報サービス）
+    ↓
+対象案件の選定（部内会議）
+    ↓
+案件カードの作成（Excel管理）
+    ↓
+発注機関への訪問・情報収集
+    ↓
+営業日報の作成
+</code></pre></div>
+
+<p><strong>現行の課題</strong>
+- 発注見通しの手動チェックに時間がかかる
+- 案件管理がExcelで属人化している
+- 営業日報が紙or個別Excelで共有されにくい
+- 過去の受注実績検索に手間がかかる</p>
+<h3 id="22">2.2 入札対応業務</h3>
+<div class="codehilite"><pre><span></span><code>入札公告の確認
+    ↓
+参加資格の確認（等級・地域・実績要件）
+    ↓
+入札参加決定（部長承認）
+    ↓
+総合評価方式の場合：技術提案書作成
+    ↓
+入札書・技術提案書の提出
+    ↓
+開札・結果確認
+    ↓
+受注 or 敗退分析
+</code></pre></div>
+
+<h3 id="23">2.3 技術提案書作成業務</h3>
+<div class="codehilite"><pre><span></span><code>入札条件・評価基準の分析
+    ↓
+技術本部への技術相談
+    ↓
+過去の類似提案書の検索（ファイルサーバー手動検索）
+    ↓
+提案書ドラフト作成
+    ↓
+部内レビュー
+    ↓
+技術本部レビュー
+    ↓
+最終版作成・提出
+</code></pre></div>
+
+<p><strong>現行の課題</strong>
+- 過去提案書の検索が困難（ファイルサーバーに散在）
+- 提案書作成に1件あたり1～2週間を要する
+- 類似提案の知識が個人に蓄積し共有されない</p>
+<hr />
+<h2 id="3">3. 業務要件（詳細）</h2>
+<h3 id="31">3.1 案件管理</h3>
+<h4 id="311">3.1.1 案件ライフサイクル管理</h4>
+<p>案件を以下のステータスで管理し、各段階での必要アクションを明確にする。</p>
+<table>
+<thead>
+<tr>
+<th>ステータス</th>
+<th>定義</th>
+<th>必要アクション</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>情報収集中</td>
+<td>発注見通しに計上された段階</td>
+<td>発注機関訪問、詳細情報収集</td>
+</tr>
+<tr>
+<td>検討中</td>
+<td>入札参加を検討している段階</td>
+<td>参加資格確認、社内審議</td>
+</tr>
+<tr>
+<td>入札準備中</td>
+<td>入札参加決定後</td>
+<td>提案書作成、見積作成</td>
+</tr>
+<tr>
+<td>入札済</td>
+<td>入札書提出後</td>
+<td>結果待ち</td>
+</tr>
+<tr>
+<td>受注</td>
+<td>落札・契約締結</td>
+<td>施工本部への引き渡し</td>
+</tr>
+<tr>
+<td>敗退</td>
+<td>不落札</td>
+<td>敗退分析、次回対策</td>
+</tr>
+<tr>
+<td>中止</td>
+<td>発注中止等</td>
+<td>記録保存</td>
+</tr>
+</tbody>
+</table>
+<h4 id="312">3.1.2 案件登録情報</h4>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th style="text-align: center;">必須</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>案件名</td>
+<td style="text-align: center;">○</td>
+<td>工事名称</td>
+</tr>
+<tr>
+<td>発注機関</td>
+<td style="text-align: center;">○</td>
+<td>マスタから選択</td>
+</tr>
+<tr>
+<td>工事場所</td>
+<td style="text-align: center;">○</td>
+<td>都道府県・市区町村</td>
+</tr>
+<tr>
+<td>工種</td>
+<td style="text-align: center;">○</td>
+<td>海上工事・陸上工事・エネルギー等</td>
+</tr>
+<tr>
+<td>概算金額</td>
+<td style="text-align: center;">△</td>
+<td>予定価格または推定額</td>
+</tr>
+<tr>
+<td>入札方式</td>
+<td style="text-align: center;">○</td>
+<td>一般競争・指名競争・総合評価</td>
+</tr>
+<tr>
+<td>入札日</td>
+<td style="text-align: center;">△</td>
+<td>判明時点で入力</td>
+</tr>
+<tr>
+<td>担当者</td>
+<td style="text-align: center;">○</td>
+<td>営業担当者</td>
+</tr>
+<tr>
+<td>備考</td>
+<td style="text-align: center;">-</td>
+<td>自由記述</td>
+</tr>
+</tbody>
+</table>
+<h4 id="313">3.1.3 案件カンバンボード</h4>
+<ul>
+<li>ステータス別のカンバン表示（ドラッグ＆ドロップで遷移）</li>
+<li>カンバン上のカードに金額・入札日・担当者を表示</li>
+<li>フィルタ：発注機関別・工種別・支店別・担当者別</li>
+</ul>
+<hr />
+<h3 id="32">3.2 入札管理</h3>
+<h4 id="321">3.2.1 入札情報自動収集</h4>
+<ul>
+<li>電子入札システム（JACIC）からの発注情報自動取得</li>
+<li>入札公告のRSS/スクレイピングによる自動通知</li>
+<li>キーワードフィルタ（工種・地域・金額帯）による絞り込み通知</li>
+</ul>
+<h4 id="322">3.2.2 参加資格自動チェック</h4>
+<p>以下の参加資格要件を自動確認する機能：</p>
+<table>
+<thead>
+<tr>
+<th>チェック項目</th>
+<th>確認内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>経営事項審査</td>
+<td>総合評定値（P点）の充足</td>
+</tr>
+<tr>
+<td>等級区分</td>
+<td>発注等級の該当性</td>
+</tr>
+<tr>
+<td>地域要件</td>
+<td>本店/支店の所在地要件</td>
+</tr>
+<tr>
+<td>実績要件</td>
+<td>同種工事の施工実績</td>
+</tr>
+<tr>
+<td>技術者要件</td>
+<td>配置予定技術者の資格・実績</td>
+</tr>
+<tr>
+<td>指名停止</td>
+<td>指名停止期間中でないこと</td>
+</tr>
+</tbody>
+</table>
+<h4 id="323">3.2.3 入札履歴管理</h4>
+<ul>
+<li>過去の入札結果（落札者・落札金額・落札率）をDB管理</li>
+<li>競合他社の入札傾向分析</li>
+<li>自社の落札率推移分析</li>
+</ul>
+<hr />
+<h3 id="33">3.3 総合評価点分析</h3>
+<h4 id="331">3.3.1 業務目的</h4>
+<p>総合評価方式入札での得点を最大化するため、過去の評価結果を分析し、加点項目の戦略的確保を行う。</p>
+<h4 id="332">3.3.2 評価項目管理</h4>
+<table>
+<thead>
+<tr>
+<th>評価区分</th>
+<th>評価項目例</th>
+<th>配点目安</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>技術提案</td>
+<td>施工計画の的確性</td>
+<td>30点</td>
+</tr>
+<tr>
+<td>技術提案</td>
+<td>品質確保の取り組み</td>
+<td>20点</td>
+</tr>
+<tr>
+<td>技術提案</td>
+<td>安全対策</td>
+<td>15点</td>
+</tr>
+<tr>
+<td>企業の能力</td>
+<td>同種工事の施工実績</td>
+<td>10点</td>
+</tr>
+<tr>
+<td>企業の能力</td>
+<td>工事成績評定点</td>
+<td>10点</td>
+</tr>
+<tr>
+<td>配置予定技術者</td>
+<td>資格・実績</td>
+<td>10点</td>
+</tr>
+<tr>
+<td>地域貢献</td>
+<td>地域精通度・災害協定</td>
+<td>5点</td>
+</tr>
+</tbody>
+</table>
+<h4 id="333">3.3.3 加点シミュレーション機能</h4>
+<ul>
+<li>技術者配置パターンを変えた場合の得点シミュレーション</li>
+<li>実績・成績評定点の組み合わせ最適化</li>
+<li>総合評価点の予測値と競合比較</li>
+</ul>
+<hr />
+<h3 id="34-ai">3.4 AI技術提案書生成</h3>
+<h4 id="341">3.4.1 業務要件</h4>
+<ul>
+<li>案件条件（工種・工事場所・規模・評価基準）を入力すると、過去の類似提案書を検索</li>
+<li>検索結果をベースにAIがドラフト提案書を生成</li>
+<li>生成結果は「施工計画」「品質管理」「安全対策」「環境配慮」のセクション別</li>
+<li>技術者が編集・加筆して完成版にするワークフロー</li>
+</ul>
+<h4 id="342">3.4.2 品質要件</h4>
+<ul>
+<li>生成されたドラフトの技術的正確性は技術本部がレビュー必須</li>
+<li>AI生成であることを社内で明示（提出書類にはAI生成表記不要）</li>
+<li>過去5年以上の提案書データを学習ベースに使用</li>
+</ul>
+<hr />
+<h3 id="35">3.5 営業日報</h3>
+<h4 id="351">3.5.1 入力項目</h4>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th style="text-align: center;">必須</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>日付</td>
+<td style="text-align: center;">○</td>
+<td>自動入力</td>
+</tr>
+<tr>
+<td>訪問先</td>
+<td style="text-align: center;">○</td>
+<td>発注機関名・担当者名</td>
+</tr>
+<tr>
+<td>訪問目的</td>
+<td style="text-align: center;">○</td>
+<td>情報収集/案件打合せ/表敬/その他</td>
+</tr>
+<tr>
+<td>商談内容</td>
+<td style="text-align: center;">○</td>
+<td>自由記述（音声入力対応）</td>
+</tr>
+<tr>
+<td>次回アクション</td>
+<td style="text-align: center;">○</td>
+<td>期限付き</td>
+</tr>
+<tr>
+<td>関連案件</td>
+<td style="text-align: center;">△</td>
+<td>案件紐づけ</td>
+</tr>
+<tr>
+<td>添付資料</td>
+<td style="text-align: center;">-</td>
+<td>写真・名刺等</td>
+</tr>
+</tbody>
+</table>
+<h4 id="352">3.5.2 承認ワークフロー</h4>
+<div class="codehilite"><pre><span></span><code>営業担当が日報入力
+    ↓
+課長が確認・コメント（翌営業日まで）
+    ↓
+部長が確認（任意）
+</code></pre></div>
+
+<hr />
+<h3 id="36">3.6 名刺管理・顧客情報管理</h3>
+<h4 id="361-ocr">3.6.1 名刺OCR</h4>
+<ul>
+<li>スマートフォンカメラで名刺撮影→AI OCRで自動読取</li>
+<li>読取項目：会社名・部署・役職・氏名・電話番号・メールアドレス</li>
+<li>日本語名刺の認識精度95%以上</li>
+<li>読取結果の手動修正機能</li>
+</ul>
+<h4 id="362">3.6.2 顧客情報管理</h4>
+<ul>
+<li>発注機関の組織構造管理（部署・担当者の階層表示）</li>
+<li>人事異動の追跡記録</li>
+<li>接触履歴の時系列表示</li>
+<li>関連案件の紐づけ</li>
+</ul>
+<hr />
+<h2 id="4">4. 外部システム連携要件</h2>
+<table>
+<thead>
+<tr>
+<th>連携先</th>
+<th>連携内容</th>
+<th>方向</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>技術本部システム</td>
+<td>技術提案書DB・類似工法検索</td>
+<td>←</td>
+</tr>
+<tr>
+<td>施工本部システム</td>
+<td>完成工事実績・工事成績評定</td>
+<td>←</td>
+</tr>
+<tr>
+<td>管理本部システム</td>
+<td>有資格者情報・経営事項審査データ</td>
+<td>←</td>
+</tr>
+<tr>
+<td>経営ダッシュボード</td>
+<td>受注データ・パイプライン</td>
+<td>→</td>
+</tr>
+<tr>
+<td>電子入札システム</td>
+<td>入札情報取得</td>
+<td>←</td>
+</tr>
+<tr>
+<td>SharePoint Online</td>
+<td>提案書・契約書保管</td>
+<td>↔</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="5">5. モバイル要件</h2>
+<ul>
+<li>営業日報のスマートフォン入力（PWA）</li>
+<li>オフラインでの日報入力→後同期（訪問先が圏外の場合）</li>
+<li>名刺撮影OCR（スマートフォンカメラ）</li>
+<li>案件情報のモバイル参照</li>
+</ul></div>
+  <div class="footer">&copy; 2026 みらい建設工業 IT-DX部門 &nbsp;|&nbsp; 統合建設DX基盤 業務要件書</div>
+</div>
+
+<script>
+function toggleTheme(){
+  var h=document.documentElement, d=h.getAttribute('data-theme')==='dark';
+  if(d){h.removeAttribute('data-theme');localStorage.setItem('mirai-dx-theme','light');}
+  else{h.setAttribute('data-theme','dark');localStorage.setItem('mirai-dx-theme','dark');}
+}
+</script>
+
+</body></html>

@@ -1,0 +1,39 @@
+[Unit]
+Description=Construction-DX-OS PXE Server (dnsmasq DHCP+TFTP)
+Documentation=https://github.com/Kensan196948G/Construction-DX-OS
+After=network-online.target
+Wants=network-online.target
+# Ensure cdx-os-server is running before PXE hands out boot scripts
+After=cdx-os-server.service
+
+[Service]
+Type=forking
+PIDFile=/run/dnsmasq-cdx-pxe.pid
+
+# Run as dedicated user (create with: useradd -r -s /sbin/nologin dnsmasq)
+User=root
+Group=root
+
+# dnsmasq with project-specific config (does not touch system config)
+ExecStartPre=/usr/sbin/dnsmasq --test --conf-file=/etc/dnsmasq.d/cdx-pxe.conf
+ExecStart=/usr/sbin/dnsmasq \
+    --conf-file=/etc/dnsmasq.d/cdx-pxe.conf \
+    --pid-file=/run/dnsmasq-cdx-pxe.pid \
+    --keep-in-foreground=false
+
+ExecReload=/bin/kill -HUP $MAINPID
+
+# Restart policy: restart on failure, back off 5s
+Restart=on-failure
+RestartSec=5s
+
+# Hardening
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/log /run /var/lib/misc
+PrivateTmp=yes
+AmbientCapabilities=CAP_NET_BIND_SERVICE CAP_NET_RAW
+
+[Install]
+WantedBy=multi-user.target

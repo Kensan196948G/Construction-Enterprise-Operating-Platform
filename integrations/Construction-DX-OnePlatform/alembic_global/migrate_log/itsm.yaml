@@ -1,0 +1,6 @@
+subsystem: itsm
+order: 40
+alembic_dir: 10_IT-DX部門/ConstructionITSM-ZeroTrustPlatform/backend
+heads:
+  - 0001_initial
+  - 0002_pgvector_knowledge

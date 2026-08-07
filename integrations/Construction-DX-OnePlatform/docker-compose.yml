@@ -1,0 +1,460 @@
+# =========================================================
+# Construction DX One Platform — Docker Compose (Phase 1)
+# Platform: Windows 11 + WSL2 + Docker Desktop
+# =========================================================
+name: construction-dx
+
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
+  monitoring:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  redis-data:
+  elasticsearch-data:
+  minio-data:
+  grafana-data:
+  wazuh-config:
+  wazuh-data:
+
+services:
+  # ---------------- Data Layer ----------------
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: cdx-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-construction_dx}
+      POSTGRES_USER: ${POSTGRES_USER:-cdx_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me}
+      TZ: Asia/Tokyo
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./00_共通基盤/shared-db/init:/docker-entrypoint-initdb.d:ro
+    networks: [backend]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cdx_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: cdx-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks: [backend]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    container_name: cdx-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks: [backend]
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -fs http://localhost:9200/_cluster/health || exit 1",
+        ]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: cdx-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-cdx_minio}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-change_me}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    networks: [backend]
+
+  # ---------------- Application Layer ----------------
+  # NOTE: 各 backend は shared-auth / shared-db をローカル path 依存しているため
+  #       build.context をリポジトリルートにし、Dockerfile 内で共通モジュールを COPY する。
+  #
+  # ポート割当ポリシー:
+  #   - api : 80xx (gateway=8080, exec=8001, crm=8002, sol=8003, site=8004,
+  #                 tech=8005, sq=8006, corp=8007, proc=8008, marine=8009,
+  #                 itsm=8010, data=8011, mocks=8090)
+  #   - web : 30xx (site=3000, sq=3001, itsm=3002, crm=3003, sol=3004,
+  #                 tech=3005, corp=3007, proc=3008, marine=3009,
+  #                 data=3011, exec=3013)
+  #   ※ 既存サービスのポートは互換のため変更しない (site=3000 / sq=3001 / itsm=3002)
+  api-gateway:
+    build:
+      context: .
+      dockerfile: ./00_共通基盤/api-gateway/Dockerfile
+    container_name: cdx-api-gateway
+    env_file: .env
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    networks: [frontend, backend]
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8080/health',timeout=2).status==200 else 1)",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ---- 01 経営企画部 (Executive Dashboard) ----
+  executive-api:
+    build:
+      context: .
+      dockerfile: ./01_経営企画部/ConstructionExecutiveDashboard/backend/Dockerfile
+    container_name: cdx-exec-api
+    env_file: .env
+    ports:
+      - "8001:8000"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    networks: [backend]
+
+  executive-web:
+    build:
+      context: .
+      dockerfile: ./01_経営企画部/ConstructionExecutiveDashboard/frontend/Dockerfile
+    container_name: cdx-exec-web
+    ports:
+      - "3013:80" # 3001 は 06 safety-quality-web で既に使用
+    depends_on: [executive-api]
+    networks: [frontend]
+
+  # ---- 02 営業本部 (CRM & Bid Management) ----
+  crm-api:
+    build:
+      context: .
+      dockerfile: ./02_営業本部/ConstructionCRM-BidManagement/backend/Dockerfile
+    container_name: cdx-crm-api
+    env_file: .env
+    ports:
+      - "8002:8000"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    networks: [backend]
+
+  crm-web:
+    build:
+      context: .
+      dockerfile: ./02_営業本部/ConstructionCRM-BidManagement/frontend/Dockerfile
+    container_name: cdx-crm-web
+    ports:
+      - "3003:80"
+    depends_on: [crm-api]
+    networks: [frontend]
+
+  # ---- 03 ソリューション営業本部 (Smart Infrastructure Solution) ----
+  solution-api:
+    build:
+      context: .
+      dockerfile: ./03_ソリューション営業本部/SmartInfrastructureSolutionPlatform/backend/Dockerfile
+    container_name: cdx-sol-api
+    env_file: .env
+    ports:
+      - "8003:8000"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    networks: [backend]
+
+  solution-web:
+    build:
+      context: .
+      dockerfile: ./03_ソリューション営業本部/SmartInfrastructureSolutionPlatform/frontend/Dockerfile
+    container_name: cdx-sol-web
+    ports:
+      - "3004:80"
+    depends_on: [solution-api]
+    networks: [frontend]
+
+  # ---- 04 施工本部 (既存) ----
+  construction-site-api:
+    build:
+      context: .
+      dockerfile: ./04_施工本部/ConstructionSiteManagementSystem/backend/Dockerfile
+    container_name: cdx-site-api
+    env_file: .env
+    ports:
+      - "8004:8000"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      minio: { condition: service_started }
+    networks: [backend]
+
+  construction-site-web:
+    build:
+      context: .
+      dockerfile: ./04_施工本部/ConstructionSiteManagementSystem/frontend/Dockerfile
+    container_name: cdx-site-web
+    ports:
+      - "3000:80"
+    depends_on: [construction-site-api]
+    networks: [frontend]
+
+  # ---- 05 技術本部 (Technical Knowledge & BIM) ----
+  tech-api:
+    build:
+      context: .
+      dockerfile: ./05_技術本部/TechnicalKnowledge-BIMPlatform/backend/Dockerfile
+    container_name: cdx-tech-api
+    env_file: .env
+    ports:
+      - "8005:8000"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    networks: [backend]
+
+  tech-web:
+    build:
+      context: .
+      dockerfile: ./05_技術本部/TechnicalKnowledge-BIMPlatform/frontend/Dockerfile
+    container_name: cdx-tech-web
+    ports:
+      - "3005:80"
+    depends_on: [tech-api]
+    networks: [frontend]
+
+  safety-quality-api:
+    build:
+      context: .
+      dockerfile: ./06_安全品質環境本部/SafetyQualityGovernancePlatform/backend/Dockerfile
+    container_name: cdx-sq-api
+    env_file: .env
+    ports:
+      - "8006:8000"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    networks: [backend]
+
+  safety-quality-web:
+    build:
+      context: .
+      dockerfile: ./06_安全品質環境本部/SafetyQualityGovernancePlatform/frontend/Dockerfile
+    container_name: cdx-sq-web
+    ports:
+      - "3001:80"
+    depends_on: [safety-quality-api]
+    networks: [frontend]
+
+  # ---- 07 管理本部 (Corporate Operation) ----
+  corp-api:
+    build:
+      context: .
+      dockerfile: ./07_管理本部/CorporateOperationPlatform/backend/Dockerfile
+    container_name: cdx-corp-api
+    env_file: .env
+    ports:
+      - "8007:8000"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    networks: [backend]
+
+  corp-web:
+    build:
+      context: .
+      dockerfile: ./07_管理本部/CorporateOperationPlatform/frontend/Dockerfile
+    container_name: cdx-corp-web
+    ports:
+      - "3007:80"
+    depends_on: [corp-api]
+    networks: [frontend]
+
+  # ---- 08 購買部 (Procurement & Material) ----
+  proc-api:
+    build:
+      context: .
+      dockerfile: ./08_購買部/ProcurementMaterialPlatform/backend/Dockerfile
+    container_name: cdx-proc-api
+    env_file: .env
+    ports:
+      - "8008:8000"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    networks: [backend]
+
+  proc-web:
+    build:
+      context: .
+      dockerfile: ./08_購買部/ProcurementMaterialPlatform/frontend/Dockerfile
+    container_name: cdx-proc-web
+    ports:
+      - "3008:80"
+    depends_on: [proc-api]
+    networks: [frontend]
+
+  # ---- 09 船舶事業部 (Marine Fleet Management) ----
+  marine-api:
+    build:
+      context: .
+      dockerfile: ./09_船舶事業部/MarineFleetManagement/backend/Dockerfile
+    container_name: cdx-marine-api
+    env_file: .env
+    ports:
+      - "8009:8000"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    networks: [backend]
+
+  marine-web:
+    build:
+      context: .
+      dockerfile: ./09_船舶事業部/MarineFleetManagement/frontend/Dockerfile
+    container_name: cdx-marine-web
+    ports:
+      - "3009:80"
+    depends_on: [marine-api]
+    networks: [frontend]
+
+  itsm-api:
+    build:
+      context: .
+      dockerfile: ./10_IT-DX部門/ConstructionITSM-ZeroTrustPlatform/backend/Dockerfile
+    container_name: cdx-itsm-api
+    env_file: .env
+    ports:
+      - "8010:8000"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      elasticsearch: { condition: service_healthy }
+    networks: [backend, monitoring]
+
+  itsm-web:
+    build:
+      context: .
+      dockerfile: ./10_IT-DX部門/ConstructionITSM-ZeroTrustPlatform/frontend/Dockerfile
+    container_name: cdx-itsm-web
+    ports:
+      - "3002:80"
+    depends_on: [itsm-api]
+    networks: [frontend]
+
+  # ---- 11 統合データ基盤 (Data Lake & Digital Twin) ----
+  data-api:
+    build:
+      context: .
+      dockerfile: ./11_統合データ基盤/ConstructionDataLake-DigitalTwin/backend/Dockerfile
+    container_name: cdx-data-api
+    env_file: .env
+    ports:
+      - "8011:8000"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      elasticsearch: { condition: service_healthy }
+      minio: { condition: service_started }
+    networks: [backend]
+
+  data-web:
+    build:
+      context: .
+      dockerfile: ./11_統合データ基盤/ConstructionDataLake-DigitalTwin/frontend/Dockerfile
+    container_name: cdx-data-web
+    ports:
+      - "3011:80"
+    depends_on: [data-api]
+    networks: [frontend]
+
+  # ---- 統合ポータル WebUI (Construction DX One Platform) ----
+  cdx-portal:
+    build:
+      context: ./00_共通基盤/portal
+      dockerfile: Dockerfile
+    container_name: cdx-portal-webui
+    ports:
+      - "${CDX_PORTAL_BIND_HOST:-0.0.0.0}:${CDX_PORTAL_PORT:-5179}:80"
+    networks: [frontend]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ---- 部門間 API mock サーバ (開発時のみ起動) ----
+  mocks:
+    build:
+      context: ./mocks
+      dockerfile: Dockerfile
+    container_name: cdx-mocks
+    ports:
+      - "8090:8090"
+    networks: [backend, frontend]
+    profiles: ["mocks"]
+
+  # ---------------- Monitoring Layer ----------------
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: cdx-grafana
+    ports:
+      - "3010:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana-provisioning.yml:/etc/grafana/provisioning/dashboards/cdx.yml:ro
+      - ./monitoring/grafana-datasources.yml:/etc/grafana/provisioning/datasources/cdx.yml:ro
+      - ./monitoring/grafana-dashboards:/var/lib/grafana/dashboards/cdx:ro
+      - ./monitoring/grafana-dashboard-cdx.json:/var/lib/grafana/dashboards/legacy/cdx-auth.json:ro
+    entrypoint:
+      - /bin/sh
+      - -c
+      - "mkdir -p /var/lib/grafana/dashboards/legacy && exec /run.sh"
+    networks: [monitoring]
+
+  zabbix-server:
+    image: zabbix/zabbix-server-pgsql:alpine-7.0-latest
+    container_name: cdx-zabbix-server
+    environment:
+      DB_SERVER_HOST: postgres
+      POSTGRES_USER: ${POSTGRES_USER:-cdx_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me}
+      POSTGRES_DB: zabbix
+    networks: [monitoring, backend]
+
+  wazuh:
+    image: wazuh/wazuh-manager:4.8.0
+    container_name: cdx-wazuh
+    volumes:
+      - wazuh-config:/var/ossec/etc
+      - wazuh-data:/var/ossec/logs
+    networks: [monitoring]

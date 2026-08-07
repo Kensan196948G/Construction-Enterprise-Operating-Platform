@@ -1,0 +1,40 @@
+# ruff設定（Python linter & formatter）
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+src = ["app", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "S", "B", "A", "C4", "T20", "PT"]
+ignore = ["S101", "S104", "B008", "S105", "S106", "UP042", "UP046", "UP017", "A003"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v --cov=app --cov-report=term-missing --benchmark-disable"
+markers = [
+    "redis: tests that require a running Redis instance (deselect with -m 'not redis')",
+]
+
+[tool.coverage.run]
+concurrency = ["greenlet", "thread"]
+source = ["app"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = false
+ignore_missing_imports = true
+plugins = ["pydantic.mypy"]
+
+[tool.pytest-benchmark]
+# Store benchmark results for regression comparison
+storage = ".benchmarks"
+# Only compare if the deviation is above this threshold (10%)
+min_time = 0.1
+max_time = 5.0

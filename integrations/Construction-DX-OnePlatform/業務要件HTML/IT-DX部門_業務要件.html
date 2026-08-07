@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IT-DX部門_業務要件 | みらい建設工業 統合建設DX基盤</title>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
+
+  :root {
+    --bg:               #ffffff;
+    --bg-surface:       #f8fafc;
+    --bg-card:          #ffffff;
+    --text:             #1e293b;
+    --text-secondary:   #64748b;
+    --text-muted:       #94a3b8;
+    --accent:           #2563eb;
+    --accent-light:     #dbeafe;
+    --accent2:          #0ea5e9;
+    --accent3:          #7c3aed;
+    --accent-red:       #f43f5e;
+    --border:           #e2e8f0;
+    --border-light:     #f1f5f9;
+    --shadow:           0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-lg:        0 4px 16px rgba(0,0,0,0.06);
+    --header-bg:        #ffffff;
+    --header-text:      #0f172a;
+    --header-sub:       #475569;
+    --header-shadow:    0 1px 4px rgba(0,0,0,0.08), 0 1px 0 #e2e8f0;
+    --header-border:    #e2e8f0;
+    --nav-link:         #475569;
+    --nav-hover-bg:     rgba(37,99,235,0.08);
+    --nav-active-bg:    rgba(37,99,235,0.12);
+    --nav-active-text:  #2563eb;
+    --table-head-bg:    linear-gradient(135deg, #2563eb, #0ea5e9);
+    --table-head-text:  #ffffff;
+    --table-stripe:     #f8fafc;
+    --table-hover:      #eff6ff;
+    --code-bg:          #f1f5f9;
+    --code-color:       #2563eb;
+    --pre-bg:           #1e293b;
+    --pre-color:        #e2e8f0;
+    --section-bg:       #f0f9ff;
+    --quote-bg:         #fef2f2;
+    --quote-border:     #f43f5e;
+    --toggle-bg:        #e2e8f0;
+    --toggle-dot:       #ffffff;
+    --toggle-active-bg: #334155;
+    --toggle-active-dot:#f59e0b;
+    --btn-bg:           #2563eb;
+    --btn-text:         #ffffff;
+    --btn-hover:        #1d4ed8;
+  }
+
+  [data-theme="dark"] {
+    --bg:               #0f172a;
+    --bg-surface:       #1e293b;
+    --bg-card:          #1e293b;
+    --text:             #e2e8f0;
+    --text-secondary:   #94a3b8;
+    --text-muted:       #64748b;
+    --accent:           #60a5fa;
+    --accent-light:     #1e3a5f;
+    --accent2:          #38bdf8;
+    --accent3:          #a78bfa;
+    --accent-red:       #fb7185;
+    --border:           #334155;
+    --border-light:     #1e293b;
+    --shadow:           0 1px 3px rgba(0,0,0,0.3);
+    --shadow-lg:        0 4px 16px rgba(0,0,0,0.4);
+    --header-bg:        #0f172a;
+    --header-text:      #f1f5f9;
+    --header-sub:       #94a3b8;
+    --header-shadow:    0 1px 0 #1e293b, 0 4px 16px rgba(0,0,0,0.5);
+    --header-border:    #334155;
+    --nav-link:         rgba(255,255,255,0.7);
+    --nav-hover-bg:     rgba(255,255,255,0.1);
+    --nav-active-bg:    rgba(255,255,255,0.15);
+    --nav-active-text:  #60a5fa;
+    --table-head-bg:    linear-gradient(135deg, #1e3a5f, #0c4a6e);
+    --table-head-text:  #e2e8f0;
+    --table-stripe:     #1a2536;
+    --table-hover:      #253347;
+    --code-bg:          #334155;
+    --code-color:       #60a5fa;
+    --pre-bg:           #0b1120;
+    --pre-color:        #94a3b8;
+    --section-bg:       #172033;
+    --quote-bg:         #2a1520;
+    --quote-border:     #fb7185;
+    --toggle-bg:        #334155;
+    --toggle-dot:       #f59e0b;
+    --toggle-active-bg: #334155;
+    --toggle-active-dot:#f59e0b;
+    --btn-bg:           #2563eb;
+    --btn-text:         #ffffff;
+    --btn-hover:        #3b82f6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Noto Sans JP', 'Meiryo', 'Hiragino Sans', sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.85;
+    transition: background 0.35s, color 0.35s;
+  }
+
+  /* ── Header ── */
+  .header-bar {
+    background: var(--header-bg);
+    padding: 22px 36px 16px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: var(--header-shadow);
+    display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+    transition: background 0.35s, box-shadow 0.35s;
+    border-bottom: 1px solid var(--header-border);
+  }
+  .header-main { flex: 1; min-width: 280px; }
+  .header-bar h1 {
+    font-size: 1.55em; font-weight: 700; letter-spacing: 0.04em;
+    color: var(--header-text);
+    transition: color 0.35s;
+  }
+  .header-bar .subtitle {
+    font-size: 0.82em; margin-top: 3px;
+    color: var(--header-sub);
+    font-weight: 400; letter-spacing: 0.02em;
+    transition: color 0.35s;
+  }
+  .header-nav {
+    width: 100%; margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid var(--header-border);
+    display: flex; flex-wrap: wrap; gap: 3px;
+    transition: border-color 0.35s;
+  }
+  .header-nav a {
+    color: var(--nav-link); text-decoration: none;
+    padding: 4px 11px; border-radius: 6px;
+    font-size: 0.76em; transition: all 0.2s;
+  }
+  .header-nav a:hover { background: var(--nav-hover-bg); color: var(--nav-active-text); }
+  .header-nav a.active { background: var(--nav-active-bg); color: var(--nav-active-text); font-weight: 600; }
+
+  /* ── Toggle ── */
+  .toggle-wrap { display: flex; align-items: center; flex-shrink: 0; gap: 7px; }
+  .theme-label { font-size: 0.72em; color: var(--text-secondary); white-space: nowrap; transition: color 0.35s; }
+  .theme-toggle {
+    position: relative; width: 52px; height: 26px;
+    background: var(--toggle-bg); border-radius: 13px;
+    cursor: pointer; border: 2px solid var(--border);
+    outline: none; transition: all 0.3s;
+  }
+  .theme-toggle::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--accent);
+    transition: transform 0.3s, background 0.3s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+  [data-theme="dark"] .theme-toggle { background: var(--toggle-active-bg); border-color: #475569; }
+  [data-theme="dark"] .theme-toggle::after { transform: translateX(26px); background: var(--toggle-active-dot); }
+
+  /* ── Container ── */
+  .container { max-width: 1140px; margin: 28px auto; padding: 0 24px; }
+
+  /* ── Cards ── */
+  .content, .idx-card {
+    background: var(--bg-card); border-radius: 14px;
+    padding: 36px 42px; box-shadow: var(--shadow-lg);
+    margin: 20px 0; border: 1px solid var(--border-light);
+    transition: background 0.35s, border 0.35s, box-shadow 0.35s;
+  }
+
+  /* ── Typography ── */
+  h1 { color: var(--accent); font-size: 1.65em; margin: 28px 0 14px; padding-bottom: 10px; border-bottom: 3px solid var(--accent); }
+  h2 {
+    color: var(--text); font-size: 1.3em; margin: 26px 0 12px;
+    padding: 10px 0 10px 16px;
+    border-left: 4px solid var(--accent2);
+    background: var(--section-bg); border-radius: 0 8px 8px 0;
+    transition: background 0.35s;
+  }
+  h3 { color: var(--accent); font-size: 1.1em; margin: 20px 0 10px; }
+  h4 { color: var(--accent3); font-size: 1.0em; margin: 16px 0 8px; }
+  p { margin: 8px 0; text-align: justify; }
+  strong { color: var(--accent); }
+  ul, ol { margin: 8px 0 8px 24px; }
+  li { margin: 4px 0; }
+  a { color: var(--accent); transition: color 0.2s; }
+  a:hover { color: var(--accent2); }
+  hr { border: none; height: 1px; background: var(--border); margin: 24px 0; }
+
+  /* ── Tables ── */
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.91em; }
+  thead { background: var(--table-head-bg); color: var(--table-head-text); }
+  th { padding: 12px 16px; text-align: left; font-weight: 500; white-space: nowrap; }
+  td { padding: 10px 16px; border-bottom: 1px solid var(--border); transition: background 0.2s; }
+  tbody tr:nth-child(even) { background: var(--table-stripe); }
+  tbody tr:hover { background: var(--table-hover); }
+
+  /* ── Code ── */
+  code { background: var(--code-bg); padding: 2px 7px; border-radius: 5px; font-size: 0.9em; color: var(--code-color); transition: background 0.35s; }
+  pre { background: var(--pre-bg); color: var(--pre-color); padding: 20px; border-radius: 10px; overflow-x: auto; margin: 16px 0; font-size: 0.87em; line-height: 1.65; transition: background 0.35s; }
+  pre code { background: none; color: inherit; padding: 0; }
+
+  /* ── Misc ── */
+  blockquote { border-left: 4px solid var(--quote-border); padding: 12px 20px; margin: 16px 0; background: var(--quote-bg); border-radius: 0 8px 8px 0; transition: background 0.35s; }
+  .footer { text-align: center; padding: 32px; color: var(--text-muted); font-size: 0.83em; }
+
+  /* ── Index ── */
+  .dept-badge {
+    display: inline-block; padding: 2px 12px; border-radius: 20px;
+    font-size: 0.82em; font-weight: 500;
+    background: var(--accent-light); color: var(--accent);
+    transition: all 0.35s;
+  }
+  .btn-open {
+    display: inline-block; padding: 7px 22px; border-radius: 8px;
+    font-size: 0.84em; font-weight: 500;
+    background: var(--btn-bg); color: var(--btn-text);
+    text-decoration: none; transition: all 0.2s;
+  }
+  .btn-open:hover { background: var(--btn-hover); color: var(--btn-text); transform: translateY(-1px); }
+  .stats-bar { display: flex; gap: 16px; flex-wrap: wrap; margin: 20px 0 28px; }
+  .stat-chip {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 20px; border-radius: 10px;
+    background: var(--bg-surface); border: 1px solid var(--border);
+    font-size: 0.88em; transition: all 0.35s;
+  }
+  .stat-chip .num { font-size: 1.4em; font-weight: 700; color: var(--accent); }
+
+  @media print {
+    .header-bar { position: static; }
+    body { background: #fff !important; color: #000 !important; }
+    .content, .idx-card { box-shadow: none; border: 1px solid #ccc; }
+    .toggle-wrap { display: none; }
+  }
+</style>
+<script>
+  (function(){
+    var s = localStorage.getItem('mirai-dx-theme');
+    if(s==='dark') document.documentElement.setAttribute('data-theme','dark');
+  })();
+</script>
+
+</head>
+<body>
+<div class="header-bar">
+  <div class="header-main">
+    <h1>みらい建設工業 統合建設DX基盤</h1>
+    <div class="subtitle">Construction DX One Platform &mdash; IT-DX部門_業務要件</div>
+  </div>
+  <div class="toggle-wrap">
+  <span class="theme-label">Light / Dark</span>
+  <button class="theme-toggle" onclick="toggleTheme()" aria-label="テーマ切替"></button>
+</div>
+  <div class="header-nav"><a href="index.html" style="font-weight:600;">一覧</a><a href="経営企画部_業務要件.html">経営企画部</a><a href="営業第一部_業務要件.html">営業第一部</a><a href="営業第二部_業務要件.html">営業第二部</a><a href="ソリューション営業本部_業務要件.html">ソリューション営業本部</a><a href="施工本部_工事部_業務要件.html">施工本部_工事部</a><a href="技術部_業務要件.html">技術部</a><a href="研究開発部_業務要件.html">研究開発部</a><a href="品質環境部_業務要件.html">品質環境部</a><a href="安全管理部_業務要件.html">安全管理部</a><a href="人事部_業務要件.html">人事部</a><a href="経理部_業務要件.html">経理部</a><a href="総務部_業務要件.html">総務部</a><a href="購買部_業務要件.html">購買部</a><a href="船舶事業部_業務要件.html">船舶事業部</a><a href="IT-DX部門_業務要件.html" class="active">IT-DX部門</a><a href="統合データ基盤_業務要件.html">統合データ基盤</a></div>
+</div>
+<div class="container">
+  <div class="content"><h1 id="itdx">IT/DX部門 業務要件書</h1>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>文書ID</td>
+<td>BIZ-ITD-001</td>
+</tr>
+<tr>
+<td>版数</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>作成日</td>
+<td>2026年5月16日</td>
+</tr>
+<tr>
+<td>対象部署</td>
+<td>IT/DX部門</td>
+</tr>
+<tr>
+<td>対象システム</td>
+<td>Construction ITSM &amp; ZeroTrust Platform</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1">1. 部署概要</h2>
+<h3 id="11">1.1 組織上の位置づけ</h3>
+<p>IT/DX部門は全社のIT基盤の構築・運用・セキュリティ管理を担う。Construction DX One Platformの構築推進役であり、全部門システムの統合認証・監視・運用を統括する最重要部門。</p>
+<h3 id="12">1.2 部署ミッション</h3>
+<ul>
+<li>全社IT基盤の安定運用（稼働率99.5%以上）</li>
+<li>ゼロトラストセキュリティの実現</li>
+<li>Construction DX One Platformの構築推進</li>
+<li>全社DX推進・社内IT支援</li>
+<li>情報セキュリティインシデントの防止と対応</li>
+</ul>
+<h3 id="13-it">1.3 現行IT環境</h3>
+<table>
+<thead>
+<tr>
+<th>システム</th>
+<th>用途</th>
+<th>備考</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Microsoft 365</td>
+<td>メール・Office・Teams</td>
+<td>全社利用</td>
+</tr>
+<tr>
+<td>Entra ID</td>
+<td>ID管理・認証</td>
+<td>全社認証基盤</td>
+</tr>
+<tr>
+<td>HENNGE</td>
+<td>SSO・セキュリティ</td>
+<td>M365アクセス制御</td>
+</tr>
+<tr>
+<td>SharePoint Online</td>
+<td>文書管理・ポータル</td>
+<td>全社利用</td>
+</tr>
+<tr>
+<td>Exchange Online</td>
+<td>メール</td>
+<td>M365に含む</td>
+</tr>
+<tr>
+<td>FortiGate</td>
+<td>ファイアウォール・VPN</td>
+<td>拠点間・リモートVPN</td>
+</tr>
+<tr>
+<td>Cisco</td>
+<td>ネットワーク機器</td>
+<td>スイッチ・ルーター</td>
+</tr>
+<tr>
+<td>DeskNet's NEO</td>
+<td>グループウェア</td>
+<td>スケジュール・ワークフロー</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2">2. 業務要件（詳細）</h2>
+<h3 id="21-itsmit">2.1 ITSM（ITサービス管理）</h3>
+<h4 id="211">2.1.1 インシデント管理</h4>
+<table>
+<thead>
+<tr>
+<th>フェーズ</th>
+<th>業務内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>検知</td>
+<td>ユーザー申告/監視アラート/AI HelpDesk</td>
+</tr>
+<tr>
+<td>記録</td>
+<td>チケット起票（自動分類＋優先度設定）</td>
+</tr>
+<tr>
+<td>分類</td>
+<td>カテゴリ分類（ネットワーク/端末/M365/業務AP/セキュリティ）</td>
+</tr>
+<tr>
+<td>優先度判定</td>
+<td>影響度×緊急度マトリクス</td>
+</tr>
+<tr>
+<td>調査・診断</td>
+<td>ナレッジベース検索・ログ分析</td>
+</tr>
+<tr>
+<td>解決</td>
+<td>対処実施・ユーザー確認</td>
+</tr>
+<tr>
+<td>クローズ</td>
+<td>解決確認・フィードバック</td>
+</tr>
+</tbody>
+</table>
+<h4 id="212">2.1.2 優先度マトリクス</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th style="text-align: center;">緊急度：高</th>
+<th style="text-align: center;">緊急度：中</th>
+<th style="text-align: center;">緊急度：低</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>影響度：高</strong></td>
+<td style="text-align: center;">P1（重大）</td>
+<td style="text-align: center;">P2（高）</td>
+<td style="text-align: center;">P3（中）</td>
+</tr>
+<tr>
+<td><strong>影響度：中</strong></td>
+<td style="text-align: center;">P2（高）</td>
+<td style="text-align: center;">P3（中）</td>
+<td style="text-align: center;">P4（低）</td>
+</tr>
+<tr>
+<td><strong>影響度：低</strong></td>
+<td style="text-align: center;">P3（中）</td>
+<td style="text-align: center;">P4（低）</td>
+<td style="text-align: center;">P5（計画）</td>
+</tr>
+</tbody>
+</table>
+<h4 id="213-sla">2.1.3 SLA目標</h4>
+<table>
+<thead>
+<tr>
+<th>優先度</th>
+<th>初動対応</th>
+<th>解決目標</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P1（重大）</td>
+<td>15分以内</td>
+<td>4時間以内</td>
+</tr>
+<tr>
+<td>P2（高）</td>
+<td>30分以内</td>
+<td>8時間以内</td>
+</tr>
+<tr>
+<td>P3（中）</td>
+<td>2時間以内</td>
+<td>24時間以内</td>
+</tr>
+<tr>
+<td>P4（低）</td>
+<td>4時間以内</td>
+<td>72時間以内</td>
+</tr>
+<tr>
+<td>P5（計画）</td>
+<td>1営業日以内</td>
+<td>計画に従う</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h4 id="214">2.1.4 問題管理</h4>
+<ul>
+<li>繰り返し発生するインシデントの根本原因分析</li>
+<li>既知の問題（Known Error）のDB管理</li>
+<li>ワークアラウンド（暫定対処法）の管理</li>
+<li>恒久対策の計画・実施・検証</li>
+</ul>
+<h4 id="215">2.1.5 変更管理</h4>
+<table>
+<thead>
+<tr>
+<th>変更種別</th>
+<th>承認要件</th>
+<th>例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>標準変更</td>
+<td>事前承認済み</td>
+<td>パッチ適用、ユーザー追加</td>
+</tr>
+<tr>
+<td>通常変更</td>
+<td>CAB（変更諮問委員会）承認</td>
+<td>サーバー増設、ネットワーク変更</td>
+</tr>
+<tr>
+<td>緊急変更</td>
+<td>緊急CAB承認</td>
+<td>セキュリティ脆弱性対応</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="22-cmdb">2.2 CMDB（構成管理データベース）</h3>
+<h4 id="221">2.2.1 管理対象</h4>
+<table>
+<thead>
+<tr>
+<th>CI種別</th>
+<th>想定件数</th>
+<th>管理項目</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>サーバー</td>
+<td>20～50台</td>
+<td>OS・スペック・IP・ロール</td>
+</tr>
+<tr>
+<td>PC</td>
+<td>200～500台</td>
+<td>OS・ユーザー・Entra ID</td>
+</tr>
+<tr>
+<td>ネットワーク機器</td>
+<td>50～100台</td>
+<td>機種・IP・ポート構成</td>
+</tr>
+<tr>
+<td>プリンター</td>
+<td>30～50台</td>
+<td>機種・場所・ネットワーク</td>
+</tr>
+<tr>
+<td>ソフトウェア</td>
+<td>100～200件</td>
+<td>ライセンス数・割当状況</td>
+</tr>
+<tr>
+<td>クラウドサービス</td>
+<td>20～30件</td>
+<td>M365・Azure・SaaS</td>
+</tr>
+</tbody>
+</table>
+<h4 id="222">2.2.2 自動ディスカバリ</h4>
+<ul>
+<li>ネットワークスキャンによるデバイス自動検出</li>
+<li>Entra IDからのデバイス情報同期</li>
+<li>SNMP v3によるネットワーク機器の自動登録</li>
+<li>ソフトウェアインベントリの自動収集</li>
+</ul>
+<h4 id="223">2.2.3 ライセンス管理</h4>
+<ul>
+<li>Microsoft 365ライセンスの割当・利用状況</li>
+<li>ソフトウェアライセンスのコンプライアンス管理</li>
+<li>ライセンス過不足のアラート</li>
+<li>ライセンスコストの最適化分析</li>
+</ul>
+<hr />
+<h3 id="23-siemsoc">2.3 セキュリティ監視（SIEM/SOC）</h3>
+<h4 id="231">2.3.1 ログ収集対象</h4>
+<table>
+<thead>
+<tr>
+<th>ソース</th>
+<th>ログ種別</th>
+<th>収集方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FortiGate</td>
+<td>ファイアウォールログ・VPNログ・IPS</td>
+<td>Syslog (UDP/514)</td>
+</tr>
+<tr>
+<td>Cisco</td>
+<td>スイッチログ・ルーターログ</td>
+<td>Syslog/SNMP</td>
+</tr>
+<tr>
+<td>Entra ID</td>
+<td>サインインログ・監査ログ</td>
+<td>Microsoft Graph API</td>
+</tr>
+<tr>
+<td>Exchange Online</td>
+<td>メールフローログ</td>
+<td>Microsoft Graph API</td>
+</tr>
+<tr>
+<td>Windows Server</td>
+<td>イベントログ</td>
+<td>Wazuh Agent</td>
+</tr>
+<tr>
+<td>各業務システム</td>
+<td>アプリケーションログ</td>
+<td>Fluentd/API</td>
+</tr>
+</tbody>
+</table>
+<h4 id="232">2.3.2 検知ルール（主要なもの）</h4>
+<table>
+<thead>
+<tr>
+<th>ルール名</th>
+<th>条件</th>
+<th style="text-align: center;">重要度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ブルートフォース攻撃</td>
+<td>同一IPから5分間に10回以上のログイン失敗</td>
+<td style="text-align: center;">高</td>
+</tr>
+<tr>
+<td>不審なVPN接続</td>
+<td>通常と異なる地域からのVPN接続</td>
+<td style="text-align: center;">高</td>
+</tr>
+<tr>
+<td>マルウェア検知</td>
+<td>FortiGate IPSでのマルウェア検知</td>
+<td style="text-align: center;">最高</td>
+</tr>
+<tr>
+<td>特権アカウント使用</td>
+<td>管理者アカウントの通常外使用</td>
+<td style="text-align: center;">高</td>
+</tr>
+<tr>
+<td>大量データ送信</td>
+<td>通常の10倍以上のデータ送信</td>
+<td style="text-align: center;">中</td>
+</tr>
+<tr>
+<td>営業時間外アクセス</td>
+<td>深夜・休日のシステムアクセス</td>
+<td style="text-align: center;">低</td>
+</tr>
+<tr>
+<td>退職予定者アクセス</td>
+<td>退職予定者の大量ファイルアクセス</td>
+<td style="text-align: center;">中</td>
+</tr>
+</tbody>
+</table>
+<h4 id="233">2.3.3 インシデント対応フロー</h4>
+<div class="codehilite"><pre><span></span><code>セキュリティアラート発生
+    ↓（自動）
+チケット自動起票（P1扱い）
+    ↓（15分以内）
+IT/DX部門担当者が初動対応
+    ↓
+影響範囲の特定
+    ↓
+封じ込め（端末隔離・アカウント停止等）
+    ↓
+根本原因の調査
+    ↓
+復旧措置
+    ↓
+再発防止策の策定
+    ↓（重大インシデントの場合）
+経営層への報告
+</code></pre></div>
+
+<hr />
+<h3 id="24">2.4 ネットワーク監視</h3>
+<h4 id="241-fortigate">2.4.1 FortiGate監視</h4>
+<table>
+<thead>
+<tr>
+<th>監視項目</th>
+<th>閾値</th>
+<th>対応</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CPU使用率</td>
+<td>80%超</td>
+<td>アラート通知</td>
+</tr>
+<tr>
+<td>メモリ使用率</td>
+<td>85%超</td>
+<td>アラート通知</td>
+</tr>
+<tr>
+<td>VPN接続数</td>
+<td>上限の90%超</td>
+<td>容量計画見直し</td>
+</tr>
+<tr>
+<td>セッション数</td>
+<td>上限の80%超</td>
+<td>アラート通知</td>
+</tr>
+<tr>
+<td>IPSイベント</td>
+<td>Critical/High</td>
+<td>即時通知</td>
+</tr>
+</tbody>
+</table>
+<h4 id="242-cisco">2.4.2 Cisco機器監視</h4>
+<table>
+<thead>
+<tr>
+<th>監視項目</th>
+<th>閾値</th>
+<th>対応</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ポートステータス</td>
+<td>Down検知</td>
+<td>即時通知</td>
+</tr>
+<tr>
+<td>CPU使用率</td>
+<td>70%超</td>
+<td>アラート通知</td>
+</tr>
+<tr>
+<td>インターフェース帯域</td>
+<td>80%超</td>
+<td>容量計画見直し</td>
+</tr>
+<tr>
+<td>エラーカウンタ</td>
+<td>増加傾向</td>
+<td>調査開始</td>
+</tr>
+<tr>
+<td>温度</td>
+<td>メーカー推奨超</td>
+<td>アラート通知</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="25-ai-helpdesk">2.5 AI HelpDesk</h3>
+<h4 id="251">2.5.1 業務要件</h4>
+<table>
+<thead>
+<tr>
+<th>要件</th>
+<th>詳細</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>自動応答</td>
+<td>よくある問い合わせへのAI自動回答</td>
+</tr>
+<tr>
+<td>ナレッジ検索</td>
+<td>過去のチケット解決履歴からの回答検索</td>
+</tr>
+<tr>
+<td>チケット起票</td>
+<td>AI対話からのチケット自動起票</td>
+</tr>
+<tr>
+<td>エスカレーション</td>
+<td>AIで解決できない場合の担当者エスカレーション</td>
+</tr>
+<tr>
+<td>対応言語</td>
+<td>日本語（主）、英語（補助）</td>
+</tr>
+</tbody>
+</table>
+<h4 id="252-faq">2.5.2 FAQ例</h4>
+<table>
+<thead>
+<tr>
+<th>カテゴリ</th>
+<th>質問例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>M365</td>
+<td>「Teamsに接続できない」「SharePointにファイルがアップロードできない」</td>
+</tr>
+<tr>
+<td>VPN</td>
+<td>「VPNに接続できない」「VPNが遅い」</td>
+</tr>
+<tr>
+<td>パスワード</td>
+<td>「パスワードを忘れた」「パスワードを変更したい」</td>
+</tr>
+<tr>
+<td>プリンター</td>
+<td>「印刷できない」「プリンターが認識されない」</td>
+</tr>
+<tr>
+<td>セキュリティ</td>
+<td>「不審なメールを受信した」「ファイルが暗号化された」</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="26">2.6 統合認証基盤管理</h3>
+<h4 id="261-entra-id">2.6.1 Entra ID運用管理</h4>
+<table>
+<thead>
+<tr>
+<th>業務</th>
+<th>詳細</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ユーザー管理</td>
+<td>入社・退職・異動に伴うアカウント管理</td>
+</tr>
+<tr>
+<td>グループ管理</td>
+<td>部門別・プロジェクト別のセキュリティグループ</td>
+</tr>
+<tr>
+<td>条件付きアクセス</td>
+<td>デバイス・場所・リスクに基づくアクセス制御</td>
+</tr>
+<tr>
+<td>MFA管理</td>
+<td>多要素認証の設定・運用</td>
+</tr>
+<tr>
+<td>ゲストアクセス</td>
+<td>協力会社等の外部ユーザー管理</td>
+</tr>
+</tbody>
+</table>
+<h4 id="262-hennge">2.6.2 HENNGE連携管理</h4>
+<ul>
+<li>HENNGE One によるM365アクセスポリシー管理</li>
+<li>デバイス証明書によるアクセス制御</li>
+<li>IPアドレス制限の管理</li>
+<li>メールセキュリティ（誤送信防止・添付ファイル暗号化）</li>
+</ul>
+<hr />
+<h2 id="3-dx">3. DX推進業務</h2>
+<h3 id="31-construction-dx-one-platform">3.1 Construction DX One Platform推進</h3>
+<ul>
+<li>Phase1～3の構築計画管理</li>
+<li>各部門システムの技術支援</li>
+<li>統合基盤（認証・API・データレイク）の構築・運用</li>
+<li>全社DXリテラシー向上施策の企画・実施</li>
+</ul>
+<h3 id="32-it">3.2 IT投資管理</h3>
+<ul>
+<li>IT予算の策定・管理</li>
+<li>IT投資のROI評価</li>
+<li>クラウドサービスコストの最適化（FinOps）</li>
+</ul></div>
+  <div class="footer">&copy; 2026 みらい建設工業 IT-DX部門 &nbsp;|&nbsp; 統合建設DX基盤 業務要件書</div>
+</div>
+
+<script>
+function toggleTheme(){
+  var h=document.documentElement, d=h.getAttribute('data-theme')==='dark';
+  if(d){h.removeAttribute('data-theme');localStorage.setItem('mirai-dx-theme','light');}
+  else{h.setAttribute('data-theme','dark');localStorage.setItem('mirai-dx-theme','dark');}
+}
+</script>
+
+</body></html>

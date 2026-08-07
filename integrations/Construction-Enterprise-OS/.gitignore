@@ -1,0 +1,91 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+*.egg
+.Python
+
+# Environment
+.env
+.env.local
+.env.*.local
+*.env
+.env.webui
+# Windows config template (not a secret — commit this)
+!.env.windows
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+coverage/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+
+# Database
+*.db
+*.sqlite3
+migrations/versions/*.pyc
+
+# Docker
+.docker/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+
+# Logs
+logs/
+*.log
+
+# Uploads
+uploads/
+data/
+storage/
+
+# OS
+Thumbs.db
+Desktop.ini
+
+# Turborepo
+.turbo/
+
+# Next.js auto-generated
+apps/*/next-env.d.ts
+
+# Claude Code tooling (session-local)
+.claude/
+
+# CI/Build reports
+reports/
+
+# npm lock file (project uses pnpm)
+apps/web/package-lock.json

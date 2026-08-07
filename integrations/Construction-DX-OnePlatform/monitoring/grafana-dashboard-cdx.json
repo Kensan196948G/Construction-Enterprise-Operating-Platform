@@ -1,0 +1,122 @@
+{
+  "title": "CDX Platform - Codex 5 Metrics + Business KPIs",
+  "tags": ["cdx", "platform", "production"],
+  "timezone": "Asia/Tokyo",
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "30s",
+  "panels": [
+    {
+      "title": "🔐 auth_unavailable rate (Codex #1)",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [{
+        "expr": "sum(rate(http_requests_total{job=~\"cdx-.*-api\",status=\"503\"}[5m])) / sum(rate(http_requests_total{job=~\"cdx-.*-api\"}[5m])) * 100",
+        "legendFormat": "503 rate %"
+      }],
+      "thresholds": {"steps": [{"value": 1.0, "color": "red"}]}
+    },
+    {
+      "title": "🚨 untrusted issuer (Codex #2)",
+      "type": "stat",
+      "datasource": "Loki",
+      "targets": [{
+        "expr": "sum by (job) (count_over_time({app=\"cdx-auth\"} |= \"untrusted issuer\" [5m]))"
+      }],
+      "thresholds": {"steps": [{"value": 10, "color": "red"}]}
+    },
+    {
+      "title": "🔑 unknown kid / JWKS refresh (Codex #3)",
+      "type": "stat",
+      "datasource": "Loki",
+      "targets": [{
+        "expr": "sum by (job) (count_over_time({app=\"cdx-auth\"} |~ \"unknown kid|JWKS force-refreshed\" [5m]))"
+      }],
+      "thresholds": {"steps": [{"value": 5, "color": "orange"}]}
+    },
+    {
+      "title": "⚠️ HENNGE disabling (Codex #4)",
+      "type": "stat",
+      "datasource": "Loki",
+      "targets": [{
+        "expr": "sum (count_over_time({app=\"cdx-auth\"} |= \"disabling HENNGE\" [5m]))"
+      }],
+      "thresholds": {"steps": [{"value": 1, "color": "red"}]}
+    },
+    {
+      "title": "🚫 RBAC deny burst (Codex #5)",
+      "type": "stat",
+      "datasource": "Loki",
+      "targets": [{
+        "expr": "sum by (job) (count_over_time({app=\"cdx-auth\"} |~ \"rbac config rejected|insufficient role\" [10m]))"
+      }],
+      "thresholds": {"steps": [{"value": 20, "color": "red"}]}
+    },
+    {
+      "title": "📊 部門別 API レイテンシ p95",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [{
+        "expr": "histogram_quantile(0.95, sum by (job, le) (rate(http_request_duration_seconds_bucket{job=~\"cdx-.*-api\"}[5m])))",
+        "legendFormat": "{{job}}"
+      }],
+      "thresholds": {"steps": [{"value": 5.0, "color": "red"}]}
+    },
+    {
+      "title": "🚧 04 施工 オフライン同期 失敗連続",
+      "type": "stat",
+      "datasource": "Loki",
+      "targets": [{
+        "expr": "sum (count_over_time({app=\"cdx-site-api\"} |= \"sync failed\" [5m]))"
+      }],
+      "thresholds": {"steps": [{"value": 5, "color": "red"}]}
+    },
+    {
+      "title": "💻 10 ITSM SLA 違反件数",
+      "type": "stat",
+      "datasource": "Loki",
+      "targets": [{
+        "expr": "sum (count_over_time({app=\"cdx-itsm-api\"} |= \"breach detected\" [5m]))"
+      }],
+      "thresholds": {"steps": [{"value": 1, "color": "red"}]}
+    },
+    {
+      "title": "🤖 11 統合DB ETL 失敗",
+      "type": "stat",
+      "datasource": "Loki",
+      "targets": [{
+        "expr": "sum (count_over_time({app=\"cdx-data-api\"} |= \"ETL job failed\" [5m]))"
+      }],
+      "thresholds": {"steps": [{"value": 1, "color": "red"}]}
+    },
+    {
+      "title": "🗄 PostgreSQL 接続数 / 上限",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [{
+        "expr": "pg_stat_activity_count / pg_settings_max_connections * 100",
+        "legendFormat": "DB connection %"
+      }],
+      "thresholds": {"steps": [{"value": 80, "color": "red"}]}
+    },
+    {
+      "title": "🔴 Redis メモリ使用",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [{
+        "expr": "redis_memory_used_bytes / redis_memory_max_bytes * 100",
+        "legendFormat": "Redis mem %"
+      }],
+      "thresholds": {"steps": [{"value": 80, "color": "orange"}]}
+    },
+    {
+      "title": "📈 11部門 ヘルスチェック",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "targets": [{
+        "expr": "up{job=~\"cdx-.*-api\"}",
+        "legendFormat": "{{job}}"
+      }]
+    }
+  ]
+}

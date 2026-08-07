@@ -1,0 +1,17 @@
+# Prometheus configuration for Construction DX OS local dev stack
+#
+# Scrapes cdx-server's /metrics endpoint every 15 seconds.
+# In production, replace the target with the actual server address.
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    environment: "local-dev"
+
+scrape_configs:
+  - job_name: "cdx-server"
+    static_configs:
+      - targets: ["cdx-server:8000"]
+    metrics_path: /metrics
+    scrape_interval: 15s

@@ -1,0 +1,143 @@
+name: docker-build
+
+# Loop #9 (Issue #4): Docker 全11部門 実 build を CI で担保
+# 各 Dockerfile を build context = リポジトリルートで個別 build する
+# image push なし (build 可能性の証跡のみ取得)
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # 共通基盤 + mocks
+          - name: api-gateway
+            dockerfile: 00_共通基盤/api-gateway/Dockerfile
+            context: .
+          - name: shared-ui
+            dockerfile: 00_共通基盤/shared-ui/Dockerfile
+            context: .
+          - name: mocks
+            dockerfile: mocks/Dockerfile
+            context: ./mocks
+
+          # 01 経営企画部
+          - name: exec-api
+            dockerfile: 01_経営企画部/ConstructionExecutiveDashboard/backend/Dockerfile
+          - name: exec-web
+            dockerfile: 01_経営企画部/ConstructionExecutiveDashboard/frontend/Dockerfile
+
+          # 02 営業本部
+          - name: crm-api
+            dockerfile: 02_営業本部/ConstructionCRM-BidManagement/backend/Dockerfile
+          - name: crm-web
+            dockerfile: 02_営業本部/ConstructionCRM-BidManagement/frontend/Dockerfile
+
+          # 03 ソリューション営業本部
+          - name: solution-api
+            dockerfile: 03_ソリューション営業本部/SmartInfrastructureSolutionPlatform/backend/Dockerfile
+          - name: solution-web
+            dockerfile: 03_ソリューション営業本部/SmartInfrastructureSolutionPlatform/frontend/Dockerfile
+
+          # 04 施工本部
+          - name: site-api
+            dockerfile: 04_施工本部/ConstructionSiteManagementSystem/backend/Dockerfile
+          - name: site-web
+            dockerfile: 04_施工本部/ConstructionSiteManagementSystem/frontend/Dockerfile
+
+          # 05 技術本部
+          - name: tech-api
+            dockerfile: 05_技術本部/TechnicalKnowledge-BIMPlatform/backend/Dockerfile
+          - name: tech-web
+            dockerfile: 05_技術本部/TechnicalKnowledge-BIMPlatform/frontend/Dockerfile
+
+          # 06 安全品質環境本部
+          - name: sq-api
+            dockerfile: 06_安全品質環境本部/SafetyQualityGovernancePlatform/backend/Dockerfile
+          - name: sq-web
+            dockerfile: 06_安全品質環境本部/SafetyQualityGovernancePlatform/frontend/Dockerfile
+
+          # 07 管理本部
+          - name: corp-api
+            dockerfile: 07_管理本部/CorporateOperationPlatform/backend/Dockerfile
+          - name: corp-web
+            dockerfile: 07_管理本部/CorporateOperationPlatform/frontend/Dockerfile
+
+          # 08 購買部
+          - name: proc-api
+            dockerfile: 08_購買部/ProcurementMaterialPlatform/backend/Dockerfile
+          - name: proc-web
+            dockerfile: 08_購買部/ProcurementMaterialPlatform/frontend/Dockerfile
+
+          # 09 船舶事業部
+          - name: marine-api
+            dockerfile: 09_船舶事業部/MarineFleetManagement/backend/Dockerfile
+          - name: marine-web
+            dockerfile: 09_船舶事業部/MarineFleetManagement/frontend/Dockerfile
+
+          # 10 IT-DX部門
+          - name: itsm-api
+            dockerfile: 10_IT-DX部門/ConstructionITSM-ZeroTrustPlatform/backend/Dockerfile
+          - name: itsm-web
+            dockerfile: 10_IT-DX部門/ConstructionITSM-ZeroTrustPlatform/frontend/Dockerfile
+
+          # 11 統合データ基盤
+          - name: data-api
+            dockerfile: 11_統合データ基盤/ConstructionDataLake-DigitalTwin/backend/Dockerfile
+          - name: data-web
+            dockerfile: 11_統合データ基盤/ConstructionDataLake-DigitalTwin/frontend/Dockerfile
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Verify Dockerfile exists
+        run: |
+          if [ ! -f "${{ matrix.dockerfile }}" ]; then
+            echo "::error::Dockerfile not found: ${{ matrix.dockerfile }}"
+            exit 1
+          fi
+          echo "Building ${{ matrix.name }} from ${{ matrix.dockerfile }}"
+
+      - name: Build image (no push, cache enabled)
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context || '.' }}
+          file: ${{ matrix.dockerfile }}
+          push: false
+          load: false
+          tags: cdx-${{ matrix.name }}:loop10
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,scope=${{ matrix.name }},mode=max
+
+  summary:
+    needs: build
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report
+        run: |
+          echo "## 🐳 Docker Build Matrix Result" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Build status (per-service results above in matrix jobs)." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Services: **25** (api-gateway + shared-ui + mocks + 11 × 2)" >> $GITHUB_STEP_SUMMARY
+          echo "- Cache: GHA per-service scope" >> $GITHUB_STEP_SUMMARY
+          echo "- Push: disabled (build-only証跡)" >> $GITHUB_STEP_SUMMARY

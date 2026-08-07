@@ -1,0 +1,7 @@
+# The mock WebUI is a "no build step, serve static files only" demo.
+# The prebuilt admin-spa/dist/bundle.js IS the deliverable here, not throwaway
+# build output, so override the repo-root `dist/` ignore rule for this subtree.
+# Without this, a fresh clone / systemd boot would serve index.html that
+# references a missing bundle.js -> blank screen.
+!admin-spa/dist/
+!admin-spa/dist/**

@@ -1,0 +1,113 @@
+# Policy Test Matrix - Sprint 0 minimum cases.
+#
+# Goal: G1 最小ルールセットの代表挙動を YAML だけで網羅できることを示す。
+# Sprint 1 で QA / セキュリティチームが case を追加できる土台にする。
+#
+# 形式:
+#   - name: 人間可読なケース名
+#     rule_refs: 関連 G1 ルール ID（参考）
+#     input: PolicyDecisionInput の dict 形式（欠落フィールドはデフォルト適用）
+#     expect:
+#       final_decision: 最終決定
+#       must_include_rule_ids: applied_rules に必ず含まれる rule_id
+#       requires_audit: bool
+
+- name: AUTH-001 same-tenant human public allow
+  rule_refs: [AUTH-001]
+  input:
+    actor_id: idn_tena_20260502_0001
+    actor_type: human
+    tenant_id: ten_tena_20260502_0001
+    object_type: issue
+    action: issue.read
+    classification: public
+  expect:
+    final_decision: allow
+    must_include_rule_ids: [AUTH-001]
+    requires_audit: false
+
+- name: AI-003 confidential to external cloud requires local LLM (overridden by APP-002 to approval_required)
+  rule_refs: [AI-003, APP-002]
+  input:
+    actor_id: idn_tena_20260502_0001
+    actor_type: ai_agent
+    tenant_id: ten_tena_20260502_0001
+    object_type: ai_action
+    action: ai.execute
+    classification: confidential
+    data_destination: external_ai_cloud
+    model_provider: external_cloud
+    is_ai_execution: true
+    has_prompt_audit_ref: true
+    has_dlp_result_ref: true
+  expect:
+    final_decision: approval_required
+    must_include_rule_ids: [AI-003, APP-002]
+    requires_audit: true
+
+- name: AI-004 restricted blocks external AI
+  rule_refs: [AI-004]
+  input:
+    actor_id: idn_tena_20260502_0001
+    actor_type: ai_agent
+    tenant_id: ten_tena_20260502_0001
+    object_type: ai_action
+    action: ai.execute
+    classification: restricted
+    data_destination: external_ai_cloud
+    model_provider: external_cloud
+    is_ai_execution: true
+    has_prompt_audit_ref: true
+    has_dlp_result_ref: true
+  expect:
+    final_decision: deny
+    must_include_rule_ids: [AI-004]
+    requires_audit: true
+
+- name: FED-005 cross tenant restricted federation deny
+  rule_refs: [FED-005]
+  input:
+    actor_id: idn_tena_20260502_0001
+    actor_type: human
+    tenant_id: ten_tena_20260502_0001
+    target_tenant_id: ten_tenb_20260502_0002
+    object_type: federation_event
+    action: federation.share
+    classification: restricted
+  expect:
+    final_decision: deny
+    must_include_rule_ids: [FED-005]
+    requires_audit: true
+
+- name: FED-003 cross tenant internal requires federation review
+  rule_refs: [FED-003]
+  input:
+    actor_id: idn_tena_20260502_0001
+    actor_type: human
+    tenant_id: ten_tena_20260502_0001
+    target_tenant_id: ten_tenb_20260502_0002
+    object_type: federation_event
+    action: federation.share
+    classification: internal
+    trust_level: l1_internal
+  expect:
+    final_decision: federation_review_required
+    must_include_rule_ids: [FED-003]
+    requires_audit: true
+
+- name: AI-005 missing prompt_audit_ref denies AI execution
+  rule_refs: [AI-005]
+  input:
+    actor_id: idn_tena_20260502_0001
+    actor_type: ai_agent
+    tenant_id: ten_tena_20260502_0001
+    object_type: ai_action
+    action: ai.execute
+    classification: internal
+    is_ai_execution: true
+    has_prompt_audit_ref: false
+    has_dlp_result_ref: true
+  expect:
+    final_decision: deny
+    must_include_rule_ids: [AI-005]
+    requires_audit: true

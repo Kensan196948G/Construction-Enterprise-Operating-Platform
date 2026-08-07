@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>品質環境部_業務要件 | みらい建設工業 統合建設DX基盤</title>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
+
+  :root {
+    --bg:               #ffffff;
+    --bg-surface:       #f8fafc;
+    --bg-card:          #ffffff;
+    --text:             #1e293b;
+    --text-secondary:   #64748b;
+    --text-muted:       #94a3b8;
+    --accent:           #2563eb;
+    --accent-light:     #dbeafe;
+    --accent2:          #0ea5e9;
+    --accent3:          #7c3aed;
+    --accent-red:       #f43f5e;
+    --border:           #e2e8f0;
+    --border-light:     #f1f5f9;
+    --shadow:           0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-lg:        0 4px 16px rgba(0,0,0,0.06);
+    --header-bg:        #ffffff;
+    --header-text:      #0f172a;
+    --header-sub:       #475569;
+    --header-shadow:    0 1px 4px rgba(0,0,0,0.08), 0 1px 0 #e2e8f0;
+    --header-border:    #e2e8f0;
+    --nav-link:         #475569;
+    --nav-hover-bg:     rgba(37,99,235,0.08);
+    --nav-active-bg:    rgba(37,99,235,0.12);
+    --nav-active-text:  #2563eb;
+    --table-head-bg:    linear-gradient(135deg, #2563eb, #0ea5e9);
+    --table-head-text:  #ffffff;
+    --table-stripe:     #f8fafc;
+    --table-hover:      #eff6ff;
+    --code-bg:          #f1f5f9;
+    --code-color:       #2563eb;
+    --pre-bg:           #1e293b;
+    --pre-color:        #e2e8f0;
+    --section-bg:       #f0f9ff;
+    --quote-bg:         #fef2f2;
+    --quote-border:     #f43f5e;
+    --toggle-bg:        #e2e8f0;
+    --toggle-dot:       #ffffff;
+    --toggle-active-bg: #334155;
+    --toggle-active-dot:#f59e0b;
+    --btn-bg:           #2563eb;
+    --btn-text:         #ffffff;
+    --btn-hover:        #1d4ed8;
+  }
+
+  [data-theme="dark"] {
+    --bg:               #0f172a;
+    --bg-surface:       #1e293b;
+    --bg-card:          #1e293b;
+    --text:             #e2e8f0;
+    --text-secondary:   #94a3b8;
+    --text-muted:       #64748b;
+    --accent:           #60a5fa;
+    --accent-light:     #1e3a5f;
+    --accent2:          #38bdf8;
+    --accent3:          #a78bfa;
+    --accent-red:       #fb7185;
+    --border:           #334155;
+    --border-light:     #1e293b;
+    --shadow:           0 1px 3px rgba(0,0,0,0.3);
+    --shadow-lg:        0 4px 16px rgba(0,0,0,0.4);
+    --header-bg:        #0f172a;
+    --header-text:      #f1f5f9;
+    --header-sub:       #94a3b8;
+    --header-shadow:    0 1px 0 #1e293b, 0 4px 16px rgba(0,0,0,0.5);
+    --header-border:    #334155;
+    --nav-link:         rgba(255,255,255,0.7);
+    --nav-hover-bg:     rgba(255,255,255,0.1);
+    --nav-active-bg:    rgba(255,255,255,0.15);
+    --nav-active-text:  #60a5fa;
+    --table-head-bg:    linear-gradient(135deg, #1e3a5f, #0c4a6e);
+    --table-head-text:  #e2e8f0;
+    --table-stripe:     #1a2536;
+    --table-hover:      #253347;
+    --code-bg:          #334155;
+    --code-color:       #60a5fa;
+    --pre-bg:           #0b1120;
+    --pre-color:        #94a3b8;
+    --section-bg:       #172033;
+    --quote-bg:         #2a1520;
+    --quote-border:     #fb7185;
+    --toggle-bg:        #334155;
+    --toggle-dot:       #f59e0b;
+    --toggle-active-bg: #334155;
+    --toggle-active-dot:#f59e0b;
+    --btn-bg:           #2563eb;
+    --btn-text:         #ffffff;
+    --btn-hover:        #3b82f6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Noto Sans JP', 'Meiryo', 'Hiragino Sans', sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.85;
+    transition: background 0.35s, color 0.35s;
+  }
+
+  /* ── Header ── */
+  .header-bar {
+    background: var(--header-bg);
+    padding: 22px 36px 16px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: var(--header-shadow);
+    display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+    transition: background 0.35s, box-shadow 0.35s;
+    border-bottom: 1px solid var(--header-border);
+  }
+  .header-main { flex: 1; min-width: 280px; }
+  .header-bar h1 {
+    font-size: 1.55em; font-weight: 700; letter-spacing: 0.04em;
+    color: var(--header-text);
+    transition: color 0.35s;
+  }
+  .header-bar .subtitle {
+    font-size: 0.82em; margin-top: 3px;
+    color: var(--header-sub);
+    font-weight: 400; letter-spacing: 0.02em;
+    transition: color 0.35s;
+  }
+  .header-nav {
+    width: 100%; margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid var(--header-border);
+    display: flex; flex-wrap: wrap; gap: 3px;
+    transition: border-color 0.35s;
+  }
+  .header-nav a {
+    color: var(--nav-link); text-decoration: none;
+    padding: 4px 11px; border-radius: 6px;
+    font-size: 0.76em; transition: all 0.2s;
+  }
+  .header-nav a:hover { background: var(--nav-hover-bg); color: var(--nav-active-text); }
+  .header-nav a.active { background: var(--nav-active-bg); color: var(--nav-active-text); font-weight: 600; }
+
+  /* ── Toggle ── */
+  .toggle-wrap { display: flex; align-items: center; flex-shrink: 0; gap: 7px; }
+  .theme-label { font-size: 0.72em; color: var(--text-secondary); white-space: nowrap; transition: color 0.35s; }
+  .theme-toggle {
+    position: relative; width: 52px; height: 26px;
+    background: var(--toggle-bg); border-radius: 13px;
+    cursor: pointer; border: 2px solid var(--border);
+    outline: none; transition: all 0.3s;
+  }
+  .theme-toggle::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--accent);
+    transition: transform 0.3s, background 0.3s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+  [data-theme="dark"] .theme-toggle { background: var(--toggle-active-bg); border-color: #475569; }
+  [data-theme="dark"] .theme-toggle::after { transform: translateX(26px); background: var(--toggle-active-dot); }
+
+  /* ── Container ── */
+  .container { max-width: 1140px; margin: 28px auto; padding: 0 24px; }
+
+  /* ── Cards ── */
+  .content, .idx-card {
+    background: var(--bg-card); border-radius: 14px;
+    padding: 36px 42px; box-shadow: var(--shadow-lg);
+    margin: 20px 0; border: 1px solid var(--border-light);
+    transition: background 0.35s, border 0.35s, box-shadow 0.35s;
+  }
+
+  /* ── Typography ── */
+  h1 { color: var(--accent); font-size: 1.65em; margin: 28px 0 14px; padding-bottom: 10px; border-bottom: 3px solid var(--accent); }
+  h2 {
+    color: var(--text); font-size: 1.3em; margin: 26px 0 12px;
+    padding: 10px 0 10px 16px;
+    border-left: 4px solid var(--accent2);
+    background: var(--section-bg); border-radius: 0 8px 8px 0;
+    transition: background 0.35s;
+  }
+  h3 { color: var(--accent); font-size: 1.1em; margin: 20px 0 10px; }
+  h4 { color: var(--accent3); font-size: 1.0em; margin: 16px 0 8px; }
+  p { margin: 8px 0; text-align: justify; }
+  strong { color: var(--accent); }
+  ul, ol { margin: 8px 0 8px 24px; }
+  li { margin: 4px 0; }
+  a { color: var(--accent); transition: color 0.2s; }
+  a:hover { color: var(--accent2); }
+  hr { border: none; height: 1px; background: var(--border); margin: 24px 0; }
+
+  /* ── Tables ── */
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.91em; }
+  thead { background: var(--table-head-bg); color: var(--table-head-text); }
+  th { padding: 12px 16px; text-align: left; font-weight: 500; white-space: nowrap; }
+  td { padding: 10px 16px; border-bottom: 1px solid var(--border); transition: background 0.2s; }
+  tbody tr:nth-child(even) { background: var(--table-stripe); }
+  tbody tr:hover { background: var(--table-hover); }
+
+  /* ── Code ── */
+  code { background: var(--code-bg); padding: 2px 7px; border-radius: 5px; font-size: 0.9em; color: var(--code-color); transition: background 0.35s; }
+  pre { background: var(--pre-bg); color: var(--pre-color); padding: 20px; border-radius: 10px; overflow-x: auto; margin: 16px 0; font-size: 0.87em; line-height: 1.65; transition: background 0.35s; }
+  pre code { background: none; color: inherit; padding: 0; }
+
+  /* ── Misc ── */
+  blockquote { border-left: 4px solid var(--quote-border); padding: 12px 20px; margin: 16px 0; background: var(--quote-bg); border-radius: 0 8px 8px 0; transition: background 0.35s; }
+  .footer { text-align: center; padding: 32px; color: var(--text-muted); font-size: 0.83em; }
+
+  /* ── Index ── */
+  .dept-badge {
+    display: inline-block; padding: 2px 12px; border-radius: 20px;
+    font-size: 0.82em; font-weight: 500;
+    background: var(--accent-light); color: var(--accent);
+    transition: all 0.35s;
+  }
+  .btn-open {
+    display: inline-block; padding: 7px 22px; border-radius: 8px;
+    font-size: 0.84em; font-weight: 500;
+    background: var(--btn-bg); color: var(--btn-text);
+    text-decoration: none; transition: all 0.2s;
+  }
+  .btn-open:hover { background: var(--btn-hover); color: var(--btn-text); transform: translateY(-1px); }
+  .stats-bar { display: flex; gap: 16px; flex-wrap: wrap; margin: 20px 0 28px; }
+  .stat-chip {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 20px; border-radius: 10px;
+    background: var(--bg-surface); border: 1px solid var(--border);
+    font-size: 0.88em; transition: all 0.35s;
+  }
+  .stat-chip .num { font-size: 1.4em; font-weight: 700; color: var(--accent); }
+
+  @media print {
+    .header-bar { position: static; }
+    body { background: #fff !important; color: #000 !important; }
+    .content, .idx-card { box-shadow: none; border: 1px solid #ccc; }
+    .toggle-wrap { display: none; }
+  }
+</style>
+<script>
+  (function(){
+    var s = localStorage.getItem('mirai-dx-theme');
+    if(s==='dark') document.documentElement.setAttribute('data-theme','dark');
+  })();
+</script>
+
+</head>
+<body>
+<div class="header-bar">
+  <div class="header-main">
+    <h1>みらい建設工業 統合建設DX基盤</h1>
+    <div class="subtitle">Construction DX One Platform &mdash; 品質環境部_業務要件</div>
+  </div>
+  <div class="toggle-wrap">
+  <span class="theme-label">Light / Dark</span>
+  <button class="theme-toggle" onclick="toggleTheme()" aria-label="テーマ切替"></button>
+</div>
+  <div class="header-nav"><a href="index.html" style="font-weight:600;">一覧</a><a href="経営企画部_業務要件.html">経営企画部</a><a href="営業第一部_業務要件.html">営業第一部</a><a href="営業第二部_業務要件.html">営業第二部</a><a href="ソリューション営業本部_業務要件.html">ソリューション営業本部</a><a href="施工本部_工事部_業務要件.html">施工本部_工事部</a><a href="技術部_業務要件.html">技術部</a><a href="研究開発部_業務要件.html">研究開発部</a><a href="品質環境部_業務要件.html" class="active">品質環境部</a><a href="安全管理部_業務要件.html">安全管理部</a><a href="人事部_業務要件.html">人事部</a><a href="経理部_業務要件.html">経理部</a><a href="総務部_業務要件.html">総務部</a><a href="購買部_業務要件.html">購買部</a><a href="船舶事業部_業務要件.html">船舶事業部</a><a href="IT-DX部門_業務要件.html">IT-DX部門</a><a href="統合データ基盤_業務要件.html">統合データ基盤</a></div>
+</div>
+<div class="container">
+  <div class="content"><h1 id="_1">品質環境部 業務要件書</h1>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>文書ID</td>
+<td>BIZ-HIN-001</td>
+</tr>
+<tr>
+<td>版数</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>作成日</td>
+<td>2026年5月16日</td>
+</tr>
+<tr>
+<td>対象部署</td>
+<td>安全品質環境本部 品質環境部</td>
+</tr>
+<tr>
+<td>対象システム</td>
+<td>Safety &amp; Quality Governance Platform</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1">1. 部署概要</h2>
+<h3 id="11">1.1 組織上の位置づけ</h3>
+<p>品質環境部は安全品質環境本部に属し、ISO9001（品質マネジメント）およびISO14001（環境マネジメント）の運用・維持、品質記録管理、環境管理を担う。</p>
+<h3 id="12">1.2 部署ミッション</h3>
+<ul>
+<li>ISO9001品質マネジメントシステムの運用・維持・改善</li>
+<li>ISO14001環境マネジメントシステムの運用・維持・改善</li>
+<li>施工品質の管理基準の策定・監視</li>
+<li>環境負荷の低減（CO2排出量削減・産廃管理）</li>
+<li>SBTi目標に基づくカーボンニュートラル推進</li>
+</ul>
+<hr />
+<h2 id="2">2. 業務要件（詳細）</h2>
+<h3 id="21">2.1 品質記録管理</h3>
+<h4 id="211">2.1.1 管理対象</h4>
+<table>
+<thead>
+<tr>
+<th>記録種別</th>
+<th>作成部署</th>
+<th>保管期間</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>材料試験成績書</td>
+<td>施工本部</td>
+<td>工事完了後10年</td>
+</tr>
+<tr>
+<td>コンクリート圧縮強度試験</td>
+<td>施工本部</td>
+<td>工事完了後10年</td>
+</tr>
+<tr>
+<td>出来形管理記録</td>
+<td>施工本部</td>
+<td>工事完了後10年</td>
+</tr>
+<tr>
+<td>品質管理写真</td>
+<td>施工本部</td>
+<td>工事完了後10年</td>
+</tr>
+<tr>
+<td>受入検査記録</td>
+<td>施工本部</td>
+<td>工事完了後10年</td>
+</tr>
+<tr>
+<td>溶接検査記録</td>
+<td>施工本部</td>
+<td>工事完了後10年</td>
+</tr>
+<tr>
+<td>施工管理記録</td>
+<td>施工本部</td>
+<td>工事完了後10年</td>
+</tr>
+</tbody>
+</table>
+<h4 id="212">2.1.2 品質基準管理</h4>
+<ul>
+<li>国交省土木工事共通仕様書の品質基準のDB管理</li>
+<li>工種別の品質管理項目・規格値・試験方法の一覧管理</li>
+<li>規格値逸脱時のアラートと是正処置フロー</li>
+</ul>
+<hr />
+<h3 id="22-ncr-non-conformance-report">2.2 不適合管理（NCR: Non-Conformance Report）</h3>
+<h4 id="221">2.2.1 管理フロー</h4>
+<div class="codehilite"><pre><span></span><code>不適合の発見（現場・検査・パトロール）
+    ↓
+不適合報告書（NCR）の作成
+    ↓
+原因分析（なぜなぜ分析）
+    ↓
+処置の決定（修正/手直し/特採/廃棄）
+    ↓
+処置の実施
+    ↓
+処置結果の検証
+    ↓
+是正処置（再発防止策）の策定
+    ↓
+是正処置の実施・有効性確認
+    ↓
+完了登録
+</code></pre></div>
+
+<h4 id="222">2.2.2 管理項目</h4>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NCR番号</td>
+<td>自動採番（年度-連番）</td>
+</tr>
+<tr>
+<td>発見者</td>
+<td>発見した者の氏名・所属</td>
+</tr>
+<tr>
+<td>不適合内容</td>
+<td>不適合の詳細記述</td>
+</tr>
+<tr>
+<td>影響範囲</td>
+<td>品質・安全・環境への影響評価</td>
+</tr>
+<tr>
+<td>原因分析</td>
+<td>なぜなぜ分析の記録</td>
+</tr>
+<tr>
+<td>処置方法</td>
+<td>修正/手直し/特採/廃棄</td>
+</tr>
+<tr>
+<td>是正処置</td>
+<td>再発防止策</td>
+</tr>
+<tr>
+<td>期限</td>
+<td>是正完了期限</td>
+</tr>
+<tr>
+<td>完了確認者</td>
+<td>品質環境部の確認者</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="23-iso">2.3 ISO監査管理</h3>
+<h4 id="231">2.3.1 監査スケジュール管理</h4>
+<table>
+<thead>
+<tr>
+<th>監査種別</th>
+<th>頻度</th>
+<th>実施者</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>内部監査</td>
+<td>年1回</td>
+<td>社内内部監査員</td>
+</tr>
+<tr>
+<td>サーベイランス審査</td>
+<td>年1回</td>
+<td>認証機関</td>
+</tr>
+<tr>
+<td>更新審査</td>
+<td>3年に1回</td>
+<td>認証機関</td>
+</tr>
+<tr>
+<td>特別監査</td>
+<td>必要時</td>
+<td>品質環境部</td>
+</tr>
+</tbody>
+</table>
+<h4 id="232">2.3.2 内部監査管理要件</h4>
+<ul>
+<li>年間監査計画の作成・管理</li>
+<li>監査チェックリストのテンプレート管理</li>
+<li>監査所見の記録（不適合/観察事項/改善の機会）</li>
+<li>是正処置要求書（CAR）の発行・追跡</li>
+<li>監査証拠の管理（文書・記録・インタビュー記録）</li>
+<li>内部監査員の資格管理・力量評価</li>
+</ul>
+<h4 id="233">2.3.3 マネジメントレビュー支援</h4>
+<ul>
+<li>マネジメントレビューのインプット資料自動集計</li>
+<li>監査結果、顧客満足度、プロセスパフォーマンス</li>
+<li>不適合・是正処置の状況</li>
+<li>前回からの変更事項</li>
+<li>改善の機会</li>
+<li>レビュー結果（アウトプット）の記録・追跡</li>
+</ul>
+<hr />
+<h3 id="24">2.4 環境管理</h3>
+<h4 id="241-co2">2.4.1 CO2排出量管理</h4>
+<table>
+<thead>
+<tr>
+<th>Scope</th>
+<th>対象</th>
+<th>データソース</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope 1</td>
+<td>自社重機・車両の燃料消費</td>
+<td>燃料使用量記録</td>
+</tr>
+<tr>
+<td>Scope 2</td>
+<td>購入電力</td>
+<td>電力使用量</td>
+</tr>
+<tr>
+<td>Scope 3</td>
+<td>協力会社・資材運搬・廃棄物処理等</td>
+<td>取引先データ</td>
+</tr>
+</tbody>
+</table>
+<h5 id="_2">算定要件</h5>
+<ul>
+<li>環境省「温室効果ガス排出量算定・報告マニュアル」準拠</li>
+<li>排出係数の管理（年度別・エネルギー種別）</li>
+<li>月次集計・年次報告の自動生成</li>
+<li>SBTi目標に対する進捗率表示</li>
+<li>エコ・ファーストの約束に基づく目標管理</li>
+</ul>
+<h4 id="242">2.4.2 産業廃棄物管理</h4>
+<h5 id="_3">マニフェスト管理</h5>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>交付番号</td>
+<td>マニフェスト伝票番号</td>
+</tr>
+<tr>
+<td>排出事業場</td>
+<td>現場名・住所</td>
+</tr>
+<tr>
+<td>廃棄物種類</td>
+<td>汚泥/がれき類/廃プラ/木くず等</td>
+</tr>
+<tr>
+<td>数量</td>
+<td>重量（トン）・体積（m³）</td>
+</tr>
+<tr>
+<td>収集運搬業者</td>
+<td>業者名・許可番号</td>
+</tr>
+<tr>
+<td>処分業者</td>
+<td>業者名・許可番号・処分方法</td>
+</tr>
+<tr>
+<td>交付日</td>
+<td>マニフェスト交付日</td>
+</tr>
+<tr>
+<td>返送状況</td>
+<td>B2/D/E票の返送確認</td>
+</tr>
+</tbody>
+</table>
+<h5 id="_4">電子マニフェスト対応</h5>
+<ul>
+<li>JWNET（日本産業廃棄物処理振興センター）との連携</li>
+<li>電子マニフェストの登録・確認・報告</li>
+<li>返送期限の管理とアラート</li>
+<li>年次報告書の自動生成</li>
+</ul>
+<h4 id="243">2.4.3 その他環境管理</h4>
+<ul>
+<li>騒音・振動の測定記録管理</li>
+<li>水質汚濁防止の記録管理</li>
+<li>特定建設資材のリサイクル管理（建設リサイクル法）</li>
+<li>グリーン購入の実績管理</li>
+<li>環境影響評価書の管理</li>
+</ul>
+<hr />
+<h3 id="25-capa">2.5 是正処置・予防処置（CAPA）管理</h3>
+<h4 id="251-capa">2.5.1 統合CAPA管理</h4>
+<p>品質・安全・環境の各分野で発生した不適合に対する是正処置・予防処置を統合管理する。</p>
+<table>
+<thead>
+<tr>
+<th>管理項目</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CAPA番号</td>
+<td>自動採番</td>
+</tr>
+<tr>
+<td>発生源</td>
+<td>内部監査/外部監査/顧客苦情/NCR/ヒヤリハット</td>
+</tr>
+<tr>
+<td>対象ISO規格</td>
+<td>ISO9001/14001/45001/複合</td>
+</tr>
+<tr>
+<td>根本原因</td>
+<td>RCA（Root Cause Analysis）記録</td>
+</tr>
+<tr>
+<td>是正処置</td>
+<td>具体的な対策内容</td>
+</tr>
+<tr>
+<td>担当者</td>
+<td>実施責任者</td>
+</tr>
+<tr>
+<td>期限</td>
+<td>完了期限</td>
+</tr>
+<tr>
+<td>有効性確認</td>
+<td>対策効果の検証結果</td>
+</tr>
+<tr>
+<td>完了判定</td>
+<td>品質環境部による完了判定</td>
+</tr>
+</tbody>
+</table>
+<h4 id="252">2.5.2 統計分析</h4>
+<ul>
+<li>CAPA件数の推移（月次・年次）</li>
+<li>発生源別の件数分析</li>
+<li>期限内完了率の管理（目標：90%以上）</li>
+<li>根本原因のパレート分析</li>
+<li>再発率の管理</li>
+</ul>
+<hr />
+<h2 id="3-ppe">3. PPE（個人保護具）管理</h2>
+<h3 id="31">3.1 管理要件</h3>
+<table>
+<thead>
+<tr>
+<th>項目</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PPE種別</td>
+<td>ヘルメット/安全帯/安全靴/ライフジャケット等</td>
+</tr>
+<tr>
+<td>支給対象者</td>
+<td>作業員名・所属</td>
+</tr>
+<tr>
+<td>支給日</td>
+<td>支給日</td>
+</tr>
+<tr>
+<td>有効期限</td>
+<td>製品の使用期限（ヘルメット3年等）</td>
+</tr>
+<tr>
+<td>点検記録</td>
+<td>定期点検の記録</td>
+</tr>
+<tr>
+<td>交換履歴</td>
+<td>交換理由・交換日</td>
+</tr>
+</tbody>
+</table>
+<h3 id="32">3.2 アラート</h3>
+<ul>
+<li>有効期限切れの1ヶ月前に自動通知</li>
+<li>未支給者の検知（新規入場者への支給漏れ防止）</li>
+</ul></div>
+  <div class="footer">&copy; 2026 みらい建設工業 IT-DX部門 &nbsp;|&nbsp; 統合建設DX基盤 業務要件書</div>
+</div>
+
+<script>
+function toggleTheme(){
+  var h=document.documentElement, d=h.getAttribute('data-theme')==='dark';
+  if(d){h.removeAttribute('data-theme');localStorage.setItem('mirai-dx-theme','light');}
+  else{h.setAttribute('data-theme','dark');localStorage.setItem('mirai-dx-theme','dark');}
+}
+</script>
+
+</body></html>

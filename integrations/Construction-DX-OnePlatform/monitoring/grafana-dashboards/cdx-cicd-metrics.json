@@ -1,0 +1,251 @@
+{
+  "title": "CDX CI/CD & Build Metrics",
+  "uid": "cdx-cicd-metrics",
+  "tags": ["cdx", "cicd", "build", "quality"],
+  "timezone": "Asia/Tokyo",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "5m",
+  "time": { "from": "now-7d", "to": "now" },
+  "description": "CDX CI/CD メトリクス (Docker build time / pytest / ESLint / セキュリティスキャン) — Generated Loop #36",
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "✅ CI 成功率 (7日間)",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(github_workflow_run_conclusion_total{conclusion=\"success\", workflow=~\"ci|docker-build\"}) / clamp_min(sum(github_workflow_run_conclusion_total{workflow=~\"ci|docker-build\"}), 1) * 100",
+          "legendFormat": "CI成功率"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "steps": [
+              { "value": 0, "color": "red" },
+              { "value": 80, "color": "orange" },
+              { "value": 95, "color": "green" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "🧪 pytest 通過率",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(pytest_passed_total) / clamp_min(sum(pytest_passed_total) + sum(pytest_failed_total), 1) * 100",
+          "legendFormat": "test pass %"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "steps": [
+              { "value": 0, "color": "red" },
+              { "value": 90, "color": "orange" },
+              { "value": 99, "color": "green" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "⚡ Docker Build 時間 (avg)",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "avg(github_workflow_run_duration_seconds{workflow=\"docker-build\"})",
+          "legendFormat": "build time"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "steps": [
+              { "value": 0, "color": "green" },
+              { "value": 300, "color": "orange" },
+              { "value": 600, "color": "red" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "🔐 Trivy Critical 件数",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(trivy_vulnerability_total{severity=\"CRITICAL\"})",
+          "legendFormat": "Critical"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "steps": [
+              { "value": 0, "color": "green" },
+              { "value": 1, "color": "red" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "📊 Docker Build 時間推移 (25サービス matrix)",
+      "gridPos": { "x": 0, "y": 4, "w": 24, "h": 8 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "github_workflow_run_duration_seconds{workflow=\"docker-build\"}",
+          "legendFormat": "{{context}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "s", "custom": { "lineWidth": 1 } }
+      }
+    },
+    {
+      "id": 20,
+      "type": "timeseries",
+      "title": "🧪 pytest テスト数推移 (部門別)",
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "pytest_passed_total",
+          "legendFormat": "{{module}} passed"
+        },
+        {
+          "expr": "pytest_failed_total",
+          "legendFormat": "{{module}} failed"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "short" },
+        "overrides": [
+          {
+            "matcher": { "id": "byRegexp", "options": ".*failed" },
+            "properties": [
+              {
+                "id": "color",
+                "value": { "fixedColor": "red", "mode": "fixed" }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 21,
+      "type": "timeseries",
+      "title": "⚠️ ESLint 警告数推移",
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "eslint_warnings_total",
+          "legendFormat": "{{workspace}} warnings"
+        },
+        {
+          "expr": "eslint_errors_total",
+          "legendFormat": "{{workspace}} errors"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "short" },
+        "overrides": [
+          {
+            "matcher": { "id": "byRegexp", "options": ".*errors" },
+            "properties": [
+              {
+                "id": "color",
+                "value": { "fixedColor": "red", "mode": "fixed" }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 30,
+      "type": "table",
+      "title": "🔐 セキュリティスキャン結果 (最新)",
+      "gridPos": { "x": 0, "y": 20, "w": 24, "h": 8 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "trivy_vulnerability_total",
+          "legendFormat": "{{image}} {{severity}}",
+          "instant": true
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "image": "イメージ",
+              "severity": "重大度",
+              "Value": "件数"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "重大度" },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "CRITICAL": { "text": "🚨 CRITICAL", "color": "red" }
+                    }
+                  },
+                  {
+                    "type": "value",
+                    "options": {
+                      "HIGH": { "text": "⚠️ HIGH", "color": "orange" }
+                    }
+                  },
+                  {
+                    "type": "value",
+                    "options": {
+                      "MEDIUM": { "text": "📋 MEDIUM", "color": "yellow" }
+                    }
+                  },
+                  {
+                    "type": "value",
+                    "options": { "LOW": { "text": "ℹ️ LOW", "color": "blue" } }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

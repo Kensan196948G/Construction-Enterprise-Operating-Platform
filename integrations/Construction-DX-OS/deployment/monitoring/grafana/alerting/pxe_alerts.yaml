@@ -1,0 +1,156 @@
+# PXE Boot Monitoring Alert Rules — Issue 0042 Phase 4.4
+# Grafana Unified Alerting (provisioning format)
+# Companion metrics: cdx_pxe_boot_total, cdx_pxe_provisioning_seconds
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: PXE Boot Monitoring
+    folder: CDX Alerts
+    interval: 1m
+    rules:
+      - uid: pxe-boot-failure-rate
+        title: PXE Boot Failure Rate > 5%
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 3600
+              to: 0
+            datasourceUid: ${PROMETHEUS_DS_UID:-prometheus}
+            model:
+              expr: >
+                rate(cdx_pxe_boot_total{event="bootstrap_failed"}[1h])
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 3600
+              to: 0
+            datasourceUid: ${PROMETHEUS_DS_UID:-prometheus}
+            model:
+              expr: >
+                rate(cdx_pxe_boot_total{event="bootstrap_complete"}[1h])
+                + rate(cdx_pxe_boot_total{event="bootstrap_failed"}[1h])
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: "-100"
+            model:
+              conditions:
+                - evaluator:
+                    params: [0.05]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A, B]
+                  reducer:
+                    type: last
+                  type: query
+              # failure_rate = A / (A + B), alert when > 0.05 and total > 0
+              expr: "$A / ($A + $B + 0.001) > 0.05 and ($A + $B) > 0"
+              intervalMs: 1000
+              maxDataPoints: 43200
+              type: math
+        dashboardUid: ""
+        panelId: 0
+        noDataState: OK
+        execErrState: Alerting
+        for: 5m
+        annotations:
+          summary: PXE boot failure rate exceeds 5%
+          description: >
+            PXE boot failure rate is {{ printf "%.1f" $value }}% over the last hour.
+            Check dnsmasq/nginx logs and agent-bootstrap.sh errors.
+            Runbook: deployment/pxe/README.md#troubleshooting
+        labels:
+          severity: warning
+          team: infra
+
+      - uid: pxe-provisioning-slow
+        title: PXE Provisioning P95 > 30 minutes
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 3600
+              to: 0
+            datasourceUid: ${PROMETHEUS_DS_UID:-prometheus}
+            model:
+              expr: >
+                histogram_quantile(
+                  0.95,
+                  rate(cdx_pxe_provisioning_seconds_bucket[1h])
+                )
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: "-100"
+            model:
+              conditions:
+                - evaluator:
+                    params: [1800]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    type: last
+                  type: query
+              type: classic_conditions
+        dashboardUid: ""
+        panelId: 0
+        noDataState: OK
+        execErrState: OK
+        for: 10m
+        annotations:
+          summary: PXE provisioning P95 exceeds 30 minutes
+          description: >
+            95th percentile PXE provisioning time is {{ printf "%.0f" $value }}s (> 1800s).
+            This may indicate network congestion or cdx-server overload.
+        labels:
+          severity: warning
+          team: infra
+
+      - uid: pxe-no-activity-24h
+        title: No PXE Boot Activity (24h)
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 86400
+              to: 0
+            datasourceUid: ${PROMETHEUS_DS_UID:-prometheus}
+            model:
+              expr: >
+                increase(cdx_pxe_boot_total{event="token_issued"}[24h])
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: "-100"
+            model:
+              conditions:
+                - evaluator:
+                    params: [0]
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    type: last
+                  type: query
+              type: classic_conditions
+        dashboardUid: ""
+        panelId: 0
+        noDataState: OK
+        execErrState: OK
+        for: 0s
+        annotations:
+          summary: No PXE activity in 24h (informational)
+          description: No PXE registration tokens issued in the past 24 hours.
+        labels:
+          severity: info
+          team: infra

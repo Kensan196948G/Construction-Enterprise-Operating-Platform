@@ -1,0 +1,157 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Typography */
+    --font-sans: 'IBM Plex Sans', 'Noto Sans JP', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+    /* Type scale */
+    --fs-12: 0.75rem;
+    --fs-14: 0.875rem;
+    --fs-16: 1rem;
+    --fs-18: 1.125rem;
+    --fs-20: 1.25rem;
+    --fs-24: 1.5rem;
+    --fs-28: 1.75rem;
+    --fs-32: 2rem;
+    --fs-42: 2.625rem;
+
+    /* Spacing / radius */
+    --touch: 44px;
+    --r-sm: 4px;
+    --r-md: 6px;
+    --r-lg: 8px;
+    --r-xl: 12px;
+    --r-pill: 9999px;
+
+    /* Elevation */
+    --e1: 0 1px 3px rgba(0,0,0,0.08);
+    --e2: 0 4px 16px rgba(0,0,0,0.10);
+    --e3: 0 8px 40px rgba(0,0,0,0.14);
+
+    /* Gray scale — Carbon Gray 100, v2 追加: gray-30 / gray-90 */
+    --gray-10: #f4f4f4;
+    --gray-20: #e0e0e0;
+    --gray-30: #c6c6c6;
+    --gray-40: #a8a8a8;
+    --gray-50: #8d8d8d;
+    --gray-60: #6f6f6f;
+    --gray-70: #525252;
+    --gray-80: #393939;
+    --gray-90: #262626;
+    --gray-100: #161616;
+    /* Brand colors — canonical from docs/design/ServiceHub-WebUI.html */
+    --brand-90: #0b2545;
+    --brand-80: #13315c;
+    --brand-70: #1b4079;
+    --brand-60: #2458a6;
+    --brand-50: #3b7dd8;
+    --brand-20: #d6e4f5;
+    --brand-10: #eaf2fb;
+
+    /* Safety / Status */
+    --safety-60: #d64a1a;
+    --safety-50: #e76025;
+    --safety-20: #fde3d2;
+    --safety-10: #fff1e8;
+
+    --ok-60:    #0f8b4a;
+    --ok-20:    #d3f0df;
+    --ok-10:    #e6f7ee;
+
+    --warn-60:  #b76200;
+    --warn-20:  #fde6c4;
+    --warn-10:  #fff4e0;
+
+    --err-60:   #c8102e;
+    --err-20:   #ffd4d8;
+    --err-10:   #ffebed;
+
+    --info-60:  #2458a6;
+
+    /* Surface */
+    --bg:      #f4f4f4;
+    --surface: #ffffff;
+    --line:    #e0e0e0;
+    --line-strong: #c6c6c6;
+
+    /* Focus ring */
+    --focus: 0 0 0 2px #ffffff, 0 0 0 4px var(--brand-60);
+  }
+
+  body {
+    font-family: var(--font-sans);
+    @apply bg-gray-50 text-gray-900 antialiased;
+  }
+
+  code, kbd, pre, .font-mono {
+    font-family: var(--font-mono);
+  }
+
+  /* v2: global focus-visible — 個別 ring ユーティリティ非適用の DOM にも
+     WCAG 2.2 SC 2.4.7 Focus Visible を保証する safety net */
+  *:focus-visible {
+    outline: 2px solid var(--brand-60);
+    outline-offset: 2px;
+    border-radius: var(--r-sm);
+  }
+
+  /* v2: placeholder のコントラスト確保 (WCAG 1.4.3) */
+  ::placeholder {
+    color: var(--gray-60);
+    opacity: 1;
+  }
+
+  /* v2: WCAG 2.4.1 Skip to main content */
+  .skip-link {
+    position: absolute;
+    top: -100px;
+    left: 16px;
+    background: var(--gray-100);
+    color: #ffffff;
+    padding: 12px 20px;
+    border-radius: var(--r-md);
+    font-weight: 600;
+    z-index: 9999;
+    transition: top 0.15s;
+  }
+  .skip-link:focus {
+    top: 12px;
+    text-decoration: none;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-md border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors;
+  }
+  .card {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
+  }
+  .input {
+    @apply block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm;
+  }
+  .badge-success {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800;
+  }
+  .badge-warning {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800;
+  }
+  .badge-danger {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800;
+  }
+  .badge-info {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800;
+  }
+  .badge-secondary {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700;
+  }
+}

@@ -1,0 +1,41 @@
+# =========================================================
+# Grafana provisioning (Loop #36)
+#
+# Grafana コンテナ起動時に自動 import される設定
+# docker-compose.yml の grafana サービスでマウント:
+#   volumes:
+#     - ./monitoring/grafana-provisioning.yml:/etc/grafana/provisioning/dashboards/cdx.yml:ro
+#     - ./monitoring/grafana-dashboard-cdx.json:/var/lib/grafana/dashboards/legacy/cdx-auth.json:ro
+#     - ./monitoring/grafana-dashboards:/var/lib/grafana/dashboards/cdx:ro
+#     - ./monitoring/grafana-datasources.yml:/etc/grafana/provisioning/datasources/cdx.yml:ro
+#
+# Loop #8: Wazuh + Grafana JSON 整備, Loop #9: provisioning 自動化
+# Loop #36: cdx-service-health / cdx-api-latency / cdx-cicd-metrics ダッシュボード追加
+# =========================================================
+
+apiVersion: 1
+
+providers:
+  - name: "Construction DX dashboards"
+    orgId: 1
+    folder: "CDX"
+    folderUid: cdx
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards/cdx
+      foldersFromFilesStructure: false
+
+  - name: "CDX Legacy dashboards"
+    orgId: 1
+    folder: "CDX / Legacy"
+    folderUid: cdx-legacy
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 60
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards/legacy
+      foldersFromFilesStructure: false

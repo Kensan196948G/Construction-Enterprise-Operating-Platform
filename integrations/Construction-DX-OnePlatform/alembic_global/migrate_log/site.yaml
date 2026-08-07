@@ -1,0 +1,6 @@
+subsystem: site
+order: 20
+alembic_dir: 04_施工本部/ConstructionSiteManagementSystem/backend
+heads:
+  - 20260522_0001_initial_site_tables
+  - 20260522_0002_add_photo_s3_key

@@ -1,0 +1,9 @@
+# node_modules is already excluded by root .gitignore
+node_modules/
+
+# Track built artefacts — FastAPI serves them directly from this directory.
+# CI (spa-build job) rebuilds them; we commit them so deployment doesn't need npm.
+!dist/
+!dist/bundle.js
+!vendor/
+!vendor/*.js

@@ -1,0 +1,92 @@
+# AppArmor profile for cdx-agent
+#
+# cdx-agent runs as the unprivileged ``cdx-agent`` system user (created by
+# sysusers.d) under systemd with NoNewPrivileges=true, ProtectSystem=strict,
+# and PrivateTmp=true.  This MAC profile tightens the attack surface further:
+#
+#   - Read-only access to the config and credential files it actually needs.
+#   - Read-only access to /proc and /etc paths for inventory collection.
+#   - Read-write access to the spool directory only.
+#   - Outbound TCP to the central platform (resolved at runtime via DNS).
+#   - No capability to modify kernel state, raw sockets, or ptrace.
+#
+# Deployment:
+#   sudo cp usr.bin.cdx-agent /etc/apparmor.d/
+#   sudo apparmor_parser -r /etc/apparmor.d/usr.bin.cdx-agent
+#
+# After a fresh .deb install the postinst script will handle the above.
+
+abi <abi/4.0>,
+
+include <tunables/global>
+
+profile cdx-agent /usr/bin/cdx-agent {
+  include <abstractions/base>
+  include <abstractions/python>
+  include <abstractions/nameservice>
+  include <abstractions/ssl_certs>
+
+  # --- binary & interpreter ----------------------------------------------------
+
+  /usr/bin/cdx-agent                  mr,
+  /usr/bin/python3*                   ix,
+  /usr/lib/python3/**                 r,
+  /usr/local/lib/python3*/**          r,
+
+  # --- configuration & credentials (read-only) ---------------------------------
+
+  /etc/cdx-agent/                     r,
+  /etc/cdx-agent/agent.env            r,
+  /etc/cdx-agent/device_id            r,
+  /etc/cdx-agent/shared_secret        r,
+
+  # --- spool (read-write: append and rewrite outbox.jsonl) ----------------------
+
+  /var/lib/cdx-agent/                 r,
+  /var/lib/cdx-agent/**               rw,
+
+  # --- system info for inventory collection ------------------------------------
+
+  /proc/uptime                        r,
+  /proc/meminfo                       r,
+  /proc/cpuinfo                       r,
+  /etc/os-release                     r,
+  /etc/machine-id                     r,
+
+  # --- Python import machinery -------------------------------------------------
+
+  /usr/lib/                           r,
+  /usr/lib/**                         r,
+  /usr/share/python3/**               r,
+
+  # --- temporary files (systemd PrivateTmp gives a private /tmp) ---------------
+
+  /tmp/                               r,
+  /tmp/**                             rw,
+
+  # --- DNS resolution (nameservice abstraction covers /etc/resolv.conf etc.) ---
+
+  # --- outbound HTTPS to central platform (port 443) ---------------------------
+  # Allow TCP connect; AppArmor network rules are coarse-grained at this level.
+  # The systemd unit restricts the actual hostname via environment; the profile
+  # cannot enforce per-domain rules without dnsname plugin (optional extension).
+
+  network tcp,
+  network udp,     # DNS queries
+
+  # --- logging to systemd journal (stderr → journald) --------------------------
+
+  /dev/null                           rw,
+  /dev/urandom                        r,
+  /proc/sys/kernel/random/uuid        r,
+
+  # --- deny everything else explicitly -----------------------------------------
+
+  deny /proc/sys/                     w,
+  deny /sys/                          wl,
+  deny capability sys_admin,
+  deny capability sys_ptrace,
+  deny capability net_raw,
+  deny capability net_admin,
+  deny capability dac_override,
+}

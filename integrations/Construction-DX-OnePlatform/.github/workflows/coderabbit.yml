@@ -1,0 +1,25 @@
+# =========================================================
+# CodeRabbit GitHub App configuration note
+# =========================================================
+# CodeRabbit は GitHub Actions workflow ではなく **GitHub App** として動作します。
+# 以下の手順で有効化してください:
+#
+#   1. https://github.com/apps/coderabbitai にアクセス
+#   2. Construction-DX-OnePlatform リポジトリへインストール
+#   3. .coderabbit.yaml の設定 (本リポジトリ既に配置済) が自動適用
+#
+# Workflow ファイルは不要のため、本ファイルは「ガイダンス用」として残しつつ
+# 実 job は定義しません。
+# =========================================================
+
+name: CodeRabbit (GitHub App-based, no workflow)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  noop:
+    if: false
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "CodeRabbit is configured via GitHub App, not via Actions workflow."

@@ -1,0 +1,335 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  cdx-agent:
+    name: cdx-agent
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    defaults:
+      run:
+        working-directory: agent/cdx_agent
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install cdx-agent (editable + dev extras)
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Lint (ruff)
+        run: ruff check .
+
+      - name: Test (pytest)
+        run: pytest -v --maxfail=1
+
+  cdx-server:
+    name: cdx-server
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: cdx
+          POSTGRES_PASSWORD: cdx
+          POSTGRES_DB: cdx_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    defaults:
+      run:
+        working-directory: server/api
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install cdx-server and cdx-agent (contract tests link both)
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+          python -m pip install -e ../../agent/cdx_agent
+
+      - name: Lint (ruff)
+        run: ruff check .
+
+      - name: Alembic upgrade head (migration smoke test)
+        env:
+          DATABASE_URL: postgresql+psycopg2://cdx:cdx@localhost/cdx_test
+        run: alembic upgrade head
+
+      - name: Test (pytest, including contract + real Postgres)
+        env:
+          TEST_DATABASE_URL: postgresql+psycopg2://cdx:cdx@localhost/cdx_test
+        run: |
+          pytest -v --maxfail=1 \
+            --benchmark-disable \
+            --cov=cdx_server \
+            --cov-report=term-missing \
+            --cov-report=json:coverage.json \
+            --cov-fail-under=85
+
+      - name: Coverage summary to GitHub Step Summary
+        if: always()
+        working-directory: ${{ github.workspace }}
+        run: python3 .github/scripts/coverage_summary.py
+        env:
+          COVERAGE_JSON: ${{ github.workspace }}/server/api/coverage.json
+
+      - name: Generate OpenAPI spec (Phase 4c)
+        working-directory: ${{ github.workspace }}
+        run: python scripts/generate_openapi.py
+
+      - name: Verify OpenAPI spec is up to date
+        working-directory: ${{ github.workspace }}
+        run: python scripts/generate_openapi.py --check
+
+  sdk-check:
+    name: SDK up-to-date check (Phase 5a)
+    runs-on: ubuntu-latest
+    needs: [cdx-server]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install cdx-server (needed to generate openapi.json)
+        working-directory: server/api
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Set up Java (for openapi-generator-cli)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Verify SDKs are up to date
+        run: python scripts/generate_sdk.py --check
+
+  security-scan:
+    name: security scan (pip-audit + bandit)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install cdx-server and cdx-agent
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e "server/api[dev]"
+          python -m pip install -e "agent/cdx_agent"
+          python -m pip install pip-audit bandit pytest-benchmark
+
+      - name: pip-audit (dependency CVE scan)
+        # PYSEC-2025-183: disputed CVE for PyJWT (no fix version available).
+        # Supplier disputes it; our usage is decode-only (key length not our concern).
+        run: pip-audit --skip-editable --ignore-vuln PYSEC-2025-183
+
+      - name: bandit — cdx-server (static security analysis)
+        run: bandit -r server/api/cdx_server/ --severity-level medium -q
+
+      - name: bandit — cdx-agent (static security analysis)
+        run: bandit -r agent/cdx_agent/cdx_agent/ --severity-level medium -q
+
+      - name: Test pyramid — security + backend + database + infrastructure
+        env:
+          PLAYWRIGHT_SKIP: "true"
+        run: |
+          python -m pip install requests pytest
+          python -m pytest tests/security/ tests/backend/ tests/database/ \
+            -v --tb=short -q
+
+
+  spa-build:
+    name: admin-spa prebuild (Issue 0043)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: server/api/static/admin-spa/package-lock.json
+
+      - name: Install SPA build deps
+        working-directory: server/api/static/admin-spa
+        run: npm ci
+
+      - name: Build SPA bundle
+        working-directory: server/api/static/admin-spa
+        run: npm run build
+
+      - name: Verify no CDN references in built HTML
+        working-directory: server/api/static/admin-spa
+        run: |
+          ! grep -q "unpkg.com" index.html
+          ! grep -q "fonts.googleapis.com" index.html
+          ! grep -q "babel" index.html
+          echo "✓ No external CDN references found in index.html"
+
+  docs-lint:
+    name: docs hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify required docs exist
+        run: |
+          test -f README.md
+          test -f CLAUDE.md
+          test -f CONTRIBUTING.md
+          test -f CHANGELOG.md
+          test -f claudeos/state.json
+          test -f agent/cdx_agent/pyproject.toml
+          test -f agent/cdx_agent/README.md
+          test -f server/api/pyproject.toml
+          test -f server/api/README.md
+          test -f .github/workflows/ci.yml
+          test -f Makefile
+          test -f sdk/typescript/src/index.ts
+          test -f sdk/python/cdx_client/__init__.py
+          test -f .github/scripts/release_countdown.py
+          test -f docker-compose.prod.yml
+          test -f .env.prod.example
+          test -f deployment/nginx/nginx.prod.conf
+
+  prod-docker-validate:
+    name: prod docker-compose validate (Issue 0046)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate docker-compose.prod.yml config
+        env:
+          CDX_DOMAIN: cdx.example.com
+          CDX_REGISTRATION_TOKEN: ci-test-token
+          CDX_ADMIN_PASSWORD: ci-test-password
+          CDX_BOOTSTRAP_SECRET: ci-test-secret
+          POSTGRES_PASSWORD: ci-test-pg-password
+          GRAFANA_ADMIN_PASSWORD: ci-test-grafana-password
+        run: docker compose -f docker-compose.prod.yml config --quiet
+
+      - name: Verify .env.prod.example covers all required vars
+        run: |
+          grep -q "CDX_DOMAIN" .env.prod.example
+          grep -q "CDX_REGISTRATION_TOKEN" .env.prod.example
+          grep -q "CDX_ADMIN_PASSWORD" .env.prod.example
+          grep -q "CDX_BOOTSTRAP_SECRET" .env.prod.example
+          grep -q "POSTGRES_PASSWORD" .env.prod.example
+          grep -q "GRAFANA_ADMIN_PASSWORD" .env.prod.example
+          echo "✓ All required variables documented in .env.prod.example"
+
+  e2e:
+    name: E2E Playwright tests (Issue 0047)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install cdx-server + Playwright
+        working-directory: server/api
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+          python -m pip install pytest-playwright requests
+          playwright install --with-deps chromium
+
+      - name: Start cdx-server in background (InMemoryStorage)
+        env:
+          CDX_REGISTRATION_TOKEN: ci-e2e-token
+          CDX_ADMIN_PASSWORD: ci-e2e-admin
+        run: |
+          cd server/api
+          uvicorn cdx_server.app:app --host 127.0.0.1 --port 8000 &
+          echo "Waiting for server to be ready..."
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8000/health && echo "Server ready" && break
+            sleep 1
+          done
+
+      - name: Run E2E tests
+        env:
+          CDX_SERVER_URL: http://localhost:8000
+          PLAYWRIGHT_SKIP: "false"
+        run: |
+          python -m pip install requests
+          python -m pytest tests/frontend/ -v --tb=short -q
+
+  release-countdown:
+    name: release countdown (6-month deadline)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compute remaining days and apply degradation policy
+        run: python3 .github/scripts/release_countdown.py

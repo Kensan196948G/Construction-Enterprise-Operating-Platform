@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}New ISO Build — cdx-server Admin{% endblock %}
+{% block content %}
+<a href="/admin/iso-builder" class="back-link">← ジョブ一覧へ戻る</a>
+<div class="card">
+  <h2>＋ 新規 ISO ビルドジョブ</h2>
+  <p style="margin: 0.5rem 0 1rem; color: #666; font-size: 0.85rem;">
+    profile と git_ref を選択してジョブをキューに投入します。実際のビルドは worker (Issue 0023) が拾って live-build を実行します。
+  </p>
+  <form method="post" action="/admin/iso-builder">
+    <div style="margin-bottom: 1rem;">
+      <label for="profile" style="display:block; font-weight:600; margin-bottom:0.25rem;">Profile <span style="color:#dc2626">*</span></label>
+      <select name="profile" id="profile" required style="padding:0.5rem; min-width: 240px;">
+        {% for p in profiles %}
+        <option value="{{ p }}">{{ p }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div style="margin-bottom: 1rem;">
+      <label for="git_ref" style="display:block; font-weight:600; margin-bottom:0.25rem;">Git Ref <span style="color:#dc2626">*</span></label>
+      <input type="text" name="git_ref" id="git_ref" required
+             placeholder="例: main, release/1.0, abc1234"
+             style="padding:0.5rem; width: 320px;">
+      <p style="font-size:0.8rem; color:#666; margin-top:0.25rem;">
+        live-build 設定のコミット SHA / branch / tag。再現性確保のためフルハッシュ推奨。
+      </p>
+    </div>
+    <div style="margin-bottom: 1rem;">
+      <label for="notes" style="display:block; font-weight:600; margin-bottom:0.25rem;">Notes (任意)</label>
+      <textarea name="notes" id="notes" rows="3"
+                placeholder="変更内容や対象現場のメモ"
+                style="padding:0.5rem; width: 320px;"></textarea>
+    </div>
+    <button type="submit" style="padding:0.5rem 1rem; background:#1a1a2e; color:#fff; border:none; border-radius:4px; cursor:pointer;">
+      🚀 ビルドを開始
+    </button>
+    <a href="/admin/iso-builder" style="margin-left: 1rem;">キャンセル</a>
+  </form>
+</div>
+{% endblock %}

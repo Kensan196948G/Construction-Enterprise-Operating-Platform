@@ -1,0 +1,296 @@
+---
+# Construction DX One Platform — Zabbix Universal Template
+# Generated: Loop #36 (2026-06-01)
+# Zabbix version: 6.4+
+#
+# 対象: CDX 全サービス (23 services) の共通監視テンプレート
+# 部門別 override は cdx-frontend.yaml / cdx-backend.yaml を参照
+
+zabbix_export:
+  version: "6.4"
+  date: "2026-06-01T18:00:00Z"
+  groups:
+    - uuid: cdx0001-0000-0000-0000-000000000001
+      name: "Construction DX / Frontend"
+    - uuid: cdx0001-0000-0000-0000-000000000002
+      name: "Construction DX / Backend"
+    - uuid: cdx0001-0000-0000-0000-000000000003
+      name: "Construction DX / Infrastructure"
+
+  templates:
+    - uuid: cdx0002-0000-0000-0000-000000000001
+      template: CDX Universal Service Monitor
+      name: "CDX 汎用サービス監視テンプレート"
+      description: |
+        Construction DX One Platform 全サービス共通監視テンプレート。
+        HTTP ヘルスチェック / ポート疎通 / CPU・メモリ・ディスク基本監視。
+        部門別テンプレートはこのテンプレートを継承して override する。
+      groups:
+        - name: "Construction DX / Infrastructure"
+
+      macros:
+        - macro: "{$CDX_HEALTH_PATH}"
+          value: /health
+          description: "ヘルスチェックエンドポイントパス"
+        - macro: "{$CDX_HEALTH_TIMEOUT}"
+          value: "5"
+          description: "ヘルスチェックタイムアウト (秒)"
+        - macro: "{$CDX_PORT}"
+          value: "8080"
+          description: "サービスポート (部門テンプレートでオーバーライド)"
+        - macro: "{$CDX_HTTP_SCHEME}"
+          value: http
+          description: "HTTP スキーム (http / https)"
+        - macro: "{$CDX_RESPONSE_TIME_WARN}"
+          value: "2"
+          description: "レスポンス時間警告閾値 (秒)"
+        - macro: "{$CDX_RESPONSE_TIME_HIGH}"
+          value: "5"
+          description: "レスポンス時間障害閾値 (秒)"
+        - macro: "{$CPU_UTIL_WARN}"
+          value: "80"
+          description: "CPU使用率警告閾値 (%)"
+        - macro: "{$CPU_UTIL_HIGH}"
+          value: "95"
+          description: "CPU使用率障害閾値 (%)"
+        - macro: "{$MEM_UTIL_WARN}"
+          value: "80"
+          description: "メモリ使用率警告閾値 (%)"
+        - macro: "{$DISK_UTIL_WARN}"
+          value: "85"
+          description: "ディスク使用率警告閾値 (%)"
+
+      items:
+        # --- HTTP ヘルスチェック ---
+        - uuid: cdx0003-0001-0000-0000-000000000001
+          name: "HTTP ヘルスチェック ({$CDX_PORT})"
+          type: HTTP_AGENT
+          key: "cdx.http.health[{$CDX_PORT}]"
+          url: "{$CDX_HTTP_SCHEME}://localhost:{$CDX_PORT}{$CDX_HEALTH_PATH}"
+          request_method: GET
+          timeout: "{$CDX_HEALTH_TIMEOUT}s"
+          retrieve_mode: STATUS_CODE
+          value_type: UNSIGNED
+          delay: 30s
+          history: 7d
+          trends: 30d
+          description: "HTTP ヘルスチェック。200 以外は障害とみなす"
+          tags:
+            - tag: component
+              value: http
+            - tag: cdx
+              value: health
+
+        - uuid: cdx0003-0001-0000-0000-000000000002
+          name: "HTTP レスポンス時間 ({$CDX_PORT})"
+          type: SIMPLE
+          key: "net.tcp.service.perf[http,,{$CDX_PORT}]"
+          value_type: FLOAT
+          units: s
+          delay: 60s
+          history: 14d
+          trends: 90d
+          description: "HTTP レスポンス時間 (秒)"
+          tags:
+            - tag: component
+              value: http
+            - tag: cdx
+              value: latency
+
+        # --- ポート疎通確認 ---
+        - uuid: cdx0003-0002-0000-0000-000000000001
+          name: "ポート疎通確認 TCP:{$CDX_PORT}"
+          type: SIMPLE
+          key: "net.tcp.port[localhost,{$CDX_PORT}]"
+          value_type: UNSIGNED
+          delay: 30s
+          history: 7d
+          description: "TCP ポート疎通確認。1=open, 0=closed"
+          tags:
+            - tag: component
+              value: network
+
+        # --- システムリソース監視 ---
+        - uuid: cdx0003-0003-0000-0000-000000000001
+          name: "CPU使用率"
+          type: ZABBIX_ACTIVE
+          key: "system.cpu.util[,idle]"
+          value_type: FLOAT
+          units: "%"
+          delay: 60s
+          history: 14d
+          trends: 365d
+          description: "CPU アイドル率 (100 - value = 使用率)"
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - "return 100 - value;"
+          tags:
+            - tag: component
+              value: system
+            - tag: cdx
+              value: cpu
+
+        - uuid: cdx0003-0003-0000-0000-000000000002
+          name: "メモリ使用率"
+          type: ZABBIX_ACTIVE
+          key: "vm.memory.utilization"
+          value_type: FLOAT
+          units: "%"
+          delay: 60s
+          history: 14d
+          trends: 365d
+          description: "メモリ使用率 (%)"
+          tags:
+            - tag: component
+              value: system
+            - tag: cdx
+              value: memory
+
+        - uuid: cdx0003-0003-0000-0000-000000000003
+          name: "ディスク使用率 (/)"
+          type: ZABBIX_ACTIVE
+          key: "vfs.fs.size[/,pused]"
+          value_type: FLOAT
+          units: "%"
+          delay: 300s
+          history: 30d
+          trends: 365d
+          description: "ルートファイルシステム使用率 (%)"
+          tags:
+            - tag: component
+              value: system
+            - tag: cdx
+              value: disk
+
+        # --- Docker コンテナ監視 ---
+        - uuid: cdx0003-0004-0000-0000-000000000001
+          name: "Docker コンテナ稼働数"
+          type: ZABBIX_ACTIVE
+          key: "docker.containers.running"
+          value_type: UNSIGNED
+          delay: 60s
+          history: 14d
+          description: "稼働中 Docker コンテナ数 (期待値: 23以上)"
+          tags:
+            - tag: component
+              value: docker
+
+      triggers:
+        # --- HTTP ヘルスチェック系トリガー ---
+        - uuid: cdxt001-0001-0000-0000-000000000001
+          expression: "last(/CDX Universal Service Monitor/cdx.http.health[{$CDX_PORT}])<>200"
+          name: "⚠️ [{HOST.NAME}] HTTP ヘルスチェック失敗 (Port:{$CDX_PORT})"
+          priority: HIGH
+          description: |
+            HTTP ヘルスチェックが 200 以外を返した。
+            サービスが停止またはエラー状態の可能性がある。
+            対応: RUNBOOK.md#サービス再起動手順 参照
+          manual_close: YES
+          tags:
+            - tag: scope
+              value: availability
+
+        - uuid: cdxt001-0001-0000-0000-000000000002
+          expression: |
+            min(/CDX Universal Service Monitor/cdx.http.health[{$CDX_PORT}],#3)<>200
+          name: "🚨 [{HOST.NAME}] HTTP ヘルスチェック継続失敗 (3回連続, Port:{$CDX_PORT})"
+          priority: DISASTER
+          description: |
+            3回連続でHTTPヘルスチェックが失敗。サービスダウンを疑う。
+            エスカレーション: オンコール担当への通報を行う。
+          tags:
+            - tag: scope
+              value: availability
+
+        - uuid: cdxt001-0002-0000-0000-000000000001
+          expression: |
+            last(/CDX Universal Service Monitor/cdx.http.response_time[{$CDX_PORT}])>{$CDX_RESPONSE_TIME_WARN}
+          name: "⚠️ [{HOST.NAME}] レスポンス遅延 (>{$CDX_RESPONSE_TIME_WARN}s, Port:{$CDX_PORT})"
+          priority: WARNING
+          description: "レスポンス時間が警告閾値を超えた。"
+          tags:
+            - tag: scope
+              value: performance
+
+        - uuid: cdxt001-0002-0000-0000-000000000002
+          expression: |
+            last(/CDX Universal Service Monitor/cdx.http.response_time[{$CDX_PORT}])>{$CDX_RESPONSE_TIME_HIGH}
+          name: "🚨 [{HOST.NAME}] レスポンス重大遅延 (>{$CDX_RESPONSE_TIME_HIGH}s, Port:{$CDX_PORT})"
+          priority: HIGH
+          description: "レスポンス時間が障害閾値を超えた。SLA 違反の可能性がある。"
+          tags:
+            - tag: scope
+              value: performance
+
+        - uuid: cdxt001-0003-0000-0000-000000000001
+          expression: |
+            last(/CDX Universal Service Monitor/net.tcp.port[localhost,{$CDX_PORT}])=0
+          name: "🚨 [{HOST.NAME}] ポート閉塞 (TCP:{$CDX_PORT})"
+          priority: HIGH
+          description: "TCP ポートが閉じている。プロセスが停止した可能性がある。"
+          tags:
+            - tag: scope
+              value: availability
+
+        # --- システムリソース系トリガー ---
+        - uuid: cdxt002-0001-0000-0000-000000000001
+          expression: |
+            avg(/CDX Universal Service Monitor/system.cpu.util[,idle],5m)>{$CPU_UTIL_WARN}
+          name: "⚠️ [{HOST.NAME}] CPU使用率高 (>{$CPU_UTIL_WARN}%)"
+          priority: WARNING
+          tags:
+            - tag: scope
+              value: capacity
+
+        - uuid: cdxt002-0001-0000-0000-000000000002
+          expression: |
+            avg(/CDX Universal Service Monitor/system.cpu.util[,idle],5m)>{$CPU_UTIL_HIGH}
+          name: "🚨 [{HOST.NAME}] CPU使用率危険 (>{$CPU_UTIL_HIGH}%)"
+          priority: HIGH
+          tags:
+            - tag: scope
+              value: capacity
+
+        - uuid: cdxt002-0002-0000-0000-000000000001
+          expression: |
+            last(/CDX Universal Service Monitor/vm.memory.utilization)>{$MEM_UTIL_WARN}
+          name: "⚠️ [{HOST.NAME}] メモリ使用率高 (>{$MEM_UTIL_WARN}%)"
+          priority: WARNING
+          tags:
+            - tag: scope
+              value: capacity
+
+        - uuid: cdxt002-0003-0000-0000-000000000001
+          expression: |
+            last(/CDX Universal Service Monitor/vfs.fs.size[/,pused])>{$DISK_UTIL_WARN}
+          name: "⚠️ [{HOST.NAME}] ディスク使用率高 (>{$DISK_UTIL_WARN}%)"
+          priority: WARNING
+          tags:
+            - tag: scope
+              value: capacity
+
+      graphs:
+        - uuid: cdxg001-0001-0000-0000-000000000001
+          name: "HTTP ヘルス & レスポンス時間"
+          graph_items:
+            - color: "1A7C11"
+              item:
+                host: CDX Universal Service Monitor
+                key: "cdx.http.health[{$CDX_PORT}]"
+            - color: "F63100"
+              item:
+                host: CDX Universal Service Monitor
+                key: "cdx.http.response_time[{$CDX_PORT}]"
+
+        - uuid: cdxg001-0002-0000-0000-000000000001
+          name: "システムリソース (CPU / Memory)"
+          graph_items:
+            - color: "199C0D"
+              item:
+                host: CDX Universal Service Monitor
+                key: "system.cpu.util[,idle]"
+            - color: "F63100"
+              item:
+                host: CDX Universal Service Monitor
+                key: "vm.memory.utilization"

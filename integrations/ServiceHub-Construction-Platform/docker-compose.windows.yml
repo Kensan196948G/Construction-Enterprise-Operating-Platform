@@ -1,0 +1,40 @@
+# Windows 環境用オーバーライド
+# 使用方法: docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.windows.yml up -d
+# または start-servicehub.ps1 から自動適用される
+#
+# このファイルの役割:
+#   - 全ポートを 0.0.0.0（全インターフェース）に明示バインド
+#   - VITE_API_BASE_URL / ALLOWED_ORIGINS を .env から注入
+#   - Windows の改行コード問題を回避するため volume に :delegated を付与しない（不要）
+
+version: "3.9"
+services:
+  api:
+    ports:
+      - "0.0.0.0:8080:8000"
+    environment:
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+
+  frontend:
+    ports:
+      - "0.0.0.0:3001:3000"
+    build:
+      args:
+        - VITE_API_BASE_URL=${VITE_API_BASE_URL}
+
+  db:
+    ports:
+      - "0.0.0.0:5435:5432"
+
+  redis:
+    ports:
+      - "0.0.0.0:6380:6379"
+
+  nginx:
+    ports:
+      - "0.0.0.0:8088:80"
+
+  minio:
+    ports:
+      - "0.0.0.0:9010:9000"
+      - "0.0.0.0:9011:9001"
