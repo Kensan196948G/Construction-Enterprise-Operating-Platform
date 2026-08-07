@@ -4,9 +4,9 @@
     "start_date": "2026-06-25",
     "release_deadline": "2026-12-25",
     "registered_at": "2026-06-25",
-    "phase_mode": "development"
+    "phase_mode": "maintenance"
   },
-  "goal": "v0.6.1 本番運用開始 — ceop.mirai-dx-platform.com 公開・226テスト pass・CI グリーン・監視/バックアップ稼働",
+  "goal": "v0.6.2 本番運用継続 — 監査ログのテナント分離（G-18）と Release ノート抽出（G-20）を解消し、232 テスト pass・CI グリーン・本番 ceop.mirai-dx-platform.com を v0.6.2 で稼働維持",
   "phase": "maintenance",
   "release": {
     "v0_1_0_foundation": "release_ready",
@@ -20,9 +20,9 @@
   },
   "kpi": {
     "success_rate_target": 0.9,
-    "ci_success_rate": 1.0,
-    "test_pass_rate": 1.0,
-    "test_count": 226,
+    "ci_success_rate": 1,
+    "test_pass_rate": 1,
+    "test_count": 232,
     "security_critical": 0,
     "security_high_resolved": 17,
     "blocker_count": 0
@@ -130,7 +130,17 @@
     "M12: SqliteAuditLog #lastHash dead field removed (stale-cache fix副作用)",
     "M12: /governance route auth gated (false→true), audit:read permission gate on dashboard",
     "M12: 53/53 tests pass, typecheck/lint clean",
-    "M13: CodeRabbit 9 Minor fixes — rate-limiter off-by-one, bodyHasKey guards, trim consistency (device/user/org), SQLite resource leaks in tests, README endpoint table + test count"
+    "M13: CodeRabbit 9 Minor fixes — rate-limiter off-by-one, bodyHasKey guards, trim consistency (device/user/org), SQLite resource leaks in tests, README endpoint table + test count",
+    "PR #7: js-yaml CVE-2026-59870 override (4.3.1) + CI 日次 security scan + format:check ゲート実体化",
+    "PR #8 / G-18 (P1): 監査ログのテナント分離 — AUDIT_ORG_KEY を metadata に付与し GET /governance/audit と dashboard 監査カウンタを自組織へ絞込み（fail-closed）",
+    "PR #8: audit-tenant-scope 統合テスト 5 件追加（mutation テストで 3/5 fail を確認し実効性を実証）",
+    "PR #8: README/OpenAPI/ROOT-ASSESSMENT/CHANGELOG のテスト件数を 213/221/226 の三重不整合から 231 へ統一",
+    "PR #9 / v0.6.2: GitHub Release ノート抽出の修復（タグ vX.Y.Z → CHANGELOG 見出し [X.Y.Z] のプレフィックス除去・index() 一致・空検出でビルド失敗）。v0.6.2 Release 本文で実地検証",
+    "PR #9 / v0.6.2: Dockerfile の OCI version ラベルを回帰テストで固定（232 件目。mutation 検証済み）",
+    "v0.6.2 本番デプロイ（2026-08-07）: 事前 VACUUM INTO バックアップ → docker run 差し替え（旧コンテナは rename 保持）→ 公開 URL でヘルス・認証込みスモーク 9 API・SSR 2 画面・ネガティブ制御 401 を確認",
+    "G-21: バックアップ cron のイメージ参照をバージョン固定タグから可動エイリアス ceop-platform:current へ変更し、cron コマンドを実行して検証",
+    "G-19: docker-compose.prod.yml を実運用トポロジへ整合（bind mount / container_name / loopback bind / CEOP_IMAGE 必須）+ ハードニング（read_only・cap_drop ALL・no-new-privileges・cpu/memory/pids 制限・ログローテーション）を実機起動検証",
+    "運用文書の実装整合: RUNBOOK（起動方式 docker run・イメージタグ運用・compose 切替手順と既知の差分）、BACKUP_RESTORE（実 cron・WAL サイドカー退避・所有権 1001・RPO/RTO・未実施項目の明示）"
   ],
   "blocked_issues": [],
   "learning": {
@@ -142,15 +152,27 @@
       "HMAC-SHA256 API key design: only hash stored, constant-time compare, per-process ephemeral keys",
       "Promise-chain mutex (#writeQueue) serializes async writes without a lock file",
       "settled flag + close handler prevent double-resolve in readJsonBody across Node.js event edge cases",
-      "ABAC spread order: attributes spread BEFORE authoritative fields (subject/resource/action) to prevent override"
+      "ABAC spread order: attributes spread BEFORE authoritative fields (subject/resource/action) to prevent override",
+      "改竄検知チェーンを持つ監査ログへ属性を足すときは metadata へ置く。canonicalize() が 明示列挙フィールド + metadata 全体をハッシュするため、トップレベル追加はハッシュ定義変更となり 既存の封印済みエントリを全て検証不能にする",
+      "セキュリティ絞込みの回帰テストは mutation テストで実効性を確認する。修正を戻して fail するテスト数を数えれば、vacuous なテストを PR に混ぜない",
+      "レイヤ違反の早期検知: src/dashboard/ から src/api/ を import しそうになったら定数を src/domain/ へ移す。domain は両者の共通下位層",
+      "文書だけを直して実機を直したことにしない。compose 定義を整合させても本番は docker run のままなので、ハードニング未適用を別 gap として残した",
+      "自動処理（cron）がバージョン固定タグを直接参照すると、リリースのたびに更新漏れで静かに失敗する。可動エイリアスを 1 本挟む",
+      "新規テストが空振りでないことは mutation（意図的に修正を戻して fail するか）で証明する"
     ]
   },
   "notes": {
     "remote": "https://github.com/Kensan196948G/Construction-Enterprise-Operating-Platform (PRIVATE)",
     "branch": "feat/production-hardening (base: feat/platform-foundation)",
     "next_actions": [
-      "初期安定化監視の継続（health/ready cron・ログ・エラー率）と運用台帳の開始",
-      "四半期バックアップ復元試験と権限棚卸し",
+      "L-01 (P2): 監査ログ CSV/JSON エクスポート API。scopeAuditEntries 適用と CSV 数式インジェクション対策（=,+,-,@,TAB,CR）必須",
+      "G-22 (P2): 本番応答に HSTS が無い。Cloudflare エッジ設定のため Approval PR 対象",
+      "G-23 (P2): 本番 docker run に read_only/cap_drop/no-new-privileges/リソース制限/ログローテーションが未適用。compose 切替は停止を伴うため別 PR で計画",
+      "G-24 (P3): バックアップ世代の自動削除が未実装・オフサイトコピー無し（運用台帳で手動管理中）",
+      "G-25 (P3): 全トラフィックが Tunnel 経由 loopback のため per-IP レート制限が実質単一バケット",
+      "運用ギャップ: アラートルール未デプロイ、Web ルートの HEAD 404",
+      "初期安定化監視の継続（health/ready・ログ・エラー率）と運用台帳の運用開始",
+      "四半期バックアップ復元試験（未実施）と権限棚卸し",
       "P3 バックログ（CSP nonce 化、リクエスト ID、SSO、実アダプタ接続等）"
     ],
     "v060_verify": {
@@ -181,7 +203,11 @@
       "all_tests": "178/178 pass",
       "typecheck": "clean",
       "lint": "clean",
-      "new_features": ["pagination utility (parsePagination/paginate)", "Policy CRUD (5 endpoints)", "paginated list for org/user/app/device/role"],
+      "new_features": [
+        "pagination utility (parsePagination/paginate)",
+        "Policy CRUD (5 endpoints)",
+        "paginated list for org/user/app/device/role"
+      ],
       "new_tests": 32,
       "completed_at": "2026-06-27"
     },
@@ -256,6 +282,79 @@
       ],
       "pr": "https://github.com/Kensan196948G/Construction-Enterprise-Operating-Platform/pull/1",
       "completed_at": "2026-06-27"
+    },
+    "session_2026_08_07": {
+      "focus": "リポジトリ全面監査 → P1 cross-tenant 情報開示の解消 → PR 化",
+      "branches": [
+        "fix/security-audit-js-yaml (merged 8c3265f)",
+        "fix/audit-tenant-scope (PR #8)"
+      ],
+      "commits": [
+        "245c040 fix(security): 監査ログのテナント分離",
+        "f36d3a7 docs: README/OpenAPI/評価文書へ反映"
+      ],
+      "verify": {
+        "format_check": "PASS",
+        "typecheck": "PASS",
+        "lint": "PASS",
+        "test": "231/231 PASS (fail 0 / skipped 0)",
+        "build": "PASS",
+        "dependency_audit": "PASS — pnpm audit --audit-level=high で 0 件",
+        "openapi_drift": "PASS — 生成物と docs/openapi.yaml が一致",
+        "mutation_test": "PASS — 新規 5 件中 3 件が修正を戻すと fail（残 2 件は不変条件テスト）"
+      },
+      "decisions": [
+        "テナント識別子は AuditEvent トップレベルではなく metadata に置く（改竄検知の内側・ハッシュ定義不変）",
+        "テナント属性なしの既存エントリはスコープ付き資格情報から不可視（fail-closed）",
+        "Workflow / Policy に organizationId が無いのは設計境界であり欠落ではない（前者はテナント横断テンプレート、後者はプラットフォーム全体の認可規則）"
+      ],
+      "protected_user_changes": [
+        ".claude/START_PROMPT.md (modified)",
+        ".claude/skills/ (untracked)",
+        "全 commit で `git add -A -- . ':!.claude'` を使用し一度も staging していない"
+      ],
+      "known_env_issue": "ローカルの GITHUB_TOKEN 環境変数が無効。gh/git remote 操作は `env -u GITHUB_TOKEN` 経由が必須。恒久対処は当該環境変数の削除"
+    },
+    "session_2026_08_07_release": {
+      "focus": "v0.6.2 リリース（Release ノート抽出修復 + 監査テナント分離）→ 本番デプロイ・検証 → 本番と運用文書の整合（G-19）",
+      "branches": [
+        "fix/audit-tenant-scope (PR #8 merged)",
+        "release/v0.6.2 (PR #9 merged 651ed2a)",
+        "ops/production-alignment-v0.6.2"
+      ],
+      "commits": [
+        "54f0564 fix(ci): CHANGELOG ノート抽出",
+        "fa0aa42 chore(release): v0.6.2",
+        "651ed2a squash merge (PR #9)"
+      ],
+      "release": {
+        "tag": "v0.6.2",
+        "tag_object": "6c4cfdb9",
+        "workflow_run": "31134526940 success (1m13s)",
+        "ghcr_digest": "sha256:ee24d862016a796593b6a08f289aaf3b96f7d92b23306d96ded4b4632da409dc"
+      },
+      "production": {
+        "url": "https://ceop.mirai-dx-platform.com",
+        "version": "0.6.2",
+        "method": "docker run（compose 管理外。Labels に com.docker.compose.* なしで確認）",
+        "predeploy_backup": "/home/kensan/.ceop/backups/ceop-predeploy-v0.6.2-20260807T002436Z.db",
+        "rollback_ready": "旧コンテナを ceop-platform-v061 として rename 保持 + ceop-platform:v0.6.1 イメージ保持",
+        "smoke": "PASS — token 200 (expiresIn=3600) / 主要 9 API 200 / /dashboard・/governance 200 CSP:set / 無効資格情報・資格情報なし 401"
+      },
+      "verify": {
+        "format_check": "PASS",
+        "typecheck": "PASS",
+        "lint": "PASS",
+        "test": "232/232 PASS",
+        "build": "PASS",
+        "dependency_audit": "PASS — 0 件",
+        "openapi_drift": "PASS"
+      },
+      "protected_user_changes": [
+        ".claude/START_PROMPT.md (modified)",
+        ".claude/skills/ (untracked)"
+      ],
+      "known_env_issue": "ローカルの GITHUB_TOKEN 環境変数が無効。gh/git remote 操作は `env -u GITHUB_TOKEN` 経由が必須"
     }
   }
 }

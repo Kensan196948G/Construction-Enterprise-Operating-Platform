@@ -450,18 +450,24 @@ curl -H "Authorization: Bearer <jwt>" http://localhost:3000/api/v1/dashboard
 
 ## 🚀 本番デプロイ（M8）
 
-### 🌐 本番環境（v0.6.1 稼働中）
+### 🌐 本番環境（v0.6.2 稼働中）
 
-| 項目         | 値                                                                                                                 |
-| ------------ | ------------------------------------------------------------------------------------------------------------------ |
-| 本番 URL     | https://ceop.mirai-dx-platform.com                                                                                 |
-| 形態         | 本機 Docker コンテナ + Cloudflare Tunnel（cloudflared-ceop.service）                                               |
-| イメージ     | `ceop-platform:v0.6.1`（GHCR: `ghcr.io/kensan196948g/construction-eop:v0.6.1`）                                    |
-| ホスト       | 192.168.0.185（127.0.0.1:3120 → コンテナ 3000）                                                                    |
-| DB           | `/home/kensan/.ceop/data/ceop.db`（SQLite WAL、migration 001〜005 適用済み）                                       |
-| 認証情報     | `/home/kensan/.ceop/admin-credential.txt`・`viewer-credential.txt`（root のみ閲覧可。値は Secrets 管理へ移行推奨） |
-| バックアップ | cron 毎日 02:15 → `/home/kensan/.ceop/backups/`                                                                    |
-| ヘルス監視   | cron 毎日 02:30 に `/health/ready` を確認                                                                          |
+| 項目           | 値                                                                                                           |
+| -------------- | ------------------------------------------------------------------------------------------------------------ |
+| 本番 URL       | https://ceop.mirai-dx-platform.com                                                                           |
+| 形態           | 本機 Docker コンテナ（`docker run`）+ Cloudflare Tunnel（cloudflared-ceop.service）                          |
+| イメージ       | `ceop-platform:v0.6.2`（GHCR: `ghcr.io/kensan196948g/construction-eop:0.6.2`）                               |
+| 可動エイリアス | `ceop-platform:current`（稼働中バージョンを指す。バックアップ cron が参照）                                  |
+| ホスト         | 192.168.0.185（127.0.0.1:3120 → コンテナ 3000）                                                              |
+| DB             | `/home/kensan/.ceop/data/ceop.db`（SQLite WAL、migration 001〜005 適用済み）                                 |
+| 認証情報       | `/home/kensan/.ceop/admin-credential.txt`・`viewer-credential.txt`（chmod 600。値は Secrets 管理へ移行推奨） |
+| バックアップ   | cron 毎日 02:15 → `/home/kensan/.ceop/backups/`                                                              |
+| ヘルス監視     | cron 毎日 02:30 に `/health/ready` を確認（失敗時のみ `health.log` へ追記）                                  |
+
+> ⚠️ **本番は `docker compose` 管理下ではない。** `docker-compose.prod.yml` は同一トポロジを
+> 再現するよう合わせてあるが、実機は `docker run` で起動している。`docker compose stop` は
+> 一致するコンテナを見つけられず静かに no-op で終わり、実機は止まらない。
+> 実運用手順は [`docs/operations/RUNBOOK.md`](docs/operations/RUNBOOK.md) を正とする。
 
 ### 前提フロー
 
@@ -469,7 +475,7 @@ curl -H "Authorization: Bearer <jwt>" http://localhost:3000/api/v1/dashboard
   必ずファイル/Secrets 管理に保持し、リポジトリへコミットしない。
 
 ```
-① シークレット生成  →  ② DB マイグレーション  →  ③ API キー発行  →  ④ Compose 起動
+① シークレット生成  →  ② DB マイグレーション  →  ③ API キー発行  →  ④ 起動（docker run）
 ```
 
 ### ① JWT シークレット生成
