@@ -1,0 +1,50 @@
+{
+  "name": "civil-construction-ims",
+  "version": "0.1.0",
+  "private": true,
+  "description": "建設・土木統合マネジメントシステム - ISO 9001/14001/45001/55001/19650 統合プラットフォーム",
+  "scripts": {
+    "dev": "pnpm --parallel run dev",
+    "build": "pnpm --filter='./apps/*' run build",
+    "test": "pnpm --parallel run test",
+    "lint": "pnpm --parallel run lint",
+    "typecheck": "pnpm --parallel run typecheck",
+    "format": "prettier --write \"**/*.{ts,tsx,json,md}\" --ignore-path .gitignore",
+    "db:migrate": "pnpm --filter=api run db:migrate",
+    "db:seed": "pnpm --filter=api run db:seed",
+    "db:studio": "pnpm --filter=api run db:studio"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@10.26.2",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@nestjs/core",
+      "@prisma/client",
+      "@prisma/engines",
+      "bcrypt",
+      "esbuild",
+      "prisma",
+      "sharp",
+      "unrs-resolver"
+    ],
+    "overrides": {
+      "tar": ">=7.5.16",
+      "postcss": ">=8.5.10",
+      "form-data": ">=4.0.6",
+      "js-yaml": ">=4.2.0",
+      "multer": ">=2.2.0"
+    },
+    "publicHoistPatterns": [
+      "*next-auth*",
+      "*@auth/core*"
+    ]
+  }
+}

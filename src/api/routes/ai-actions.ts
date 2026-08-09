@@ -14,10 +14,12 @@ import type { ServerResponse } from "node:http";
 import type { IsoTimestamp } from "../../domain/common.ts";
 import {
   AI_ACTION_DECISIONS,
+  AI_OPERATION_STATUSES,
   AI_ACTION_STATUSES,
   createAiAction,
   decideAiAction,
   aiActionId,
+  setAiOperationStatus,
 } from "../../domain/ai-action.ts";
 import { parsePagination, paginate } from "../pagination.ts";
 import { recordAudit } from "../audit.ts";
@@ -91,6 +93,13 @@ export function registerAiActionRoutes(router: Router, container: AppContainer):
     const model = str(req.body, "model");
     const purpose = str(req.body, "purpose");
     const promptHash = str(req.body, "promptHash");
+    const evidenceRefsRaw = (req.body as Record<string, unknown>)["evidenceRefs"];
+    const evidenceRefs =
+      Array.isArray(evidenceRefsRaw) && evidenceRefsRaw.every((r) => typeof r === "string")
+        ? (evidenceRefsRaw as string[])
+        : undefined;
+    const inputRetentionDays = (req.body as Record<string, unknown>)["inputRetentionDays"];
+    const piiSensitive = (req.body as Record<string, unknown>)["piiSensitive"];
     const bodyOrg = str(req.body, "organizationId");
     if (
       ctx?.organizationId !== undefined &&
@@ -110,6 +119,12 @@ export function registerAiActionRoutes(router: Router, container: AppContainer):
       model: model ?? "",
       purpose: purpose ?? "",
       promptHash: promptHash ?? "",
+      ...(evidenceRefs !== undefined ? { evidenceRefs } : {}),
+      ...(typeof inputRetentionDays === "number" ? { inputRetentionDays } : {}),
+      ...(typeof piiSensitive === "boolean" ? { piiSensitive } : {}),
+      ...(str(req.body, "wrongAnswerMitigation") !== undefined
+        ? { wrongAnswerMitigation: str(req.body, "wrongAnswerMitigation") }
+        : {}),
       createdAt: nowTs(),
     });
     if (!created.ok) {
@@ -171,5 +186,51 @@ export function registerAiActionRoutes(router: Router, container: AppContainer):
       decision: decided.value.status,
     });
     writeJson(res, 200, { aiAction: decided.value });
+  });
+
+  router.post("/api/v1/ai-actions/:id/status", async (req, ctx, res) => {
+    if (!hasPermission(ctx, "ai", "approve")) {
+      forbidden(res, "ai:approve");
+      return;
+    }
+    const action = await repositories.aiActions.findById(aiActionId(req.params["id"] ?? ""));
+    if (action === null) {
+      notFound(res);
+      return;
+    }
+    if (
+      ctx?.organizationId !== undefined &&
+      action.organizationId !== undefined &&
+      action.organizationId !== ctx.organizationId
+    ) {
+      notFound(res);
+      return;
+    }
+    const status = str(req.body, "status");
+    if (status === undefined || !AI_OPERATION_STATUSES.includes(status as never)) {
+      badRequest(res, [
+        {
+          field: "status",
+          message: `status must be one of: ${AI_OPERATION_STATUSES.join(", ")}`,
+        },
+      ]);
+      return;
+    }
+    const reason = str(req.body, "reason");
+    const updated = setAiOperationStatus(action, {
+      status: status as never,
+      actor: ctx?.subject ?? "system",
+      at: nowTs(),
+      ...(reason !== undefined ? { reason } : {}),
+    });
+    if (!updated.ok) {
+      badRequest(res, updated.error);
+      return;
+    }
+    await repositories.aiActions.save(updated.value);
+    recordAudit(container.auditLog, ctx, "ai-action:status", `ai-actions/${action.id}`, "success", {
+      operationStatus: updated.value.operationStatus,
+    });
+    writeJson(res, 200, { aiAction: updated.value });
   });
 }

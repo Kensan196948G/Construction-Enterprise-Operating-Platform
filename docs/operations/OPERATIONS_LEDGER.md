@@ -54,3 +54,19 @@
 | 19:0x | 旧5リポジトリの完全ミラー退避（/var/backups/ceop-repo-absorption-20260807・root 700・fsck OK） | ✅ |
 | 19:0x | `gh repo delete` で5リポジトリ削除（ユーザー Y 承認）・GraphQL 不存在確認 | ✅ |
 | 19:0x | WORKING_LOG / OPERATIONS_LEDGER へ記録・PR #39 | ✅ |
+
+## 実行記録（2026-08-09・v0.11.0 IMS 吸収）
+
+| 日時 (JST) | 内容 | 結果 |
+| --- | --- | --- |
+| 20:20 | IMS スナップショット取得・アーカイブ（bundle/issues.json 50/pulls.json 37） | ✅ |
+| 20:30〜 | ISO 統合マネジメント実装（domain/persistence/routes/UI/migration 025） | ✅ |
+| 20:30〜 | 連携先6システム連携基盤（webhook/event/retry/contract/migration 026） | ✅ |
+| 21:0x | AI ガバナンス拡張（evidence/retention/pii/mitigation/利用停止） | ✅ |
+| 21:0x | ISO 管理コンソール `/iso-app`（CRUD・状態遷移・分析・連携表示） | ✅ |
+| 21:1x | Playwright E2E 追加（`/iso-app` 認証・CRUD・状態遷移・連携表示） | ✅ |
+| 21:2x | PR #40 CI: E2E (Playwright) 含む全ジョブ成功 | ✅ |
+| 21:3x | イベント自動配送（integration:dispatch）+ 契約 eventTypes 厳格検証 | ✅ |
+| 21:1x | データ移行・復旧実演（import 3 件 → backup → delete → restore 3 件） | ✅ |
+| 21:1x | `pnpm run verify` 398/398・parity 27/27・build・audit 0 | ✅ |
+| 21:0x | PR `feat/ims-integration-v0.11.0`（#40）CI 全ジョブ成功 | ✅ |

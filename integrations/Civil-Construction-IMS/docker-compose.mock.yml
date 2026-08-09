@@ -1,0 +1,54 @@
+# ===================================================================
+#  Civil Construction IMS — モック(デモ) WebUI スタック
+# -------------------------------------------------------------------
+#  用途: バックエンド不要のデモ環境を 1 コンテナで常駐させる。
+#  特徴:
+#   - web コンテナ単体 (API/DB/Redis/MinIO 不要)
+#   - restart: always → Docker デーモン起動時(=機器起動時)に自動で立ち上がる
+#   - ポートは MOCK_UI_PORT (既定 18080) を 0.0.0.0 にバインド
+#     → ホストの自動割当(DHCP)IP + このポートで LAN 内からアクセス可能
+#   - コンテナ IP は Docker が自動割当 (civil-ims-mock-net ブリッジ)
+#
+#  起動:   docker compose -f docker-compose.mock.yml up -d --build
+#  停止:   docker compose -f docker-compose.mock.yml down
+#  推奨:   scripts/mock/Start-MockUI.ps1 (空きポート自動検出 + IP 表示)
+# ===================================================================
+
+services:
+  web-mock:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile.mock
+    image: civil-ims-web-mock:latest
+    container_name: civil-ims-web-mock
+    environment:
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+      - NEXT_PUBLIC_MOCK_MODE=1
+      # NextAuth: 自動割当 IP/ポートでもホスト検証を通す
+      - AUTH_TRUST_HOST=true
+      # デモ用固定シークレット（モック専用・本番では使用しない）
+      - NEXTAUTH_SECRET=${MOCK_NEXTAUTH_SECRET:-civil-ims-mock-demo-secret-do-not-use-in-prod}
+      - APP_ENV=mock
+    ports:
+      # ホスト 0.0.0.0:<MOCK_UI_PORT> → コンテナ 3000
+      - '${MOCK_UI_PORT:-18080}:3000'
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "require('http').get('http://localhost:3000/api/health',r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      start_period: 40s
+      retries: 3
+    # 機器(ホスト)起動時に Docker デーモンが自動でこのコンテナを起動する
+    restart: always
+
+networks:
+  default:
+    name: civil-ims-mock-net
+    driver: bridge

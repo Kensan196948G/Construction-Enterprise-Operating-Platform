@@ -58,6 +58,7 @@ import {
   FileLegalEvidenceRepository,
   FileNotificationTemplateRepository,
 } from "./business-repositories.ts";
+import { FileIsoRecordRepository, FileIntegrationEventRepository } from "./iso-repositories.ts";
 
 // ---------------------------------------------------------------------------
 // Concrete file repositories
@@ -302,5 +303,7 @@ export async function createFileRepositories(dataDir: string): Promise<Repositor
       dataDir,
       "notification-templates.json",
     ),
+    isoRecords: new FileIsoRecordRepository(dataDir),
+    integrationEvents: new FileIntegrationEventRepository(dataDir),
   };
 }

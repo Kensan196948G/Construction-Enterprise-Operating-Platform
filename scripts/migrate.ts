@@ -523,6 +523,46 @@ export const MIGRATIONS: readonly Migration[] = [
       CREATE        INDEX IF NOT EXISTS idx_notification_templates_org ON notification_templates (org_id);
     `,
   },
+  {
+    version: "025",
+    description: "iso_records table (Civil-Construction-IMS 全 ISO モジュール吸収)",
+    up: `
+      CREATE TABLE IF NOT EXISTS iso_records (
+        id         TEXT PRIMARY KEY,
+        data       TEXT NOT NULL,
+        org_id     TEXT NOT NULL,
+        kind       TEXT NOT NULL,
+        project_id TEXT,
+        status     TEXT NOT NULL,
+        parent_id  TEXT
+      );
+      CREATE INDEX IF NOT EXISTS idx_iso_org     ON iso_records (org_id);
+      CREATE INDEX IF NOT EXISTS idx_iso_kind    ON iso_records (kind);
+      CREATE INDEX IF NOT EXISTS idx_iso_project ON iso_records (project_id);
+      CREATE INDEX IF NOT EXISTS idx_iso_status  ON iso_records (status);
+      CREATE INDEX IF NOT EXISTS idx_iso_parent  ON iso_records (parent_id);
+    `,
+  },
+  {
+    version: "026",
+    description: "integration_events table（連携先6システムの Webhook/イベント）",
+    up: `
+      CREATE TABLE IF NOT EXISTS integration_events (
+        id              TEXT PRIMARY KEY,
+        data            TEXT NOT NULL,
+        system          TEXT NOT NULL,
+        event_type      TEXT NOT NULL,
+        direction       TEXT NOT NULL,
+        idempotency_key TEXT NOT NULL,
+        status          TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_integration_system    ON integration_events (system);
+      CREATE INDEX IF NOT EXISTS idx_integration_status    ON integration_events (status);
+      CREATE INDEX IF NOT EXISTS idx_integration_direction ON integration_events (direction);
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_integration_idem
+        ON integration_events (system, idempotency_key);
+    `,
+  },
 ];
 // ---------------------------------------------------------------------------
 

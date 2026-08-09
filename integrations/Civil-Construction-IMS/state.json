@@ -1,0 +1,254 @@
+{
+  "project": {
+    "name": "Civil-Construction-IMS",
+    "display_name": "建設・土木統合マネジメントシステム",
+    "repo": "civil-construction-ims",
+    "start_date": "2026-05-31",
+    "release_deadline": "2026-11-30",
+    "phase_mode": "development",
+    "current_phase_week": 1,
+    "phase": "Phase1 - 共通基盤 + ISO9001 + ISO14001"
+  },
+  "goal": "Phase1 最終品質検証: auth/login/middleware テスト追加 + CI成功・blocker=0 → Release Ready判定。または stop after 20 turns",
+  "goal_type": "quality-and-verify",
+  "goal_status": "ACHIEVED",
+  "phase": "Release",
+  "session_2026_06_13": {
+    "feature": "mock-webui-docker",
+    "pr": 39,
+    "branch": "feat/mock-webui-docker",
+    "ci_run": "27459318968",
+    "ci_result": "success 6/6 (typecheck/lint/api-test/web-test/build/security)",
+    "codex_review_fixes": [
+      "auth.ts: MOCK_MODE && !IS_PRODUCTION 多層防御",
+      "mock/server.ts: URLSearchParams対応pagination",
+      "Register-MockUI-Autostart.ps1: AtLogOn+currentUser (Docker Desktop互換)",
+      "Start-MockUI.ps1: -Rebuild no-op修正 + InterfaceAlias IP除外"
+    ],
+    "deliverables": [
+      "NEXT_PUBLIC_MOCK_MODE モック層(api-client/auth 2点注入・全14ドメインダミーデータ・インメモリCRUD)",
+      "docker-compose.mock.yml(restart:always) + Dockerfile.mock + scripts/mock/*.ps1(空きポート自動検出・起動時自動立上げ)",
+      "README非エンジニア向け再作成 + docs/MOCK_UI.md/FOR_IT_STAFF.md/TECH_STACK.md"
+    ],
+    "local_verify_note": "ローカルpnpm install が next@15.5.18 取得時 ERR_PNPM_EPERM で失敗→CIを検証ゲートとした",
+    "status": "MERGED (squash commit ef2d1b421567) 2026-06-13T06:42:45Z"
+  },
+  "kpi": {
+    "success_rate_target": 0.9,
+    "ci_success_rate": 1,
+    "test_pass_rate": 1,
+    "test_count": 331,
+    "security_critical": 0,
+    "audit_vulnerabilities": 0,
+    "e2e_tests": 3,
+    "frontend_pages_total": 14,
+    "blocker_count": 0,
+    "ci_jobs_passing": "6/6 (main run #27460211168 success - PR #35/#36/#37/#38/#41 merged)",
+    "last_pr_merged_at_session": "PR #41 tdd-auth-pages-state-update (squash merge) 2026-06-13T07:21:18Z",
+    "open_issues": 0,
+    "closed_this_session": [
+      "#1",
+      "#2",
+      "#3",
+      "#4",
+      "#5",
+      "#6",
+      "#7",
+      "#10",
+      "#11",
+      "entra-id-oidc-pr25-jest-esm-fix",
+      "vitest-critical-cve-GHSA-5xrq-8626-4rwp",
+      "#26",
+      "PR#35-quality-safety-crud",
+      "PR#36-deploy-checklist",
+      "PR#37-assets-crud",
+      "PR#38-environment-crud",
+      "PR#41-tdd-auth-pages",
+      "tdd_required-warning"
+    ],
+    "pr25_merged": "2026-06-06T14:55:44Z",
+    "deploy_checklist_issue": "#26"
+  },
+  "execution": {
+    "max_duration_minutes": 300,
+    "repair_count": 0,
+    "max_repair": 3,
+    "same_error_limit": 2,
+    "session_start": "2026-06-01T11:09:00+09:00",
+    "last_stop_at": "2026-06-13T09:12:15.109Z",
+    "final_ci_run": "27460211168",
+    "current_session_start_at": "2026-06-17T12:06:41.374Z",
+    "last_pr_merged": "41",
+    "last_pr_merged_at": "2026-06-13T07:21:18Z",
+    "last_trigger": "cron",
+    "last_cron_session_id": "20260617-202313-Civil-Construction-IMS"
+  },
+  "automation": {
+    "auto_issue_generation": true,
+    "self_evolution": true
+  },
+  "tech_stack": {
+    "frontend": "Next.js 15 + React 19 + TypeScript + Tailwind CSS + shadcn/ui",
+    "backend": "NestJS + TypeScript + Prisma",
+    "database": "PostgreSQL 16",
+    "auth": "NextAuth.js / OIDC (Entra ID)",
+    "storage": "S3-compatible (MinIO for dev)",
+    "ci": "GitHub Actions",
+    "iac": "Docker Compose (dev) / Terraform (prod)"
+  },
+  "modules": {
+    "phase1": ["common-base", "iso9001", "iso14001"],
+    "phase2": ["iso45001"],
+    "phase3": ["iso19650", "cde-adapter"],
+    "phase4": ["iso55001", "asset-handover"],
+    "phase5": ["analytics", "isms", "bcp"]
+  },
+  "completed_issues": [
+    "C-2-bim-controller",
+    "IDOR-SafetyEducation",
+    "IDOR-EnvironmentalAspect-dashboard",
+    "IDOR-AssetSubresource",
+    "C-3-refresh-token-redesign",
+    "H-2-RolesGuard",
+    "code-review-audit-try-catch",
+    "code-review-O1-fix"
+  ],
+  "blocked_issues": [],
+  "learning": {
+    "failure_patterns": [],
+    "success_patterns": [
+      {
+        "pattern": "security-first org scope enforcement",
+        "result": "typecheck 0 after each fix"
+      }
+    ],
+    "usage_history": {
+      "agents": {
+        "general-purpose": {
+          "call_count": 3,
+          "last_used": "2026-06-13T04:24:59.399Z",
+          "last_description": "IT部門向け・技術スタックdocs作成"
+        },
+        "_total_agent_calls": 6,
+        "_last_agent_call_at": "2026-06-13T06:32:43.318Z",
+        "pr-review-toolkit_silent-failure-hunter": {
+          "call_count": 1,
+          "last_used": "2026-05-31T13:50:01.675Z",
+          "last_description": "サイレント障害ハント"
+        },
+        "pr-review-toolkit_code-reviewer": {
+          "call_count": 1,
+          "last_used": "2026-05-31T14:19:28.609Z",
+          "last_description": "PR #9 最終コードレビュー"
+        },
+        "codex_codex-rescue": {
+          "call_count": 1,
+          "last_used": "2026-06-13T06:32:43.318Z",
+          "last_description": "Codex PR #39 review"
+        }
+      },
+      "skills": {
+        "security-review": {
+          "call_count": 1,
+          "last_used": "2026-05-31T13:45:21.352Z",
+          "last_args_preview": ""
+        },
+        "_total_skill_calls": 4,
+        "_last_skill_call_at": "2026-06-13T06:32:59.373Z",
+        "coderabbit:code-review": {
+          "call_count": 1,
+          "last_used": "2026-05-31T14:13:51.655Z",
+          "last_args_preview": "PR #9 のレビューを実施してください。特に IDOR 対策（organizationId スコープ注入）、C-2 req.user.sub 修正、テナント越"
+        },
+        "coderabbit:coderabbit-review": {
+          "call_count": 1,
+          "last_used": "2026-06-13T06:19:13.401Z",
+          "last_args_preview": "committed --base main"
+        },
+        "codex:rescue": {
+          "call_count": 1,
+          "last_used": "2026-06-13T06:32:59.373Z",
+          "last_args_preview": "review --base main : PR #39 (feat/mock-webui-docker) のコミット済み差分をレビューしてください。観点: モッ"
+        }
+      }
+    }
+  },
+  "feature_flags": {
+    "ultrareview": {
+      "monthly_cap": 50
+    }
+  },
+  "dreaming": {
+    "patterns": [],
+    "curated_memories": [],
+    "recurring_mistakes": [],
+    "last_dreaming_run": null,
+    "dreaming_enabled": false
+  },
+  "warnings": [],
+  "compact": {
+    "last_pre_compact_at": "2026-06-17T12:05:20.947Z"
+  },
+  "session_2026_06_13_evening": {
+    "merged_prs": [41],
+    "branch": "chore/tdd-auth-pages-state-update",
+    "ci_run": "27460211168",
+    "ci_result": "success 6/6 (typecheck/lint/api-test/web-test/build/security)",
+    "test_count_delta": "+45 (286->331)",
+    "key_fixes": [
+      "auth.controller.spec.ts: Prettier inline format修正 (refresh/entraExchange rejects.toThrow)",
+      "bcp.test.tsx: BcpPage 9テスト追加 (loading/error/empty/data states)",
+      "isms.test.tsx: IsmsPage 9テスト追加 (tabs/asset/incident switching)",
+      "tdd_required warning: 全12ファイル対応完了・警告クリア"
+    ],
+    "warnings_resolved": ["tdd_required (12 files → 0 files)"],
+    "status": "PR#41 merged. CI 6/6 SUCCESS. warnings=[]. 2026-06-13T07:21:18Z",
+    "goal_status": "ACHIEVED"
+  },
+  "session_2026_06_17": {
+    "goal": "MVP Release Candidate を完成させ、最小限の動作可能な状態でリリース判定を受ける",
+    "phase": "Build",
+    "prs": [
+      {
+        "pr": 42,
+        "branch": "feat/audits-bim-crud-dialogs",
+        "status": "open",
+        "deliverables": [
+          "apps/web/src/app/(dashboard)/audits/page.tsx: 完全CRUD実装 (AuditStatus修正)",
+          "apps/web/src/app/(dashboard)/bim/page.tsx: 完全CRUD実装 (PUT対応・projectId選択)",
+          "apps/web/src/__tests__/audits-crud.test.tsx: 9テスト",
+          "apps/web/src/__tests__/bim-crud.test.tsx: 11テスト (20/20 PASS)"
+        ]
+      },
+      {
+        "pr": null,
+        "branch": "feat/corrective-actions-crud",
+        "status": "in_progress",
+        "deliverables": [
+          "apps/web/src/app/(dashboard)/corrective-actions/page.tsx: 完全CRUD実装 (ISO 9001/14001 箇条10.2)",
+          "apps/web/src/__tests__/corrective-actions-crud.test.tsx: 11テスト予定"
+        ]
+      }
+    ],
+    "test_count_delta": "+31 (331->362 予定)",
+    "status": "IN_PROGRESS"
+  },
+  "session_2026_06_13_afternoon": {
+    "merged_prs": [
+      35,
+      36,
+      37,
+      38
+    ],
+    "test_count_delta": "+20 (331->351)",
+    "status": "IN_PROGRESS - commit/PR pending"
+  },
+  "session_2026_06_13_afternoon": {
+    "merged_prs": [35, 36, 37, 38],
+    "ci_run": "27459624215",
+    "ci_result": "success 6/6 (typecheck/lint/api-test/web-test/build/security)",
+    "test_count_delta": "+90 (196->286)",
+    "closed_issues": ["#26"],
+    "status": "4 PRs merged. CI 6/6 SUCCESS. open_issues=0. 2026-06-13T06:54:00Z"
+  }
+}

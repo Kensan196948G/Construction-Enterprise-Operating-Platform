@@ -23,7 +23,12 @@ import { buildDashboard } from "../../dashboard/dashboard.ts";
 import type { Policy } from "../../domain/policy.ts";
 import type { Router } from "../router.ts";
 import type { AppContainer } from "../types.ts";
-import { renderDashboard, renderGovernance, type GovernancePolicyRow } from "../../web/renderer.ts";
+import {
+  renderDashboard,
+  renderGovernance,
+  renderIsoPage,
+  type GovernancePolicyRow,
+} from "../../web/renderer.ts";
 import { hasPermission } from "./governance.ts";
 
 /** Write a complete HTML response with browser security headers. */
@@ -118,6 +123,13 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
     false,
   );
   router.get(
+    "/api/assets/iso.js",
+    async (_req, _ctx, res) => {
+      await sendFile(res, join(staticDir, "iso.js"), "text/javascript; charset=utf-8");
+    },
+    false,
+  );
+  router.get(
     "/api/assets/favicon.svg",
     async (_req, _ctx, res) => {
       await sendFile(res, join(staticDir, "favicon.svg"), "image/svg+xml; charset=utf-8");
@@ -142,6 +154,13 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
     "/assets/app.js",
     async (_req, _ctx, res) => {
       await sendFile(res, join(staticDir, "app.js"), "text/javascript; charset=utf-8");
+    },
+    false,
+  );
+  router.get(
+    "/assets/iso.js",
+    async (_req, _ctx, res) => {
+      await sendFile(res, join(staticDir, "iso.js"), "text/javascript; charset=utf-8");
     },
     false,
   );
@@ -222,6 +241,26 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
           ? container.jwtIssuer.issue(ctx!.subject, ctx!.permissions, ctx!.organizationId)
           : "";
       sendHtml(res, 200, await renderGovernance(policyRows, webToken));
+    },
+    true,
+  );
+
+  router.get(
+    "/iso-app",
+    async (_req, ctx, res) => {
+      if (!hasPermission(ctx, "iso", "read")) {
+        sendHtml(
+          res,
+          403,
+          "<html><body><h1>403 Forbidden</h1><p>requires iso:read permission</p></body></html>",
+        );
+        return;
+      }
+      const webToken =
+        container.jwtIssuer !== undefined
+          ? container.jwtIssuer.issue(ctx!.subject, ctx!.permissions, ctx!.organizationId)
+          : "";
+      sendHtml(res, 200, await renderIsoPage(webToken));
     },
     true,
   );

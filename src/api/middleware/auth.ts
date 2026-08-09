@@ -40,9 +40,11 @@ export function createApiKey(
   permissions: readonly Permission[],
   store: ApiKeyStore,
   organizationId?: string,
+  keyIdOverride?: string,
+  secretOverride?: string,
 ): { key: string; secret: string } {
-  const keyId = randomBytes(16).toString("hex");
-  const secret = randomBytes(32).toString("hex");
+  const keyId = keyIdOverride ?? randomBytes(16).toString("hex");
+  const secret = secretOverride ?? randomBytes(32).toString("hex");
   const secretHash = computeSecretHash(keyId, secret);
 
   const record: ApiKeyRecord = {

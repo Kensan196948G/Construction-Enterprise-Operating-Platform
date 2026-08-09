@@ -6,8 +6,8 @@
     "registered_at": "2026-06-25",
     "phase_mode": "maintenance"
   },
-  "goal": "5 リポジトリ統合進行中 — P0 ソース統合（PR #22）+ L-02 ワークフローインスタンス + favicon（v0.8.3、319 テスト pass）。旧リポジトリ削除は全機能移行後の Y/N 判断",
-  "phase": "maintenance",
+  "goal": "Civil-Construction-IMS 統合（v0.11.0）— ISO 統合マネジメント + 連携先6システム連携基盤を実装。IMS 削除はユーザー Y/N 判断待ち",
+  "phase": "release",
   "release": {
     "v0_1_0_foundation": "release_ready",
     "v0_2_0_api_gateway": "release_ready",
@@ -19,12 +19,15 @@
     "production_deploy": "completed",
     "judged_by": "CTO",
     "judged_at": "2026-08-06"
+    ,
+    "v0_11_0_ims_absorption": "release_ready",
+    "v0_11_0_judged_at": "2026-08-09"
   },
   "kpi": {
     "success_rate_target": 0.9,
     "ci_success_rate": 1,
     "test_pass_rate": 1,
-    "test_count": 335,
+    "test_count": 398,
     "security_critical": 0,
     "security_high_resolved": 19,
     "blocker_count": 0
@@ -57,11 +60,17 @@
     "M14_security_hardening_r2": "completed",
     "M15_ci_pnpm_fix": "completed",
     "M16_coderabbit_all16_fixes": "completed",
+    "M17_ims_absorption": "completed",
+    "M18_linked_integrations": "completed",
     "v0_6_0_production_readiness": "completed",
     "v0_8_0_production_hardening": "completed",
     "v0_8_1_ssr_assets_fix": "completed"
   },
   "completed_issues": [
+    "v0.11.0: Civil-Construction-IMS 完全吸収 — ISO 9001/14001/45001/55001/19650・監査・是正・ISMS・BCP を iso_records + 統一 ISO API へ再構成（migration 025）",
+    "v0.11.0: IMS 互換エイリアス 32 系統（/quality/plans・/environment/aspects・/assets 等）",
+    "v0.11.0: 連携先6システム連携基盤 — webhook 受信・イベントキュー・再送・契約一覧（migration 026）",
+    "v0.11.0: IMS アーカイブ（git bundle・Issue 50・PR 37）・移行台帳・統合報告書・削除チェックリスト",
     "v0.6.0: version unification (src/version.ts + guard test, package.json/info/OpenAPI/UI/Docker 0.6.0)",
     "v0.6.0: LICENSE.md (Proprietary/UNLICENSED) + OpenAPI license correction",
     "v0.6.0: dependency audit clean (brace-expansion/js-yaml overrides) — 0 vulnerabilities",

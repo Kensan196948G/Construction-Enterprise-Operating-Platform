@@ -1,0 +1,26 @@
+{
+  "trust": {
+    "level": 1,
+    "score": 0.50,
+    "updated_at": "2026-05-31",
+    "reason": "New project — initial trust level. Will increase as CI passes and tests accumulate.",
+    "allowed_operations": [
+      "file_edit",
+      "test_execution",
+      "issue_creation",
+      "draft_pr"
+    ],
+    "restricted_operations": [
+      "auto_merge",
+      "staging_deploy",
+      "production_deploy"
+    ]
+  },
+  "history": [
+    {
+      "date": "2026-05-31",
+      "score": 0.50,
+      "event": "Project initialized"
+    }
+  ]
+}

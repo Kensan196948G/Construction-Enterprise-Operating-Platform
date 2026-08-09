@@ -1,6 +1,6 @@
 {
   "name": "construction-eop",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "private": true,
   "license": "UNLICENSED",
   "description": "Construction Enterprise Operating Platform - governance, portal, field OS, and AI governance coordination layer",
@@ -20,6 +20,7 @@
     "build": "tsc -p tsconfig.build.json",
     "test": "node --test --experimental-strip-types \"src/**/*.test.ts\" \"scripts/**/*.test.ts\"",
     "test:watch": "node --test --watch --experimental-strip-types \"src/**/*.test.ts\" \"scripts/**/*.test.ts\"",
+    "test:e2e": "playwright test",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.ts\" \"scripts/**/*.test.ts\" \"examples/**/*.ts\" \"*.json\" \"*.md\"",
@@ -31,7 +32,8 @@
     "openapi:check": "node --experimental-strip-types scripts/generate-openapi.ts --check",
     "favicon:gen": "node --experimental-strip-types scripts/generate-favicon.ts",
     "webui:unpack": "node --experimental-strip-types scripts/webui-unpack.ts",
-    "webui:serve": "node --experimental-strip-types scripts/webui-serve.ts"
+    "webui:serve": "node --experimental-strip-types scripts/webui-serve.ts",
+    "integration:dispatch": "node --experimental-strip-types scripts/run-integration-dispatcher.ts"
   },
   "pnpm": {
     "overrides": {
@@ -42,6 +44,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
+    "@playwright/test": "^1.62.1",
     "@types/node": "^22.0.0",
     "eslint": "^9.0.0",
     "prettier": "^3.3.0",

@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ISO 統合マネジメントコンソール — 建設企業プラットフォーム</title>
+    <link rel="icon" href="/api/assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/api/assets/app.css" />
+  </head>
+  <body>
+    <input type="hidden" id="ceopToken" value="{{API_TOKEN}}" />
+
+    <header class="header">
+      <button class="hamburger" id="hamburgerBtn" aria-label="メニューを開閉">☰</button>
+      <a class="header__logo" href="/iso-app">
+        <span class="header__logo-mark">📋</span>
+        <span>
+          <span class="header__title">ISO 統合マネジメント</span>
+          <span class="header__subtitle">ISO 9001 / 14001 / 45001 / 55001 / 19650</span>
+        </span>
+      </a>
+      <div class="header__spacer"></div>
+      <span class="header__version">v{{VERSION}}</span>
+      <button class="btn-icon" id="refreshBtn">更新</button>
+    </header>
+
+    <div class="layout">
+      <nav class="sidebar" id="sidebar">
+        <div class="sidebar__section-label">ISO モジュール</div>
+        <a class="nav-item iso-tab active" data-tab="analytics" href="#analytics"
+          ><span class="nav-icon">📊</span> 分析ダッシュボード</a
+        >
+        <a class="nav-item iso-tab" data-tab="quality" href="#quality"
+          ><span class="nav-icon">✅</span> 品質 9001</a
+        >
+        <a class="nav-item iso-tab" data-tab="environment" href="#environment"
+          ><span class="nav-icon">🌿</span> 環境 14001</a
+        >
+        <a class="nav-item iso-tab" data-tab="safety" href="#safety"
+          ><span class="nav-icon">⛑️</span> 安全 45001</a
+        >
+        <a class="nav-item iso-tab" data-tab="assets" href="#assets"
+          ><span class="nav-icon">🏛️</span> 資産 55001</a
+        >
+        <a class="nav-item iso-tab" data-tab="bim" href="#bim"
+          ><span class="nav-icon">🏗️</span> BIM/CIM 19650</a
+        >
+        <a class="nav-item iso-tab" data-tab="audit" href="#audit"
+          ><span class="nav-icon">📋</span> 監査・是正</a
+        >
+        <a class="nav-item iso-tab" data-tab="isms" href="#isms"
+          ><span class="nav-icon">🔐</span> ISMS 27001</a
+        >
+        <a class="nav-item iso-tab" data-tab="bcp" href="#bcp"
+          ><span class="nav-icon">🔄</span> 事業継続 BCP</a
+        >
+        <a class="nav-item iso-tab" data-tab="integrations" href="#integrations"
+          ><span class="nav-icon">🔗</span> 連携先システム</a
+        >
+        <hr class="sidebar__divider" />
+        <a class="nav-item" href="/dashboard"><span class="nav-icon">📊</span> ダッシュボード</a>
+        <a class="nav-item" href="/portal"><span class="nav-icon">🏛️</span> ポータル</a>
+      </nav>
+
+      <main class="main" id="mainContent">
+        <div class="page-header">
+          <div class="page-eyebrow">Integrated Management System</div>
+          <h1 class="page-title" id="pageTitle">ISO 分析ダッシュボード</h1>
+          <p class="page-subtitle" id="pageSubtitle">
+            Civil-Construction-IMS 吸収 — 日常業務をそのまま ISO 運用に
+          </p>
+        </div>
+
+        <div class="iso-toolbar" id="isoToolbar" hidden>
+          <select id="isoKindSelect" class="input" aria-label="レコード種別"></select>
+          <input
+            id="isoSearch"
+            class="input"
+            type="search"
+            placeholder="タイトル・番号・内容で検索"
+            aria-label="検索"
+          />
+          <select id="isoStatusFilter" class="input" aria-label="ステータス絞り込み">
+            <option value="">全ステータス</option>
+          </select>
+          <button class="btn" id="isoNewBtn" type="button">＋ 新規作成</button>
+          <button class="btn" id="isoReloadBtn" type="button">再読込</button>
+        </div>
+
+        <section class="section" id="analyticsSection">
+          <div class="section-title">規格別レコード件数</div>
+          <div class="stats-grid" id="isoAnalyticsGrid"></div>
+          <div class="section-title" style="margin-top: 20px">ステータス別件数</div>
+          <div class="card" id="isoStatusGrid"></div>
+        </section>
+
+        <section class="section" id="recordsSection" hidden>
+          <div class="section-title" id="recordsTitle">レコード一覧</div>
+          <div class="card">
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>番号</th>
+                    <th>タイトル</th>
+                    <th>ステータス</th>
+                    <th>プロジェクト</th>
+                    <th>更新日時</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="isoTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="integrationsSection" hidden>
+          <div class="section-title">連携先6システム契約定義</div>
+          <div class="card" id="contractsBody"></div>
+        </section>
+      </main>
+    </div>
+
+    <div class="modal-overlay" id="isoDialogOverlay" hidden>
+      <div class="modal">
+        <div class="modal__title" id="isoDialogTitle">新規作成</div>
+        <div class="modal__body">
+          <label class="field-label" for="isoFormKind">種別</label>
+          <select id="isoFormKind" class="input"></select>
+          <label class="field-label" for="isoFormTitle">タイトル（必須）</label>
+          <input id="isoFormTitle" class="input" type="text" />
+          <label class="field-label" for="isoFormNumber">番号</label>
+          <input id="isoFormNumber" class="input" type="text" />
+          <label class="field-label" for="isoFormProjectId">プロジェクト ID</label>
+          <input id="isoFormProjectId" class="input" type="text" />
+          <label class="field-label" for="isoFormParentId">親レコード ID</label>
+          <input id="isoFormParentId" class="input" type="text" />
+          <label class="field-label" for="isoFormStatus">ステータス</label>
+          <select id="isoFormStatus" class="input"></select>
+          <label class="field-label" for="isoFormPayload">業務項目（JSON）</label>
+          <textarea id="isoFormPayload" class="input iso-json-input" rows="8"></textarea>
+          <p class="iso-help">
+            例: {"assetType":"structure","name":"橋梁A"}。種別に必要な項目は保存時に検証されます。
+          </p>
+        </div>
+        <div class="modal__actions">
+          <button class="btn" id="isoDialogCancel" type="button">キャンセル</button>
+          <button class="btn btn-primary" id="isoDialogSave" type="button">保存</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="isoActionOverlay" hidden>
+      <div class="modal">
+        <div class="modal__title">状態遷移（承認・公開・完了・取消）</div>
+        <div class="modal__body">
+          <label class="field-label" for="isoActionSelect">アクション</label>
+          <select id="isoActionSelect" class="input">
+            <option value="submit-review">レビュー提出 (submit-review)</option>
+            <option value="approve">承認 (approve)</option>
+            <option value="reject">却下 (reject)</option>
+            <option value="return">差戻し (return)</option>
+            <option value="publish">公開 (publish)</option>
+            <option value="withdraw">撤回 (withdraw)</option>
+            <option value="start">着手 (start)</option>
+            <option value="close">完了・是正クローズ (close)</option>
+            <option value="complete">完了 (complete)</option>
+            <option value="cancel">取消 (cancel)</option>
+          </select>
+        </div>
+        <div class="modal__actions">
+          <button class="btn" id="isoActionCancel" type="button">キャンセル</button>
+          <button class="btn btn-primary" id="isoActionApply" type="button">実行</button>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <span>建設企業オペレーティングプラットフォーム v{{VERSION}}</span>
+      <span class="footer__right">ISO 統合マネジメントコンソール</span>
+    </footer>
+
+    <div class="toast-container" id="toastContainer"></div>
+    <script src="/api/assets/iso.js"></script>
+  </body>
+</html>

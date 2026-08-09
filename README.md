@@ -4,7 +4,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-22.13+-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Zero Runtime Deps](https://img.shields.io/badge/runtime%20deps-zero-brightgreen)](package.json)
 [![CI](https://img.shields.io/github/actions/workflow/status/Kensan196948G/Construction-Enterprise-Operating-Platform/ci.yml?label=CI&logo=github)](/.github/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-335%20pass-brightgreen)](src/)
+[![Tests](https://img.shields.io/badge/tests-398%20pass-brightgreen)](src/)
 [![Security](https://img.shields.io/badge/security-hardened-blue)](src/api/middleware/auth.ts)
 [![License](https://img.shields.io/badge/license-proprietary-lightgrey)](LICENSE.md)
 
@@ -15,18 +15,18 @@
 
 ## 📌 概要
 
-| 項目         | 内容                                                                                                                                                                                            |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 役割         | 統制・ガバナンス・共通ワークフローの調整基盤                                                                                                                                                    |
-| バージョン   | v0.8.3（WebUI ホスティング: デザインバンドル 100% 適用配信・systemd 常駐・Neon アクセスログ。基盤: SQLite 永続化・JWT 認証・監査証跡のテナント分離・CRUD/Workflow/WorkflowInstance/Policy API） |
-| 言語         | TypeScript 5.7（strict / `noUncheckedIndexedAccess` / 例外を投げない設計）                                                                                                                      |
-| ランタイム   | Node.js v22.13+（ネイティブ TS 実行・ビルトインテストランナー）                                                                                                                                 |
-| HTTP サーバ  | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                                                                                                                                        |
-| 依存方針     | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）                                                                                                                |
-| パッケージ   | pnpm 10.26.2                                                                                                                                                                                    |
-| テスト       | 382 tests pass（node:test ビルトインランナー）                                                                                                                                                  |
-| コンテナ     | Docker multi-stage build（non-root・HEALTHCHECK 付き）                                                                                                                                          |
-| セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限                                                                                                               |
+| 項目         | 内容                                                                                                                                                                |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 役割         | 統制・ガバナンス・共通ワークフローの調整基盤                                                                                                                        |
+| バージョン   | v0.11.0（v0.10.0 + Civil-Construction-IMS 完全吸収: ISO 9001/14001/45001/55001/19650・監査・是正・ISMS・BCP の統一 ISO API + 連携先6システム Webhook/イベント基盤） |
+| 言語         | TypeScript 5.7（strict / `noUncheckedIndexedAccess` / 例外を投げない設計）                                                                                          |
+| ランタイム   | Node.js v22.13+（ネイティブ TS 実行・ビルトインテストランナー）                                                                                                     |
+| HTTP サーバ  | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                                                                                                            |
+| 依存方針     | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）                                                                                    |
+| パッケージ   | pnpm 10.26.2                                                                                                                                                        |
+| テスト       | 398 tests pass（node:test ビルトインランナー）                                                                                                                      |
+| コンテナ     | Docker multi-stage build（non-root・HEALTHCHECK 付き）                                                                                                              |
+| セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限                                                                                   |
 
 ---
 
@@ -614,7 +614,7 @@ bash scripts/webui-deploy.sh
 ## 🧪 テスト実行
 
 ```bash
-# 全テスト実行（335 tests）
+# 全テスト実行（398 tests）
 pnpm run test
 
 # typecheck + lint + test 一括
@@ -1216,9 +1216,57 @@ migration `022`（compliance_checks）・`023`（legal_evidence）・`024`（not
 
 ---
 
+## 📋 ISO 統合マネジメント API（v0.11.0 / Civil-Construction-IMS 吸収）
+
+Civil-Construction-IMS（ISO 9001/14001/45001/55001/19650・監査・是正・ISMS・BCP）を
+CEOP の認証・認可・監査・テナント境界に再構成して統合しました。全 ISO レコードは
+kind 判別型の統一ストア（`iso_records`、migration 025）で管理され、IMS 互換エイリアス
+（`/api/v1/quality/plans`・`/api/v1/environment/aspects`・`/api/v1/assets` 等 32 系統）も提供します。
+
+```text
+GET/POST         /api/v1/iso                   全 ISO レコード（kind/projectId/status/parentId/q 検索）
+GET/PUT/DELETE   /api/v1/iso/:id               個別レコード
+POST             /api/v1/iso/:id/action        状態遷移（submit-review/approve/reject/return/publish/withdraw/start/close/complete/cancel）
+GET              /api/v1/iso/analytics         ISO コンプライアンス分析
+GET              /api/v1/analytics/iso-compliance / safety-kpi
+GET              /iso                          ISO ランディングページ
+GET              /iso-app                      ISO 管理コンソール（全モジュール CRUD・状態遷移・分析・連携）
+```
+
+移行台帳・機能インベントリ: `docs/integration/IMS_MIGRATION_LEDGER.md` /
+`docs/integration/IMS_FEATURE_INVENTORY.md`。旧リポジトリの Git 履歴・Issue/PR は
+`reports/ims-archive/` に保存済み。
+
+### AI ガバナンス拡張（v0.11.0）
+
+`ai-actions` API に本番運用に必要な統制項目を追加しました。
+
+- `evidenceRefs` — 根拠表示のための出典参照（プロンプト実体は SHA-256 ハッシュのみ保存）
+- `inputRetentionDays` — 入力データ保持日数（0 = 保持しない）
+- `piiSensitive` — 個人情報入力の明示（実体保存禁止）
+- `wrongAnswerMitigation` — 誤回答対策（フォールバック・人的確認手順）
+- `POST /api/v1/ai-actions/:id/status` — 利用停止手段（operational / limited / stopped、`ai:approve` 必須・監査記録）
+
+## 🔗 連携先6システム Integration API（v0.11.0）
+
+連携先は吸収せず、専門性・独立性を維持したまま疎結合で接続します。CEOP は
+Webhook 受信・イベントキュー・共有シークレット認証・冪等性・再試行・監査を一元提供します。
+
+```text
+POST /api/v1/integrations/webhooks/:system   受信（4d-planner / dx-idea / site-management / ai-build / portfolio-atlas / photo-logger）
+GET  /api/v1/integrations/events             イベント一覧
+POST /api/v1/integrations/events             outbound イベント作成
+POST /api/v1/integrations/events/:id/retry   再送（契約タイムアウト・バックオフ・冪等性ヘッダ付き）
+GET  /api/v1/integrations/contracts          契約定義一覧（version/auth/timeout/retry/idempotency）
+```
+
+契約仕様: `docs/integration/LINKED_INTEGRATION_SPEC.md`。
+
+---
+
 ## 🏛️ Portal（P4）
 
-`GET /portal` で CEOP の全モジュール（ダッシュボード / ガバナンス / プラットフォーム情報 / メトリクス）を
+`GET /portal` で CEOP の全モジュール（ダッシュボード / ガバナンス / ISO 統合マネジメント / プラットフォーム情報 / メトリクス）を
 一覧するポータル入口を提供します（未認証・loopback 前提。公開面は Tunnel ingress で制御）。
 
 ## 📈 Prometheus Metrics（P4）
