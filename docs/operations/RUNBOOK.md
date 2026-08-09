@@ -340,3 +340,25 @@ DNS・証明書・Tunnel 自体（UUID / credentials）には一切触れない�
 - 実機導入: `docker compose --profile monitoring up -d`（`GRAFANA_ADMIN_PASSWORD` 必須・host network・loopback 19090/13001）。
 - Tunnel ingress は `/metrics` を公開しないよう分割すること（`/api/*` のみ API へ）。
 - 確認: `curl http://127.0.0.1:19090/api/v1/targets`・Grafana `http://127.0.0.1:13001`（CEOP Platform ダッシュボード）。
+
+## 統合イベント自動配送（v0.11.1）
+
+`scripts/run-integration-dispatcher.ts` が pending/retrying の outbound 連携イベントを
+契約ポリシー（タイムアウト・再試行・冪等性ヘッダ）で自動送信します。
+systemd 資産は `deploy/systemd/ceop-integration-dispatcher.{service,timer}`。
+
+```bash
+sudo cp deploy/systemd/ceop-integration-dispatcher.service deploy/systemd/ceop-integration-dispatcher.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now ceop-integration-dispatcher.timer
+systemctl list-timers ceop-integration-dispatcher.timer
+```
+
+手動実行:
+```bash
+docker run --rm -u 0 -v /home/kensan/.ceop/data:/data --env-file /home/kensan/.ceop/.env \
+  ceop-platform:current node --experimental-strip-types scripts/run-integration-dispatcher.ts --db /data/ceop.db
+```
+
+送信先 URL は `CEOP_INTEGRATION_URL_<SYSTEM>`、共有シークレットは
+`CEOP_INTEGRATION_SHARED_SECRET`（`X-Integration-Token` と `X-CEOP-Signature`（HMAC-SHA256）で受信検証）。

@@ -6,6 +6,25 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-08-10
+
+### Added
+
+- **Webhook HMAC 署名検証** — `CEOP_INTEGRATION_SHARED_SECRET` 設定時に
+  `X-CEOP-Signature`（HMAC-SHA256、raw body）を必須化。トークン検査と二重化。
+- **モニタリング拡張** — `/metrics` に `ceop_iso_records_total` と
+  `ceop_integration_events_pending` を追加。
+- **アクセシビリティ** — ISO コンソールのダイアログに `role=dialog`・`aria-modal`・
+  ESC クローズ・フォーカス移動、トーストに `aria-live=polite`。
+- **運用資産** — `deploy/systemd/ceop-integration-dispatcher.{service,timer}`
+  （5 分間隔のイベント自動配送）。
+- **帳票（Excel/CSV 書き出し）** — 工事日報と ISO レコードの CSV エクスポート
+  （`/daily-reports/export.csv`・`/iso/export.csv`、式インジェクション対策済み）。
+- **PWA 対応** — `/manifest.webmanifest` を公開し全 SSR ページへリンク。
+- **復旧検証ツール** — `scripts/verify-restore.ts`（SQLite 整合性・migration・必須テーブル検証）。
+- **性能スモーク** — 100 並列リクエストの応答検証テストを追加。
+- テスト 9 件追加（HMAC・メトリクス・テンプレート・CSV・負荷・復旧、計 407）。
+
 ## [0.11.0] - 2026-08-09
 
 ### Added

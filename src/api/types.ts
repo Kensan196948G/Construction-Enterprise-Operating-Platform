@@ -25,6 +25,8 @@ export interface ApiRequest {
   readonly params: Readonly<Record<string, string>>;
   readonly query: Readonly<Record<string, string>>;
   readonly body?: unknown;
+  /** Raw UTF-8 request body (POST/PUT/PATCH), used for signature verification. */
+  readonly rawBody?: string;
   /**
    * TCP-layer remote address (`socket.remoteAddress`).
    * Populated by the router; use this for rate-limiting — it cannot be

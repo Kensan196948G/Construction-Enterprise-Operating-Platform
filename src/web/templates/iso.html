@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ISO 統合マネジメントコンソール — 建設企業プラットフォーム</title>
     <link rel="icon" href="/api/assets/favicon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/api/assets/manifest.webmanifest" />
     <link rel="stylesheet" href="/api/assets/app.css" />
   </head>
   <body>
@@ -122,9 +123,16 @@
       </main>
     </div>
 
-    <div class="modal-overlay" id="isoDialogOverlay" hidden>
+    <div
+      class="modal-overlay"
+      id="isoDialogOverlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="isoDialogTitle"
+      hidden
+    >
       <div class="modal">
-        <div class="modal__title" id="isoDialogTitle">新規作成</div>
+        <div class="modal__title" id="isoDialogTitle" tabindex="-1">新規作成</div>
         <div class="modal__body">
           <label class="field-label" for="isoFormKind">種別</label>
           <select id="isoFormKind" class="input"></select>
@@ -151,7 +159,14 @@
       </div>
     </div>
 
-    <div class="modal-overlay" id="isoActionOverlay" hidden>
+    <div
+      class="modal-overlay"
+      id="isoActionOverlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label="状態遷移"
+      hidden
+    >
       <div class="modal">
         <div class="modal__title">状態遷移（承認・公開・完了・取消）</div>
         <div class="modal__body">
@@ -181,7 +196,7 @@
       <span class="footer__right">ISO 統合マネジメントコンソール</span>
     </footer>
 
-    <div class="toast-container" id="toastContainer"></div>
+    <div class="toast-container" id="toastContainer" aria-live="polite"></div>
     <script src="/api/assets/iso.js"></script>
   </body>
 </html>

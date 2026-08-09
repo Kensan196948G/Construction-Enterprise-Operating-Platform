@@ -35,6 +35,8 @@ export function registerMonitoringRoutes(router: Router, container: AppContainer
       const notifications = await repositories.notificationDeliveries.findAll();
       const aiActions = await repositories.aiActions.findAll();
       const workflowInstances = await repositories.workflowInstances.findAll();
+      const isoRecords = await repositories.isoRecords.findAll();
+      const integrationEvents = await repositories.integrationEvents.findAll();
       const gauges = {
         ceop_audit_log_size: container.auditLog.size,
         ceop_notifications_pending: notifications.filter(
@@ -44,6 +46,10 @@ export function registerMonitoringRoutes(router: Router, container: AppContainer
         ceop_ai_actions_pending: aiActions.filter((a) => a.status === "pending").length,
         ceop_workflow_instances_pending: workflowInstances.filter((w) => w.status === "pending")
           .length,
+        ceop_iso_records_total: isoRecords.length,
+        ceop_integration_events_pending: integrationEvents.filter(
+          (e) => e.direction === "outbound" && (e.status === "pending" || e.status === "retrying"),
+        ).length,
         ceop_gateway_services: container.gatewayServices?.length ?? 0,
       };
       const body = renderMetrics(gauges);

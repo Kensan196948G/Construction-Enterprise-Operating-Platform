@@ -130,6 +130,13 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
     false,
   );
   router.get(
+    "/api/assets/manifest.webmanifest",
+    async (_req, _ctx, res) => {
+      await sendFile(res, join(staticDir, "manifest.webmanifest"), "application/manifest+json");
+    },
+    false,
+  );
+  router.get(
     "/api/assets/favicon.svg",
     async (_req, _ctx, res) => {
       await sendFile(res, join(staticDir, "favicon.svg"), "image/svg+xml; charset=utf-8");
@@ -161,6 +168,13 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
     "/assets/iso.js",
     async (_req, _ctx, res) => {
       await sendFile(res, join(staticDir, "iso.js"), "text/javascript; charset=utf-8");
+    },
+    false,
+  );
+  router.get(
+    "/assets/manifest.webmanifest",
+    async (_req, _ctx, res) => {
+      await sendFile(res, join(staticDir, "manifest.webmanifest"), "application/manifest+json");
     },
     false,
   );

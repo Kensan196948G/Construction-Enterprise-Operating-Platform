@@ -324,6 +324,7 @@
       formKind.value = record.kind;
     }
     document.getElementById("isoDialogOverlay").hidden = false;
+    document.getElementById("isoDialogTitle").focus();
   }
 
   function populateStatusOptions(selected) {
@@ -447,6 +448,15 @@
             .catch((e) => showToast(`削除に失敗: ${e.message}`, "error"));
         }
       }
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      const dialog = document.getElementById("isoDialogOverlay");
+      const action = document.getElementById("isoActionOverlay");
+      if (!dialog.hidden) dialog.hidden = true;
+      if (!action.hidden) action.hidden = true;
+      state.editingId = null;
+      state.actionId = null;
     });
     const initial = window.location.hash.replace("#", "");
     setActiveTab(DOMAINS.some((d) => d.id === initial) ? initial : "analytics");

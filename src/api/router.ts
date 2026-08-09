@@ -256,9 +256,12 @@ export class Router {
     }
 
     let body: unknown;
+    let rawBody: string | undefined;
     if (method === "POST" || method === "PUT" || method === "PATCH") {
       try {
-        body = await readJsonBody(req);
+        const parsed = await readJsonBody(req);
+        body = parsed.body;
+        rawBody = parsed.raw;
       } catch (e) {
         const isTooBig = e instanceof Error && e.message === "request body too large";
         const status = isTooBig ? 413 : 400;
@@ -279,6 +282,7 @@ export class Router {
       params: matched.params,
       query,
       ...(body !== undefined ? { body } : {}),
+      ...(rawBody !== undefined ? { rawBody } : {}),
       ...(req.socket?.remoteAddress !== undefined
         ? { remoteAddress: clientIpFromRequest(req) }
         : {}),
@@ -305,13 +309,13 @@ export class Router {
 const MAX_BODY_BYTES = 1 * 1024 * 1024; // 1 MiB — guard against heap-exhaustion DoS
 
 /** Buffer the request body and JSON-parse it; empty bodies resolve to `undefined`. */
-function readJsonBody(req: IncomingMessage): Promise<unknown> {
-  return new Promise<unknown>((resolve, reject) => {
+function readJsonBody(req: IncomingMessage): Promise<{ body: unknown; raw: string }> {
+  return new Promise<{ body: unknown; raw: string }>((resolve, reject) => {
     const chunks: Buffer[] = [];
     let totalBytes = 0;
     let settled = false;
 
-    const succeed = (value: unknown): void => {
+    const succeed = (value: { body: unknown; raw: string }): void => {
       if (!settled) {
         settled = true;
         resolve(value);
@@ -338,11 +342,11 @@ function readJsonBody(req: IncomingMessage): Promise<unknown> {
     req.on("end", () => {
       const raw = Buffer.concat(chunks).toString("utf-8").trim();
       if (raw.length === 0) {
-        succeed(undefined);
+        succeed({ body: undefined, raw });
         return;
       }
       try {
-        succeed(JSON.parse(raw));
+        succeed({ body: JSON.parse(raw) as unknown, raw });
       } catch (e) {
         fail(e instanceof Error ? e : new Error(String(e)));
       }

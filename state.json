@@ -30,7 +30,7 @@
     "success_rate_target": 0.9,
     "ci_success_rate": 1,
     "test_pass_rate": 1,
-    "test_count": 398,
+    "test_count": 407,
     "security_critical": 0,
     "security_high_resolved": 19,
     "blocker_count": 0
@@ -76,6 +76,8 @@
     "v0.11.0: IMS アーカイブ（git bundle・Issue 50・PR 37）・移行台帳・統合報告書・削除チェックリスト",
     "v0.11.0: 本番デプロイ（migration 025/026・コンテナ差し替え・スモーク・復元実演・Tunnel 経路更新）",
     "v0.11.0: Civil-Construction-IMS 削除（ユーザー Y 承認・ミラー退避・404 確認）",
+    "v0.11.1: Webhook HMAC 署名検証・ISO/連携メトリクス・a11y・配送 systemd（PR #42）",
+    "2026-08-10: 統合評価・改善報告書（18 カテゴリ採点・代替率 52.5%→57.5%・ロードマップ）",
     "v0.6.0: version unification (src/version.ts + guard test, package.json/info/OpenAPI/UI/Docker 0.6.0)",
     "v0.6.0: LICENSE.md (Proprietary/UNLICENSED) + OpenAPI license correction",
     "v0.6.0: dependency audit clean (brace-expansion/js-yaml overrides) — 0 vulnerabilities",

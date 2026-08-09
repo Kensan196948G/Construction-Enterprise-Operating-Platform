@@ -1,0 +1,16 @@
+{
+  "name": "建設企業オペレーティングプラットフォーム",
+  "short_name": "CEOP",
+  "description": "ガバナンス・業務ポータル・フィールドOS・AIガバナンスの統合基盤",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#f4f6fa",
+  "theme_color": "#1e3a8a",
+  "icons": [
+    {
+      "src": "/api/assets/favicon-48.png",
+      "sizes": "48x48",
+      "type": "image/png"
+    }
+  ]
+}

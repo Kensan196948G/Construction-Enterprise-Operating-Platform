@@ -72,6 +72,7 @@
 | 21:5x | Tunnel 経路に /iso・/iso-app・/portal 追加・公開確認（/iso 200・/iso-app 401） | ✅ |
 | 21:5x | 連携先実 URL 特定・設定（4D/Idea/AI-Build/Atlas/現場LAN）・到達性確認 | ✅ |
 | 21:5x | Civil-Construction-IMS 削除（ミラー退避 → `gh repo delete` → 404 確認） | ✅ |
+| 22:0x | v0.11.1 検証デプロイ（本番外 3121・本番 DB コピー）スモーク: version/health/CSV/manifest/HMAC 全 PASS | ✅ |
 | 21:1x | データ移行・復旧実演（import 3 件 → backup → delete → restore 3 件） | ✅ |
 | 21:1x | `pnpm run verify` 398/398・parity 27/27・build・audit 0 | ✅ |
 | 21:0x | PR `feat/ims-integration-v0.11.0`（#40）CI 全ジョブ成功 | ✅ |
