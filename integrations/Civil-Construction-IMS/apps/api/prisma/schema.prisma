@@ -1,0 +1,1368 @@
+// Civil Construction IMS - Prisma Schema
+// ISO 9001 / 14001 / 45001 / 55001 / 19650 Integrated Management Platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// COMMON: Organizations, Users, Roles
+// ============================================================
+
+model Organization {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String
+  nameKana    String?
+  address     String?
+  phone       String?
+  parentId    String?
+  parent      Organization?  @relation("OrgHierarchy", fields: [parentId], references: [id])
+  children    Organization[] @relation("OrgHierarchy")
+  departments Department[]
+  projects    Project[]
+  users       User[]
+  assets      Asset[]
+  legalRequirements LegalRequirement[]
+  wasteRecords WasteRecord[]
+  nearMisses            NearMiss[]
+  safetyEducations      SafetyEducation[]
+  hazardIdentifications HazardIdentification[]
+  safetyInspections     SafetyInspection[]
+  safetyIncidents       SafetyIncident[]
+  toolboxTalks          ToolboxTalk[]
+  bimEirs               BimEir[]
+  bimBeps               BimBep[]
+  bimContainers         BimInformationContainer[]
+  bimCoordinationIssues BimCoordinationIssue[]
+  ismsAssets            IsmsAsset[]
+  ismsRiskAssessments   IsmsRiskAssessment[]
+  ismsIncidents         IsmsIncident[]
+  bcpPlans              BcpPlan[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  @@map("organizations")
+}
+
+model Department {
+  id             String       @id @default(uuid())
+  code           String
+  name           String
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  users          User[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+
+  @@unique([organizationId, code])
+  @@map("departments")
+}
+
+model User {
+  id             String     @id @default(uuid())
+  email          String     @unique
+  displayName    String
+  employeeNo     String?
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  departmentId   String?
+  department     Department?  @relation(fields: [departmentId], references: [id])
+  roles          UserRole[]
+  externalId     String?    // Entra ID object ID
+  passwordHash   String?    // Local dev auth only — production uses OIDC
+  isActive       Boolean    @default(true)
+  lastLoginAt    DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  deletedAt      DateTime?
+
+  // Relations as creator/approver
+  createdDocuments     Document[]         @relation("DocumentCreator")
+  workflowRequests     WorkflowRequest[]  @relation("WorkflowRequester")
+  workflowApprovals    WorkflowAction[]   @relation("WorkflowActor")
+  auditTrails          AuditTrail[]       @relation("AuditActor")
+  refreshTokens        RefreshToken[]
+  safetyInspections    SafetyInspection[] @relation("SafetyInspector")
+
+  @@map("users")
+}
+
+// Refresh token rotation store (C-3 security fix)
+model RefreshToken {
+  id          String    @id @default(uuid())
+  tokenHash   String    @unique   // bcrypt hash of the opaque token
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  replacedById String?  // ID of the successor token (for rotation chain)
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime  @default(now())
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model Role {
+  id          String     @id @default(uuid())
+  code        String     @unique
+  name        String
+  description String?
+  permissions RolePermission[]
+  userRoles   UserRole[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String           @id @default(uuid())
+  resource    String           // e.g. "document", "audit", "quality"
+  action      String           // e.g. "read", "create", "approve"
+  roles       RolePermission[]
+
+  @@unique([resource, action])
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id])
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  userId    String
+  roleId    String
+  scope     String?   // Optional: project/department scope
+  user      User      @relation(fields: [userId], references: [id])
+  role      Role      @relation(fields: [roleId], references: [id])
+  grantedAt DateTime  @default(now())
+  grantedBy String?
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+// ============================================================
+// PROJECTS (Construction Projects / Work Orders)
+// ============================================================
+
+model Project {
+  id             String       @id @default(uuid())
+  code           String       @unique
+  name           String
+  clientName     String?
+  contractAmount Decimal?
+  startDate      DateTime?
+  endDate        DateTime?
+  status         ProjectStatus @default(PLANNING)
+  organizationId String
+  organization   Organization  @relation(fields: [organizationId], references: [id])
+  managerId      String?
+  description    String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  createdBy      String
+  versionNo      Int           @default(1)
+  deletedAt      DateTime?
+
+  // ISO module relations
+  qualityPlans         QualityPlan[]
+  environmentalAspects EnvironmentalAspect[]
+  hazardIdentifications HazardIdentification[]
+  safetyInspections    SafetyInspection[]
+  safetyIncidents      SafetyIncident[]
+  toolboxTalks         ToolboxTalk[]
+  bimBep               BimBep[]
+  bimEirs              BimEir[]
+  documents            Document[]
+  auditPlans           AuditPlan[]
+
+  @@map("projects")
+}
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  SUSPENDED
+  COMPLETED
+  CANCELLED
+}
+
+// ============================================================
+// DOCUMENT MANAGEMENT (F-02, F-03)
+// ============================================================
+
+model DocumentCategory {
+  id          String     @id @default(uuid())
+  code        String     @unique
+  name        String
+  isoStandard String?    // "9001", "14001", "45001", "55001", "19650"
+  parentId    String?
+  parent      DocumentCategory?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    DocumentCategory[] @relation("CategoryHierarchy")
+  documents   Document[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("document_categories")
+}
+
+model Document {
+  id           String           @id @default(uuid())
+  documentNo   String           @unique
+  title        String
+  categoryId   String
+  category     DocumentCategory @relation(fields: [categoryId], references: [id])
+  projectId    String?
+  project      Project?         @relation(fields: [projectId], references: [id])
+  status       DocumentStatus   @default(DRAFT)
+  currentVersion Int            @default(1)
+  versions     DocumentVersion[]
+  workflows    WorkflowRequest[]
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  createdBy    String
+  creator      User             @relation("DocumentCreator", fields: [createdBy], references: [id])
+  deletedAt    DateTime?
+
+  @@map("documents")
+}
+
+model DocumentVersion {
+  id          String         @id @default(uuid())
+  documentId  String
+  document    Document       @relation(fields: [documentId], references: [id])
+  versionNo   Int
+  title       String
+  content     String?        // text content or external reference
+  filePath    String?        // object storage path
+  fileSize    Int?
+  mimeType    String?
+  changeNote  String?
+  status      DocumentStatus @default(DRAFT)
+  approvedAt  DateTime?
+  approvedBy  String?
+  publishedAt DateTime?
+  createdAt   DateTime       @default(now())
+  createdBy   String
+
+  @@unique([documentId, versionNo])
+  @@map("document_versions")
+}
+
+enum DocumentStatus {
+  DRAFT
+  UNDER_REVIEW
+  APPROVED
+  PUBLISHED
+  SUPERSEDED
+  WITHDRAWN
+}
+
+// ============================================================
+// WORKFLOW ENGINE (F-03)
+// ============================================================
+
+model WorkflowDefinition {
+  id          String           @id @default(uuid())
+  code        String           @unique
+  name        String
+  targetType  String           // "document", "corrective_action", "audit", "bim_model"
+  steps       WorkflowStep[]
+  requests    WorkflowRequest[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  isActive    Boolean          @default(true)
+
+  @@map("workflow_definitions")
+}
+
+model WorkflowStep {
+  id           String             @id @default(uuid())
+  workflowId   String
+  workflow     WorkflowDefinition @relation(fields: [workflowId], references: [id])
+  stepOrder    Int
+  stepName     String
+  actionType   WorkflowActionType
+  roleCode     String?            // required role for this step
+  isDynamic    Boolean            @default(false)
+  timeoutDays  Int?
+
+  @@unique([workflowId, stepOrder])
+  @@map("workflow_steps")
+}
+
+model WorkflowRequest {
+  id           String             @id @default(uuid())
+  workflowId   String
+  workflow     WorkflowDefinition @relation(fields: [workflowId], references: [id])
+  targetType   String
+  targetId     String
+  documentId   String?
+  document     Document?          @relation(fields: [documentId], references: [id])
+  status       WorkflowStatus     @default(PENDING)
+  currentStep  Int                @default(1)
+  requesterId  String
+  requester    User               @relation("WorkflowRequester", fields: [requesterId], references: [id])
+  actions      WorkflowAction[]
+  comment      String?
+  dueDate      DateTime?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  completedAt  DateTime?
+
+  @@map("workflow_requests")
+}
+
+model WorkflowAction {
+  id         String             @id @default(uuid())
+  requestId  String
+  request    WorkflowRequest    @relation(fields: [requestId], references: [id])
+  stepOrder  Int
+  action     WorkflowActionType
+  actorId    String
+  actor      User               @relation("WorkflowActor", fields: [actorId], references: [id])
+  comment    String?
+  actedAt    DateTime           @default(now())
+
+  @@map("workflow_actions")
+}
+
+enum WorkflowStatus {
+  PENDING
+  IN_PROGRESS
+  APPROVED
+  REJECTED
+  WITHDRAWN
+  EXPIRED
+}
+
+enum WorkflowActionType {
+  SUBMIT
+  REVIEW
+  APPROVE
+  REJECT
+  RETURN
+  WITHDRAW
+  PUBLISH
+  ARCHIVE
+}
+
+// ============================================================
+// AUDIT TRAIL (F-15) - Core Compliance Feature
+// ============================================================
+
+model AuditTrail {
+  id         String   @id @default(uuid())
+  entityType String   // e.g. "Document", "WorkflowRequest"
+  entityId   String
+  action     String   // "CREATE", "UPDATE", "DELETE", "APPROVE"
+  actorId    String
+  actor      User     @relation("AuditActor", fields: [actorId], references: [id])
+  before     Json?    // state before change
+  after      Json?    // state after change
+  reason     String?
+  ipAddress  String?
+  userAgent  String?
+  occurredAt DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([actorId])
+  @@index([occurredAt])
+  @@map("audit_trails")
+}
+
+// ============================================================
+// CORRECTIVE ACTIONS / NONCONFORMITIES (F-05)
+// ============================================================
+
+model CorrectiveAction {
+  id           String               @id @default(uuid())
+  caNo         String               @unique
+  sourceType   String               // "nonconformity", "complaint", "audit_finding", "near_miss"
+  sourceId     String?
+  projectId    String?
+  title        String
+  description  String
+  isoStandard  String?
+  severity     Severity             @default(MEDIUM)
+  status       CorrectiveActionStatus @default(OPEN)
+  rootCause    String?
+  correctiveAction  String?
+  preventiveAction  String?
+  dueDate      DateTime?
+  closedAt     DateTime?
+  closedBy     String?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  createdBy    String
+  versionNo    Int                  @default(1)
+
+  @@map("corrective_actions")
+}
+
+enum CorrectiveActionStatus {
+  OPEN
+  IN_PROGRESS
+  PENDING_VERIFICATION
+  CLOSED
+  CANCELLED
+}
+
+enum Severity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+// ============================================================
+// INTERNAL AUDIT (F-06)
+// ============================================================
+
+model AuditPlan {
+  id           String      @id @default(uuid())
+  planNo       String      @unique
+  title        String
+  isoStandard  String      // "9001", "14001", "45001", "55001", "19650"
+  projectId    String?
+  project      Project?    @relation(fields: [projectId], references: [id])
+  scheduledAt  DateTime
+  status       AuditStatus @default(PLANNED)
+  auditorId    String?
+  auditeeId    String?
+  scope        String?
+  findings     AuditFinding[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  createdBy    String
+  completedAt  DateTime?
+
+  @@map("audit_plans")
+}
+
+model AuditFinding {
+  id            String      @id @default(uuid())
+  auditPlanId   String
+  auditPlan     AuditPlan   @relation(fields: [auditPlanId], references: [id])
+  findingType   FindingType
+  clauseRef     String?     // ISO clause reference e.g. "9001:8.5.2"
+  description   String
+  evidence      String?
+  severity      Severity    @default(MEDIUM)
+  status        FindingStatus @default(OPEN)
+  caId          String?     // linked corrective action
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  createdBy     String
+
+  @@map("audit_findings")
+}
+
+enum AuditStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum FindingType {
+  NONCONFORMITY
+  OBSERVATION
+  OPPORTUNITY_FOR_IMPROVEMENT
+  POSITIVE_FINDING
+}
+
+enum FindingStatus {
+  OPEN
+  IN_PROGRESS
+  CLOSED
+}
+
+// ============================================================
+// ISO 9001 - Quality Management (F-08)
+// ============================================================
+
+model QualityPlan {
+  id          String      @id @default(uuid())
+  planNo      String      @unique
+  projectId   String
+  project     Project     @relation(fields: [projectId], references: [id])
+  title       String
+  version     Int         @default(1)
+  status      DocumentStatus @default(DRAFT)
+  approvedAt  DateTime?
+  approvedBy  String?
+  inspections QualityInspection[]
+  nonconformities Nonconformity[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  createdBy   String
+
+  @@map("quality_plans")
+}
+
+model QualityInspection {
+  id            String      @id @default(uuid())
+  qualityPlanId String
+  qualityPlan   QualityPlan @relation(fields: [qualityPlanId], references: [id])
+  inspectionNo  String      @unique
+  inspectionType String
+  location      String?
+  scheduledAt   DateTime?
+  conductedAt   DateTime?
+  inspectorId   String?
+  result        InspectionResult?
+  remarks       String?
+  filePath      String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  createdBy     String
+
+  @@map("quality_inspections")
+}
+
+model Nonconformity {
+  id            String      @id @default(uuid())
+  ncNo          String      @unique
+  qualityPlanId String?
+  qualityPlan   QualityPlan? @relation(fields: [qualityPlanId], references: [id])
+  projectId     String?
+  title         String
+  description   String
+  detectedAt    DateTime    @default(now())
+  detectedBy    String
+  severity      Severity    @default(MEDIUM)
+  status        CorrectiveActionStatus @default(OPEN)
+  caId          String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@map("nonconformities")
+}
+
+enum InspectionResult {
+  PASS
+  FAIL
+  CONDITIONAL_PASS
+  PENDING
+}
+
+// ============================================================
+// ISO 14001 - Environmental Management (F-09)
+// ============================================================
+
+model EnvironmentalAspect {
+  id              String     @id @default(uuid())
+  projectId       String?
+  project         Project?   @relation(fields: [projectId], references: [id])
+  aspectName      String
+  activity        String?
+  environmentalImpact String?
+  significance    Significance @default(MINOR)
+  controlMeasure  String?
+  isLegallyRequired Boolean   @default(false)
+  reviewedAt      DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  createdBy       String
+
+  @@map("environmental_aspects")
+}
+
+model LegalRequirement {
+  id              String     @id @default(uuid())
+  organizationId  String     // org scope for IDOR protection
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  lawName         String
+  lawNo           String?
+  applicableScope String?
+  complianceNote  String?
+  lastEvaluatedAt DateTime?
+  complianceStatus ComplianceStatus @default(COMPLIANT)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  createdBy       String
+
+  @@index([organizationId])
+  @@map("legal_requirements")
+}
+
+model WasteRecord {
+  id             String     @id @default(uuid())
+  organizationId String     // org scope for IDOR protection
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  projectId      String?
+  wasteType      String     // industrial, construction by-product, etc.
+  quantity       Decimal
+  unit           String
+  disposalMethod String?
+  disposalDate   DateTime?
+  contractor     String?
+  manifestNo     String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  createdBy      String
+
+  @@index([organizationId])
+  @@map("waste_records")
+}
+
+enum Significance {
+  MAJOR
+  MODERATE
+  MINOR
+}
+
+enum ComplianceStatus {
+  COMPLIANT
+  PARTIALLY_COMPLIANT
+  NON_COMPLIANT
+  NOT_APPLICABLE
+}
+
+// ============================================================
+// ISO 45001 - Occupational Health & Safety (F-10)
+// ============================================================
+
+model HazardIdentification {
+  id              String       @id @default(uuid())
+  organizationId  String       // org scope for IDOR protection
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  projectId       String?
+  project         Project?     @relation(fields: [projectId], references: [id])
+  workActivity    String
+  hazardType      String
+  hazardDescription String
+  riskLevel       RiskLevel    @default(MEDIUM)
+  existingControls String?
+  additionalControls String?
+  residualRisk    RiskLevel?
+  reviewedAt      DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  createdBy       String
+
+  @@index([organizationId])
+  @@map("hazard_identifications")
+}
+
+// ISO 45001 §9.1 — Safety Inspection / Patrol (安全パトロール記録)
+model SafetyInspection {
+  id              String              @id @default(uuid())
+  organizationId  String              // org scope for IDOR protection
+  organization    Organization        @relation(fields: [organizationId], references: [id])
+  inspectionNo    String              // unique per organization (see @@unique below)
+  projectId       String?
+  project         Project?            @relation(fields: [projectId], references: [id])
+  inspectionType  String              // "daily", "weekly", "monthly", "special"
+  inspectedAt     DateTime
+  inspectorId     String
+  inspector       User                @relation("SafetyInspector", fields: [inspectorId], references: [id])
+  location        String?
+  checkItems      Json?               // JSON array of check items + results
+  findings        String?
+  correctiveItems SafetyInspectionItem[]
+  status          SafetyInspectionStatus @default(OPEN)
+  closedAt        DateTime?
+  closedBy        String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  createdBy       String
+
+  @@unique([organizationId, inspectionNo])
+  @@index([organizationId])
+  @@map("safety_inspections")
+}
+
+model SafetyInspectionItem {
+  id           String           @id @default(uuid())
+  inspectionId String
+  inspection   SafetyInspection @relation(fields: [inspectionId], references: [id])
+  itemNo       Int
+  description  String
+  result       String           // "OK", "NG", "N/A"
+  correctiveAction String?
+  dueDate      DateTime?
+  closedAt     DateTime?
+
+  @@map("safety_inspection_items")
+}
+
+// ISO 45001 §10.1 — Incident Investigation (事故・インシデント報告)
+model SafetyIncident {
+  id              String         @id @default(uuid())
+  organizationId  String         // org scope for IDOR protection
+  organization    Organization   @relation(fields: [organizationId], references: [id])
+  incidentNo      String         // unique per organization (see @@unique below)
+  projectId       String?
+  project         Project?       @relation(fields: [projectId], references: [id])
+  incidentType    IncidentType
+  occurredAt      DateTime
+  location        String?
+  description     String
+  injuredPerson   String?
+  injuryType      String?
+  lostDays        Int            @default(0)
+  severity        Severity       @default(MEDIUM)
+  immediateAction String?
+  rootCause       String?
+  preventiveMeasure String?
+  status          CorrectiveActionStatus @default(OPEN)
+  reportedBy      String
+  investigatedBy  String?
+  closedAt        DateTime?
+  closedBy        String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@unique([organizationId, incidentNo])
+  @@index([organizationId])
+  @@map("safety_incidents")
+}
+
+// ISO 45001 §8.2 — Toolbox Talk / KY Activity (危険予知活動)
+model ToolboxTalk {
+  id              String       @id @default(uuid())
+  organizationId  String       // org scope for IDOR protection
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  talkNo          String       // unique per organization (see @@unique below)
+  projectId       String?
+  project         Project?     @relation(fields: [projectId], references: [id])
+  conductedAt     DateTime
+  location        String?
+  topic           String
+  content         String?
+  leaderName      String?
+  participantCount Int         @default(0)
+  participants    ToolboxTalkParticipant[]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  createdBy       String
+
+  @@unique([organizationId, talkNo])
+  @@index([organizationId])
+  @@map("toolbox_talks")
+}
+
+model ToolboxTalkParticipant {
+  id          String       @id @default(uuid())
+  talkId      String
+  talk        ToolboxTalk  @relation(fields: [talkId], references: [id])
+  userId      String
+  signedAt    DateTime?
+
+  @@unique([talkId, userId])
+  @@map("toolbox_talk_participants")
+}
+
+enum SafetyInspectionStatus {
+  OPEN
+  IN_PROGRESS
+  CLOSED
+}
+
+enum IncidentType {
+  ACCIDENT           // 事故
+  NEAR_MISS_SERIOUS  // 重大ヒヤリハット
+  UNSAFE_CONDITION   // 不安全状態
+  UNSAFE_ACT         // 不安全行動
+  OCCUPATIONAL_DISEASE // 職業病
+}
+
+model NearMiss {
+  id             String     @id @default(uuid())
+  organizationId String     // org scope for IDOR protection
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  reportNo       String     @unique
+  projectId      String?
+  occurredAt     DateTime
+  location       String?
+  description    String
+  potentialSeverity Severity @default(MEDIUM)
+  immediateAction String?
+  rootCause      String?
+  preventiveMeasure String?
+  status         CorrectiveActionStatus @default(OPEN)
+  reportedBy     String
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@index([organizationId])
+  @@map("near_misses")
+}
+
+model SafetyEducation {
+  id             String       @id @default(uuid())
+  organizationId String       // org scope for IDOR protection
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  educationType  String       // "induction", "special", "periodic", "license"
+  title          String
+  projectId      String?
+  conductedAt    DateTime
+  instructorId   String?
+  durationHours  Decimal?
+  participants   SafetyEducationParticipant[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  createdBy      String
+
+  @@index([organizationId])
+  @@map("safety_educations")
+}
+
+model SafetyEducationParticipant {
+  id           String          @id @default(uuid())
+  educationId  String
+  education    SafetyEducation @relation(fields: [educationId], references: [id])
+  userId       String
+  attendedAt   DateTime?
+  result       String?
+
+  @@unique([educationId, userId])
+  @@map("safety_education_participants")
+}
+
+enum RiskLevel {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+  NEGLIGIBLE
+}
+
+// ============================================================
+// ISO 55001 - Asset Management (F-11)
+// ============================================================
+
+model Asset {
+  id               String       @id @default(uuid())
+  organizationId   String       // org scope for IDOR protection
+  organization     Organization @relation(fields: [organizationId], references: [id])
+  assetNo          String       // unique per organization (see @@unique)
+  name             String
+  assetType        String       // "structure", "equipment", "vehicle", "ict"
+  category         String?
+  location         String?
+  installDate      DateTime?
+  manufacturer     String?
+  model            String?
+  serialNo         String?
+  status           AssetStatus  @default(ACTIVE)
+  currentCondition AssetCondition @default(GOOD)
+  criticality      AssetCriticality @default(MEDIUM) // ISO 55001 §4.2 重要度
+  replacementYear  Int?
+  acquisitionCost  Decimal?     // 取得原価
+  lcCost           Decimal?     // ライフサイクルコスト
+  bimLinkId        String?      // link to BIM information container
+  maintenancePlans AssetMaintenancePlan[]
+  inspections      AssetInspection[]
+  riskAssessments  AssetRiskAssessment[]
+  disposals        AssetDisposal[]
+  handovers        AssetHandover[]
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  createdBy        String
+  versionNo        Int          @default(1)
+
+  @@unique([organizationId, assetNo])
+  @@index([organizationId])
+  @@map("assets")
+}
+
+model AssetMaintenancePlan {
+  id              String     @id @default(uuid())
+  assetId         String
+  asset           Asset      @relation(fields: [assetId], references: [id])
+  title           String
+  maintenanceType String     // "preventive", "corrective", "predictive", "condition-based"
+  intervalDays    Int?
+  nextDueDate     DateTime?
+  estimatedCost   Decimal?
+  actualCost      Decimal?   // 実績費用
+  status          MaintenancePlanStatus @default(ACTIVE)
+  completedAt     DateTime?
+  notes           String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  createdBy       String
+
+  @@map("asset_maintenance_plans")
+}
+
+model AssetInspection {
+  id                 String           @id @default(uuid())
+  assetId            String
+  asset              Asset            @relation(fields: [assetId], references: [id])
+  inspectionNo       String           // unique per asset (see @@unique)
+  conductedAt        DateTime
+  inspectorId        String?
+  result             InspectionResult
+  conditionAfter     AssetCondition?  // 点検後の状態評価
+  findings           String?
+  nextInspectionDate DateTime?
+  filePath           String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  createdBy          String
+
+  @@unique([assetId, inspectionNo])
+  @@map("asset_inspections")
+}
+
+// ISO 55001 §4.2 — Asset Risk Assessment (リスク評価)
+model AssetRiskAssessment {
+  id              String     @id @default(uuid())
+  assetId         String
+  asset           Asset      @relation(fields: [assetId], references: [id])
+  assessedAt      DateTime
+  assessedBy      String
+  failureProbability Int     // 1-5 scale
+  consequenceSeverity Int    // 1-5 scale
+  riskScore       Int        // computed: failureProbability × consequenceSeverity
+  riskLevel       RiskLevel
+  mitigationPlan  String?
+  nextAssessmentAt DateTime?
+  notes           String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  createdBy       String
+
+  @@map("asset_risk_assessments")
+}
+
+// ISO 55001 §6.2 — Asset Disposal / Retirement (廃棄・除却記録)
+model AssetDisposal {
+  id              String        @id @default(uuid())
+  assetId         String
+  asset           Asset         @relation(fields: [assetId], references: [id])
+  disposalNo      String        // unique per asset (see @@unique below)
+  disposalType    DisposalType
+  disposalDate    DateTime
+  reason          String
+  disposalValue   Decimal?      // 廃棄時評価額
+  contractor      String?       // 廃棄業者
+  environmentalNote String?     // 環境法令準拠事項
+  approvedBy      String?       // set server-side via approve endpoint, never by client
+  approvedAt      DateTime?     // set server-side via approve endpoint, never by client
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  createdBy       String
+
+  @@unique([assetId, disposalNo])
+  @@map("asset_disposals")
+}
+
+// ISO 55001 — Asset Handover (資産引渡し管理)
+model AssetHandover {
+  id              String         @id @default(uuid())
+  assetId         String
+  asset           Asset          @relation(fields: [assetId], references: [id])
+  handoverNo      String         // unique per asset (see @@unique below)
+  handoverDate    DateTime
+  handoverFrom    String         // 引渡し元 (組織/担当者)
+  handoverTo      String         // 引渡し先 (組織/担当者)
+  handoverType    String         // "transfer", "lease", "maintenance", "disposal"
+  status          HandoverStatus @default(NOT_INITIATED)
+  conditionAtHandover AssetCondition?
+  notes           String?
+  completedAt     DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  createdBy       String
+
+  @@unique([assetId, handoverNo])
+  @@map("asset_handovers")
+}
+
+enum AssetCriticality {
+  CRITICAL  // 業務停止に直結
+  HIGH      // 重大な影響
+  MEDIUM    // 中程度の影響
+  LOW       // 軽微な影響
+}
+
+enum DisposalType {
+  SCRAPPED        // 廃棄
+  SOLD            // 売却
+  DONATED         // 寄付
+  RETURNED        // 返却
+  TRANSFERRED     // 移管
+}
+
+enum AssetStatus {
+  ACTIVE
+  INACTIVE
+  UNDER_MAINTENANCE
+  DISPOSED
+}
+
+enum AssetCondition {
+  EXCELLENT
+  GOOD
+  FAIR
+  POOR
+  CRITICAL
+}
+
+enum MaintenancePlanStatus {
+  ACTIVE
+  SUSPENDED
+  COMPLETED
+}
+
+// ============================================================
+// ISO 19650 - BIM/CIM Information Management (F-12)
+// ============================================================
+
+model BimEir {
+  id             String       @id @default(uuid())
+  organizationId String       // org scope for IDOR protection
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  projectId      String?
+  project        Project?     @relation(fields: [projectId], references: [id])
+  title          String
+  version        Int          @default(1)
+  status         DocumentStatus @default(DRAFT)
+  requirements   Json?        // structured EIR content (ISO 19650 Annex A)
+  loidLevel      Int?         // Level of Information Detail (LOD equivalent)
+  deliveryMilestones Json?    // array of delivery milestone objects
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  createdBy      String
+
+  @@index([organizationId])
+  @@map("bim_eirs")
+}
+
+model BimBep {
+  id               String     @id @default(uuid())
+  organizationId   String     // org scope for IDOR protection
+  organization     Organization @relation(fields: [organizationId], references: [id])
+  projectId        String
+  project          Project    @relation(fields: [projectId], references: [id])
+  title            String
+  version          Int        @default(1)
+  status           DocumentStatus @default(DRAFT)
+  namingConvention String?    // e.g. "{project}-{originator}-{discipline}-{type}-{zone}-{level}-{number}"
+  approvedAt       DateTime?
+  approvedBy       String?
+  containers       BimInformationContainer[]
+  coordinationIssues BimCoordinationIssue[]
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  createdBy        String
+
+  @@index([organizationId])
+  @@map("bim_beps")
+}
+
+model BimInformationContainer {
+  id              String        @id @default(uuid())
+  organizationId  String        // org scope for IDOR protection
+  organization    Organization  @relation(fields: [organizationId], references: [id])
+  bepId           String?
+  bep             BimBep?       @relation(fields: [bepId], references: [id])
+  containerCode   String        // unique per organization (see @@unique below)
+  title           String
+  discipline      String?       // "architecture", "structure", "mep", "civil"
+  suitabilityCode SuitabilityCode @default(S0) // ISO 19650 suitability code
+  cdeStatus       CdeStatus     @default(WORK_IN_PROGRESS)
+  cdeExternalId   String?       // ID in the external CDE system
+  ifcVersion      String?       // "IFC4", "IFC4X3"
+  filePath        String?
+  fileSize        BigInt?       // file size in bytes
+  fileVersion     String?
+  checksum        String?       // SHA-256 for integrity
+  reviewStatus    ReviewStatus?
+  handoverStatus  HandoverStatus?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  createdBy       String
+
+  @@unique([organizationId, containerCode])
+  @@index([organizationId])
+  @@map("bim_information_containers")
+}
+
+// ISO 19650 §5.7 — Coordination Issues (干渉チェック・調整課題)
+model BimCoordinationIssue {
+  id              String       @id @default(uuid())
+  organizationId  String       // org scope for IDOR protection
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  bepId           String?
+  bep             BimBep?      @relation(fields: [bepId], references: [id])
+  issueNo         String       // unique per organization (see @@unique)
+  title           String
+  description     String?
+  issueType       String       // "clash", "coordination", "design-issue", "request-for-information"
+  priority        Severity     @default(MEDIUM)
+  status          CorrectiveActionStatus @default(OPEN)
+  discipline      String?
+  location        String?      // e.g. "Block A / Floor 3"
+  assignedTo      String?      // User UUID
+  dueDate         DateTime?
+  closedAt        DateTime?
+  closedBy        String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  createdBy       String
+
+  @@unique([organizationId, issueNo])
+  @@index([organizationId])
+  @@map("bim_coordination_issues")
+}
+
+enum SuitabilityCode {
+  S0  // Work in progress
+  S1  // Suitable for coordination
+  S2  // Suitable for information
+  S3  // Suitable for review and comment
+  S4  // Suitable for construction information
+  S5  // Suitable for manufacture and installation
+  S6  // Suitable for post-construction record
+}
+
+enum CdeStatus {
+  WORK_IN_PROGRESS
+  SHARED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ReviewStatus {
+  NOT_STARTED
+  IN_REVIEW
+  APPROVED
+  REJECTED
+  REVISION_REQUIRED
+}
+
+enum HandoverStatus {
+  NOT_INITIATED
+  IN_PROGRESS
+  COMPLETED
+}
+
+// ============================================================
+// NOTIFICATIONS (F-14)
+// ============================================================
+
+model Notification {
+  id          String             @id @default(uuid())
+  userId      String
+  type        NotificationType
+  title       String
+  body        String
+  entityType  String?
+  entityId    String?
+  isRead      Boolean            @default(false)
+  sentAt      DateTime           @default(now())
+  readAt      DateTime?
+  channel     NotificationChannel @default(IN_APP)
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  WORKFLOW_APPROVAL_NEEDED
+  WORKFLOW_APPROVED
+  WORKFLOW_REJECTED
+  CORRECTIVE_ACTION_DUE
+  INSPECTION_DUE
+  EDUCATION_EXPIRY
+  AUDIT_SCHEDULED
+  DOCUMENT_PUBLISHED
+  SYSTEM_ALERT
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  TEAMS
+}
+
+// ============================================================
+// Phase 5 — ISMS (ISO/IEC 27001 情報セキュリティ管理)
+// ============================================================
+
+model IsmsAsset {
+  id              String       @id @default(uuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  assetNo         String       // unique per org (see @@unique)
+  name            String
+  assetType       String       // "information", "software", "hardware", "people", "physical"
+  owner           String?      // 資産オーナー (User UUID or department name)
+  location        String?
+  classification  String       // "public", "internal", "confidential", "strictly-confidential"
+  sensitivity     Severity     @default(MEDIUM)
+  threats         IsmsThreat[]
+  riskAssessments IsmsRiskAssessment[]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  createdBy       String
+
+  @@unique([organizationId, assetNo])
+  @@index([organizationId])
+  @@map("isms_assets")
+}
+
+model IsmsThreat {
+  id              String     @id @default(uuid())
+  assetId         String
+  asset           IsmsAsset  @relation(fields: [assetId], references: [id])
+  threatType      String     // "unauthorized-access", "data-breach", "malware", "physical", "human-error"
+  description     String
+  likelihood      Int        // 1-5
+  impact          Int        // 1-5
+  riskScore       Int        // likelihood × impact
+  existingControls String?
+  status          CorrectiveActionStatus @default(OPEN)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  createdBy       String
+
+  @@map("isms_threats")
+}
+
+model IsmsRiskAssessment {
+  id              String     @id @default(uuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  assetId         String?
+  asset           IsmsAsset? @relation(fields: [assetId], references: [id])
+  assessmentNo    String     // unique per org
+  assessedAt      DateTime
+  assessedBy      String
+  summary         String?
+  overallRiskLevel RiskLevel
+  treatmentPlan   String?
+  nextReviewAt    DateTime?
+  status          CorrectiveActionStatus @default(OPEN)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  createdBy       String
+
+  @@unique([organizationId, assessmentNo])
+  @@index([organizationId])
+  @@map("isms_risk_assessments")
+}
+
+model IsmsIncident {
+  id              String       @id @default(uuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  incidentNo      String       // unique per org
+  incidentType    String       // "data-breach", "unauthorized-access", "system-failure", "physical-security"
+  occurredAt      DateTime
+  detectedAt      DateTime?
+  description     String
+  affectedSystems String?
+  severity        Severity     @default(MEDIUM)
+  status          CorrectiveActionStatus @default(OPEN)
+  rootCause       String?
+  correctiveAction String?
+  reportedBy      String
+  closedAt        DateTime?
+  closedBy        String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@unique([organizationId, incidentNo])
+  @@index([organizationId])
+  @@map("isms_incidents")
+}
+
+// ============================================================
+// Phase 5 — BCP (事業継続計画)
+// ============================================================
+
+model BcpPlan {
+  id              String       @id @default(uuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  planNo          String       // unique per org
+  title           String
+  version         Int          @default(1)
+  status          DocumentStatus @default(DRAFT)
+  scope           String?      // 対象業務・対象拠点
+  rto             Int?         // 目標復旧時間 (時間)
+  rpo             Int?         // 目標復旧時点 (時間)
+  approvedAt      DateTime?
+  approvedBy      String?
+  scenarios       BcpRiskScenario[]
+  drills          BcpDrillRecord[]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  createdBy       String
+
+  @@unique([organizationId, planNo])
+  @@index([organizationId])
+  @@map("bcp_plans")
+}
+
+model BcpRiskScenario {
+  id              String     @id @default(uuid())
+  planId          String
+  plan            BcpPlan    @relation(fields: [planId], references: [id])
+  scenarioType    String     // "earthquake", "fire", "flood", "pandemic", "cyber-attack", "power-outage"
+  title           String
+  description     String?
+  probability     Int        // 1-5 発生確率
+  impact          Int        // 1-5 影響度
+  riskScore       Int        // probability × impact
+  responseActions String?    // 対応手順
+  responsiblePerson String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  createdBy       String
+
+  @@map("bcp_risk_scenarios")
+}
+
+model BcpDrillRecord {
+  id              String     @id @default(uuid())
+  planId          String
+  plan            BcpPlan    @relation(fields: [planId], references: [id])
+  drillNo         String
+  drillType       String     // "tabletop", "functional", "full-scale"
+  conductedAt     DateTime
+  participantCount Int       @default(0)
+  scenario        String?
+  findings        String?
+  improvements    String?
+  evaluationScore Int?       // 1-100
+  nextDrillAt     DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  createdBy       String
+
+  @@unique([planId, drillNo])
+  @@map("bcp_drill_records")
+}
+
+enum IsmsAssetType {
+  INFORMATION
+  SOFTWARE
+  HARDWARE
+  PEOPLE
+  PHYSICAL
+}

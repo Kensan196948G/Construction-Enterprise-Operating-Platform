@@ -16,6 +16,8 @@ export { InMemoryWorkflowInstanceRepository } from "./workflow-instance-reposito
 export { InMemoryAiActionRepository } from "./ai-action-repository.ts";
 export { InMemoryProjectRepository } from "./project-repository.ts";
 export { InMemoryDailyReportRepository } from "./daily-report-repository.ts";
+export { InMemoryIsoRecordRepository } from "./iso-repositories.ts";
+export { InMemoryIntegrationEventRepository } from "./iso-repositories.ts";
 
 import type { Repositories } from "../ports.ts";
 import { InMemoryApplicationRepository } from "./application-repository.ts";
@@ -29,6 +31,10 @@ import { InMemoryWorkflowInstanceRepository } from "./workflow-instance-reposito
 import { InMemoryAiActionRepository } from "./ai-action-repository.ts";
 import { InMemoryProjectRepository } from "./project-repository.ts";
 import { InMemoryDailyReportRepository } from "./daily-report-repository.ts";
+import {
+  InMemoryIsoRecordRepository,
+  InMemoryIntegrationEventRepository,
+} from "./iso-repositories.ts";
 import {
   InMemoryPhotoRepository,
   InMemorySafetyCheckRepository,
@@ -80,5 +86,7 @@ export function createInMemoryRepositories(): Repositories {
     complianceChecks: new InMemoryComplianceCheckRepository(),
     legalEvidences: new InMemoryLegalEvidenceRepository(),
     notificationTemplates: new InMemoryNotificationTemplateRepository(),
+    isoRecords: new InMemoryIsoRecordRepository(),
+    integrationEvents: new InMemoryIntegrationEventRepository(),
   };
 }

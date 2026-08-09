@@ -6,6 +6,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-08-09
+
+### Added
+
+- **Civil-Construction-IMS 完全吸収（v0.11.0）** — ISO 9001/14001/45001/55001/19650・監査・是正・
+  ISMS・BCP・BIM/CIM を CEOP 設計へ再構成。kind 判別型 `iso_records`（migration `025`）+ 統一 ISO API
+  （`/api/v1/iso` CRUD・状態遷移・分析）と IMS 互換エイリアス 32 系統。
+- **連携先6システム連携基盤** — Webhook 受信（`/api/v1/integrations/webhooks/:system`）、イベントキュー・
+  再送（`/api/v1/integrations/events`・`/:id/retry`）、契約定義一覧（`/api/v1/integrations/contracts`）、
+  `integration_events`（migration `026`）。共有シークレット認証・冪等性・監査・再試行を実装。
+- **移行台帳・アーカイブ** — `docs/integration/IMS_MIGRATION_LEDGER.md`・`IMS_FEATURE_INVENTORY.md`・
+  `LINKED_INTEGRATION_SPEC.md` を作成。`reports/ims-archive/` に Git bundle・Issue 50・PR 37 を保存。
+- **UI** — `/iso` ランディングページとポータル/サイドバー導線。
+- テスト 13 件追加（domain/API/SQLite/連携）。
+
 ## [0.10.0] - 2026-08-07
 
 ### Fixed

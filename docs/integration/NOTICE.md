@@ -9,6 +9,7 @@ CEOP の `integrations/` には以下の外部リポジトリのスナップシ�
 | Construction-DX-OnePlatform      | 2026-08-07 | LICENSE ファイルあり                         | 内容確認が必要 |
 | Construction-DX-OS               | 2026-08-07 | MIT（LICENSE ファイルあり）                  | 帰属表示を維持 |
 | Synapse-OS                       | 2026-08-07 | LICENSE ファイル未確認                       | 権利確認が必要 |
+| Civil-Construction-IMS           | 2026-08-09 | Private・社内利用限定（LICENSE 未確認）      | 権利確認が必要 |
 
 CEOP 本体は Proprietary（UNLICENSED）です。統合コードを CEOP の一部として
 公開・配布・本番利用する前に、各統合元のライセンスと帰属を確認し、

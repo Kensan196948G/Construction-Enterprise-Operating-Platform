@@ -58,6 +58,13 @@ import type {
 } from "../domain/notification.ts";
 
 import type { DailyReport, DailyReportId, DailyReportStatus } from "../domain/daily-report.ts";
+import type { IsoRecord, IsoRecordId, IsoKind } from "../domain/iso.ts";
+import type {
+  IntegrationEvent,
+  IntegrationEventId,
+  IntegrationEventStatus,
+  IntegrationSystem,
+} from "../domain/integration.ts";
 
 // ---------------------------------------------------------------------------
 // Generic repository contract
@@ -219,6 +226,30 @@ export interface DailyReportRepository extends Repository<DailyReport, DailyRepo
   findByStatus(status: DailyReportStatus): Promise<readonly DailyReport[]>;
 }
 
+/**
+ * Kind-discriminated ISO integrated-management record store (IMS absorption).
+ * One repository backs every ISO module (quality, environment, safety,
+ * assets, BIM, audit, corrective actions, ISMS, BCP).
+ */
+export interface IsoRecordRepository extends Repository<IsoRecord, IsoRecordId> {
+  findByOrganization(orgId: string): Promise<readonly IsoRecord[]>;
+  findByKind(kind: IsoKind): Promise<readonly IsoRecord[]>;
+  findByProject(projectId: string): Promise<readonly IsoRecord[]>;
+  findByStatus(status: string): Promise<readonly IsoRecord[]>;
+  findByParent(parentId: string): Promise<readonly IsoRecord[]>;
+}
+
+/** Durable event log for inbound webhooks and outbound integration events. */
+export interface IntegrationEventRepository extends Repository<
+  IntegrationEvent,
+  IntegrationEventId
+> {
+  findBySystem(system: IntegrationSystem): Promise<readonly IntegrationEvent[]>;
+  findByStatus(status: IntegrationEventStatus): Promise<readonly IntegrationEvent[]>;
+  findByDirection(direction: "inbound" | "outbound"): Promise<readonly IntegrationEvent[]>;
+  findByIdempotencyKey(system: IntegrationSystem, key: string): Promise<IntegrationEvent | null>;
+}
+
 // ---------------------------------------------------------------------------
 // Aggregate: all repositories grouped for DI / factory use
 // ---------------------------------------------------------------------------
@@ -250,4 +281,6 @@ export interface Repositories {
   readonly complianceChecks: ComplianceCheckRepository;
   readonly legalEvidences: LegalEvidenceRepository;
   readonly notificationTemplates: NotificationTemplateRepository;
+  readonly isoRecords: IsoRecordRepository;
+  readonly integrationEvents: IntegrationEventRepository;
 }

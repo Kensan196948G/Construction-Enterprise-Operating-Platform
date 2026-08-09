@@ -62,6 +62,7 @@ import {
   SqliteLegalEvidenceRepository,
   SqliteNotificationTemplateRepository,
 } from "./business-repositories.ts";
+import { SqliteIsoRecordRepository, SqliteIntegrationEventRepository } from "./iso-repositories.ts";
 
 // ---------------------------------------------------------------------------
 // Concrete repositories
@@ -579,6 +580,8 @@ export function createSqliteRepositories(dbPath: string): Repositories {
     complianceChecks: new SqliteComplianceCheckRepository(db),
     legalEvidences: new SqliteLegalEvidenceRepository(db),
     notificationTemplates: new SqliteNotificationTemplateRepository(db),
+    isoRecords: new SqliteIsoRecordRepository(db),
+    integrationEvents: new SqliteIntegrationEventRepository(db),
   };
 }
 

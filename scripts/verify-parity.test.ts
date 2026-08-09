@@ -26,9 +26,9 @@ test("findMissingCoreDomains flags only planned-but-unimplemented domains", () =
   assert.equal(missing[0]?.id, "S-02");
 });
 
-test("migration registry covers 001 through 024", () => {
+test("migration registry covers 001 through 026", () => {
   const versions = new Set(MIGRATIONS.map((m) => m.version));
-  for (let i = 1; i <= 24; i += 1) {
+  for (let i = 1; i <= 26; i += 1) {
     const v = String(i).padStart(3, "0");
     assert.ok(versions.has(v), `migration ${v} must exist`);
   }

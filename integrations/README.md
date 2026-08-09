@@ -1,6 +1,6 @@
 # Integrations — 統合元リポジトリ（Migration Sources）
 
-本ディレクトリは、以下の 5 リポジトリの**現行スナップショット（.git 除く）**を
+本ディレクトリは、以下の 6 リポジトリの**現行スナップショット（.git 除く）**を
 CEOP へ取り込んだ統合元ソースです。旧リポジトリは、全機能の統合が完了し
 ユーザーの Y/N 確認を得た後に削除します（削除までは GitHub 側を正本とし、
 本ディレクトリは統合・参照・監査用のコピーとして扱います）。
@@ -12,6 +12,7 @@ CEOP へ取り込んだ統合元ソースです。旧リポジトリは、全機
 | Construction-DX-OnePlatform | 部門別モジュール群（11 本部）+ portal + shared-auth/api-gateway/shared-db/shared-pdf + monitoring | 施工・安全品質環境・営業・技術・購買・船舶・管理・経営企画・統合データ基盤・IT-DX・監査 | モック/設計中心 |
 | Construction-DX-OS | FastAPI + cdx-agent + SDK + Postgres + OIDC | 端末登録・ハートビート・インベントリ・シリアルスキャン・ISO ビルド・PXE rollback・管理 UI | 端末基盤として最も実装が進んでいる |
 | Synapse-OS | FastAPI マイクロサービス群 + Next.js | Tenant/Identity・Issue・Document・Approval・Audit・Dashboard・Knowledge・Federation・AI Gateway | 396 テスト。統制/ガバナンスで最先端 |
+| Civil-Construction-IMS | Next.js 15 + NestJS + Prisma + PostgreSQL 16 | ISO 9001/14001/45001/55001/19650 統合マネジメント・監査・是正・ISMS・BCP・BIM/CIM | 364+ テスト・全14画面 CRUD。CEOP へ完全吸収（v0.11.0） |
 
 ## ライセンス・帰属
 
@@ -21,6 +22,8 @@ CEOP へ取り込んだ統合元ソースです。旧リポジトリは、全機
   （ServiceHub README は MIT 表記）。CEOP は Proprietary のため、統合時は
   出所・ライセンス・帰属を `docs/integration/NOTICE.md` に記録し、
   権利確認が完了するまで本番利用しない方針とする。
+- Civil-Construction-IMS: Private（社内利用限定・LICENSE 未確認）。統合時の出所・最終 commit
+  `51351a4b`・Issue/PR アーカイブは `reports/ims-archive/` に保存。
 
 ## 更新方法
 
@@ -32,4 +35,3 @@ rsync -a --exclude='.git' /tmp/src/ integrations/<repo>/
 ```
 
 本ディレクトリは eslint / typecheck / build の対象外（`eslint.config.js` の ignores）。
-

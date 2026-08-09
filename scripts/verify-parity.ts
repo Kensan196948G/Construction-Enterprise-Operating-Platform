@@ -87,7 +87,7 @@ export async function verifyParity(): Promise<{
 
   // ── Migration coverage (016-024 were once lost in merge; guard against it) ──
   const migrationVersions = new Set(MIGRATIONS.map((m) => m.version));
-  const expectedMigrations = Array.from({ length: 24 }, (_, i) => String(i + 1).padStart(3, "0"));
+  const expectedMigrations = Array.from({ length: 26 }, (_, i) => String(i + 1).padStart(3, "0"));
   const missingMigrations = expectedMigrations.filter((v) => !migrationVersions.has(v));
   if (missingMigrations.length > 0) {
     throw new Error(`parity failed: missing migrations ${missingMigrations.join(", ")}`);
@@ -170,6 +170,9 @@ export async function verifyParity(): Promise<{
     await probe("/api/v1/notifications/unread-count", "GET", 200);
     await probe("/api/v1/notification-templates", "GET", 200);
     await probe("/api/v1/itsm/incidents", "GET", 200);
+    await probe("/api/v1/iso", "GET", 200);
+    await probe("/api/v1/iso/analytics", "GET", 200);
+    await probe("/api/v1/integrations/contracts", "GET", 200);
   } finally {
     await new Promise<void>((resolve) => server.close(() => resolve()));
   }

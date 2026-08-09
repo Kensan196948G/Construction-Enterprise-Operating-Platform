@@ -54,3 +54,13 @@
 | 19:0x | 旧5リポジトリの完全ミラー退避（/var/backups/ceop-repo-absorption-20260807・root 700・fsck OK） | ✅ |
 | 19:0x | `gh repo delete` で5リポジトリ削除（ユーザー Y 承認）・GraphQL 不存在確認 | ✅ |
 | 19:0x | WORKING_LOG / OPERATIONS_LEDGER へ記録・PR #39 | ✅ |
+
+## 実行記録（2026-08-09・v0.11.0 IMS 吸収）
+
+| 日時 (JST) | 内容 | 結果 |
+| --- | --- | --- |
+| 20:20 | IMS スナップショット取得・アーカイブ（bundle/issues.json 50/pulls.json 37） | ✅ |
+| 20:30〜 | ISO 統合マネジメント実装（domain/persistence/routes/UI/migration 025） | ✅ |
+| 20:30〜 | 連携先6システム連携基盤（webhook/event/retry/contract/migration 026） | ✅ |
+| 21:0x | `pnpm run verify` 395/395・parity 27/27・build・audit 0 | ✅ |
+| 21:0x | PR `feat/ims-integration-v0.11.0` 作成（CI 確認待ち） | ⏳ |
