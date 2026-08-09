@@ -291,7 +291,7 @@ export async function createApp(): Promise<AppContainer> {
         "e2e-admin",
         [...adminRole.permissions],
         apiKeyStore,
-        undefined,
+        "org-hq",
         e2eKeyId,
         e2eSecret,
       );
