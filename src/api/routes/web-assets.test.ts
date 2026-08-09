@@ -155,6 +155,8 @@ test("SSR templates reference /api/assets so the Tunnel path-split cannot shadow
   );
   assert.ok(iso.includes('href="/api/assets/app.css"'), "iso.html CSS must use /api/assets");
   assert.ok(iso.includes('src="/api/assets/iso.js"'), "iso.html JS must use /api/assets");
+  assert.ok(iso.includes('role="dialog"'), "iso.html dialogs must expose role=dialog");
+  assert.ok(iso.includes('aria-live="polite"'), "iso.html toasts must be announced");
 });
 
 test("ISO console requires auth and renders with iso:read permission", async (t) => {

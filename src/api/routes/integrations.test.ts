@@ -2,6 +2,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { createHmac } from "node:crypto";
 import type { AddressInfo } from "node:net";
 import { createServer as createHttpServer, type Server } from "node:http";
 
@@ -140,6 +141,44 @@ test("inbound webhook rejects event types outside the contract", async (t) => {
     },
   );
   assert.equal(response.status, 400);
+});
+
+test("inbound webhook requires valid HMAC signature when shared secret is set", async (t) => {
+  const h = await buildHarness();
+  t.after(h.close);
+  const previous = process.env["CEOP_INTEGRATION_SHARED_SECRET"];
+  process.env["CEOP_INTEGRATION_SHARED_SECRET"] = "test-secret";
+  t.after(() => {
+    if (previous !== undefined) process.env["CEOP_INTEGRATION_SHARED_SECRET"] = previous;
+    else delete process.env["CEOP_INTEGRATION_SHARED_SECRET"];
+  });
+
+  const body = {
+    idempotencyKey: "idea-hmac-1",
+    eventType: "idea.submitted",
+    title: "HMAC検証",
+  };
+  const raw = JSON.stringify(body);
+  const bad = await call(
+    h.baseUrl,
+    "POST",
+    "/api/v1/integrations/webhooks/dx-idea",
+    h.adminCred,
+    body,
+    { "X-CEOP-Signature": "0".repeat(64), "X-Integration-Token": "test-secret" },
+  );
+  assert.equal(bad.status, 401);
+
+  const signature = createHmac("sha256", "test-secret").update(raw).digest("hex");
+  const good = await call(
+    h.baseUrl,
+    "POST",
+    "/api/v1/integrations/webhooks/dx-idea",
+    h.adminCred,
+    body,
+    { "X-CEOP-Signature": signature, "X-Integration-Token": "test-secret" },
+  );
+  assert.equal(good.status, 202);
 });
 
 test("outbound event is queued and retry delivers to the configured endpoint", async (t) => {

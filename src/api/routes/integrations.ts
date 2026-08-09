@@ -7,10 +7,11 @@
  *
  * Inbound webhooks are authenticated by CEOP API key/JWT (`integration:write`)
  * and, when `CEOP_INTEGRATION_SHARED_SECRET` is set, by the
- * `X-Integration-Token` header. Idempotency is enforced per system + key.
+ * `X-Integration-Token` header and the `X-CEOP-Signature` HMAC-SHA256 over the
+ * raw body. Idempotency is enforced per system + key.
  */
 
-import { randomUUID, timingSafeEqual } from "node:crypto";
+import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import type { ServerResponse } from "node:http";
 import type { IsoTimestamp } from "../../domain/common.ts";
 import {
@@ -78,6 +79,28 @@ function sharedSecretValid(req: {
   }
 }
 
+/**
+ * Verify the HMAC-SHA256 request signature (`X-CEOP-Signature`) over the raw
+ * body. When no shared secret is configured the check is skipped (dev mode);
+ * in production the secret must be set and the signature is mandatory.
+ */
+function signatureValid(
+  req: { readonly headers: Readonly<Record<string, string | string[] | undefined>> },
+  rawBody: string | undefined,
+  fallbackBody: unknown,
+): boolean {
+  const secret = process.env["CEOP_INTEGRATION_SHARED_SECRET"];
+  if (secret === undefined || secret === "") return true;
+  const header = req.headers["x-ceop-signature"];
+  if (typeof header !== "string") return false;
+  const raw = rawBody ?? (fallbackBody !== undefined ? JSON.stringify(fallbackBody) : "");
+  const expected = createHmac("sha256", secret).update(raw).digest("hex");
+  const a = Buffer.from(expected);
+  const b = Buffer.from(header);
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(a, b);
+}
+
 function scopedEvents(
   container: AppContainer,
   ctx: ApiKeyContext | null,
@@ -96,6 +119,13 @@ export function registerIntegrationRoutes(router: Router, container: AppContaine
     }
     if (!sharedSecretValid(req)) {
       writeJson(res, 401, { error: "Unauthorized", message: "invalid integration token" });
+      return;
+    }
+    if (!signatureValid(req, req.rawBody, req.body)) {
+      writeJson(res, 401, {
+        error: "Unauthorized",
+        message: "invalid X-CEOP-Signature (HMAC-SHA256)",
+      });
       return;
     }
     const system = integrationSystem(req.params["system"] ?? "");

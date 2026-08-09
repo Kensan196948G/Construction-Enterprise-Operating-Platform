@@ -1,0 +1,22 @@
+# CEOP outbound integration event dispatcher (oneshot).
+#
+# Sends pending/retrying integration events to the six linked systems.
+# Install:
+#   sudo cp deploy/systemd/ceop-integration-dispatcher.{service,timer} /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now ceop-integration-dispatcher.timer
+#
+# The container image must be ceop-platform:current (see RUNBOOK §3).
+
+[Unit]
+Description=CEOP outbound integration event dispatcher
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/docker run --rm -u 0 \
+  -v /home/kensan/.ceop/data:/data \
+  --env-file /home/kensan/.ceop/.env \
+  ceop-platform:current \
+  node --experimental-strip-types scripts/run-integration-dispatcher.ts --db /data/ceop.db
