@@ -30,6 +30,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
   連携契約表示を E2E 化。CI に `E2E (Playwright)` ジョブを追加。
 - **連携イベント自動配送** — `pnpm run integration:dispatch` で pending/retrying の outbound イベントを
   契約ポリシー（タイムアウト・再試行）で自動送信。受信/送信とも契約外の `eventType` を 400 で拒否。
+- **本番デプロイ（2026-08-09）** — v0.11.0 を本番適用（migration 025/026・コンテナ差し替え・
+  事前バックアップ・公開スモーク）。Tunnel 経路に `/iso`・`/iso-app`・`/portal` を追加。
+  連携先実 URL を設定（4D/Idea/AI-Build/Atlas/現場LAN）。
+- **Civil-Construction-IMS 削除（2026-08-09）** — ユーザー Y 承認・最終ミラー退避後、
+  `gh repo delete` を実行し 404 を確認。
 - テスト 16 件追加（domain/API/SQLite/連携/Web assets、計 398）。
 
 ## [0.10.0] - 2026-08-07

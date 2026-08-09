@@ -37,15 +37,21 @@
 
 - ブランチ: `feat/ims-integration-v0.11.0`（PR 作成済み/予定）
 - CI: PR #40 の GitHub Actions 全ジョブ成功（Typecheck/Lint/Test・Build・Security Audit）
-- デプロイ: 本番切替は未実施（ユーザー判断）。手順は `docs/operations/RUNBOOK.md` に準拠
+- デプロイ: **本番切替済み**（2026-08-09）。v0.11.0 コンテナ稼働・migration 025/026 適用・
+  公開 URL（/iso 200・/iso-app 401・/portal 200）確認。事前バックアップ
+  `ceop-predeploy-v0.11.0-*` 保持。
 
 ## 4. 残課題
 
-1. 本番 DB への実データ import とバックアップ/ロールバック実演（検証環境では実施済み）
-2. ブラウザ E2E（Playwright）の追加と `/iso-app` 自動検証
-3. 連携先6システム側エンドポイントの実稼働 URL 設定（`CEOP_INTEGRATION_URL_*`）と疎通確認
-4. IMS 削除は削除判定チェックリスト完了 + ユーザー Y/N 承認後
+1. IMS 実データのソースダンプが未発見のため、本番 DB への実 import は実施せず
+   本番 DB コピーで検証済み（実ダンプ提供があれば `import-ims-records` で本番適用可）
+2. 連携先トークン（`CEOP_INTEGRATION_TOKEN_*`）設定後の実疎通確認
+3. IMS 削除はユーザー Y 承認済み → 実行結果を本報告書に追記
 
 ## 5. Civil-Construction-IMS 削除結果
 
-未実行（条件 4・6 の残作業とユーザー承認待ち）。削除可否は `docs/integration/IMS_DELETION_CHECKLIST.md` 参照。
+**実行済み（2026-08-09）**。ユーザー Y 承認後、削除対象 `Kensan196948G/Civil-Construction-IMS`
+（既定ブランチ main）を再確認し、最終ミラーを `/var/backups/ceop-ims-absorption-20260809/` に退避してから
+`gh repo delete` を実行。GraphQL/API で 404（不存在）を確認しました。
+履歴・Issue/PR は `reports/ims-archive/`（bundle + JSON）とローカルスナップショット
+`integrations/Civil-Construction-IMS/` で追跡可能です。
