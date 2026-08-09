@@ -33,7 +33,7 @@
 ## 3. コミット・PR・CI・デプロイ
 
 - ブランチ: `feat/ims-integration-v0.11.0`（PR 作成済み/予定）
-- CI: PR の GitHub Actions 結果を確認中（ローカル検証は全グリーン）
+- CI: PR #40 の GitHub Actions 全ジョブ成功（Typecheck/Lint/Test・Build・Security Audit）
 - デプロイ: 本番切替は未実施（ユーザー判断）。手順は `docs/operations/RUNBOOK.md` に準拠
 
 ## 4. 残課題
