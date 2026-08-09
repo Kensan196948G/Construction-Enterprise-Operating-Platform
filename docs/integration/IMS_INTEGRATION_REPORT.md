@@ -18,6 +18,8 @@
 - AI ガバナンス: `ai-actions` に根拠表示（evidenceRefs）・入力管理（inputRetentionDays）・
   個人情報保護（piiSensitive）・誤回答対策（wrongAnswerMitigation）・利用停止
   （`POST /api/v1/ai-actions/:id/status`）を実装。
+- E2E: Playwright（`playwright.config.ts` + `e2e/iso-app.spec.ts`）と CI ジョブを追加。
+  `/iso-app` の認証ゲート・CRUD・状態遷移・分析・連携契約表示をブラウザで検証。
 
 ## 2. 検証結果
 
@@ -29,6 +31,7 @@
 | データ移行検証 | ✅ import スクリプト + テスト |
 | 連携契約テスト | ✅ 受信認証・冪等性・再送実送信・契約一覧 6 件 |
 | データ移行・復旧実演 | ✅ import 3 件 → バックアップ → 削除 → 復元（一時 SQLite、3 件復元） |
+| ブラウザ E2E | ⏳ 追加済み・CI 実行待ち（ローカル sandbox では Chromium 起動不可） |
 
 ## 3. コミット・PR・CI・デプロイ
 

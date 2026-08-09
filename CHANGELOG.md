@@ -26,6 +26,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
   `POST /api/v1/ai-actions/:id/status` を追加。
 - **データ移行・復旧実演** — `import-ims-records` 実 import（3 件）→ バックアップ → 削除 → 復元の
   SQLite 実地検証を実施（3 件復元確認）。
+- **ブラウザ E2E** — Playwright を導入し、`/iso-app` の認証ゲート・CRUD・状態遷移・分析・
+  連携契約表示を E2E 化。CI に `E2E (Playwright)` ジョブを追加。
 - テスト 16 件追加（domain/API/SQLite/連携/Web assets、計 398）。
 
 ## [0.10.0] - 2026-08-07

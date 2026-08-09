@@ -13,6 +13,7 @@ import { createRole } from "./domain/role.ts";
 import { createDevice } from "./domain/device.ts";
 import { createApplication } from "./domain/application.ts";
 import { createPolicy } from "./domain/policy.ts";
+import { createIsoRecord } from "./domain/iso.ts";
 import { AuditLog } from "./governance/audit-log.ts";
 import { SqliteAuditLog } from "./governance/sqlite-audit-log.ts";
 import { createInMemoryRepositories } from "./persistence/in-memory/index.ts";
@@ -280,6 +281,66 @@ export async function createApp(): Promise<AppContainer> {
       apiKeyStore,
       "org-hq",
     );
+
+    // Stable credential for browser E2E (non-production only). The auth
+    // middleware still hashes it; the secret never leaves the process.
+    const e2eKeyId = process.env["CEOP_E2E_API_KEY_ID"];
+    const e2eSecret = process.env["CEOP_E2E_API_KEY_SECRET"];
+    if (e2eKeyId !== undefined && e2eSecret !== undefined) {
+      createApiKey(
+        "e2e-admin",
+        [...adminRole.permissions],
+        apiKeyStore,
+        undefined,
+        e2eKeyId,
+        e2eSecret,
+      );
+    }
+
+    // ── 8. ISO demo records ─────────────────────────────────────────────────
+
+    const demoQualityPlan = mustOk(
+      "demo quality plan",
+      createIsoRecord({
+        id: "iso-demo-quality-plan",
+        kind: "quality-plan",
+        organizationId: "org-hq",
+        projectId: "project-demo-1",
+        title: "品質計画（デモ）",
+        payload: { planNo: "QP-DEMO-001" },
+        createdBy: "user-admin",
+        createdAt,
+      }),
+    );
+    await repositories.isoRecords.save(demoQualityPlan);
+
+    const demoAsset = mustOk(
+      "demo asset",
+      createIsoRecord({
+        id: "iso-demo-asset",
+        kind: "asset",
+        organizationId: "org-hq",
+        title: "橋梁A（デモ）",
+        payload: { assetType: "structure", name: "橋梁A" },
+        createdBy: "user-admin",
+        createdAt,
+      }),
+    );
+    await repositories.isoRecords.save(demoAsset);
+
+    const demoCorrective = mustOk(
+      "demo corrective action",
+      createIsoRecord({
+        id: "iso-demo-corrective",
+        kind: "corrective-action",
+        organizationId: "org-hq",
+        title: "是正処置（デモ）",
+        payload: { sourceType: "audit_finding", description: "監査指摘対応" },
+        createdBy: "user-admin",
+        createdAt,
+      }),
+    );
+    await repositories.isoRecords.save(demoCorrective);
 
     // Explicit opt-in only — never log secret material by default.
     // Blocked outside interactive terminals to prevent credentials leaking into CI logs.
