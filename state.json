@@ -27,7 +27,7 @@
     "success_rate_target": 0.9,
     "ci_success_rate": 1,
     "test_pass_rate": 1,
-    "test_count": 395,
+    "test_count": 398,
     "security_critical": 0,
     "security_high_resolved": 19,
     "blocker_count": 0

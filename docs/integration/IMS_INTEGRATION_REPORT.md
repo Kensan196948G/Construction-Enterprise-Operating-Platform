@@ -13,17 +13,22 @@
 - 連携先6システム（4D Planner / DX-Idea / 現場管理 / AI Build / Portfolio Atlas / 資材写真）との
   疎結合連携基盤を実装: Webhook 受信・イベントキュー・共有シークレット認証・冪等性・再試行・監査・契約一覧。
 - データ移行ヘルパー `scripts/import-ims-records.ts`（検証テスト付き）を追加。
-- UI 導線: `/iso` ランディングページ、ポータル・サイドバーへ ISO メニューを追加。
+- UI: `/iso` ランディングページに加え、**ISO 管理コンソール `/iso-app`**（認証必須）を実装。
+  9 モジュールの一覧・検索・新規/編集・状態遷移・削除・分析・連携契約表示を提供。
+- AI ガバナンス: `ai-actions` に根拠表示（evidenceRefs）・入力管理（inputRetentionDays）・
+  個人情報保護（piiSensitive）・誤回答対策（wrongAnswerMitigation）・利用停止
+  （`POST /api/v1/ai-actions/:id/status`）を実装。
 
 ## 2. 検証結果
 
 | 項目 | 結果 |
 |---|---|
-| `pnpm run verify` | ✅ format / openapi / typecheck / lint / test(395) / parity(27 プローブ) |
+| `pnpm run verify` | ✅ format / openapi / typecheck / lint / test(398) / parity(27 プローブ) |
 | `pnpm run build` | ✅ |
 | `pnpm audit --audit-level=high` | ✅ 0 vulnerabilities |
 | データ移行検証 | ✅ import スクリプト + テスト |
 | 連携契約テスト | ✅ 受信認証・冪等性・再送実送信・契約一覧 6 件 |
+| データ移行・復旧実演 | ✅ import 3 件 → バックアップ → 削除 → 復元（一時 SQLite、3 件復元） |
 
 ## 3. コミット・PR・CI・デプロイ
 
@@ -33,8 +38,8 @@
 
 ## 4. 残課題
 
-1. IMS の 14 画面相当の UI 完全移植（現状: `/iso` ランディング + API）
-2. 本番 DB への実データ import とバックアップ/ロールバック実演
+1. 本番 DB への実データ import とバックアップ/ロールバック実演（検証環境では実施済み）
+2. ブラウザ E2E（Playwright）の追加と `/iso-app` 自動検証
 3. 連携先6システム側エンドポイントの実稼働 URL 設定（`CEOP_INTEGRATION_URL_*`）と疎通確認
 4. IMS 削除は削除判定チェックリスト完了 + ユーザー Y/N 承認後
 

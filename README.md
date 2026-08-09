@@ -4,7 +4,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-22.13+-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Zero Runtime Deps](https://img.shields.io/badge/runtime%20deps-zero-brightgreen)](package.json)
 [![CI](https://img.shields.io/github/actions/workflow/status/Kensan196948G/Construction-Enterprise-Operating-Platform/ci.yml?label=CI&logo=github)](/.github/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-395%20pass-brightgreen)](src/)
+[![Tests](https://img.shields.io/badge/tests-398%20pass-brightgreen)](src/)
 [![Security](https://img.shields.io/badge/security-hardened-blue)](src/api/middleware/auth.ts)
 [![License](https://img.shields.io/badge/license-proprietary-lightgrey)](LICENSE.md)
 
@@ -24,7 +24,7 @@
 | HTTP サーバ  | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                                                                                                            |
 | 依存方針     | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）                                                                                    |
 | パッケージ   | pnpm 10.26.2                                                                                                                                                        |
-| テスト       | 395 tests pass（node:test ビルトインランナー）                                                                                                                      |
+| テスト       | 398 tests pass（node:test ビルトインランナー）                                                                                                                      |
 | コンテナ     | Docker multi-stage build（non-root・HEALTHCHECK 付き）                                                                                                              |
 | セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限                                                                                   |
 
@@ -614,7 +614,7 @@ bash scripts/webui-deploy.sh
 ## 🧪 テスト実行
 
 ```bash
-# 全テスト実行（335 tests）
+# 全テスト実行（398 tests）
 pnpm run test
 
 # typecheck + lint + test 一括
@@ -1230,11 +1230,22 @@ POST             /api/v1/iso/:id/action        状態遷移（submit-review/appr
 GET              /api/v1/iso/analytics         ISO コンプライアンス分析
 GET              /api/v1/analytics/iso-compliance / safety-kpi
 GET              /iso                          ISO ランディングページ
+GET              /iso-app                      ISO 管理コンソール（全モジュール CRUD・状態遷移・分析・連携）
 ```
 
 移行台帳・機能インベントリ: `docs/integration/IMS_MIGRATION_LEDGER.md` /
 `docs/integration/IMS_FEATURE_INVENTORY.md`。旧リポジトリの Git 履歴・Issue/PR は
 `reports/ims-archive/` に保存済み。
+
+### AI ガバナンス拡張（v0.11.0）
+
+`ai-actions` API に本番運用に必要な統制項目を追加しました。
+
+- `evidenceRefs` — 根拠表示のための出典参照（プロンプト実体は SHA-256 ハッシュのみ保存）
+- `inputRetentionDays` — 入力データ保持日数（0 = 保持しない）
+- `piiSensitive` — 個人情報入力の明示（実体保存禁止）
+- `wrongAnswerMitigation` — 誤回答対策（フォールバック・人的確認手順）
+- `POST /api/v1/ai-actions/:id/status` — 利用停止手段（operational / limited / stopped、`ai:approve` 必須・監査記録）
 
 ## 🔗 連携先6システム Integration API（v0.11.0）
 

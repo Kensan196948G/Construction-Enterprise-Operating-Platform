@@ -222,3 +222,51 @@ test("ai actions enforce tenant scope", async (t) => {
   const globalList = await call(h.baseUrl, "GET", "/api/v1/ai-actions", h.adminCred);
   assert.equal(globalList.json.total, 1);
 });
+
+test("AI governance metadata and operation stop are enforced", async (t) => {
+  const h = await buildHarness();
+  t.after(h.close);
+
+  const created = await call(h.baseUrl, "POST", "/api/v1/ai-actions", h.aiWriterCred, {
+    model: "deepseek:deepseek-chat",
+    purpose: "工事写真の異常検知",
+    promptHash: HASH,
+    evidenceRefs: ["doc-1", "https://example.com/standard"],
+    inputRetentionDays: 0,
+    piiSensitive: true,
+    wrongAnswerMitigation: "異常判定は現場担当者の確認を必須とする",
+  });
+  assert.equal(created.status, 201);
+  assert.deepEqual(created.json.aiAction.evidenceRefs, ["doc-1", "https://example.com/standard"]);
+  assert.equal(created.json.aiAction.inputRetentionDays, 0);
+  assert.equal(created.json.aiAction.piiSensitive, true);
+  assert.equal(created.json.aiAction.operationStatus, "operational");
+
+  const stopped = await call(
+    h.baseUrl,
+    "POST",
+    `/api/v1/ai-actions/${created.json.aiAction.id}/status`,
+    h.aiApproverCred,
+    { status: "stopped", reason: "モデル障害のため利用停止" },
+  );
+  assert.equal(stopped.status, 200);
+  assert.equal(stopped.json.aiAction.operationStatus, "stopped");
+
+  const forbiddenStop = await call(
+    h.baseUrl,
+    "POST",
+    `/api/v1/ai-actions/${created.json.aiAction.id}/status`,
+    h.aiWriterCred,
+    { status: "stopped" },
+  );
+  assert.equal(forbiddenStop.status, 403);
+
+  const invalid = await call(
+    h.baseUrl,
+    "POST",
+    `/api/v1/ai-actions/${created.json.aiAction.id}/status`,
+    h.aiApproverCred,
+    { status: "exploded" },
+  );
+  assert.equal(invalid.status, 400);
+});

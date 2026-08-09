@@ -66,7 +66,7 @@
 
 | ID | 候補 | 根拠 | 影響 | 代替 |
 |---|---|---|---|---|
-| I-D01 | IMS 単独の Next.js フロントエンド | CEOP は SSR/ポータルへ一本化。設計バンドルは編集対象外 | 画面遷移は `/iso`・`/portal` 経由 | CEOP Portal + ISO ランディング |
+| I-D01 | IMS 単独の Next.js フロントエンド | CEOP は SSR/ポータルへ一本化。設計バンドルは編集対象外 | 画面遷移は `/iso`・`/iso-app`・`/portal` 経由 | CEOP Portal + ISO 管理コンソール（全モジュール CRUD） |
 | I-D02 | IMS 単独の Prisma/PostgreSQL スキーマ | 重複した RBAC・監査・永続化を CEOP に統一 | 旧 API クライアントは互換エイリアスで継続 | CEOP SQLite/ファイル永続化 + iso_records |
 | I-D03 | IMS の RefreshToken 実装 | CEOP JWT 失効管理で代替 | なし（新規利用なし） | revoked_jtis + JWT |
 | I-D04 | IMS の Docker Compose スタック | CEOP が本番スタックを所有 | なし | docker-compose.prod.yml |

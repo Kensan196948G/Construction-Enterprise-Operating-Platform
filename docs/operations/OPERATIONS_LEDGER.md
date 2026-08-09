@@ -62,5 +62,8 @@
 | 20:20 | IMS スナップショット取得・アーカイブ（bundle/issues.json 50/pulls.json 37） | ✅ |
 | 20:30〜 | ISO 統合マネジメント実装（domain/persistence/routes/UI/migration 025） | ✅ |
 | 20:30〜 | 連携先6システム連携基盤（webhook/event/retry/contract/migration 026） | ✅ |
-| 21:0x | `pnpm run verify` 395/395・parity 27/27・build・audit 0 | ✅ |
+| 21:0x | AI ガバナンス拡張（evidence/retention/pii/mitigation/利用停止） | ✅ |
+| 21:0x | ISO 管理コンソール `/iso-app`（CRUD・状態遷移・分析・連携表示） | ✅ |
+| 21:1x | データ移行・復旧実演（import 3 件 → backup → delete → restore 3 件） | ✅ |
+| 21:1x | `pnpm run verify` 398/398・parity 27/27・build・audit 0 | ✅ |
 | 21:0x | PR `feat/ims-integration-v0.11.0` 作成（CI 確認待ち） | ⏳ |

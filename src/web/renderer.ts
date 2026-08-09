@@ -31,6 +31,7 @@ const TEMPLATES_DIR = join(fileURLToPath(import.meta.url), "..", "templates");
 export const TEMPLATES = {
   INDEX: join(TEMPLATES_DIR, "index.html"),
   GOVERNANCE: join(TEMPLATES_DIR, "governance.html"),
+  ISO: join(TEMPLATES_DIR, "iso.html"),
 } as const;
 
 /** The platform version string. Callers may override at bootstrap. */
@@ -316,4 +317,16 @@ export async function renderGovernance(
   };
 
   return renderTemplate(TEMPLATES.GOVERNANCE, context);
+}
+
+/**
+ * Build the ISO integrated-management console HTML shell. All data is loaded
+ * client-side from the authenticated ISO API.
+ */
+export async function renderIsoPage(apiToken = ""): Promise<string> {
+  const context: RenderContext = {
+    VERSION: esc(_platformVersion),
+    API_TOKEN: esc(apiToken),
+  };
+  return renderTemplate(TEMPLATES.ISO, context);
 }

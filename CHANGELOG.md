@@ -19,7 +19,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 - **移行台帳・アーカイブ** — `docs/integration/IMS_MIGRATION_LEDGER.md`・`IMS_FEATURE_INVENTORY.md`・
   `LINKED_INTEGRATION_SPEC.md` を作成。`reports/ims-archive/` に Git bundle・Issue 50・PR 37 を保存。
 - **UI** — `/iso` ランディングページとポータル/サイドバー導線。
-- テスト 13 件追加（domain/API/SQLite/連携）。
+- **ISO 管理コンソール** — `/iso-app`（認証必須・`iso:read`）：全モジュールの一覧・検索・新規/編集・
+  状態遷移・削除・分析・連携契約表示。
+- **AI ガバナンス拡張** — `ai-actions` に evidenceRefs（根拠表示）/inputRetentionDays（入力管理）/
+  piiSensitive（個人情報保護）/wrongAnswerMitigation（誤回答対策）と利用停止エンドポイント
+  `POST /api/v1/ai-actions/:id/status` を追加。
+- **データ移行・復旧実演** — `import-ims-records` 実 import（3 件）→ バックアップ → 削除 → 復元の
+  SQLite 実地検証を実施（3 件復元確認）。
+- テスト 16 件追加（domain/API/SQLite/連携/Web assets、計 398）。
 
 ## [0.10.0] - 2026-08-07
 
