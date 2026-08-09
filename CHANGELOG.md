@@ -28,6 +28,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
   SQLite 実地検証を実施（3 件復元確認）。
 - **ブラウザ E2E** — Playwright を導入し、`/iso-app` の認証ゲート・CRUD・状態遷移・分析・
   連携契約表示を E2E 化。CI に `E2E (Playwright)` ジョブを追加。
+- **連携イベント自動配送** — `pnpm run integration:dispatch` で pending/retrying の outbound イベントを
+  契約ポリシー（タイムアウト・再試行）で自動送信。受信/送信とも契約外の `eventType` を 400 で拒否。
 - テスト 16 件追加（domain/API/SQLite/連携/Web assets、計 398）。
 
 ## [0.10.0] - 2026-08-07

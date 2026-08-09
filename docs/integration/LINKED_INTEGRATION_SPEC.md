@@ -103,7 +103,11 @@ Webhook 受信・イベントキュー・認証・監査・再試行・冪等性
 - 受信 Webhook: `POST /api/v1/integrations/webhooks/:system`（認証・共有シークレット・冪等性・監査）
 - イベントキュー: `POST /api/v1/integrations/events`（outbound 作成）
 - 再送: `POST /api/v1/integrations/events/:id/retry`（契約タイムアウト・再試行・冪等性ヘッダ付き送信）
+- 自動配送: `pnpm run integration:dispatch`（`scripts/run-integration-dispatcher.ts`）が
+  pending/retrying の outbound イベントを契約ポリシーで自動送信（systemd timer / cron 運用）
 - 一覧: `GET /api/v1/integrations/events` / `GET /api/v1/integrations/contracts`
-- 契約テスト: `src/api/routes/integrations.test.ts`（受信認証・冪等性・再送実送信・契約一覧 6 件）
+- 契約検証: 受信/送信イベントは契約定義の `eventTypes` にない種別を 400 で拒否（fail-closed）
+- 契約テスト: `src/api/routes/integrations.test.ts`（受信認証・冪等性・イベント種別検証・再送実送信・契約一覧 6 件）+
+  `scripts/run-integration-dispatcher.test.ts`（自動配送）
 - 環境変数: `CEOP_INTEGRATION_URL_<SYSTEM>` / `CEOP_INTEGRATION_TOKEN_<SYSTEM>` /
   `CEOP_INTEGRATION_SHARED_SECRET`

@@ -125,6 +125,23 @@ test("inbound webhook requires auth, enforces idempotency, and records audit", a
   assert.ok(h.audit.entries.some((entry) => entry.event.action === "integration.receive"));
 });
 
+test("inbound webhook rejects event types outside the contract", async (t) => {
+  const h = await buildHarness();
+  t.after(h.close);
+
+  const response = await call(
+    h.baseUrl,
+    "POST",
+    "/api/v1/integrations/webhooks/dx-idea",
+    h.adminCred,
+    {
+      idempotencyKey: "idea-2",
+      eventType: "not.in.contract",
+    },
+  );
+  assert.equal(response.status, 400);
+});
+
 test("outbound event is queued and retry delivers to the configured endpoint", async (t) => {
   const h = await buildHarness();
   t.after(h.close);

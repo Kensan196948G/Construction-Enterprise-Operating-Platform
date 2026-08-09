@@ -32,7 +32,8 @@
     "openapi:check": "node --experimental-strip-types scripts/generate-openapi.ts --check",
     "favicon:gen": "node --experimental-strip-types scripts/generate-favicon.ts",
     "webui:unpack": "node --experimental-strip-types scripts/webui-unpack.ts",
-    "webui:serve": "node --experimental-strip-types scripts/webui-serve.ts"
+    "webui:serve": "node --experimental-strip-types scripts/webui-serve.ts",
+    "integration:dispatch": "node --experimental-strip-types scripts/run-integration-dispatcher.ts"
   },
   "pnpm": {
     "overrides": {

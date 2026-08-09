@@ -15,6 +15,7 @@ import type { ServerResponse } from "node:http";
 import type { IsoTimestamp } from "../../domain/common.ts";
 import {
   INTEGRATION_CONTRACTS,
+  contractForSystem,
   createIntegrationEvent,
   integrationEventId,
   integrationSystem,
@@ -116,6 +117,16 @@ export function registerIntegrationRoutes(router: Router, container: AppContaine
       return;
     }
     const eventType = str(req.body, "eventType") ?? "unknown";
+    const contract = contractForSystem(system);
+    if (contract !== undefined && !contract.eventTypes.includes(eventType)) {
+      badRequest(res, [
+        {
+          field: "eventType",
+          message: `eventType must be one of: ${contract.eventTypes.join(", ")}`,
+        },
+      ]);
+      return;
+    }
     const created = createIntegrationEvent({
       id: `evt-${randomUUID()}`,
       system,
@@ -183,6 +194,16 @@ export function registerIntegrationRoutes(router: Router, container: AppContaine
       return;
     }
     const eventType = str(req.body, "eventType") ?? "custom";
+    const contract = contractForSystem(system);
+    if (contract !== undefined && !contract.eventTypes.includes(eventType)) {
+      badRequest(res, [
+        {
+          field: "eventType",
+          message: `eventType must be one of: ${contract.eventTypes.join(", ")}`,
+        },
+      ]);
+      return;
+    }
     const payload =
       typeof req.body === "object" && req.body !== null
         ? (req.body as Record<string, unknown>)
