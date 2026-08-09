@@ -18,6 +18,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
   ESC クローズ・フォーカス移動、トーストに `aria-live=polite`。
 - **運用資産** — `deploy/systemd/ceop-integration-dispatcher.{service,timer}`
   （5 分間隔のイベント自動配送）。
+- テスト 5 件追加（HMAC・メトリクス・テンプレート、計 403）。
 
 ## [0.11.0] - 2026-08-09
 
