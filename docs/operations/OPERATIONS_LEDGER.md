@@ -64,7 +64,8 @@
 | 20:30〜 | 連携先6システム連携基盤（webhook/event/retry/contract/migration 026） | ✅ |
 | 21:0x | AI ガバナンス拡張（evidence/retention/pii/mitigation/利用停止） | ✅ |
 | 21:0x | ISO 管理コンソール `/iso-app`（CRUD・状態遷移・分析・連携表示） | ✅ |
-| 21:1x | Playwright E2E 追加（`/iso-app` 認証・CRUD・状態遷移・連携表示） | ✅（CI 実行待ち） |
+| 21:1x | Playwright E2E 追加（`/iso-app` 認証・CRUD・状態遷移・連携表示） | ✅ |
+| 21:2x | PR #40 CI: E2E (Playwright) 含む全ジョブ成功 | ✅ |
 | 21:1x | データ移行・復旧実演（import 3 件 → backup → delete → restore 3 件） | ✅ |
 | 21:1x | `pnpm run verify` 398/398・parity 27/27・build・audit 0 | ✅ |
 | 21:0x | PR `feat/ims-integration-v0.11.0`（#40）CI 全ジョブ成功 | ✅ |
