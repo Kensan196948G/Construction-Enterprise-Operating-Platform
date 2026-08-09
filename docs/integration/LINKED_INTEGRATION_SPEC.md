@@ -111,3 +111,18 @@ Webhook 受信・イベントキュー・認証・監査・再試行・冪等性
   `scripts/run-integration-dispatcher.test.ts`（自動配送）
 - 環境変数: `CEOP_INTEGRATION_URL_<SYSTEM>` / `CEOP_INTEGRATION_TOKEN_<SYSTEM>` /
   `CEOP_INTEGRATION_SHARED_SECRET`
+
+## 8. 実 URL 特定・到達性確認（2026-08-09）
+
+連携先リポジトリの README・wrangler.toml・state.json・docs から実稼働 URL を特定し、
+本番 `.env`（Git 外）へ `CEOP_INTEGRATION_URL_*` として設定しました。トークンは
+各システムの Cloudflare Access / API 認証が提供された時点で `CEOP_INTEGRATION_TOKEN_*` に設定します。
+
+| システム | 実 URL（設定値） | 到達性（イベント経路 POST） |
+|---|---|---|
+| 4d-planner | `https://civil4d-ai.mirai-dx-platform.com/v1/ceop/events` | 302（Cloudflare Access。トークン設定後に疎通確認） |
+| dx-idea | `https://dxidea.mirai-dx-platform.com/api/ideas/events` | 302（Cloudflare Access。トークン設定後に疎通確認） |
+| site-management | `http://192.168.0.185:3003/api/v1/integrations/events` | 000（本機で未稼働。デプロイ後に再確認） |
+| ai-build | `https://ccabp.mirai-dx-platform.com/api/v1/ai/events` | 405（ホスト到達・経路存在。受信実装後に契約合わせ） |
+| portfolio-atlas | `https://dx-atlas.mirai-dx-platform.com/api/v1/portfolio/events` | 302（Cloudflare Access。トークン設定後に疎通確認） |
+| photo-logger | 未特定（リポジトリに公開 URL なし。Expo アプリ想定） | 未確認 |

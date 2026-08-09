@@ -17,7 +17,7 @@ credentials-file: /home/kensan/.cloudflared/21a24cec-9ac1-4aa8-aa92-c64867bece8b
 
 ingress:
   - hostname: ceop.mirai-dx-platform.com
-    path: ^/(api|health|dashboard|governance)(/.*)?$
+    path: ^/(api|health|dashboard|governance|iso|iso-app|portal)(/.*)?$
     service: http://localhost:3120
   - hostname: ceop.mirai-dx-platform.com
     service: http://localhost:3130
