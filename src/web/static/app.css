@@ -1158,6 +1158,10 @@ tbody td {
   background: rgba(17, 24, 39, 0.45);
 }
 
+.modal-overlay[hidden] {
+  display: none !important;
+}
+
 .modal {
   box-sizing: border-box;
   width: min(640px, calc(100vw - 32px));
