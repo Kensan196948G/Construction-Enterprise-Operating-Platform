@@ -27,6 +27,7 @@ import {
   type IsoRecord,
 } from "../../domain/iso.ts";
 import { recordAudit, type AuditMetadata } from "../audit.ts";
+import { toCsv } from "../csv.ts";
 import { parsePagination, paginate } from "../pagination.ts";
 import type { Router } from "../router.ts";
 import { writeJson } from "../router.ts";
@@ -329,6 +330,51 @@ export function registerIsoRoutes(router: Router, container: AppContainer): void
     }
     const items = filterRecords(await scopedRecords(container, ctx), req.query);
     writeJson(res, 200, { analytics: isoAnalytics(items), kinds: ISO_KIND_LABELS });
+  });
+
+  router.get("/api/v1/iso/export.csv", async (req, ctx, res) => {
+    if (!hasPermission(ctx, PERM_RESOURCE, "read")) {
+      forbidden(res, "iso:read");
+      return;
+    }
+    const items = filterRecords(await scopedRecords(container, ctx), req.query);
+    const csv = toCsv(
+      [
+        "id",
+        "kind",
+        "organizationId",
+        "projectId",
+        "parentId",
+        "number",
+        "title",
+        "status",
+        "createdBy",
+        "createdAt",
+        "updatedAt",
+        "versionNo",
+      ],
+      items.map((r) => ({
+        id: r.id,
+        kind: r.kind,
+        organizationId: r.organizationId,
+        projectId: r.projectId ?? "",
+        parentId: r.parentId ?? "",
+        number: r.number ?? "",
+        title: r.title,
+        status: r.status,
+        createdBy: r.createdBy,
+        createdAt: r.createdAt,
+        updatedAt: r.updatedAt,
+        versionNo: String(r.versionNo),
+      })),
+    );
+    res.writeHead(200, {
+      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Disposition": 'attachment; filename="iso-records.csv"',
+      "Cache-Control": "no-store",
+      "X-Content-Type-Options": "nosniff",
+    });
+    res.end(csv);
   });
 
   router.get("/api/v1/analytics/iso-compliance", async (req, ctx, res) => {

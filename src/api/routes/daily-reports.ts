@@ -17,6 +17,7 @@ import {
 } from "../../domain/daily-report.ts";
 import { projectId } from "../../domain/project.ts";
 import { createWorkflowInstance } from "../../domain/workflow-instance.ts";
+import { toCsv } from "../csv.ts";
 import { parsePagination, paginate } from "../pagination.ts";
 import { recordAudit } from "../audit.ts";
 import type { Router } from "../router.ts";
@@ -96,6 +97,61 @@ export function registerDailyReportRoutes(router: Router, container: AppContaine
       limit: page.limit,
       offset: page.offset,
     });
+  });
+
+  router.get("/api/v1/projects/:projectId/daily-reports/export.csv", async (req, ctx, res) => {
+    if (!hasPermission(ctx, "daily-report", "read")) {
+      forbidden(res, "daily-report:read");
+      return;
+    }
+    const project = await repositories.projects.findById(projectId(req.params["projectId"] ?? ""));
+    if (
+      project === null ||
+      (ctx?.organizationId !== undefined && project.organizationId !== ctx.organizationId)
+    ) {
+      notFound(res);
+      return;
+    }
+    const items = await repositories.dailyReports.findByProject(project.id);
+    const csv = toCsv(
+      [
+        "id",
+        "reportDate",
+        "weather",
+        "temperature",
+        "workerCount",
+        "workContent",
+        "progressRate",
+        "safetyCheck",
+        "safetyNotes",
+        "issues",
+        "status",
+        "createdAt",
+        "updatedAt",
+      ],
+      items.map((r) => ({
+        id: r.id,
+        reportDate: r.reportDate,
+        weather: r.weather ?? "",
+        temperature: r.temperature !== undefined ? String(r.temperature) : "",
+        workerCount: r.workerCount !== undefined ? String(r.workerCount) : "",
+        workContent: r.workContent ?? "",
+        progressRate: r.progressRate !== undefined ? String(r.progressRate) : "",
+        safetyCheck: r.safetyCheck !== undefined ? String(r.safetyCheck) : "",
+        safetyNotes: r.safetyNotes ?? "",
+        issues: r.issues ?? "",
+        status: r.status,
+        createdAt: r.createdAt,
+        updatedAt: r.updatedAt,
+      })),
+    );
+    res.writeHead(200, {
+      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Disposition": `attachment; filename="daily-reports-${project.id}.csv"`,
+      "Cache-Control": "no-store",
+      "X-Content-Type-Options": "nosniff",
+    });
+    res.end(csv);
   });
 
   router.post("/api/v1/projects/:projectId/daily-reports", async (req, ctx, res) => {

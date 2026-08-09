@@ -83,6 +83,16 @@ test("SSR assets: /api/assets/iso.js is served with JS MIME type", async (t) => 
   assert.ok((await res.text()).includes("ISO 統合マネジメントコンソール"));
 });
 
+test("SSR assets: /api/assets/manifest.webmanifest is served with manifest MIME", async (t) => {
+  const h = await buildHarness();
+  t.after(() => h.close());
+
+  const res = await fetch(`${h.baseUrl}/api/assets/manifest.webmanifest`);
+  assert.equal(res.status, 200);
+  assert.match(res.headers.get("content-type") ?? "", /manifest\+json/);
+  assert.match(await res.text(), /short_name/);
+});
+
 test("SSR assets: /api/assets/favicon.svg is served with SVG MIME and security headers", async (t) => {
   const h = await buildHarness();
   t.after(() => h.close());
@@ -144,6 +154,10 @@ test("SSR templates reference /api/assets so the Tunnel path-split cannot shadow
     readFile(new URL("../../web/templates/iso.html", import.meta.url), "utf-8"),
   ]);
   assert.ok(index.includes('href="/api/assets/app.css"'), "index.html CSS must use /api/assets");
+  assert.ok(
+    index.includes('rel="manifest" href="/api/assets/manifest.webmanifest"'),
+    "index.html must reference the PWA manifest",
+  );
   assert.ok(index.includes('src="/api/assets/app.js"'), "index.html JS must use /api/assets");
   assert.ok(
     governance.includes('href="/api/assets/app.css"'),

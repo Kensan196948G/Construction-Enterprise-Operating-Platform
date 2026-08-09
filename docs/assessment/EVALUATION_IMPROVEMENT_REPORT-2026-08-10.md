@@ -169,7 +169,11 @@ AI: RAG 検索、OCR 抽出、工程予測、異常検知、要約、根拠引�
 | /metrics に iso/integration gauge 追加 | PR #42 | テスト 1 件追加 |
 | ISO コンソール a11y（dialog/ESC/aria-live） | PR #42 | E2E pass |
 | 配送 systemd timer 資産 + RUNBOOK | PR #42 | ドキュメント検証 |
-| v0.11.1 バージョン | PR #42 | verify 401 件・build・audit 0 |
+| CSV/Excel 書き出し（日報・ISO） | PR #42 | テスト 1 件・式インジェクション対策（csv.ts） |
+| PWA manifest | PR #42 | 全 SSR ページへリンク・テスト |
+| 復旧検証ツール（verify-restore） | PR #42 | テスト 1 件 |
+| 性能スモーク（100 並列） | PR #42 | テスト 1 件 |
+| v0.11.1 バージョン | PR #42 | verify 407 件・build・audit 0 |
 | （v0.11.0 実績）本番デプロイ・IMS 削除・移行台帳 | PR #40/#41 | 本番スモーク・404 確認 |
 
 ## 8. 再評価（予測・一部実測）
