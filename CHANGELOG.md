@@ -8,6 +8,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 ## [0.11.1] - 2026-08-10
 
+**本番適用済み（2026-08-10）** — PR #42 マージ（f669114）・事前バックアップ・コンテナ差し替え・
+公開スモーク（version 0.11.1・HMAC 401・metrics 新 gauge・CSV 200）確認。
+
 ### Added
 
 - **Webhook HMAC 署名検証** — `CEOP_INTEGRATION_SHARED_SECRET` 設定時に
