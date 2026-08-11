@@ -1271,6 +1271,7 @@ GET  /api/v1/integrations/contracts          契約定義一覧（version/auth/t
 ```
 
 契約仕様: `docs/integration/LINKED_INTEGRATION_SPEC.md`。
+全体設計・リポジトリ統廃合マスタープラン: `docs/integration/REPOSITORY_MASTER_PLAN.md`。
 
 ---
 

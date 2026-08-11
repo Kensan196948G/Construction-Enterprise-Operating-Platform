@@ -9,19 +9,9 @@
  * internally the DatabaseSync API is synchronous (no event loop contention).
  */
 
-import { createRequire } from "node:module";
+import { DatabaseSync } from "node:sqlite";
+import type { StatementSync } from "node:sqlite";
 import type { Repository } from "../ports.ts";
-
-// node:sqlite ships without bundled TypeScript types in Node.js v22/v25.
-// createRequire bridges the untyped built-in into our ESM module graph.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type DatabaseSync = any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type StatementSync = any;
-
-// Module-level require handle — initialized once, reused per openDatabase() call.
-const _require = createRequire(import.meta.url);
-const _sqlite = _require("node:sqlite") as { DatabaseSync: new (path: string) => DatabaseSync };
 
 // ---------------------------------------------------------------------------
 // SQL identifier safety guard
@@ -125,7 +115,9 @@ export class BaseSqliteRepository<T extends { id: string }> implements Repositor
 
   async save(entity: T): Promise<void> {
     const stmt = this.#upsertStmt();
-    stmt.run(entity.id, JSON.stringify(entity), ...this.extraValues(entity));
+    const extra = this.extraValues(entity);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    stmt.run(entity.id, JSON.stringify(entity), ...(extra as any[]));
   }
 
   async delete(id: string): Promise<void> {
@@ -144,7 +136,7 @@ export class BaseSqliteRepository<T extends { id: string }> implements Repositor
  * Returns a `DatabaseSync` instance (node:sqlite experimental API).
  */
 export function openDatabase(filePath: string): DatabaseSync {
-  const db = new _sqlite.DatabaseSync(filePath);
+  const db = new DatabaseSync(filePath);
   db.exec("PRAGMA journal_mode = WAL");
   db.exec("PRAGMA foreign_keys = ON");
   return db;

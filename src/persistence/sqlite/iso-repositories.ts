@@ -2,6 +2,7 @@
  * SQLite-backed ISO record + integration event repositories.
  */
 
+import type { DatabaseSync } from "node:sqlite";
 import type { IsoRecord, IsoRecordId, IsoKind } from "../../domain/iso.ts";
 import type {
   IntegrationEvent,
@@ -16,7 +17,7 @@ export class SqliteIsoRecordRepository
   extends BaseSqliteRepository<IsoRecord>
   implements IsoRecordRepository
 {
-  constructor(db: unknown) {
+  constructor(db: DatabaseSync) {
     super(
       db,
       "iso_records",
@@ -101,7 +102,7 @@ export class SqliteIntegrationEventRepository
   extends BaseSqliteRepository<IntegrationEvent>
   implements IntegrationEventRepository
 {
-  constructor(db: unknown) {
+  constructor(db: DatabaseSync) {
     super(
       db,
       "integration_events",

@@ -46,7 +46,12 @@ async function importRecords(
     const kind = asString(record.kind);
     const organizationId = asString(record.organizationId);
     const title = asString(record.title);
-    if (kind === undefined || isoKind(kind) === null || organizationId === undefined || title === undefined) {
+    if (
+      kind === undefined ||
+      isoKind(kind) === null ||
+      organizationId === undefined ||
+      title === undefined
+    ) {
       errors.push(`record ${index}: kind/organizationId/title are required`);
       continue;
     }
@@ -54,7 +59,9 @@ async function importRecords(
       id: `iso-import-${index}-${Date.now()}`,
       kind: isoKind(kind) as never,
       organizationId,
-      ...(asString(record.projectId) !== undefined ? { projectId: asString(record.projectId) } : {}),
+      ...(asString(record.projectId) !== undefined
+        ? { projectId: asString(record.projectId) }
+        : {}),
       ...(asString(record.parentId) !== undefined ? { parentId: asString(record.parentId) } : {}),
       ...(asString(record.number) !== undefined ? { number: asString(record.number) } : {}),
       title,
@@ -62,7 +69,18 @@ async function importRecords(
       payload: {
         ...Object.fromEntries(
           Object.entries(record).filter(
-            ([key]) => !["kind", "organizationId", "projectId", "parentId", "number", "title", "status", "payload", "createdBy"].includes(key),
+            ([key]) =>
+              ![
+                "kind",
+                "organizationId",
+                "projectId",
+                "parentId",
+                "number",
+                "title",
+                "status",
+                "payload",
+                "createdBy",
+              ].includes(key),
           ),
         ),
         ...(typeof record.payload === "object" &&
@@ -114,6 +132,9 @@ async function main(): Promise<void> {
 
 export { importRecords };
 
-if (process.argv[1] !== undefined && import.meta.url === new URL(process.argv[1], import.meta.url).href) {
+if (
+  process.argv[1] !== undefined &&
+  import.meta.url === new URL(process.argv[1], import.meta.url).href
+) {
   await main();
 }

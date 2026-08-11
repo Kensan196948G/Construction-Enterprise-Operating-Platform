@@ -31,9 +31,8 @@ export function verifyBackup(dbPath: string): BackupVerification {
       db.prepare("SELECT COUNT(*) AS c FROM schema_migrations").get() as { c: number }
     ).c;
     const table = (name: string): boolean =>
-      db
-        .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?")
-        .get(name) !== undefined;
+      db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?").get(name) !==
+      undefined;
     const hasIsoRecords = table("iso_records");
     const hasIntegrationEvents = table("integration_events");
     return {
@@ -49,7 +48,10 @@ export function verifyBackup(dbPath: string): BackupVerification {
   }
 }
 
-if (process.argv[1] !== undefined && import.meta.url === new URL(process.argv[1], import.meta.url).href) {
+if (
+  process.argv[1] !== undefined &&
+  import.meta.url === new URL(process.argv[1], import.meta.url).href
+) {
   const dbPath = process.argv[2];
   if (dbPath === undefined) {
     console.error("usage: verify-restore.ts <backup.db>");

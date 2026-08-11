@@ -23,7 +23,9 @@ export async function dispatchPendingEvents(
   fetchImpl: typeof fetch = fetch,
 ): Promise<{ sent: number; failed: number; events: readonly IntegrationEvent[] }> {
   const all = await repositories.integrationEvents.findByDirection("outbound");
-  const candidates = all.filter((event) => event.status === "pending" || event.status === "retrying");
+  const candidates = all.filter(
+    (event) => event.status === "pending" || event.status === "retrying",
+  );
   const events: IntegrationEvent[] = [];
   let failed = 0;
   for (const event of candidates) {
@@ -54,6 +56,9 @@ async function main(): Promise<void> {
 
 export { main as dispatchMain };
 
-if (process.argv[1] !== undefined && import.meta.url === new URL(process.argv[1], import.meta.url).href) {
+if (
+  process.argv[1] !== undefined &&
+  import.meta.url === new URL(process.argv[1], import.meta.url).href
+) {
   await main();
 }

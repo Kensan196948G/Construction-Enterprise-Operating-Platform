@@ -1,0 +1,15 @@
+#!/bin/sh
+# CEOP pre-commit hook — fast gates before every commit.
+# Failing here means CI would also fail; fix before pushing.
+set -eu
+
+echo "[pre-commit] format check…"
+pnpm run format:check
+
+echo "[pre-commit] lint…"
+pnpm run lint
+
+echo "[pre-commit] typecheck…"
+pnpm run typecheck
+
+echo "[pre-commit] ✓ all gates passed"

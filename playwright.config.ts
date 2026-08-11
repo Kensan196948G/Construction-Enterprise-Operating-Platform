@@ -29,6 +29,8 @@ export default defineConfig({
       CEOP_SEED_DEMO: "true",
       CEOP_E2E_API_KEY_ID: "e2e-admin",
       CEOP_E2E_API_KEY_SECRET: "e2e-secret",
+      CEOP_E2E_VIEWER_API_KEY_ID: "e2e-viewer",
+      CEOP_E2E_VIEWER_API_KEY_SECRET: "e2e-viewer-secret",
     },
   },
 });

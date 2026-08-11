@@ -43,3 +43,6 @@ backups/
 *.key
 *.crt
 *.p12
+
+# Agent session state (opencode)
+.opencode/

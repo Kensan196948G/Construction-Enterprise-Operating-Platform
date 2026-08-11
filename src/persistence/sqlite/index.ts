@@ -44,6 +44,7 @@ import type {
   DailyReportRepository,
 } from "../ports.ts";
 import type { ApiKeyStore } from "../../api/types.ts";
+import type { DatabaseSync } from "node:sqlite";
 import { BaseSqliteRepository, openDatabase } from "./base-sqlite-repository.ts";
 import {
   SqlitePhotoRepository,
@@ -69,7 +70,7 @@ import { SqliteIsoRecordRepository, SqliteIntegrationEventRepository } from "./i
 // ---------------------------------------------------------------------------
 
 class SqliteUserRepository extends BaseSqliteRepository<User> implements UserRepository {
-  constructor(db: unknown) {
+  constructor(db: DatabaseSync) {
     super(
       db,
       "users",
@@ -115,7 +116,7 @@ class SqliteOrganizationRepository
   extends BaseSqliteRepository<Organization>
   implements OrganizationRepository
 {
-  constructor(db: unknown) {
+  constructor(db: DatabaseSync) {
     super(
       db,
       "organizations",
@@ -160,7 +161,7 @@ class SqliteOrganizationRepository
 }
 
 class SqliteRoleRepository extends BaseSqliteRepository<Role> implements RoleRepository {
-  constructor(db: unknown) {
+  constructor(db: DatabaseSync) {
     super(
       db,
       "roles",
@@ -192,7 +193,7 @@ class SqliteRoleRepository extends BaseSqliteRepository<Role> implements RoleRep
 }
 
 class SqliteDeviceRepository extends BaseSqliteRepository<Device> implements DeviceRepository {
-  constructor(db: unknown) {
+  constructor(db: DatabaseSync) {
     super(
       db,
       "devices",
@@ -227,7 +228,7 @@ class SqliteApplicationRepository
   extends BaseSqliteRepository<Application>
   implements ApplicationRepository
 {
-  constructor(db: unknown) {
+  constructor(db: DatabaseSync) {
     super(
       db,
       "applications",
@@ -270,7 +271,7 @@ class SqliteApplicationRepository
 }
 
 class SqlitePolicyRepository extends BaseSqliteRepository<Policy> implements PolicyRepository {
-  constructor(db: unknown) {
+  constructor(db: DatabaseSync) {
     super(
       db,
       "policies",
@@ -305,7 +306,7 @@ class SqliteWorkflowRepository
   extends BaseSqliteRepository<Workflow>
   implements WorkflowRepository
 {
-  constructor(db: unknown) {
+  constructor(db: DatabaseSync) {
     super(
       db,
       "workflows",
@@ -351,7 +352,7 @@ class SqliteWorkflowInstanceRepository
   extends BaseSqliteRepository<WorkflowInstance>
   implements WorkflowInstanceRepository
 {
-  constructor(db: unknown) {
+  constructor(db: DatabaseSync) {
     super(
       db,
       "workflow_instances",
@@ -399,7 +400,7 @@ class SqliteAiActionRepository
   extends BaseSqliteRepository<AiAction>
   implements AiActionRepository
 {
-  constructor(db: unknown) {
+  constructor(db: DatabaseSync) {
     super(
       db,
       "ai_actions",
@@ -440,7 +441,7 @@ class SqliteAiActionRepository
 }
 
 class SqliteProjectRepository extends BaseSqliteRepository<Project> implements ProjectRepository {
-  constructor(db: unknown) {
+  constructor(db: DatabaseSync) {
     super(
       db,
       "projects",
@@ -492,7 +493,7 @@ class SqliteDailyReportRepository
   extends BaseSqliteRepository<DailyReport>
   implements DailyReportRepository
 {
-  constructor(db: unknown) {
+  constructor(db: DatabaseSync) {
     super(
       db,
       "daily_reports",

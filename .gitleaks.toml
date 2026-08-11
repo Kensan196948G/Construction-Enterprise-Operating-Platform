@@ -1,0 +1,28 @@
+# Gitleaks configuration for CEOP
+# https://github.com/gitleaks/gitleaks
+
+title = "CEOP Gitleaks Config"
+
+[allowlist]
+description = "Global allowlist"
+# Demo API keys in README and documentation — these are public examples, not real secrets.
+paths = [
+  '''README\.md''',
+  '''docs/assessment/.*\.md''',
+  '''examples/''',
+  '''webui/CEOP Platform\.html''',
+  '''integrations/''',
+  '''legacy-projects/''',
+  '''reports/''',
+  '''\.git/''',
+  '''node_modules/''',
+  '''dist/''',
+  '''coverage/''',
+  '''playwright-report/''',
+  '''test-results/''',
+]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API key pattern"
+regex = '''(?i)(?:key|api|secret|token|auth).*['"][0-9a-fA-F]{16,}['"]'''

@@ -66,6 +66,9 @@ jobs:
           mkdir -p coverage
           pnpm run test \
             --experimental-test-coverage \
+            --test-coverage-lines=70 \
+            --test-coverage-branches=60 \
+            --test-coverage-functions=70 \
             --test-reporter=tap \
             --test-reporter-destination=stdout \
             --test-reporter=lcov \
@@ -142,7 +145,13 @@ jobs:
       - name: Audit dependencies (pnpm audit)
         run: pnpm audit --audit-level=high
 
-      - name: Scan for hardcoded secrets
+      - name: Gitleaks secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITLEAKS_CONFIG: ".gitleaks.toml"
+        continue-on-error: false
+
+      - name: Scan for hardcoded secrets (src/)
         run: |
           if grep -rE '(password|secret|token)\s*=\s*["'"'"'][^"'"'"'\$\{][^"'"'"']{3,}' src/; then
             echo "FAIL: potential hardcoded secret detected"

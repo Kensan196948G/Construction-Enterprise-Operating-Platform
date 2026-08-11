@@ -297,6 +297,19 @@ export async function createApp(): Promise<AppContainer> {
       );
     }
 
+    const e2eViewerKeyId = process.env["CEOP_E2E_VIEWER_API_KEY_ID"];
+    const e2eViewerSecret = process.env["CEOP_E2E_VIEWER_API_KEY_SECRET"];
+    if (e2eViewerKeyId !== undefined && e2eViewerSecret !== undefined) {
+      createApiKey(
+        "e2e-viewer",
+        [...viewerRole.permissions],
+        apiKeyStore,
+        "org-hq",
+        e2eViewerKeyId,
+        e2eViewerSecret,
+      );
+    }
+
     // ── 8. ISO demo records ─────────────────────────────────────────────────
 
     const demoQualityPlan = mustOk(

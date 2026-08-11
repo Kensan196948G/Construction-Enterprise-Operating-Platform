@@ -4,6 +4,23 @@ All notable changes to the Construction Enterprise Operating Platform are docume
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- **レポジトリ統廃合・機能連携マスタープラン** — `docs/integration/REPOSITORY_MASTER_PLAN.md`
+  （中核 CEOP・統合元 IMS 削除済み・維持連携 6 システムの責務境界と現状を一元化）
+- **レベル付きロガー** — `src/obs/logger.ts`（`LOG_LEVEL` 対応・stderr 出力）を HTTP リクエストログへ適用
+
+### Changed
+
+- **CI カバレッジ閾値** — line 70% / branch 60% / function 70% を test ジョブに追加
+- **CI Gitleaks スキャン** — `.gitleaks.toml` によるシークレットスキャンを追加
+- **verify に build を追加** — `pnpm run verify` が format / openapi / typecheck / lint / test / build / parity を実行
+- **E2E viewer クレデンシャル** — viewer 権限の E2E 用 API キーを seed（`CEOP_E2E_VIEWER_API_KEY_*`）
+- **node:sqlite 型整備** — `createRequire` ブリッジを撤廃し `DatabaseSync` / `StatementSync` 型を直接利用
+- **.gitignore** — `.opencode/`（エージェントセッション状態）を除外
+
 ### 2026-08-11
 
 - **ルート共通ヘルパー集約** — 21 のルートファイルに重複定義されていた `str()`/`nowTs()`/`forbidden()`/`notFound()`/`badRequest()` を
