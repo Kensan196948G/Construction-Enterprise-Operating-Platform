@@ -57,13 +57,19 @@ jobs:
       - name: OpenAPI drift check
         run: pnpm run openapi:check
 
+      - name: Parity check (feature inventory vs implementation)
+        run: pnpm run parity
+
       - name: Test (with coverage)
         run: |
           set -eo pipefail
+          mkdir -p coverage
           pnpm run test \
             --experimental-test-coverage \
             --test-reporter=tap \
             --test-reporter-destination=stdout \
+            --test-reporter=lcov \
+            --test-reporter-destination=coverage/lcov.info \
             2>&1 | tee test-results.txt
         continue-on-error: false
 
@@ -72,7 +78,9 @@ jobs:
         if: always()
         with:
           name: test-results-${{ github.run_number }}
-          path: test-results.txt
+          path: |
+            test-results.txt
+            coverage/lcov.info
           retention-days: 14
 
   # ── Job 2: TypeScript build ──────────────────────────────────────────────────

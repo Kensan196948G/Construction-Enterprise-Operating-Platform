@@ -11,7 +11,6 @@
  */
 
 import { randomUUID } from "node:crypto";
-import type { ServerResponse } from "node:http";
 import {
   createWorkflow,
   workflowId,
@@ -24,23 +23,12 @@ import { recordAudit } from "../audit.ts";
 import type { Router } from "../router.ts";
 import { writeJson } from "../router.ts";
 import { hasPermission } from "./governance.ts";
+import { badRequest, bodyHasKey, forbidden, noContent, notFound, str } from "./route-helpers.ts";
 import type { AppContainer } from "../types.ts";
 
 // ---------------------------------------------------------------------------
-// Body-extraction helpers
+// Workflow-specific body parsing
 // ---------------------------------------------------------------------------
-
-function str(body: unknown, key: string): string | undefined {
-  if (typeof body !== "object" || body === null) return undefined;
-  const v = (body as Record<string, unknown>)[key];
-  return typeof v === "string" ? v : undefined;
-}
-
-function bodyHasKey(body: unknown, key: string): boolean {
-  return typeof body === "object" && body !== null && key in (body as Record<string, unknown>);
-}
-
-/** Parse `steps` from the request body, returning undefined if malformed. */
 function parseSteps(body: unknown): WorkflowStep[] | undefined {
   if (typeof body !== "object" || body === null) return undefined;
   const v = (body as Record<string, unknown>)["steps"];
@@ -62,27 +50,6 @@ function parseSteps(body: unknown): WorkflowStep[] | undefined {
     result.push({ key, name, requiredPermission });
   }
   return result;
-}
-
-// ---------------------------------------------------------------------------
-// Response helpers
-// ---------------------------------------------------------------------------
-
-function noContent(res: ServerResponse): void {
-  res.writeHead(204);
-  res.end();
-}
-
-function forbidden(res: ServerResponse, perm: string): void {
-  writeJson(res, 403, { error: "Forbidden", message: `requires '${perm}' permission` });
-}
-
-function notFound(res: ServerResponse): void {
-  writeJson(res, 404, { error: "Not Found", message: "workflow not found" });
-}
-
-function badRequest(res: ServerResponse, details: unknown): void {
-  writeJson(res, 400, { error: "Bad Request", message: "validation failed", details });
 }
 
 // ---------------------------------------------------------------------------
@@ -134,7 +101,7 @@ export function registerWorkflowRoutes(router: Router, container: AppContainer):
     }
     const workflow = await repositories.workflows.findById(workflowId(req.params["id"] ?? ""));
     if (workflow === null) {
-      notFound(res);
+      notFound(res, "workflow");
       return;
     }
     writeJson(res, 200, workflow);
@@ -203,7 +170,7 @@ export function registerWorkflowRoutes(router: Router, container: AppContainer):
 
     const existing = await repositories.workflows.findById(workflowId(req.params["id"] ?? ""));
     if (existing === null) {
-      notFound(res);
+      notFound(res, "workflow");
       return;
     }
 
@@ -259,7 +226,7 @@ export function registerWorkflowRoutes(router: Router, container: AppContainer):
     }
     const existing = await repositories.workflows.findById(workflowId(req.params["id"] ?? ""));
     if (existing === null) {
-      notFound(res);
+      notFound(res, "workflow");
       return;
     }
     await repositories.workflows.delete(existing.id);

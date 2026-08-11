@@ -4,7 +4,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-22.13+-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Zero Runtime Deps](https://img.shields.io/badge/runtime%20deps-zero-brightgreen)](package.json)
 [![CI](https://img.shields.io/github/actions/workflow/status/Kensan196948G/Construction-Enterprise-Operating-Platform/ci.yml?label=CI&logo=github)](/.github/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-407%20pass-brightgreen)](src/)
+[![Tests](https://img.shields.io/badge/tests-523%20pass-brightgreen)](src/)
 [![Security](https://img.shields.io/badge/security-hardened-blue)](src/api/middleware/auth.ts)
 [![License](https://img.shields.io/badge/license-proprietary-lightgrey)](LICENSE.md)
 
@@ -24,7 +24,7 @@
 | HTTP サーバ  | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                                                                                                            |
 | 依存方針     | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）                                                                                    |
 | パッケージ   | pnpm 10.26.2                                                                                                                                                        |
-| テスト       | 407 tests pass（node:test ビルトインランナー）                                                                                                                      |
+| テスト       | 523 tests pass（node:test ビルトインランナー）                                                                                                                      |
 | コンテナ     | Docker multi-stage build（non-root・HEALTHCHECK 付き）                                                                                                              |
 | セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限                                                                                   |
 
@@ -614,7 +614,7 @@ bash scripts/webui-deploy.sh
 ## 🧪 テスト実行
 
 ```bash
-# 全テスト実行（407 tests）
+# 全テスト実行（523 tests）
 pnpm run test
 
 # typecheck + lint + test 一括
@@ -652,15 +652,15 @@ node --experimental-strip-types scripts/sqlite-backup.ts /data/ceop.db /backup/c
 
 ### 📊 現在の品質状態
 
-| ゲート    | 状態           | 備考                                                                                                                                                                                                                                                                                                                                                                                                       |
-| --------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| typecheck | ✅ pass        | strict・`noUncheckedIndexedAccess`・0 error                                                                                                                                                                                                                                                                                                                                                                |
-| lint      | ✅ pass        | ESLint flat config + typescript-eslint・0 warning                                                                                                                                                                                                                                                                                                                                                          |
-| test      | ✅ 382/382     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud + governance-crud + sqlite-audit-log + workflow-crud + workflow-instance + audit-coverage + migrate + rate-limit（CF-IP 分離含む）+ tenant-scope + audit-tenant-scope + jwt-org + webui + client-ip + backup-retention + auth-keys + api-key-repository + web-assets + favicon + ai-actions + device-ingest |
-| build     | ✅ pass        | `dist/` に型定義付き出力                                                                                                                                                                                                                                                                                                                                                                                   |
-| CI        | ✅ 設定済み    | `.github/workflows/ci.yml`（push / PR トリガー）                                                                                                                                                                                                                                                                                                                                                           |
-| Docker    | ✅ multi-stage | non-root ユーザー・HEALTHCHECK 付き                                                                                                                                                                                                                                                                                                                                                                        |
-| security  | ✅ hardened    | timingSafeEqual・ボディ制限・権限ゲート・CSP・API セキュリティヘッダ・監査網羅                                                                                                                                                                                                                                                                                                                             |
+| ゲート    | 状態           | 備考                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| --------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| typecheck | ✅ pass        | strict・`noUncheckedIndexedAccess`・0 error                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| lint      | ✅ pass        | ESLint flat config + typescript-eslint・0 warning                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| test      | ✅ 523/523     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud + governance-crud + sqlite-audit-log + workflow-crud + workflow-instance + audit-coverage + migrate + rate-limit（CF-IP 分離含む）+ tenant-scope + audit-tenant-scope + jwt-org + webui + client-ip + backup-retention + auth-keys + api-key-repository + web-assets + favicon + ai-actions + device-ingest + P3 domain/routes + notification + compliance + documents + work-schedules + purchase-orders + webhook + health-probe + verify-restore + iso + integrations + load-smoke |
+| build     | ✅ pass        | `dist/` に型定義付き出力                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| CI        | ✅ 設定済み    | `.github/workflows/ci.yml`（push / PR トリガー）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Docker    | ✅ multi-stage | non-root ユーザー・HEALTHCHECK 付き                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| security  | ✅ hardened    | timingSafeEqual・ボディ制限・権限ゲート・CSP・API セキュリティヘッダ・監査網羅                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 
 ---
 
@@ -683,6 +683,12 @@ node --experimental-strip-types scripts/sqlite-backup.ts /data/ceop.db /backup/c
 | `CEOP_GATEWAY_<SERVICE>_TOKEN` | —                                            | 上流統合サービスへ渡す Bearer トークン（`upstreamTokenEnv` で指定。Git 非コミット）                                             |
 | `CEOP_CORS_ORIGIN`             | —（未設定 = CORS 無効）                      | 明示した場合のみ `Access-Control-Allow-Origin` を出力（認証 API では `*` 禁止）                                                 |
 | `CEOP_ALERT_WEBHOOK_URL`       | —（未設定 = 通知なし）                       | `scripts/health-probe.sh` が ALERT/RECOVERED 時に JSON POST する Webhook URL（cron/サービス環境に設定・Git には置かない）       |
+| `CEOP_SMTP_HOST`               | —（未設定 = email 通知無効）                 | 通知ディスパッチャーの SMTP サーバホスト（`src/notifications/smtp.ts`・暗黙的 TLS / AUTH PLAIN）                                |
+| `CEOP_SMTP_PORT`               | `465`                                        | SMTP ポート（暗黙的 TLS 既定）                                                                                                  |
+| `CEOP_SMTP_SECURE`             | `true`                                       | 暗黙的 TLS（port 465）を使用するか（`false` で平文・port 25 想定）                                                              |
+| `CEOP_SMTP_USER`               | —                                            | SMTP AUTH PLAIN ユーザー名                                                                                                      |
+| `CEOP_SMTP_PASSWORD`           | —                                            | SMTP AUTH PLAIN パスワード                                                                                                      |
+| `CEOP_SMTP_FROM`               | `ceop@example.local`                         | 送信元メールアドレス（From ヘッダ）                                                                                             |
 
 ### 🗄️ 永続化ティア選択
 
@@ -1011,11 +1017,12 @@ AI 利用の統制・承認・監査を CEOP で一元管理します。プロ�
 SHA-256 ハッシュ（`promptHash`）のみを記録し、承認ワークフロー
 （`pending → approved | rejected`）と監査ログを適用します。
 
-| エンドポイント                          | 権限         | 説明                                                       |
-| --------------------------------------- | ------------ | ---------------------------------------------------------- |
-| `GET /api/v1/ai-actions`                | `ai:read`    | テナント単位の AI アクション一覧（ページング・`?status=`） |
-| `POST /api/v1/ai-actions`               | `ai:write`   | AI アクション要求の作成（状態: pending）                   |
-| `POST /api/v1/ai-actions/{id}/decision` | `ai:approve` | 承認 / 却下（一度だけ遷移可・監査記録）                    |
+| エンドポイント                          | 権限         | 説明                                                                  |
+| --------------------------------------- | ------------ | --------------------------------------------------------------------- |
+| `GET /api/v1/ai-actions`                | `ai:read`    | テナント単位の AI アクション一覧（ページング・`?status=`）            |
+| `POST /api/v1/ai-actions`               | `ai:write`   | AI アクション要求の作成（状態: pending）                              |
+| `POST /api/v1/ai-actions/{id}/decision` | `ai:approve` | 承認 / 却下（一度だけ遷移可・監査記録）                               |
+| `POST /api/v1/ai-actions/{id}/status`   | `ai:approve` | 運用ステータス設定（`operational` / `limited` / `stopped`・監査記録） |
 
 テナント境界は資格情報のスコープから決定し、リクエスト本文の `organizationId` は
 スコープと一致しない場合に拒否します（クロステナント防止）。
@@ -1057,13 +1064,14 @@ migration `008`（`projects` テーブル）を追加。
 日報（天気・作業員数・作業内容・安全確認・進捗・課題）を案件配下で管理します。
 ライフサイクル: `draft → submitted → approved`。
 
-| エンドポイント                                    | 権限                 | 説明                                 |
-| ------------------------------------------------- | -------------------- | ------------------------------------ |
-| `GET /api/v1/projects/{projectId}/daily-reports`  | `daily-report:read`  | 案件配下の日報一覧                   |
-| `POST /api/v1/projects/{projectId}/daily-reports` | `daily-report:write` | 日報作成                             |
-| `GET /api/v1/daily-reports/{id}`                  | `daily-report:read`  | 日報詳細                             |
-| `PATCH /api/v1/daily-reports/{id}`                | `daily-report:write` | 日報更新                             |
-| `POST /api/v1/daily-reports/{id}/transition`      | `daily-report:write` | 状態遷移（draft→submitted→approved） |
+| エンドポイント                                              | 権限                 | 説明                                                               |
+| ----------------------------------------------------------- | -------------------- | ------------------------------------------------------------------ |
+| `GET /api/v1/projects/{projectId}/daily-reports`            | `daily-report:read`  | 案件配下の日報一覧                                                 |
+| `POST /api/v1/projects/{projectId}/daily-reports`           | `daily-report:write` | 日報作成                                                           |
+| `GET /api/v1/daily-reports/{id}`                            | `daily-report:read`  | 日報詳細                                                           |
+| `PATCH /api/v1/daily-reports/{id}`                          | `daily-report:write` | 日報更新                                                           |
+| `POST /api/v1/daily-reports/{id}/transition`                | `daily-report:write` | 状態遷移（draft→submitted→approved）                               |
+| `GET /api/v1/projects/{projectId}/daily-reports/export.csv` | `daily-report:read`  | CSV エクスポート（案件配下の日報一括・式インジェクション対策済み） |
 
 migration `009`（`daily_reports` テーブル）を追加。
 
@@ -1186,9 +1194,10 @@ migration `016`（knowledge_articles）・`017`（legal_contracts）を追加。
 ## 🔔 Notification Preference / Dispatcher（P3 / E-11・S-09）
 
 - `GET/PUT /api/v1/notification-preferences/{userId}` — ユーザー別の通知購読設定（email/slack/events）
-- `scripts/run-notification-dispatcher.ts` — pending/retry 配信を Webhook/Slack へ実送信
+- `scripts/run-notification-dispatcher.ts` — pending/retry 配信を Webhook/Slack/email へ実送信
   （`CEOP_NOTIFICATION_WEBHOOK_URL` / `CEOP_NOTIFICATION_SLACK_WEBHOOK_URL`。未設定チャネルは
-  `not-configured` として失敗記録・email は SMTP 未実装のため同様）
+  `not-configured` として失敗記録）
+- email チャネルは `CEOP_SMTP_*` 環境変数設定時に暗黙的 TLS（`src/notifications/smtp.ts`、AUTH PLAIN）で実送信
 
 migration `018`（documents）・`019`（work_schedules）・`020`（purchase_orders）・`021`（notification_preferences）を追加。
 
@@ -1228,6 +1237,7 @@ GET/POST         /api/v1/iso                   全 ISO レコード（kind/proje
 GET/PUT/DELETE   /api/v1/iso/:id               個別レコード
 POST             /api/v1/iso/:id/action        状態遷移（submit-review/approve/reject/return/publish/withdraw/start/close/complete/cancel）
 GET              /api/v1/iso/analytics         ISO コンプライアンス分析
+GET              /api/v1/iso/export.csv        CSV エクスポート（全 ISO レコード・式インジェクション対策済み）
 GET              /api/v1/analytics/iso-compliance / safety-kpi
 GET              /iso                          ISO ランディングページ
 GET              /iso-app                      ISO 管理コンソール（全モジュール CRUD・状態遷移・分析・連携）
@@ -1267,7 +1277,13 @@ GET  /api/v1/integrations/contracts          契約定義一覧（version/auth/t
 ## 🏛️ Portal（P4）
 
 `GET /portal` で CEOP の全モジュール（ダッシュボード / ガバナンス / ISO 統合マネジメント / プラットフォーム情報 / メトリクス）を
-一覧するポータル入口を提供します（未認証・loopback 前提。公開面は Tunnel ingress で制御）。
+一覧するポータル入口を提供します。
+
+| エンドポイント | 認証 | 権限       | 説明                                                                     |
+| -------------- | ---- | ---------- | ------------------------------------------------------------------------ |
+| `GET /portal`  | 不要 | なし       | CEOP 全モジュールへのポータル入口 SSR ページ（P4）                       |
+| `GET /iso`     | 不要 | なし       | ISO 統合マネジメントのランディングページ SSR（モジュール一覧・API 概要） |
+| `GET /iso-app` | 必須 | `iso:read` | ISO 管理コンソール SSR（全モジュール CRUD・状態遷移・分析・連携）        |
 
 ## 📈 Prometheus Metrics（P4）
 

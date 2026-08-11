@@ -362,3 +362,66 @@ docker run --rm -u 0 -v /home/kensan/.ceop/data:/data --env-file /home/kensan/.c
 
 送信先 URL は `CEOP_INTEGRATION_URL_<SYSTEM>`、共有シークレットは
 `CEOP_INTEGRATION_SHARED_SECRET`（`X-Integration-Token` と `X-CEOP-Signature`（HMAC-SHA256）で受信検証）。
+
+## 9. リリース手順
+
+### 仕組み
+
+Git タグ `vX.Y.Z` を push すると、GitHub Actions `release.yml` が自動で以下を実行します：
+
+1. `pnpm run verify`（typecheck + lint + test + build）
+2. Docker イメージをビルドし GHCR（`ghcr.io/kensan196948g/construction-eop`）へ push
+   - タグ: `X.Y.Z` / `X.Y` / `X`（semver パターン）
+3. `CHANGELOG.md` から該当バージョンのセクションを抽出し GitHub Release を作成
+
+トリガー条件: `.github/workflows/release.yml` の `on.push.tags: ["v*.*.*"]`
+
+### 手順
+
+```bash
+# 1. src/version.ts の PLATFORM_VERSION を更新（package.json と一致させる）
+#    src/version.test.ts が不一致を検出するため、両方を同時に更新すること
+
+# 2. CHANGELOG.md に [X.Y.Z] セクションを追加（release.yml がこの見出しを抽出する）
+
+# 3. 変更をコミット
+git add src/version.ts package.json CHANGELOG.md
+git commit -m "chore: bump version to vX.Y.Z"
+
+# 4. タグを作成して push（これで release.yml が発火）
+git tag vX.Y.Z
+git push origin main --tags
+```
+
+### 注意事項
+
+- **タグを push する前に `pnpm run verify` が通ることを必ず確認する。**
+  release.yml 内でも verify は実行されるが、タグ push 後の CI 失敗はリカバリが面倒。
+- **CHANGELOG.md の見出しは `## [X.Y.Z]` 形式（`v` 接頭辞なし）であること。**
+  release.yml は `vX.Y.Z` タグから `v` を除去して CHANGELOG を検索する。
+- **タグは一度 push すると削除・再作成が難しい。** 誤ったタグを push した場合は
+  GitHub Release を手動で削除し、GHCR の誤イメージも手動で削除する必要がある。
+
+### v0.11.x タグ未作成問題（2026-08-11 現在）
+
+v0.11.0（2026-08-09）および v0.11.1（2026-08-10）は本番デプロイ済みだが、
+Git タグが作成されなかったため `release.yml` が発火せず、以下が未実施：
+
+- GHCR に `0.11.0` / `0.11.1` イメージが push されていない
+- GitHub Release が作成されていない
+
+**対応手順:**
+
+```bash
+# v0.11.0 のコミットを特定し、タグを作成
+git log --oneline --all | grep -i "0.11.0"
+# 該当コミットの SHA を確認し:
+git tag v0.11.0 <commit-sha>
+git tag v0.11.1 <commit-sha>
+
+# タグを push（release.yml が発火し GHCR イメージ + GitHub Release が作成される）
+git push origin v0.11.0 v0.11.1
+```
+
+> ⚠️ タグ push により release.yml が 2 回発火する。v0.11.0 の CHANGELOG セクションが
+> 存在することを事前に確認すること（存在しない場合、release.yml はエラーで停止する）。

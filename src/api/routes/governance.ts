@@ -11,7 +11,6 @@
  */
 
 import { randomUUID } from "node:crypto";
-import type { ServerResponse } from "node:http";
 import type { IsoTimestamp } from "../../domain/common.ts";
 import { AUDIT_ORG_KEY, createAuditEvent } from "../../domain/audit-event.ts";
 import { createPolicy, policyId } from "../../domain/policy.ts";
@@ -25,6 +24,15 @@ import type { Router } from "../router.ts";
 import { writeAttachment, writeJson } from "../router.ts";
 import { parsePagination, paginate } from "../pagination.ts";
 import type { AppContainer } from "../types.ts";
+import {
+  badRequest,
+  bodyHasKey,
+  forbidden,
+  noContent,
+  notFound,
+  str,
+  strArr,
+} from "./route-helpers.ts";
 
 const AUDIT_LIMIT_DEFAULT = 50;
 const AUDIT_LIMIT_MAX = 200;
@@ -190,24 +198,6 @@ function asStringRecord(value: unknown): Record<string, string> | null {
 // Policy body helpers
 // ---------------------------------------------------------------------------
 
-function str(body: unknown, key: string): string | undefined {
-  if (typeof body !== "object" || body === null) return undefined;
-  const v = (body as Record<string, unknown>)[key];
-  return typeof v === "string" ? v : undefined;
-}
-
-function strArr(body: unknown, key: string): string[] | undefined {
-  if (typeof body !== "object" || body === null) return undefined;
-  const v = (body as Record<string, unknown>)[key];
-  if (!Array.isArray(v)) return undefined;
-  if (!(v as unknown[]).every((x) => typeof x === "string")) return undefined;
-  return v as string[];
-}
-
-function bodyHasKey(body: unknown, key: string): boolean {
-  return typeof body === "object" && body !== null && key in (body as Record<string, unknown>);
-}
-
 function conditionsArr(body: unknown, key: string): PolicyCondition[] | undefined {
   if (typeof body !== "object" || body === null) return undefined;
   const v = (body as Record<string, unknown>)[key];
@@ -228,23 +218,6 @@ function conditionsArr(body: unknown, key: string): PolicyCondition[] | undefine
     });
   }
   return result;
-}
-
-function notFound(res: ServerResponse, resource: string): void {
-  writeJson(res, 404, { error: "Not Found", message: `${resource} not found` });
-}
-
-function badRequest(res: ServerResponse, details: unknown): void {
-  writeJson(res, 400, { error: "Bad Request", message: "validation failed", details });
-}
-
-function forbidden(res: ServerResponse, perm: string): void {
-  writeJson(res, 403, { error: "Forbidden", message: `requires '${perm}' permission` });
-}
-
-function noContent(res: ServerResponse): void {
-  res.writeHead(204);
-  res.end();
 }
 
 // ---------------------------------------------------------------------------

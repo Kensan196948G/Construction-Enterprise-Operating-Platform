@@ -3,8 +3,6 @@
  */
 
 import { randomUUID } from "node:crypto";
-import type { ServerResponse } from "node:http";
-import type { IsoTimestamp } from "../../domain/common.ts";
 import {
   DOCUMENT_STATUSES,
   DOCUMENT_TYPES,
@@ -16,35 +14,8 @@ import { recordAudit } from "../audit.ts";
 import type { Router } from "../router.ts";
 import { writeJson } from "../router.ts";
 import { hasPermission } from "./governance.ts";
+import { badRequest, forbidden, notFound, nowTs, num, str } from "./route-helpers.ts";
 import type { AppContainer } from "../types.ts";
-
-function str(body: unknown, key: string): string | undefined {
-  if (typeof body !== "object" || body === null) return undefined;
-  const v = (body as Record<string, unknown>)[key];
-  return typeof v === "string" ? v : undefined;
-}
-
-function num(body: unknown, key: string): number | undefined {
-  if (typeof body !== "object" || body === null) return undefined;
-  const v = (body as Record<string, unknown>)[key];
-  return typeof v === "number" ? v : undefined;
-}
-
-function forbidden(res: ServerResponse, perm: string): void {
-  writeJson(res, 403, { error: "Forbidden", message: `requires '${perm}' permission` });
-}
-
-function notFound(res: ServerResponse): void {
-  writeJson(res, 404, { error: "Not Found", message: "document not found" });
-}
-
-function badRequest(res: ServerResponse, details: unknown): void {
-  writeJson(res, 400, { error: "Bad Request", message: "validation failed", details });
-}
-
-function nowTs(): IsoTimestamp {
-  return new Date().toISOString() as IsoTimestamp;
-}
 
 export function registerDocumentRoutes(router: Router, container: AppContainer): void {
   const { repositories } = container;
@@ -153,7 +124,7 @@ export function registerDocumentRoutes(router: Router, container: AppContainer):
       document === null ||
       (ctx?.organizationId !== undefined && document.organizationId !== ctx.organizationId)
     ) {
-      notFound(res);
+      notFound(res, "document");
       return;
     }
     writeJson(res, 200, { document });
@@ -169,7 +140,7 @@ export function registerDocumentRoutes(router: Router, container: AppContainer):
       document === null ||
       (ctx?.organizationId !== undefined && document.organizationId !== ctx.organizationId)
     ) {
-      notFound(res);
+      notFound(res, "document");
       return;
     }
     await repositories.documents.delete(document.id);

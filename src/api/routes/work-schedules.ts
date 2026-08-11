@@ -3,8 +3,6 @@
  */
 
 import { randomUUID } from "node:crypto";
-import type { ServerResponse } from "node:http";
-import type { IsoTimestamp } from "../../domain/common.ts";
 import { projectId } from "../../domain/project.ts";
 import {
   WORK_SCHEDULE_STATUSES,
@@ -16,29 +14,8 @@ import { recordAudit } from "../audit.ts";
 import type { Router } from "../router.ts";
 import { writeJson } from "../router.ts";
 import { hasPermission } from "./governance.ts";
+import { badRequest, forbidden, notFound, nowTs, str } from "./route-helpers.ts";
 import type { AppContainer } from "../types.ts";
-
-function str(body: unknown, key: string): string | undefined {
-  if (typeof body !== "object" || body === null) return undefined;
-  const v = (body as Record<string, unknown>)[key];
-  return typeof v === "string" ? v : undefined;
-}
-
-function forbidden(res: ServerResponse, perm: string): void {
-  writeJson(res, 403, { error: "Forbidden", message: `requires '${perm}' permission` });
-}
-
-function notFound(res: ServerResponse): void {
-  writeJson(res, 404, { error: "Not Found", message: "work schedule not found" });
-}
-
-function badRequest(res: ServerResponse, details: unknown): void {
-  writeJson(res, 400, { error: "Bad Request", message: "validation failed", details });
-}
-
-function nowTs(): IsoTimestamp {
-  return new Date().toISOString() as IsoTimestamp;
-}
 
 export function registerWorkScheduleRoutes(router: Router, container: AppContainer): void {
   const { repositories } = container;
@@ -53,7 +30,7 @@ export function registerWorkScheduleRoutes(router: Router, container: AppContain
       project === null ||
       (ctx?.organizationId !== undefined && project.organizationId !== ctx.organizationId)
     ) {
-      notFound(res);
+      notFound(res, "work schedule");
       return;
     }
     const page = paginate(
@@ -79,7 +56,7 @@ export function registerWorkScheduleRoutes(router: Router, container: AppContain
       project === null ||
       (ctx?.organizationId !== undefined && project.organizationId !== ctx.organizationId)
     ) {
-      notFound(res);
+      notFound(res, "work schedule");
       return;
     }
     const status = str(req.body, "status");
@@ -127,7 +104,7 @@ export function registerWorkScheduleRoutes(router: Router, container: AppContain
       schedule === null ||
       (ctx?.organizationId !== undefined && schedule.organizationId !== ctx.organizationId)
     ) {
-      notFound(res);
+      notFound(res, "work schedule");
       return;
     }
     writeJson(res, 200, { workSchedule: schedule });

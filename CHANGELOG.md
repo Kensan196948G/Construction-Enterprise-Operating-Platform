@@ -4,7 +4,23 @@ All notable changes to the Construction Enterprise Operating Platform are docume
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+### 2026-08-11
+
+- **ルート共通ヘルパー集約** — 21 のルートファイルに重複定義されていた `str()`/`nowTs()`/`forbidden()`/`notFound()`/`badRequest()` を
+  `src/api/routes/route-helpers.ts` へ集約し import で共有（`-805/+288` 行・挙動不変・verify pass）
+- **P3 後半ルート/ドメインのテスト追加** — `documents`/`work-schedules`/`purchase-orders`/`notification-preferences`/`compliance` の
+  ルート統合テストとドメインテストを追加（計 17 ファイル・verify 523/523 pass）
+- **src/domain/index.ts 全ドメイン再エクスポート** — 19 ドメイン（compliance/contract/cost/daily-report/device-ingest/document/
+  iso/knowledge/notification/notification-preference/notification-template/p3b/p3-slices/photo/project/
+  purchase-order/s07-e11/safety/work-schedule）の型・ファクトリを再エクスポート
+- **CI に parity ジョブ追加** — `ci.yml` の test ジョブに `pnpm run parity`（FEATURE_INVENTORY 突合 + API プローブ 27/27 PASS）を追加
+- **CI カバレッジ lcov 出力** — `--test-reporter=lcov` で `coverage/lcov.info` を artifact に追加
+- **README 更新** — テスト数 523 に修正、未記載エンドポイント（CSV エクスポート・ai-actions/status・portal/iso/iso-app）と
+  SMTP 環境変数を追記、品質状態のテスト記述を最新化
+
+### Fixed
+
+- **README テスト数不整合** — バッジ・表・品質状態セクションのテスト数を実測（523 pass）に修正
 
 ## [0.11.1] - 2026-08-10
 

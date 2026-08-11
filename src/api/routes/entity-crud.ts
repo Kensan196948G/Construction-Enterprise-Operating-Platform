@@ -14,7 +14,6 @@
  */
 
 import { randomUUID } from "node:crypto";
-import type { ServerResponse } from "node:http";
 import type { IsoTimestamp } from "../../domain/common.ts";
 import { parsePagination, paginate } from "../pagination.ts";
 import { createOrganization, organizationId } from "../../domain/organization.ts";
@@ -31,46 +30,8 @@ import { recordAudit, type AuditMetadata } from "../audit.ts";
 import type { Router } from "../router.ts";
 import { writeJson } from "../router.ts";
 import { canAccessOrganization, coversPermissions, hasPermission } from "./governance.ts";
+import { badRequest, forbidden, noContent, notFound, nowTs, str, strArr } from "./route-helpers.ts";
 import type { ApiKeyContext, AppContainer } from "../types.ts";
-
-// ---------------------------------------------------------------------------
-// Internal body-extraction helpers
-// ---------------------------------------------------------------------------
-
-function str(body: unknown, key: string): string | undefined {
-  if (typeof body !== "object" || body === null) return undefined;
-  const v = (body as Record<string, unknown>)[key];
-  return typeof v === "string" ? v : undefined;
-}
-
-function strArr(body: unknown, key: string): string[] | undefined {
-  if (typeof body !== "object" || body === null) return undefined;
-  const v = (body as Record<string, unknown>)[key];
-  if (!Array.isArray(v)) return undefined;
-  if (!(v as unknown[]).every((x) => typeof x === "string")) return undefined;
-  return v as string[];
-}
-
-function nowTs(): IsoTimestamp {
-  return new Date().toISOString() as IsoTimestamp;
-}
-
-function noContent(res: ServerResponse): void {
-  res.writeHead(204);
-  res.end();
-}
-
-function forbidden(res: ServerResponse, perm: string): void {
-  writeJson(res, 403, { error: "Forbidden", message: `requires '${perm}' permission` });
-}
-
-function notFound(res: ServerResponse, resource: string): void {
-  writeJson(res, 404, { error: "Not Found", message: `${resource} not found` });
-}
-
-function badRequest(res: ServerResponse, details: unknown): void {
-  writeJson(res, 400, { error: "Bad Request", message: "validation failed", details });
-}
 
 /** Record a successful mutation in the tamper-evident audit log. */
 function audit(

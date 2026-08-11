@@ -3,8 +3,6 @@
  */
 
 import { randomUUID } from "node:crypto";
-import type { ServerResponse } from "node:http";
-import type { IsoTimestamp } from "../../domain/common.ts";
 import {
   CONTRACT_RISK_SCORES,
   CONTRACT_STATUSES,
@@ -18,35 +16,8 @@ import { recordAudit } from "../audit.ts";
 import type { Router } from "../router.ts";
 import { writeJson } from "../router.ts";
 import { hasPermission } from "./governance.ts";
+import { badRequest, forbidden, notFound, nowTs, num, str } from "./route-helpers.ts";
 import type { AppContainer } from "../types.ts";
-
-function str(body: unknown, key: string): string | undefined {
-  if (typeof body !== "object" || body === null) return undefined;
-  const v = (body as Record<string, unknown>)[key];
-  return typeof v === "string" ? v : undefined;
-}
-
-function num(body: unknown, key: string): number | undefined {
-  if (typeof body !== "object" || body === null) return undefined;
-  const v = (body as Record<string, unknown>)[key];
-  return typeof v === "number" ? v : undefined;
-}
-
-function forbidden(res: ServerResponse, perm: string): void {
-  writeJson(res, 403, { error: "Forbidden", message: `requires '${perm}' permission` });
-}
-
-function notFound(res: ServerResponse): void {
-  writeJson(res, 404, { error: "Not Found", message: "contract not found" });
-}
-
-function badRequest(res: ServerResponse, details: unknown): void {
-  writeJson(res, 400, { error: "Bad Request", message: "validation failed", details });
-}
-
-function nowTs(): IsoTimestamp {
-  return new Date().toISOString() as IsoTimestamp;
-}
 
 export function registerContractRoutes(router: Router, container: AppContainer): void {
   const { repositories } = container;
@@ -61,7 +32,7 @@ export function registerContractRoutes(router: Router, container: AppContainer):
       project === null ||
       (ctx?.organizationId !== undefined && project.organizationId !== ctx.organizationId)
     ) {
-      notFound(res);
+      notFound(res, "contract");
       return;
     }
     const page = paginate(
@@ -87,7 +58,7 @@ export function registerContractRoutes(router: Router, container: AppContainer):
       project === null ||
       (ctx?.organizationId !== undefined && project.organizationId !== ctx.organizationId)
     ) {
-      notFound(res);
+      notFound(res, "contract");
       return;
     }
     const contractNumber = str(req.body, "contractNumber") ?? "";
@@ -165,7 +136,7 @@ export function registerContractRoutes(router: Router, container: AppContainer):
       contract === null ||
       (ctx?.organizationId !== undefined && contract.organizationId !== ctx.organizationId)
     ) {
-      notFound(res);
+      notFound(res, "contract");
       return;
     }
     writeJson(res, 200, { contract });
