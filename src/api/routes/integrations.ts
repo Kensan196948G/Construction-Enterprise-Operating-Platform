@@ -45,7 +45,12 @@ function sharedSecretValid(req: {
   readonly headers: Readonly<Record<string, string | string[] | undefined>>;
 }): boolean {
   const configured = process.env["CEOP_INTEGRATION_SHARED_SECRET"];
-  if (configured === undefined || configured === "") return true; // optional in dev
+  // In production the shared secret is mandatory — fail-closed so webhooks
+  // are not silently downgraded to API-key-only auth when the env is missing.
+  if (configured === undefined || configured === "") {
+    if (process.env["NODE_ENV"] === "production") return false;
+    return true; // dev/test: optional
+  }
   const header = req.headers["x-integration-token"];
   const token = typeof header === "string" ? header : "";
   if (configured.length !== token.length) return false;
@@ -67,7 +72,12 @@ function signatureValid(
   fallbackBody: unknown,
 ): boolean {
   const secret = process.env["CEOP_INTEGRATION_SHARED_SECRET"];
-  if (secret === undefined || secret === "") return true;
+  // In production the shared secret is mandatory — fail-closed so signature
+  // verification is not silently skipped when the env is missing.
+  if (secret === undefined || secret === "") {
+    if (process.env["NODE_ENV"] === "production") return false;
+    return true;
+  }
   const header = req.headers["x-ceop-signature"];
   if (typeof header !== "string") return false;
   const raw = rawBody ?? (fallbackBody !== undefined ? JSON.stringify(fallbackBody) : "");

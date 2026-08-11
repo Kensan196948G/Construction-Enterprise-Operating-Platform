@@ -78,6 +78,7 @@ export function createServer(config: ServerConfig, container: AppContainer): Ser
   const router = new Router({
     apiKeyStore: container.apiKeyStore,
     ...(container.jwtIssuer !== undefined ? { jwtIssuer: container.jwtIssuer } : {}),
+    auditLog: container.auditLog,
   });
   registerHealthRoutes(router, container);
   if (container.jwtIssuer !== undefined) {

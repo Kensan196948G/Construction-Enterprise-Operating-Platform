@@ -405,4 +405,20 @@ export async function start(port = 3000): Promise<void> {
   };
   process.once("SIGTERM", shutdown);
   process.once("SIGINT", shutdown);
+
+  // Node 22+ terminates the process on unhandled rejections by default.
+  // These handlers ensure a diagnostic message is logged before exit so
+  // the cause of a crash is visible in Docker / journald stderr, and they
+  // attempt a graceful server.close() so the container exits cleanly.
+  process.on("unhandledRejection", (reason: unknown) => {
+    console.error("[app] FATAL: unhandled rejection:", reason);
+    server.close(() => process.exit(1));
+    // If close() hangs (e.g. keep-alive), force exit after 5 seconds.
+    setTimeout(() => process.exit(1), 5_000);
+  });
+  process.on("uncaughtException", (err: Error) => {
+    console.error("[app] FATAL: unhandled exception:", err);
+    server.close(() => process.exit(1));
+    setTimeout(() => process.exit(1), 5_000);
+  });
 }

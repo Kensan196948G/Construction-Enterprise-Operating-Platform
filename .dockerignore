@@ -1,42 +1,49 @@
-# Version control
+# ── Large directories that are NOT part of the platform image ──────────────
+# integrations/ is ~68 MB of snapshot repositories; shipping them bloats the
+# Docker build context and CI cache with no runtime benefit.
+integrations
+
+# .omo/ contains agent run-continuation session files that should never be
+# shipped inside a production image.
+.omo
+
+# ── Version control ───────────────────────────────────────────────────────
 .git
 .gitignore
 
-# Dependencies (installed inside image, not copied from host)
+# ── Dependencies ──────────────────────────────────────────────────────────
 node_modules
 
-# Build output (re-created inside image by tsc)
+# ── Build output (re-created inside image by tsc) ─────────────────────────
 dist
 
-# Test coverage
+# ── Test coverage ─────────────────────────────────────────────────────────
 coverage
 
-# Logs
+# ── Logs ───────────────────────────────────────────────────────────────────
 *.log
 npm-debug.log*
 pnpm-debug.log*
 
-# Environment secrets
+# ── Environment secrets ───────────────────────────────────────────────────
 .env
 .env.*
 !.env.example
 
-# Editor / OS artefacts
+# ── Editor / OS artefacts ─────────────────────────────────────────────────
 .DS_Store
 *.swp
 *.swo
 Thumbs.db
 
-# Legacy source material (not part of the deployed platform)
+# ── Legacy source material ────────────────────────────────────────────────
 legacy-projects
 
-# Claude / dev-only tooling
+# ── Claude / dev-only tooling ─────────────────────────────────────────────
 .claude
 CLAUDE.md
 
-# Large / irrelevant source material — not copied into the image.
-# webui/CEOP Platform.html is 8.7 MB and webui/dist contains 500+ unpacked
-# assets; the design bundle is hosted by the systemd service, not the API image.
+# ── Large / irrelevant source material ────────────────────────────────────
 webui
 docs
 reports
@@ -46,6 +53,5 @@ state.json
 .coderabbit.yaml
 SECURITY.md
 
-# Large markdown files that are not needed in the image
-# (README.md is kept so labels / HEALTHCHECK documentation survives)
+# ── Large markdown files ──────────────────────────────────────────────────
 CHANGELOG.md

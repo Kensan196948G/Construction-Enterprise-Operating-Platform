@@ -33,7 +33,9 @@
     "favicon:gen": "node --experimental-strip-types scripts/generate-favicon.ts",
     "webui:unpack": "node --experimental-strip-types scripts/webui-unpack.ts",
     "webui:serve": "node --experimental-strip-types scripts/webui-serve.ts",
-    "integration:dispatch": "node --experimental-strip-types scripts/run-integration-dispatcher.ts"
+    "integration:dispatch": "node --experimental-strip-types scripts/run-integration-dispatcher.ts",
+    "setup": "git config core.hooksPath .githooks && echo '✓ git hooks configured'",
+    "pre-commit": "pnpm run format:check && pnpm run lint && pnpm run typecheck"
   },
   "pnpm": {
     "overrides": {

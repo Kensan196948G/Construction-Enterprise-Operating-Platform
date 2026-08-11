@@ -2,6 +2,7 @@
  * Monitoring routes (P4): Prometheus /metrics endpoint.
  */
 
+import { timingSafeEqual } from "node:crypto";
 import type { ServerResponse } from "node:http";
 import { renderMetrics } from "../../monitoring/metrics.ts";
 import type { Router } from "../router.ts";
@@ -12,12 +13,25 @@ function metricsForbidden(res: ServerResponse): void {
   writeJson(res, 401, { error: "Unauthorized", message: "invalid metrics token" });
 }
 
+function timingSafeStrCmp(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return timingSafeEqual(bufA, bufB);
+}
+
 export function registerMonitoringRoutes(router: Router, container: AppContainer): void {
   const { repositories } = container;
   const metricsToken = process.env["CEOP_METRICS_TOKEN"] ?? "";
 
-  // Public endpoint (requiresAuth=false): access control is handled by
-  // CEOP_METRICS_TOKEN below (optional).
+  // In production, /metrics MUST be token-protected to prevent information
+  // disclosure (queue gauges) and unauthenticated DoS via 6× findAll().
+  if (process.env["NODE_ENV"] === "production" && metricsToken === "") {
+    throw new Error(
+      "CEOP_METRICS_TOKEN is required in production. Generate one with: openssl rand -hex 32",
+    );
+  }
+
   router.get(
     "/metrics",
     async (req, _ctx, res) => {
@@ -27,7 +41,7 @@ export function registerMonitoringRoutes(router: Router, container: AppContainer
           typeof header === "string" && header.startsWith("Bearer ")
             ? header.slice("Bearer ".length).trim()
             : "";
-        if (credential !== metricsToken) {
+        if (!timingSafeStrCmp(credential, metricsToken)) {
           metricsForbidden(res);
           return;
         }
