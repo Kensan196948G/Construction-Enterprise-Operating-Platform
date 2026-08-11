@@ -5,31 +5,13 @@
  * adapter is in-memory; a real ITSM adapter can be wired through AppContainer.
  */
 
-import type { ServerResponse } from "node:http";
 import { InMemoryItsmAdapter } from "../../adapters/in-memory-itsm-adapter.ts";
 import { recordAudit } from "../audit.ts";
 import type { Router } from "../router.ts";
 import { writeJson } from "../router.ts";
 import { hasPermission } from "./governance.ts";
+import { badRequest, forbidden, notFound, str } from "./route-helpers.ts";
 import type { AppContainer } from "../types.ts";
-
-function str(body: unknown, key: string): string | undefined {
-  if (typeof body !== "object" || body === null) return undefined;
-  const v = (body as Record<string, unknown>)[key];
-  return typeof v === "string" ? v : undefined;
-}
-
-function forbidden(res: ServerResponse, perm: string): void {
-  writeJson(res, 403, { error: "Forbidden", message: `requires '${perm}' permission` });
-}
-
-function notFound(res: ServerResponse): void {
-  writeJson(res, 404, { error: "Not Found", message: "incident not found" });
-}
-
-function badRequest(res: ServerResponse, details: unknown): void {
-  writeJson(res, 400, { error: "Bad Request", message: "validation failed", details });
-}
 
 export function registerItsmRoutes(router: Router, container: AppContainer): void {
   // Default in-memory adapter; production can inject a real ITSM adapter later.
@@ -50,7 +32,7 @@ export function registerItsmRoutes(router: Router, container: AppContainer): voi
     }
     const incident = await itsm.getIncident(req.params["id"] ?? "");
     if (incident === null) {
-      notFound(res);
+      notFound(res, "incident");
       return;
     }
     writeJson(res, 200, { incident });

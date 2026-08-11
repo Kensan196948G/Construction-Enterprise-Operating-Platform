@@ -16,7 +16,7 @@ import { hasPermission } from "./governance.ts";
 import type { Router } from "../router.ts";
 import type { AppContainer } from "../types.ts";
 
-function forbidden(res: ServerResponse, serviceId: string): void {
+function gatewayForbidden(res: ServerResponse, serviceId: string): void {
   writeJson(res, 403, {
     error: "Forbidden",
     message: `requires gateway:${serviceId} permissions`,
@@ -58,7 +58,7 @@ export function registerGatewayRoutes(
           `${service.pathPrefix}/${suffix}`,
           "denied",
         );
-        forbidden(res, service.id);
+        gatewayForbidden(res, service.id);
         return;
       }
 

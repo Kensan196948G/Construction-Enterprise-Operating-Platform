@@ -12,8 +12,6 @@
  */
 
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
-import type { ServerResponse } from "node:http";
-import type { IsoTimestamp } from "../../domain/common.ts";
 import {
   INTEGRATION_CONTRACTS,
   contractForSystem,
@@ -28,31 +26,10 @@ import { parsePagination, paginate } from "../pagination.ts";
 import type { Router } from "../router.ts";
 import { writeJson } from "../router.ts";
 import { hasPermission } from "./governance.ts";
+import { badRequest, forbidden, notFound, nowTs, str } from "./route-helpers.ts";
 import type { ApiKeyContext, AppContainer } from "../types.ts";
 
 const PERM_RESOURCE = "integration";
-
-function str(body: unknown, key: string): string | undefined {
-  if (typeof body !== "object" || body === null) return undefined;
-  const value = (body as Record<string, unknown>)[key];
-  return typeof value === "string" ? value : undefined;
-}
-
-function nowTs(): IsoTimestamp {
-  return new Date().toISOString() as IsoTimestamp;
-}
-
-function forbidden(res: ServerResponse, perm: string): void {
-  writeJson(res, 403, { error: "Forbidden", message: `requires '${perm}' permission` });
-}
-
-function badRequest(res: ServerResponse, details: unknown): void {
-  writeJson(res, 400, { error: "Bad Request", message: "validation failed", details });
-}
-
-function notFound(res: ServerResponse, resource: string): void {
-  writeJson(res, 404, { error: "Not Found", message: `${resource} not found` });
-}
 
 function audit(
   container: AppContainer,

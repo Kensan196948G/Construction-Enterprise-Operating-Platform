@@ -8,7 +8,7 @@ import type { Router } from "../router.ts";
 import { writeJson } from "../router.ts";
 import type { AppContainer } from "../types.ts";
 
-function forbidden(res: ServerResponse): void {
+function metricsForbidden(res: ServerResponse): void {
   writeJson(res, 401, { error: "Unauthorized", message: "invalid metrics token" });
 }
 
@@ -28,7 +28,7 @@ export function registerMonitoringRoutes(router: Router, container: AppContainer
             ? header.slice("Bearer ".length).trim()
             : "";
         if (credential !== metricsToken) {
-          forbidden(res);
+          metricsForbidden(res);
           return;
         }
       }

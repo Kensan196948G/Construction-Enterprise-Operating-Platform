@@ -10,8 +10,6 @@
  */
 
 import { randomUUID } from "node:crypto";
-import type { ServerResponse } from "node:http";
-import type { IsoTimestamp } from "../../domain/common.ts";
 import {
   AI_ACTION_DECISIONS,
   AI_OPERATION_STATUSES,
@@ -26,29 +24,8 @@ import { recordAudit } from "../audit.ts";
 import type { Router } from "../router.ts";
 import { writeJson } from "../router.ts";
 import { hasPermission } from "./governance.ts";
+import { badRequest, forbidden, notFound, nowTs, str } from "./route-helpers.ts";
 import type { AppContainer } from "../types.ts";
-
-function str(body: unknown, key: string): string | undefined {
-  if (typeof body !== "object" || body === null) return undefined;
-  const v = (body as Record<string, unknown>)[key];
-  return typeof v === "string" ? v : undefined;
-}
-
-function forbidden(res: ServerResponse, perm: string): void {
-  writeJson(res, 403, { error: "Forbidden", message: `requires '${perm}' permission` });
-}
-
-function notFound(res: ServerResponse): void {
-  writeJson(res, 404, { error: "Not Found", message: "ai action not found" });
-}
-
-function badRequest(res: ServerResponse, details: unknown): void {
-  writeJson(res, 400, { error: "Bad Request", message: "validation failed", details });
-}
-
-function nowTs(): IsoTimestamp {
-  return new Date().toISOString() as IsoTimestamp;
-}
 
 export function registerAiActionRoutes(router: Router, container: AppContainer): void {
   const { repositories } = container;
@@ -149,7 +126,7 @@ export function registerAiActionRoutes(router: Router, container: AppContainer):
     }
     const action = await repositories.aiActions.findById(aiActionId(req.params["id"] ?? ""));
     if (action === null) {
-      notFound(res);
+      notFound(res, "ai action");
       return;
     }
     if (
@@ -157,7 +134,7 @@ export function registerAiActionRoutes(router: Router, container: AppContainer):
       action.organizationId !== undefined &&
       action.organizationId !== ctx.organizationId
     ) {
-      notFound(res);
+      notFound(res, "ai action");
       return;
     }
     const decision = str(req.body, "decision");
@@ -195,7 +172,7 @@ export function registerAiActionRoutes(router: Router, container: AppContainer):
     }
     const action = await repositories.aiActions.findById(aiActionId(req.params["id"] ?? ""));
     if (action === null) {
-      notFound(res);
+      notFound(res, "ai action");
       return;
     }
     if (
@@ -203,7 +180,7 @@ export function registerAiActionRoutes(router: Router, container: AppContainer):
       action.organizationId !== undefined &&
       action.organizationId !== ctx.organizationId
     ) {
-      notFound(res);
+      notFound(res, "ai action");
       return;
     }
     const status = str(req.body, "status");
