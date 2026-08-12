@@ -123,6 +123,9 @@ services:
       - --web.listen-address=127.0.0.1:19090
     volumes:
       - ./deploy/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      # CEOP /metrics の Bearer トークン（.env の CEOP_METRICS_TOKEN と同一・
+      # chmod 600 で配置。Git には保存しない）
+      - /home/kensan/.ceop/ceop-metrics-token:/secrets/ceop-metrics-token:ro
       - ceop-prometheus-data:/prometheus
     read_only: true
     tmpfs:

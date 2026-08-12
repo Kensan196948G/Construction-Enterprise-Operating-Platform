@@ -68,6 +68,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 - **verify-restore の検証漏れ** — 監査ログの索引列（actor/outcome 等）改ざんを検出できていなかった
   検証ロジックを修正（JSON ハッシュに加えて列突き合わせを実施）。
+- **本番適用（2026-08-12）** — v0.12.0 を本番へデプロイ。事前バックアップ
+  （ceop-predeploy-v0.12.0-20260812T092252Z.db）・旧 v0.11.2 を `ceop-platform-prev-0112` として
+  rename 保持・公開スモーク（/health・/health/ready・info=0.12.0・metrics トークン認証・
+  audit/verify 401）・監査チェーン CLI 実地検証（entries=5 valid=true）・日次タイマー
+  `ceop-audit-verify.timer` 導入と初回実行成功を確認。
+- **監視スタックのトークン認証移行** — v0.11.3 以降 production で必須の `CEOP_METRICS_TOKEN` を
+  `.env`（chmod 600・Git 非保存）へ設定し、Prometheus は `credentials_file` 経由で Bearer 認証。
+  `deploy/prometheus/prometheus.yml`・`docker-compose.prod.yml` を更新し target UP を確認。
 
 ## [0.11.1] - 2026-08-10
 

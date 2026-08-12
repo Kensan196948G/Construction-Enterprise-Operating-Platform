@@ -29,7 +29,9 @@
     "v0_11_1_production_deploy_at": "2026-08-10"
     ,
     "v0_12_0_assessment_hardening": "in_progress",
-    "v0_12_0_branch": "feat/assessment-hardening-v0.12.0"
+    "v0_12_0_branch": "feat/assessment-hardening-v0.12.0",
+    "v0_12_0_production_deploy": "completed",
+    "v0_12_0_production_deploy_at": "2026-08-12"
   },
   "kpi": {
     "success_rate_target": 0.9,
@@ -75,6 +77,7 @@
     "v0_8_1_ssr_assets_fix": "completed"
   },
   "completed_issues": [
+    "v0.12.0: 本番デプロイ（2026-08-12）— predeploy バックアップ・旧 v0.11.2 を rename 保持・CEOP_METRICS_TOKEN 導入（.env + Prometheus credentials_file）・公開スモーク（health/ready・info 0.12.0・metrics 401/トークン 200・audit verify 401）・監査チェーン CLI 実地検証（entries=5 valid=true）・日次タイマー導入・journald 成功記録",
     "v0.12.0: 監査チェーン検証 API（GET /api/v1/governance/audit/verify・audit:read・検証自体も監査記録）+ CLI（verify-audit-chain）+ 日次 systemd タイマー",
     "v0.12.0: verify-restore 拡張（監査チェーン整合性 + ISO レコード番号重複検査）と改ざんバックアップ拒否テスト",
     "v0.12.0: PWA アイコン 192/512・maskable manifest・apple-touch-icon 追加",

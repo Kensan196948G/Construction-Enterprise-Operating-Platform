@@ -4,7 +4,7 @@
 
 - GitHub: https://github.com/Kensan196948G/Construction-Enterprise-Operating-Platform（PRIVATE）
 - 本番 URL: https://ceop.mirai-dx-platform.com（Cloudflare Tunnel → API 127.0.0.1:3120 / WebUI 3130）
-- 本番コンテナ: `ceop-platform:v0.11.2`（healthy・ReadOnly/cap-drop/リソース制限適用済み・migration 001〜026）
+- 本番コンテナ: `ceop-platform:v0.12.0`（2026-08-12 デプロイ・healthy・ReadOnly/cap-drop/リソース制限適用済み・migration 001〜026）
 - 本番 DB: SQLite WAL（api_keys 2・audit_log 5・業務テーブル全 0 件）
 - 改善ラウンド: v0.12.0（ブランチ `feat/assessment-hardening-v0.12.0`・PR #47）
 
@@ -22,7 +22,7 @@
 | 主な利用者 | 現場（作業員・所長・監督員）、本社（工事部・経理・品質安全・IT/DX 7 名）、経営層、協力会社                                      |
 | 業務課題   | 公共 80%・民間 20% の土木工事で、日報・安全・品質・原価・発注・契約・ISO 認証運用を一元化し、監査証跡と AI 利用の統制を確保する |
 | 提供価値   | 共通ドメイン＋統制ゲート＋改ざん検知監査＋ISO 統合＋連携イベント基盤を単一コンテナ・ゼロ依存で提供                              |
-| 完成段階   | v0.12.0・534 テスト pass・本番稼働中（v0.11.2）・業務データ投入前                                                               |
+| 完成段階   | v0.12.0・534 テスト pass・本番稼働中（v0.12.0）・業務データ投入前                                                               |
 | 運用段階   | 基盤リリース済み・本番スモーク済み・初期安定化監視中・実業務データ移行待ち                                                      |
 
 ## 2. 改善前後の 18 カテゴリ採点
@@ -56,18 +56,20 @@
 
 ### 2-2. 実測証拠サマリ（2026-08-12）
 
-| 項目                                                                 | 実測                                                                                         | 判定              |
-| -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ----------------- |
-| `pnpm run verify`（format/openapi/typecheck/lint/test/build/parity） | 全 pass・**534/534 tests**・parity API 27/27                                                 | ✅                |
-| 本番 `/health`・`/api/v1/info`                                       | 200・v0.11.2・uptime 87,475s                                                                 | ✅                |
-| 本番コンテナ ハーデニング                                            | ReadOnly=true / CapDrop=[ALL] / no-new-privileges / mem 256M / cpus 1 / pids 128 / log 10m×3 | ✅（P0 解消済み） |
-| 本番 DB                                                              | migration 26・業務テーブル全 0 件・audit_log 5                                               | ⚠️ 実データ 0     |
-| pnpm audit                                                           | 0 vulnerabilities                                                                            | ✅                |
-| CI（PR #46 最新 run）                                                | success                                                                                      | ✅                |
-| Git タグ/Release                                                     | v0.11.0・v0.11.1 作成済み（2026-08-11）                                                      | ✅                |
-| バックアップ                                                         | 日次スナップショット＋retention 14 日（オフサイトなし）                                      | ⚠️                |
-| アラート通知先                                                       | `CEOP_ALERT_WEBHOOK_URL` 未設定                                                              | ❌                |
-| E2E ローカル実行                                                     | Chromium バイナリが起動直後に core dump（環境不具合）→ CI の E2E ジョブは成功実績            | ⚠️                |
+| 項目                                                                 | 実測                                                                                         | 判定                                |
+| -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ----------------------------------- |
+| `pnpm run verify`（format/openapi/typecheck/lint/test/build/parity） | 全 pass・**534/534 tests**・parity API 27/27                                                 | ✅                                  |
+| 本番 `/health`・`/api/v1/info`                                       | 200・v0.12.0（デプロイ後スモーク）                                                           | ✅                                  |
+| 本番コンテナ ハーデニング                                            | ReadOnly=true / CapDrop=[ALL] / no-new-privileges / mem 256M / cpus 1 / pids 128 / log 10m×3 | ✅（P0 解消済み・v0.12.0 で再適用） |
+| 本番 DB                                                              | migration 26・業務テーブル全 0 件・audit_log 5                                               | ⚠️ 実データ 0                       |
+| pnpm audit                                                           | 0 vulnerabilities                                                                            | ✅                                  |
+| CI（PR #46/#47 最新 run）                                            | success（E2E 含む）                                                                          | ✅                                  |
+| 監査検証タイマー                                                     | `ceop-audit-verify.timer` 導入・初回実行成功（entries=5 valid=true）                         | ✅                                  |
+| /metrics トークン認証                                                | CEOP_METRICS_TOKEN 導入・Prometheus target UP                                                | ✅                                  |
+| Git タグ/Release                                                     | v0.11.0・v0.11.1 作成済み（2026-08-11）                                                      | ✅                                  |
+| バックアップ                                                         | 日次スナップショット＋retention 14 日（オフサイトなし）                                      | ⚠️                                  |
+| アラート通知先                                                       | `CEOP_ALERT_WEBHOOK_URL` 未設定                                                              | ❌                                  |
+| E2E ローカル実行                                                     | Chromium バイナリが起動直後に core dump（環境不具合）→ CI の E2E ジョブは成功実績            | ⚠️                                  |
 
 ## 3. 強み（17 件）
 
@@ -260,7 +262,7 @@
 | P0   | アラート通知先未設定                                | 未設定（要ユーザー提供の URL） |
 | P1   | 本番実業務データ 0 件                               | 未投入                         |
 | P1   | オフサイトバックアップ                              | 未設定                         |
-| P1   | PR #46/#47 マージ・v0.12.0 デプロイ                 | 未実施                         |
+| P1   | PR #46/#47 マージ（デプロイは完了・マージ待ち）     | レビュー待ち                   |
 | P1   | ローカル E2E の Chromium 不具合                     | 環境依存（CI は成功実績）      |
 | P2   | CSP nonce・JWT localStorage・Neon 移行・モバイル SW | バックログ                     |
 
