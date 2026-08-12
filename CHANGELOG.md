@@ -69,6 +69,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 - なし（本リリースは機能追加のみ）
 
+### 本番適用（2026-08-12）
+
+- v0.12.1 を本番へデプロイ。事前バックアップ・旧 v0.12.0 を `ceop-platform-prev-0120` として
+  rename 保持・公開スモーク（info=0.12.1・health/ready・/daily-reports 401・metrics トークン 200）。
+- Tunnel ingress に `/daily-reports` を追加し、公開 URL で API ルート到達（401）を確認。
+- `ceop-platform:current` を v0.12.1 へ更新。監査チェーン CLI（entries=5 valid=true）・
+  Prometheus target UP を確認。
+
 ## [0.12.0] - 2026-08-12
 
 ### Added
