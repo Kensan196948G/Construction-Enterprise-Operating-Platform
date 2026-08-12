@@ -39,6 +39,44 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 - **README テスト数不整合** — バッジ・表・品質状態セクションのテスト数を実測（523 pass）に修正
 
+## [0.12.0] - 2026-08-12
+
+### Added
+
+- **監査チェーン検証 API** — `GET /api/v1/governance/audit/verify`（`audit:read`）。SHA-256 ハッシュチェーンを
+  再計算し `{ valid, brokenAt, checkedAt }` と `X-CEOP-Audit-Valid` ヘッダで返却。検証自体も監査ログへ記録。
+- **監査チェーン検証 CLI** — `scripts/verify-audit-chain.ts`（exit 0 = 正常 / 2 = 改ざん検出）。
+- **日次監査検証 systemd** — `deploy/systemd/ceop-audit-verify.{service,timer}`（毎日 03:40、検証失敗は
+  非零 exit で journald に残る）。
+- **バックアップ検証の拡張** — `scripts/verify-restore.ts` が監査チェーン整合性と ISO レコード番号の
+  重複（org×kind×number）を検証。改ざんバックアップを拒否するテスト追加。
+- **PWA アイコン** — 192/512 px アイコンを生成（`scripts/generate-favicon.ts`）し manifest に
+  `any maskable` で追加。各 SSR テンプレートに `apple-touch-icon` を追加。
+- **ブラウザ E2E 拡張** — `e2e/portal-dashboard.spec.ts`（公開ポータル・ダッシュボード認証ゲート・
+  viewer の ISO コンソール 403）を追加（計 6 テスト）。
+- **node:sqlite 型整備** — `SqliteAuditLog` の `any` / `createRequire` ブリッジを撤廃し
+  `DatabaseSync` / `StatementSync` 型を直接利用。
+
+### Changed
+
+- **バージョン 0.12.0** — `src/version.ts` / `package.json` / Dockerfile OCI label / OpenAPI を一元更新。
+- **OpenAPI** — `GET /api/v1/governance/audit/verify` を追加し仕様を再生成。
+- **SECURITY.md** — サポートバージョンを v0.6.x から v0.12.x へ更新。
+- **README** — テスト数 534・v0.12.0・監査検証エンドポイントを反映。
+
+### Fixed
+
+- **verify-restore の検証漏れ** — 監査ログの索引列（actor/outcome 等）改ざんを検出できていなかった
+  検証ロジックを修正（JSON ハッシュに加えて列突き合わせを実施）。
+- **本番適用（2026-08-12）** — v0.12.0 を本番へデプロイ。事前バックアップ
+  （ceop-predeploy-v0.12.0-20260812T092252Z.db）・旧 v0.11.2 を `ceop-platform-prev-0112` として
+  rename 保持・公開スモーク（/health・/health/ready・info=0.12.0・metrics トークン認証・
+  audit/verify 401）・監査チェーン CLI 実地検証（entries=5 valid=true）・日次タイマー
+  `ceop-audit-verify.timer` 導入と初回実行成功を確認。
+- **監視スタックのトークン認証移行** — v0.11.3 以降 production で必須の `CEOP_METRICS_TOKEN` を
+  `.env`（chmod 600・Git 非保存）へ設定し、Prometheus は `credentials_file` 経由で Bearer 認証。
+  `deploy/prometheus/prometheus.yml`・`docker-compose.prod.yml` を更新し target UP を確認。
+
 ## [0.11.1] - 2026-08-10
 
 **本番適用済み（2026-08-10）** — PR #42 マージ（f669114）・事前バックアップ・コンテナ差し替え・
