@@ -32,6 +32,8 @@
     "v0_12_1_branch": "feat/field-ops-v0.12.1",
     "v0_12_1_production_deploy": "completed",
     "v0_12_1_production_deploy_at": "2026-08-12",
+    "v0_12_1_release_tag": "v0.12.1",
+    "v0_12_1_release_at": "2026-08-12",
     "v0_12_0_assessment_hardening": "in_progress",
     "v0_12_0_branch": "feat/assessment-hardening-v0.12.0",
     "v0_12_0_production_deploy": "completed",
@@ -41,7 +43,7 @@
     "success_rate_target": 0.9,
     "ci_success_rate": 1,
     "test_pass_rate": 1,
-    "test_count": 540,
+    "test_count": 547,
     "security_critical": 0,
     "security_high_resolved": 19,
     "blocker_count": 0
@@ -81,6 +83,8 @@
     "v0_8_1_ssr_assets_fix": "completed"
   },
   "completed_issues": [
+    "v0.12.2 準備: health-probe の Slack/Teams 自動変換 + CEOP_ALERT_FORMAT（テスト 3 件）・CSV インポート（--csv・テンプレート 8 種・テスト 4 件）・setup-r2-backup.sh（rclone 実導入・ローカル E2E 検証）",
+    "v0.12.1: Release 作成（2026-08-12）— PR #48 squash マージ（d5f4644）→ tag v0.12.1 push → Release ワークフロー成功 → GitHub Release v0.12.1 + GHCR ghcr.io/kensan196948g/construction-eop:0.12.1/0.12/0/latest 公開",
     "v0.12.1: 本番デプロイ（2026-08-12）— predeploy バックアップ（ceop-predeploy-v0.12.1-20260812T095941Z.db）・旧 v0.12.0 を ceop-platform-prev-0120 として rename 保持・公開スモーク（info=0.12.1・health/ready・daily-reports 401・metrics トークン 200）・Tunnel 経路に /daily-reports 追加（public 401 確認）・ceop-platform:current 更新・監査チェーン CLI valid=true・Prometheus UP",
     "v0.12.1: 日報管理コンソール（/daily-reports・案件選択・作成/編集・提出/承認・viewer 403・E2E 2 件）",
     "v0.12.1: 実業務データ移行スクリプト（import-business-data・8 種別・ドメイン検証・自然キー重複防止・サンプル 8 件投入検証）",

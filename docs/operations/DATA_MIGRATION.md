@@ -107,6 +107,24 @@ curl -s -H "Authorization: Bearer keyId:secret" \
   https://ceop.mirai-dx-platform.com/api/v1/projects | jq .total
 ```
 
+### CSV での投入（Excel からの移行向け）
+
+JSON の代わりに Excel 書き出し CSV を直接投入できます。ヘッダー行は JSON の
+キー名と同一にし、`examples/import-templates/` の各 CSV を雛形に使ってください。
+
+```bash
+# 例: 案件 + 日報を CSV 2 ファイルで投入（ドライランは --db を一時 DB に）
+node --experimental-strip-types scripts/import-business-data.ts \
+  --csv project examples/import-templates/projects.csv \
+  --csv daily-report examples/import-templates/daily-reports.csv \
+  --db /home/kensan/.ceop/data/ceop.db
+```
+
+- 数値・真偽（workerCount, progressRate, safetyCheck 等）は文字列のままでも自動変換されます
+- 空セルは省略扱い（ドメイン既定値が使われます）
+- `"` を含む値・カンマを含む値は CSV の引用符ルール（`"..."`・`""` エスケープ）に従ってください
+- 同じ内容の再実行は自然キーで拒否されます（二重投入防止）
+
 ## 5. 受入れ基準
 
 - 全レコードが `imported=N errors=0` で投入される

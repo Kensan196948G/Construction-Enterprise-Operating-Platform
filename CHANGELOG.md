@@ -8,6 +8,25 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 ### Added
 
+- **アラート通知の Slack / Teams 自動変換** — `scripts/health-probe.sh` が URL を判定して
+  Slack（`{"text": ...}`）・Teams（MessageCard）・汎用 JSON を自動選択。
+  `CEOP_ALERT_FORMAT=slack|teams|generic` で明示指定も可能。配信テスト 3 件追加。
+- **CSV インポート対応** — `scripts/import-business-data.ts --csv <type> <file.csv>`
+  （RFC 4180 パーサー・数値/真偽の自動変換・空セル省略・自然キー重複防止）。
+  `examples/import-templates/` に 8 種別の CSV 雛形を追加。
+- **R2 バックアップ設定ヘルパー** — `scripts/setup-r2-backup.sh`（rclone リモート作成・
+  config 600 化・接続確認・systemd タイマー有効化）。rclone を実機に導入し、
+  ローカルリモートでの転送 → 検証 → 保持のエンドツーエンド動作確認済み。
+
+### Changed
+
+- テスト 547/547 pass（health-probe 通知 3 件・CSV/CLI 4 件を追加）
+
+### Fixed
+
+- `import-business-data.ts` の引数解析で `--db` の値が入力 JSON と誤認される問題を修正
+  （`--csv` と `--db` の併用時に発生）
+
 - **レポジトリ統廃合・機能連携マスタープラン** — `docs/integration/REPOSITORY_MASTER_PLAN.md`
   （中核 CEOP・統合元 IMS 削除済み・維持連携 6 システムの責務境界と現状を一元化）
 - **レベル付きロガー** — `src/obs/logger.ts`（`LOG_LEVEL` 対応・stderr 出力）を HTTP リクエストログへ適用

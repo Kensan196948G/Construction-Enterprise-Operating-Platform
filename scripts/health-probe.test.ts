@@ -18,6 +18,8 @@ import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createServer } from "node:http";
+import type { AddressInfo } from "node:net";
 
 const SCRIPT = fileURLToPath(new URL("./health-probe.sh", import.meta.url));
 
@@ -48,6 +50,7 @@ function runProbe(
   url: string,
   threshold = "3",
   webhookUrl?: string,
+  format?: string,
 ): Promise<number> {
   return new Promise((resolve) => {
     execFile(
@@ -62,6 +65,7 @@ function runProbe(
           CEOP_HEALTH_THRESHOLD: threshold,
           CEOP_HEALTH_TIMEOUT: "2",
           ...(webhookUrl !== undefined ? { CEOP_ALERT_WEBHOOK_URL: webhookUrl } : {}),
+          ...(format !== undefined ? { CEOP_ALERT_FORMAT: format } : {}),
         },
       },
       (error) => resolve(error === null ? 0 : ((error as { code?: number }).code ?? 1)),
@@ -74,12 +78,48 @@ async function probe(
   url: string,
   threshold = "3",
   webhookUrl?: string,
+  format?: string,
 ): Promise<ProbeRun> {
   const before = await readFile(env.log, "utf-8").catch(() => "");
-  const exitCode = await runProbe(env, url, threshold, webhookUrl);
+  const exitCode = await runProbe(env, url, threshold, webhookUrl, format);
   const after = await readFile(env.log, "utf-8");
   const state = (await readFile(env.stateFile, "utf-8").catch(() => "")).trim();
   return { exitCode, line: after.slice(before.length).trim(), state };
+}
+
+/** Local HTTP capture server: /ok returns 200, /hook records POST bodies. */
+async function startCaptureServer(): Promise<{
+  okUrl: string;
+  hookUrl: string;
+  bodies: string[];
+  close(): Promise<void>;
+}> {
+  return new Promise((resolve) => {
+    const bodies: string[] = [];
+    const server = createServer((req, res) => {
+      if (req.url === "/hook") {
+        let body = "";
+        req.on("data", (chunk) => (body += chunk));
+        req.on("end", () => {
+          bodies.push(body);
+          res.writeHead(200);
+          res.end();
+        });
+        return;
+      }
+      res.writeHead(200);
+      res.end("ok");
+    });
+    server.listen(0, "127.0.0.1", () => {
+      const { port } = server.address() as AddressInfo;
+      resolve({
+        okUrl: `http://127.0.0.1:${port}/ok`,
+        hookUrl: `http://127.0.0.1:${port}/hook`,
+        bodies,
+        close: () => new Promise((r) => server.close(() => r())),
+      });
+    });
+  });
 }
 
 test("health-probe: escalates WARN → ALERT only at the configured threshold", async () => {
@@ -117,6 +157,56 @@ test("health-probe: threshold is configurable", async () => {
   const first = await probe(env, DEAD_URL, "1");
   assert.match(first.line, /^\S+ ALERT /);
   assert.equal(first.exitCode, 1);
+});
+
+test("health-probe: ALERT is delivered as Slack text payload", async () => {
+  const env = await makeEnv();
+  const capture = await startCaptureServer();
+  try {
+    const run = await probe(env, DEAD_URL, "1", capture.hookUrl, "slack");
+    assert.equal(run.exitCode, 1);
+    assert.equal(capture.bodies.length, 1);
+    const parsed = JSON.parse(capture.bodies[0] ?? "{}") as { text?: string };
+    assert.ok(parsed.text !== undefined, "Slack payload must carry a text field");
+    assert.match(parsed.text ?? "", /CEOP ALERT:/);
+  } finally {
+    await capture.close();
+  }
+});
+
+test("health-probe: ALERT is delivered as generic JSON payload", async () => {
+  const env = await makeEnv();
+  const capture = await startCaptureServer();
+  try {
+    const run = await probe(env, DEAD_URL, "1", capture.hookUrl);
+    assert.equal(run.exitCode, 1);
+    assert.equal(capture.bodies.length, 1);
+    const parsed = JSON.parse(capture.bodies[0] ?? "{}") as {
+      event?: string;
+      consecutiveFailures?: number;
+    };
+    assert.equal(parsed.event, "ALERT");
+    assert.equal(parsed.consecutiveFailures, 1);
+  } finally {
+    await capture.close();
+  }
+});
+
+test("health-probe: RECOVERED is delivered after an outage", async () => {
+  const env = await makeEnv();
+  const capture = await startCaptureServer();
+  try {
+    await probe(env, DEAD_URL, "1", capture.hookUrl);
+    const recovered = await probe(env, capture.okUrl, "1", capture.hookUrl);
+    assert.equal(recovered.exitCode, 0);
+    assert.equal(capture.bodies.length, 2);
+    const first = JSON.parse(capture.bodies[0] ?? "{}") as { event?: string };
+    const second = JSON.parse(capture.bodies[1] ?? "{}") as { event?: string };
+    assert.equal(first.event, "ALERT");
+    assert.equal(second.event, "RECOVERED");
+  } finally {
+    await capture.close();
+  }
 });
 
 test("health-probe: a corrupt state file fails open at zero rather than silencing the probe", async () => {

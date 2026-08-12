@@ -29,6 +29,7 @@ STATE="${CEOP_HEALTH_STATE:-/home/kensan/.ceop/health-probe.state}"
 THRESHOLD="${CEOP_HEALTH_THRESHOLD:-3}"
 TIMEOUT="${CEOP_HEALTH_TIMEOUT:-10}"
 NOTIFY_URL="${CEOP_ALERT_WEBHOOK_URL:-}"
+NOTIFY_FORMAT="${CEOP_ALERT_FORMAT:-auto}"
 
 now() { date -u +%Y-%m-%dT%H:%M:%SZ; }
 log() { printf '%s %s\n' "$(now)" "$1" >>"$LOG"; }
@@ -43,7 +44,37 @@ notify() {
   # $1: event (ALERT|RECOVERED), $2: consecutive failures
   [ -z "$NOTIFY_URL" ] && return 0
   safe_url=$(printf '%s' "$URL" | sed 's/\\/\\\\/g; s/"/\\"/g')
-  payload=$(printf '{"event":"%s","target":"%s","consecutiveFailures":%s,"timestamp":"%s"}' "$1" "$safe_url" "$2" "$(now)")
+  # Slack expects {"text": ...}; Teams expects MessageCard JSON. Both are
+  # detected from the URL so operators can paste the standard webhook URL
+  # without writing a custom payload. Anything else keeps the generic JSON.
+  # Format selection: explicit CEOP_ALERT_FORMAT (slack|teams|generic) wins;
+  # otherwise the URL is inspected for the standard Slack/Teams hosts.
+  case "$NOTIFY_FORMAT" in
+    slack|teams|generic) ;;
+    auto)
+      case "$NOTIFY_URL" in
+        *hooks.slack.com*) NOTIFY_FORMAT=slack ;;
+        *webhookb2*) NOTIFY_FORMAT=teams ;;
+        *) NOTIFY_FORMAT=generic ;;
+      esac
+      ;;
+    *)
+      log "NOTIFY_FAILED unknown CEOP_ALERT_FORMAT=${NOTIFY_FORMAT} event=$1 failures=$2"
+      return 0
+      ;;
+  esac
+  case "$NOTIFY_FORMAT" in
+    slack)
+      text=$(printf 'CEOP %s: %s（連続失敗 %s 回）' "$1" "$safe_url" "$2")
+      payload=$(printf '{"text":"%s"}' "$text")
+      ;;
+    teams)
+      payload=$(printf '{"@type":"MessageCard","@context":"http://schema.org/extensions","summary":"CEOP %s","title":"CEOP %s","text":"対象: %s（連続失敗 %s 回）"}' "$1" "$1" "$safe_url" "$2")
+      ;;
+    *)
+      payload=$(printf '{"event":"%s","target":"%s","consecutiveFailures":%s,"timestamp":"%s"}' "$1" "$safe_url" "$2" "$(now)")
+      ;;
+  esac
   if curl -fsS --max-time 10 -H 'Content-Type: application/json' -d "$payload" "$NOTIFY_URL" >>"$LOG" 2>&1; then
     log "NOTIFY_OK ${URL} event=$1 failures=$2"
   else

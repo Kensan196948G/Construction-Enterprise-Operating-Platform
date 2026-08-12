@@ -55,11 +55,19 @@ function asString(value: unknown): string | undefined {
 }
 
 function asNumber(value: unknown): number | undefined {
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return undefined;
 }
 
 function asBool(value: unknown): boolean | undefined {
-  return typeof value === "boolean" ? value : undefined;
+  if (typeof value === "boolean") return value;
+  if (value === "true" || value === "1") return true;
+  if (value === "false" || value === "0") return false;
+  return undefined;
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -71,6 +79,88 @@ function asRecord(value: unknown): Record<string, unknown> {
 function nowTs(): IsoTimestamp {
   return new Date().toISOString() as IsoTimestamp;
 }
+
+/**
+ * Minimal RFC 4180 CSV parser (quoted fields, escaped quotes, CRLF/LF).
+ * Used by the --csv import mode so operators can hand over Excel exports
+ * without writing JSON.
+ */
+export function parseCsv(text: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let field = "";
+  let inQuotes = false;
+  let i = 0;
+  while (i < text.length) {
+    const ch = text[i]!;
+    if (inQuotes) {
+      if (ch === '"') {
+        if (text[i + 1] === '"') {
+          field += '"';
+          i += 2;
+          continue;
+        }
+        inQuotes = false;
+        i += 1;
+        continue;
+      }
+      field += ch;
+      i += 1;
+      continue;
+    }
+    if (ch === '"') {
+      inQuotes = true;
+      i += 1;
+      continue;
+    }
+    if (ch === ",") {
+      row.push(field);
+      field = "";
+      i += 1;
+      continue;
+    }
+    if (ch === "\n" || ch === "\r") {
+      if (ch === "\r" && text[i + 1] === "\n") i += 1;
+      row.push(field);
+      field = "";
+      rows.push(row);
+      row = [];
+      i += 1;
+      continue;
+    }
+    field += ch;
+    i += 1;
+  }
+  if (field !== "" || row.length > 0) {
+    row.push(field);
+    rows.push(row);
+  }
+  return rows;
+}
+
+/** Convert parsed CSV rows (first row = headers) into record objects. */
+export function csvRowsToObjects(rows: readonly string[][]): Record<string, unknown>[] {
+  const headers = rows[0] ?? [];
+  return rows.slice(1).map((values) => {
+    const record: Record<string, unknown> = {};
+    for (const [index, header] of headers.entries()) {
+      const value = values[index];
+      if (value !== undefined && value !== "") record[header] = value;
+    }
+    return record;
+  });
+}
+
+const CSV_TYPE_TO_BUNDLE_KEY: Readonly<Record<string, keyof ImportBundle>> = {
+  project: "projects",
+  "daily-report": "dailyReports",
+  "safety-check": "safetyChecks",
+  "quality-inspection": "qualityInspections",
+  "cost-record": "costRecords",
+  "work-hour": "workHours",
+  "purchase-order": "purchaseOrders",
+  contract: "contracts",
+} as const;
 
 /** Parse and persist one typed batch; appends errors without throwing. */
 async function importBatch<T>(
@@ -507,9 +597,37 @@ export async function importBusinessData(
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
-  const filePath = args[0];
-  if (filePath === undefined) {
-    console.error("usage: import-business-data.ts <bundle.json> [--db <path>]");
+  const csvInputs: Array<{ type: string; filePath: string }> = [];
+  let filePath: string | undefined;
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]!;
+    if (arg === "--db") {
+      i += 1;
+      continue;
+    }
+    if (arg === "--csv") {
+      const type = args[i + 1];
+      const csvPath = args[i + 2];
+      if (type === undefined || csvPath === undefined) {
+        console.error("--csv requires <type> <file.csv>");
+        process.exit(1);
+      }
+      if (!(type in CSV_TYPE_TO_BUNDLE_KEY)) {
+        console.error(
+          `--csv type must be one of: ${Object.keys(CSV_TYPE_TO_BUNDLE_KEY).join(", ")}`,
+        );
+        process.exit(1);
+      }
+      csvInputs.push({ type, filePath: csvPath });
+      i += 2;
+      continue;
+    }
+    if (filePath === undefined && !arg.startsWith("--")) filePath = arg;
+  }
+  if (filePath === undefined && csvInputs.length === 0) {
+    console.error(
+      "usage: import-business-data.ts <bundle.json> [--db <path>] [--csv <type> <file.csv>]...",
+    );
     process.exit(1);
   }
   const dbIndex = args.indexOf("--db");
@@ -518,15 +636,25 @@ async function main(): Promise<void> {
     console.error("--db requires a path");
     process.exit(1);
   }
-  const parsed: unknown = JSON.parse(await readFile(filePath, "utf8"));
-  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-    console.error("input must be a JSON object with typed arrays");
-    process.exit(1);
+  const bundle: { -readonly [K in keyof ImportBundle]?: unknown[] } = {};
+  if (filePath !== undefined) {
+    const parsed: unknown = JSON.parse(await readFile(filePath, "utf8"));
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+      console.error("input must be a JSON object with typed arrays");
+      process.exit(1);
+    }
+    Object.assign(bundle, parsed);
+  }
+  for (const csv of csvInputs) {
+    const text = await readFile(csv.filePath, "utf8");
+    const records = csvRowsToObjects(parseCsv(text));
+    const key = CSV_TYPE_TO_BUNDLE_KEY[csv.type]!;
+    bundle[key] = [...(bundle[key] ?? []), ...records];
   }
   const repositories = createSqliteRepositories(
     dbPath ?? process.env["CEOP_SQLITE_FILE"] ?? "/data/ceop.db",
   );
-  const result = await importBusinessData(parsed as ImportBundle, repositories);
+  const result = await importBusinessData(bundle as ImportBundle, repositories);
   console.error(
     `[import-business-data] imported=${result.imported} errors=${result.errors.length}`,
   );
