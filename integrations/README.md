@@ -1,9 +1,10 @@
 # Integrations — 統合元リポジトリ（Migration Sources）
 
-本ディレクトリは、以下の 6 リポジトリの**現行スナップショット（.git 除く）**を
-CEOP へ取り込んだ統合元ソースです。旧リポジトリは、全機能の統合が完了し
-ユーザーの Y/N 確認を得た後に削除します（削除までは GitHub 側を正本とし、
-本ディレクトリは統合・参照・監査用のコピーとして扱います）。
+本ディレクトリは、以下の 6 リポジトリ（旧 5 システム + Civil-Construction-IMS）の
+**スナップショット（.git 除く）**を CEOP へ取り込んだ統合元ソースです。
+6 リポジトリはすべて全機能統合完了・ユーザー Y 承認後に GitHub から削除済みのため、
+本ディレクトリは履歴保全・参照・監査用のコピーとして扱います
+（正本は削除前の GitHub 履歴、`/var/backups/` のミラー、`reports/` のアーカイブ）。
 
 | リポジトリ | 技術スタック | 主な機能領域 | 備考 |
 |---|---|---|---|
@@ -13,6 +14,12 @@ CEOP へ取り込んだ統合元ソースです。旧リポジトリは、全機
 | Construction-DX-OS | FastAPI + cdx-agent + SDK + Postgres + OIDC | 端末登録・ハートビート・インベントリ・シリアルスキャン・ISO ビルド・PXE rollback・管理 UI | 端末基盤として最も実装が進んでいる |
 | Synapse-OS | FastAPI マイクロサービス群 + Next.js | Tenant/Identity・Issue・Document・Approval・Audit・Dashboard・Knowledge・Federation・AI Gateway | 396 テスト。統制/ガバナンスで最先端 |
 | Civil-Construction-IMS | Next.js 15 + NestJS + Prisma + PostgreSQL 16 | ISO 9001/14001/45001/55001/19650 統合マネジメント・監査・是正・ISMS・BCP・BIM/CIM | 364+ テスト・全14画面 CRUD。CEOP へ完全吸収（v0.11.0） |
+
+> 維持・機能連携する 6 システム（Civil-4D-AI-Planner / Construction-DX-Idea /
+> Civil-Construction-Management-Platform / Civil-Construction-AI-Build-Platform /
+> DX-Project-Portfolio-Atlas / Civil-Material-Photo-Logger）は**吸収・削除せず**、
+> 各 GitHub リポジトリを正本として維持します。CEOP 側の連携基盤と責務境界は
+> `docs/integration/REPOSITORY_MASTER_PLAN.md`・`LINKED_INTEGRATION_SPEC.md` を参照。
 
 ## ライセンス・帰属
 

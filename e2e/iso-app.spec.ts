@@ -36,7 +36,7 @@ test("ISO console renders analytics, CRUD, and integration contracts", async ({ 
 
   // 状態遷移（レビュー提出）→ under_review
   const row = page.locator("#isoTableBody tr", { hasText: "E2E 品質計画" });
-  await row.locator('[data-action]').first().click();
+  await row.locator("[data-action]").first().click();
   await page.selectOption("#isoActionSelect", "submit-review");
   await page.click("#isoActionApply");
   await expect(row).toContainText("under_review");

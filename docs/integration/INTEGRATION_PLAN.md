@@ -4,6 +4,10 @@
 責任者: CTO（主任エージェント）
 対象: Construction-Enterprise-Operating-Platform（CEOP）を単一プラットフォームとする
 
+> **2026-08-11 更新**: 本計画（旧 5 リポジトリ）は完了済み。Civil-Construction-IMS の
+> 完全吸収と維持・機能連携 6 システムを含む最新の全体像は
+> `docs/integration/REPOSITORY_MASTER_PLAN.md` を参照してください。
+
 ## 1. 目的と完了条件
 
 以下の 5 リポジトリの全機能を CEOP へ統合し、旧リポジトリを削除する。

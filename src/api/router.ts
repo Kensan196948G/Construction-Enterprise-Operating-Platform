@@ -15,6 +15,8 @@ import type { JwtIssuer } from "./middleware/jwt.ts";
 import { logRequest } from "./middleware/request-logger.ts";
 import { clientIpFromRequest } from "./client-ip.ts";
 import { recordRequest } from "../monitoring/metrics.ts";
+import { recordAudit } from "./audit.ts";
+import type { IAuditLog } from "../governance/audit-log.ts";
 import type { ApiKeyContext, ApiKeyStore, ApiRequest } from "./types.ts";
 
 // ---------------------------------------------------------------------------
@@ -46,12 +48,20 @@ export interface RouterOptions {
   readonly apiKeyStore: ApiKeyStore;
   /** When present, Bearer JWT tokens are verified in addition to API key credentials. */
   readonly jwtIssuer?: JwtIssuer;
+  /**
+   * When present, unexpected handler errors (500) are recorded in the
+   * tamper-evident audit log so that mutations that fail mid-flight are
+   * visible in the audit trail. Without this, failed mutations are silent
+   * in the evidence chain.
+   */
+  readonly auditLog?: IAuditLog;
 }
 
 export class Router {
   readonly #routes: Route[] = [];
   readonly #apiKeyStore: ApiKeyStore;
   readonly #jwtIssuer: JwtIssuer | undefined;
+  readonly #auditLog: IAuditLog | undefined;
 
   constructor(options: RouterOptions | ApiKeyStore) {
     if (options instanceof Map) {
@@ -60,6 +70,7 @@ export class Router {
     } else {
       this.#apiKeyStore = options.apiKeyStore;
       this.#jwtIssuer = options.jwtIssuer;
+      this.#auditLog = options.auditLog;
     }
   }
 
@@ -296,6 +307,17 @@ export class Router {
         writeJson(res, 500, { error: "Internal Server Error", message: "unexpected error" });
       } else if (!res.writableEnded) {
         res.destroy(e instanceof Error ? e : new Error(String(e)));
+      }
+      // Record the failure in the audit log so failed mutations are visible
+      // in the evidence trail (outcome: "failure" was previously never recorded).
+      if (ctx !== null && this.#auditLog !== undefined) {
+        recordAudit(
+          this.#auditLog,
+          ctx,
+          `${method} ${matched.route.pattern}`,
+          matched.route.pattern.source,
+          "failure",
+        );
       }
     }
     finish(res.statusCode);

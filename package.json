@@ -20,12 +20,13 @@
     "build": "tsc -p tsconfig.build.json",
     "test": "node --test --experimental-strip-types \"src/**/*.test.ts\" \"scripts/**/*.test.ts\"",
     "test:watch": "node --test --watch --experimental-strip-types \"src/**/*.test.ts\" \"scripts/**/*.test.ts\"",
+    "test:coverage": "node --test --experimental-strip-types --experimental-test-coverage \"src/**/*.test.ts\" \"scripts/**/*.test.ts\"",
     "test:e2e": "playwright test",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "format": "prettier --write \"src/**/*.ts\" \"scripts/**/*.test.ts\" \"examples/**/*.ts\" \"*.json\" \"*.md\"",
-    "format:check": "prettier --check \"src/**/*.ts\" \"scripts/**/*.test.ts\" \"examples/**/*.ts\" \"*.json\" \"*.md\"",
-    "verify": "pnpm run format:check && pnpm run openapi:check && pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run parity",
+    "format": "prettier --write \"src/**/*.ts\" \"scripts/**/*.ts\" \"examples/**/*.ts\" \"e2e/**\" \"*.json\" \"*.md\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"scripts/**/*.ts\" \"examples/**/*.ts\" \"e2e/**\" \"*.json\" \"*.md\"",
+    "verify": "pnpm run format:check && pnpm run openapi:check && pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run build && pnpm run parity",
     "parity": "node --experimental-strip-types scripts/verify-parity.ts",
     "demo": "node --experimental-strip-types examples/quickstart.ts",
     "openapi:gen": "node --experimental-strip-types scripts/generate-openapi.ts",
@@ -33,7 +34,9 @@
     "favicon:gen": "node --experimental-strip-types scripts/generate-favicon.ts",
     "webui:unpack": "node --experimental-strip-types scripts/webui-unpack.ts",
     "webui:serve": "node --experimental-strip-types scripts/webui-serve.ts",
-    "integration:dispatch": "node --experimental-strip-types scripts/run-integration-dispatcher.ts"
+    "integration:dispatch": "node --experimental-strip-types scripts/run-integration-dispatcher.ts",
+    "setup": "git config core.hooksPath .githooks && echo '✓ git hooks configured'",
+    "pre-commit": "pnpm run format:check && pnpm run lint && pnpm run typecheck"
   },
   "pnpm": {
     "overrides": {

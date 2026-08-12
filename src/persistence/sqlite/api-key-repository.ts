@@ -50,7 +50,7 @@ export function createSqliteApiKeyRepository(dbPath: string): ApiKeyRepository {
         "SELECT key_id, subject, permissions, organization_id, created_at " +
           "FROM api_keys ORDER BY created_at DESC, key_id ASC",
       );
-      const rows = stmt.all() as ApiKeyRow[];
+      const rows = stmt.all() as unknown as ApiKeyRow[];
       return rows.map((row) => ({
         keyId: row.key_id,
         subject: row.subject,

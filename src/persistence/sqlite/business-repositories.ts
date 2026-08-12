@@ -1,3 +1,4 @@
+import type { DatabaseSync } from "node:sqlite";
 import type { Photo, PhotoId } from "../../domain/photo.ts";
 import type {
   SafetyCheck,
@@ -54,7 +55,7 @@ import type {
 import { BaseSqliteRepository } from "./base-sqlite-repository.ts";
 
 export class SqlitePhotoRepository extends BaseSqliteRepository<Photo> implements PhotoRepository {
-  constructor(db: unknown) {
+  constructor(db: DatabaseSync) {
     super(
       db,
       "photos",
@@ -91,7 +92,7 @@ export class SqliteSafetyCheckRepository
   extends BaseSqliteRepository<SafetyCheck>
   implements SafetyCheckRepository
 {
-  constructor(db: unknown) {
+  constructor(db: DatabaseSync) {
     super(
       db,
       "safety_checks",
@@ -129,7 +130,7 @@ export class SqliteQualityInspectionRepository
   extends BaseSqliteRepository<QualityInspection>
   implements QualityInspectionRepository
 {
-  constructor(db: unknown) {
+  constructor(db: DatabaseSync) {
     super(
       db,
       "quality_inspections",
@@ -169,7 +170,7 @@ export class SqliteCostRecordRepository
   extends BaseSqliteRepository<CostRecord>
   implements CostRecordRepository
 {
-  constructor(db: unknown) {
+  constructor(db: DatabaseSync) {
     super(
       db,
       "cost_records",
@@ -209,7 +210,7 @@ export class SqliteWorkHourRepository
   extends BaseSqliteRepository<WorkHour>
   implements WorkHourRepository
 {
-  constructor(db: unknown) {
+  constructor(db: DatabaseSync) {
     super(
       db,
       "work_hours",
@@ -247,7 +248,7 @@ export class SqliteNotificationDeliveryRepository
   extends BaseSqliteRepository<NotificationDelivery>
   implements NotificationDeliveryRepository
 {
-  constructor(db: unknown) {
+  constructor(db: DatabaseSync) {
     super(
       db,
       "notification_deliveries",
@@ -283,7 +284,7 @@ export class SqliteKnowledgeRepository
   extends BaseSqliteRepository<KnowledgeArticle>
   implements KnowledgeRepository
 {
-  constructor(db: unknown) {
+  constructor(db: DatabaseSync) {
     super(
       db,
       "knowledge_articles",
@@ -322,7 +323,7 @@ export class SqliteContractRepository
   extends BaseSqliteRepository<Contract>
   implements ContractRepository
 {
-  constructor(db: unknown) {
+  constructor(db: DatabaseSync) {
     super(
       db,
       "legal_contracts",
@@ -370,7 +371,7 @@ export class SqliteDocumentRepository
   extends BaseSqliteRepository<Document>
   implements DocumentRepository
 {
-  constructor(db: unknown) {
+  constructor(db: DatabaseSync) {
     super(
       db,
       "documents",
@@ -415,7 +416,7 @@ export class SqliteWorkScheduleRepository
   extends BaseSqliteRepository<WorkSchedule>
   implements WorkScheduleRepository
 {
-  constructor(db: unknown) {
+  constructor(db: DatabaseSync) {
     super(
       db,
       "work_schedules",
@@ -454,7 +455,7 @@ export class SqlitePurchaseOrderRepository
   extends BaseSqliteRepository<PurchaseOrder>
   implements PurchaseOrderRepository
 {
-  constructor(db: unknown) {
+  constructor(db: DatabaseSync) {
     super(
       db,
       "purchase_orders",
@@ -501,7 +502,7 @@ export class SqliteNotificationPreferenceRepository
   extends BaseSqliteRepository<NotificationPreference>
   implements NotificationPreferenceRepository
 {
-  constructor(db: unknown) {
+  constructor(db: DatabaseSync) {
     super(
       db,
       "notification_preferences",
@@ -536,7 +537,7 @@ export class SqliteComplianceCheckRepository
   extends BaseSqliteRepository<ComplianceCheck>
   implements ComplianceCheckRepository
 {
-  constructor(db: unknown) {
+  constructor(db: DatabaseSync) {
     super(
       db,
       "compliance_checks",
@@ -577,7 +578,7 @@ export class SqliteLegalEvidenceRepository
   extends BaseSqliteRepository<LegalEvidence>
   implements LegalEvidenceRepository
 {
-  constructor(db: unknown) {
+  constructor(db: DatabaseSync) {
     super(
       db,
       "legal_evidence",
@@ -614,7 +615,7 @@ export class SqliteNotificationTemplateRepository
   extends BaseSqliteRepository<NotificationTemplate>
   implements NotificationTemplateRepository
 {
-  constructor(db: unknown) {
+  constructor(db: DatabaseSync) {
     super(
       db,
       "notification_templates",

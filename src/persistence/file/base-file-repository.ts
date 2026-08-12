@@ -60,7 +60,14 @@ export class BaseFileRepository<T extends { id: string }> implements Repository<
 
   #enqueuedFlush(store: Map<string, T>): Promise<void> {
     const next = this.#writeQueue.then(() => this.#flush(store));
-    this.#writeQueue = next.catch(() => {});
+    // The write-queue must continue past a failed flush so that subsequent
+    // save/delete operations (which roll back their own cache) are not
+    // permanently blocked. However, the failure MUST be surfaced to stderr:
+    // without this log an ENOSPC or permission error disappears silently at
+    // the repository layer, surfacing only as a 500 with no root cause.
+    this.#writeQueue = next.catch((e) => {
+      console.error(`[file-repo] flush failed (${this.#filePath}), continuing queue:`, e);
+    });
     return next;
   }
 

@@ -5,6 +5,7 @@
 /*secrets*
 /*token*
 /*Token*
+/**credential*.txt
 node_modules/
 .venv/
 venv/
@@ -25,3 +26,23 @@ playwright-report/
 test-results/
 .DS_Store
 ._*
+
+# Run-continuation sessions (may contain agent prompts / session data)
+.omo/
+
+# Database backups / runtime artefacts
+*.log
+*.db
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+backups/
+
+# Certificate / key material
+*.pem
+*.key
+*.crt
+*.p12
+
+# Agent session state (opencode)
+.opencode/
