@@ -1681,6 +1681,48 @@ const paths: { [k: string]: YamlValue } = {
       },
     },
   },
+  "/api/v1/governance/audit/verify": {
+    get: {
+      operationId: "verifyAuditLog",
+      summary: "Verify the tamper-evident audit chain (requires audit:read)",
+      description:
+        "Recomputes the SHA-256 hash chain over the persisted audit log and reports " +
+        "whether the evidence trail is intact. The response includes `X-CEOP-Audit-Valid` " +
+        "so a monitoring probe can react without parsing the body. Every check is itself " +
+        "recorded in the chain, giving the platform a history of integrity verifications. " +
+        "Tenant scoping does not apply: chain verification is a platform-wide property, " +
+        "and the result exposes no tenant data.",
+      tags: ["Governance"],
+      security: authSecurity,
+      responses: {
+        "200": {
+          description:
+            "Verification result. `valid=false` means an entry was altered or the chain " +
+            "is missing rows; `brokenAt` identifies the first broken sequence.",
+          headers: {
+            "X-CEOP-Audit-Valid": {
+              description: "true when the chain is intact, false otherwise",
+              schema: { type: "boolean" },
+            },
+          },
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["valid", "checkedAt"],
+                properties: {
+                  valid: { type: "boolean" },
+                  brokenAt: { type: "integer", minimum: 0 },
+                  checkedAt: { type: "string", format: "date-time" },
+                },
+              },
+            },
+          },
+        },
+        ...errorResponses(401, 403),
+      },
+    },
+  },
   "/api/v1/governance/policies": {
     get: {
       operationId: "listPolicies",

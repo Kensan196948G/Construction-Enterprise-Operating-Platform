@@ -1,0 +1,10 @@
+[Unit]
+Description=CEOP audit chain integrity verification timer (daily)
+
+[Timer]
+OnCalendar=*-*-* 03:40:00
+RandomizedDelaySec=300
+Unit=ceop-audit-verify.service
+
+[Install]
+WantedBy=timers.target

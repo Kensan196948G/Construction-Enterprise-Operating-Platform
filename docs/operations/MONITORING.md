@@ -8,7 +8,6 @@
 
 ---
 
-
 ### Prometheus メトリクス（P4）
 
 - `GET /metrics`（loopback 3120）が `ceop_http_requests_total` と runtime gauges
@@ -97,23 +96,49 @@ SELECT date_trunc('hour', occurred_at) AS hour, count(*) AS hits
 FROM webui_access_log GROUP BY 1 ORDER BY 1 DESC LIMIT 24;
 ```
 
+### 監査チェーン検証（v0.12.0〜）
+
+監査ログの SHA-256 ハッシュチェーンが改ざんされていないことを毎日検証する。
+検証は API と CLI の 2 経路で行える。
+
+```bash
+# 1) API（監視ツールから。audit:read 権限が必要）
+curl -s -H "Authorization: Bearer keyId:secret" \
+  https://ceop.mirai-dx-platform.com/api/v1/governance/audit/verify
+# → {"valid":true,"checkedAt":"..."} と X-CEOP-Audit-Valid: true ヘッダ
+
+# 2) CLI（本番 DB を直接検証。exit 0 = 正常 / 2 = 改ざん検出）
+docker run --rm -u 0 -v /home/kensan/.ceop/data:/data ceop-platform:current \
+  node --experimental-strip-types scripts/verify-audit-chain.ts /data/ceop.db
+
+# 3) 日次 systemd タイマー（毎日 03:40 JST を想定）
+sudo cp deploy/systemd/ceop-audit-verify.{service,timer} /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now ceop-audit-verify.timer
+sudo systemctl list-timers ceop-audit-verify.timer
+```
+
+検証失敗時は journald に `[verify-audit-chain] ... valid=false` が残り、サービスは
+exit 2 で終了する。監査ログが改ざんされた場合は RUNBOOK §5 のインシデント対応を
+開始し、直近バックアップ（verify-restore が監査チェーンも検証する）と突き合わせる。
+
 ---
 
 ## 2. 未実装（目標設計）
 
 以下は **設計のみで、動いていません**。実装済みとして扱わないでください。
 
-| 項目                                    | 現状                                                                 | 必要なもの                                                                                                               |
-| --------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| 項目                                    | 現状                                                                                                                             | 必要なもの                                                                                                               |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | 通知経路（PagerDuty / Slack / メール）  | **プローブ側は実装済み**（`CEOP_ALERT_WEBHOOK_URL` 設定時に ALERT/RECOVERED を JSON POST）。通知先の決定と資格情報の設定は未実施 | 通知先の決定と `CEOP_ALERT_WEBHOOK_URL` の設定（Secrets 管理が必要）                                                     |
-| アラートダッシュボード                  | **存在しない**                                                       | メトリクス収集基盤の導入が前提                                                                                           |
-| レイテンシ SLI（p95）                   | **未計測**                                                           | リクエストごとの所要時間の収集・集計                                                                                     |
-| エラー率 SLI                            | **未計測**                                                           | 5xx 比率の集計                                                                                                           |
-| 可用性 SLI（月間 2xx 割合）             | **未計測**（プローブのログから事後集計は可能だが自動化されていない） | プローブログの集計ジョブ                                                                                                 |
-| 認証失敗率（401/429 急増）              | **未実装**                                                           | 構造化ログの集計                                                                                                         |
-| 監査ログ破損検知                        | `verify()` は実装済みだが**定期実行されていない**                    | 定期実行ジョブ + 結果の通知                                                                                              |
-| リソース監視（CPU / メモリ / ディスク） | **未実装**                                                           | ホスト側メトリクス収集                                                                                                   |
-| コンテナログのローテーション            | **未設定**（`json-file` ドライバの既定＝サイズ上限なし）             | `--log-opt max-size` / `max-file` の指定。`docker-compose.prod.yml` には記載済みだが本番は `docker run` 運用のため未適用 |
+| アラートダッシュボード                  | **存在しない**                                                                                                                   | メトリクス収集基盤の導入が前提                                                                                           |
+| レイテンシ SLI（p95）                   | **未計測**                                                                                                                       | リクエストごとの所要時間の収集・集計                                                                                     |
+| エラー率 SLI                            | **未計測**                                                                                                                       | 5xx 比率の集計                                                                                                           |
+| 可用性 SLI（月間 2xx 割合）             | **未計測**（プローブのログから事後集計は可能だが自動化されていない）                                                             | プローブログの集計ジョブ                                                                                                 |
+| 認証失敗率（401/429 急増）              | **未実装**                                                                                                                       | 構造化ログの集計                                                                                                         |
+| 監査ログ破損検知                        | `verify()` は実装済みだが**定期実行されていない**                                                                                | 定期実行ジョブ + 結果の通知                                                                                              |
+| リソース監視（CPU / メモリ / ディスク） | **未実装**                                                                                                                       | ホスト側メトリクス収集                                                                                                   |
+| コンテナログのローテーション            | **未設定**（`json-file` ドライバの既定＝サイズ上限なし）                                                                         | `--log-opt max-size` / `max-file` の指定。`docker-compose.prod.yml` には記載済みだが本番は `docker run` 運用のため未適用 |
 
 ### SLI / SLO（目標値・未計測）
 

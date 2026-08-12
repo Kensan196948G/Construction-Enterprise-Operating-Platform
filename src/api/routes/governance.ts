@@ -442,6 +442,38 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
     );
   });
 
+  // GET /api/v1/governance/audit/verify  (requires audit:read or wildcard)
+  //
+  // Recomputes the SHA-256 hash chain over the persisted audit log and reports
+  // whether the evidence trail is intact. Monitoring can call this on a
+  // schedule; the result of every check is itself recorded in the chain, so a
+  // history of integrity checks becomes part of the evidence.
+  router.get("/api/v1/governance/audit/verify", async (req, ctx, res) => {
+    if (!hasPermission(ctx, "audit", "read")) {
+      forbidden(res, "audit:read");
+      return;
+    }
+    const report = container.auditLog.verify();
+    res.setHeader("X-CEOP-Audit-Valid", report.valid ? "true" : "false");
+    recordAudit(
+      container.auditLog,
+      ctx,
+      "audit:verify",
+      "governance:audit-log",
+      report.valid ? "success" : "failure",
+      {
+        valid: String(report.valid),
+        ...(report.brokenAt !== undefined ? { brokenAt: String(report.brokenAt) } : {}),
+        method: req.method,
+      },
+    );
+    writeJson(res, 200, {
+      valid: report.valid,
+      ...(report.brokenAt !== undefined ? { brokenAt: report.brokenAt } : {}),
+      checkedAt: new Date().toISOString(),
+    });
+  });
+
   // ── Policy CRUD ───────────────────────────────────────────────────────────
 
   // GET /api/v1/governance/policies?limit=&offset=  (requires policy:read or wildcard)

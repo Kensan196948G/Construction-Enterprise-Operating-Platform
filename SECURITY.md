@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-Security updates are provided for the latest `main` release (currently v0.6.x).
+Security updates are provided for the latest `main` release (currently v0.12.x).
 
 ## Reporting a Vulnerability
 

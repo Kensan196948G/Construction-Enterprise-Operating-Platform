@@ -331,13 +331,41 @@ DNS・証明書・Tunnel 自体（UUID / credentials）には一切触れない�
 > マイグレーション 018〜021: E-03 documents / E-02 work_schedules / E-05 purchase_orders / E-11 notification_preferences。
 > 通知ディスパッチャー: `node --experimental-strip-types scripts/run-notification-dispatcher.ts`（cron 登録推奨・5分間隔目安）。
 
-> マイグレーション 022〜024: S-07 compliance_checks / legal_evidence / E-11 notification_templates。
-> email 送信はディスパッチャー実行前に CEOP_SMTP_* を設定（未設定は not-configured 記録）。
+> マイグレーション 022〜024: S-07 compliance*checks / legal_evidence / E-11 notification_templates。
+> email 送信はディスパッチャー実行前に CEOP_SMTP*\* を設定（未設定は not-configured 記録）。
 
 ## P4 監視スタック（Prometheus / Grafana）
 
 - `GET /metrics` は loopback 3120 で公開済み（`CEOP_METRICS_TOKEN` 任意）。
 - 実機導入: `docker compose --profile monitoring up -d`（`GRAFANA_ADMIN_PASSWORD` 必須・host network・loopback 19090/13001）。
+
+## 監査チェーン検証（v0.12.0〜）
+
+監査ログの改ざん検知を日次で自動検証する。バックアップ検証（verify-restore）も
+監査チェーンと ISO レコード番号の重複を検査するため、復元試験の受入れ基準が拡張されている。
+
+```bash
+# 即時確認（API）
+curl -s -H "Authorization: Bearer keyId:secret" \
+  https://ceop.mirai-dx-platform.com/api/v1/governance/audit/verify
+
+# 即時確認（CLI・本番 DB 直接）
+docker run --rm -u 0 -v /home/kensan/.ceop/data:/data ceop-platform:current \
+  node --experimental-strip-types scripts/verify-audit-chain.ts /data/ceop.db
+
+# 日次タイマー導入
+sudo cp deploy/systemd/ceop-audit-verify.{service,timer} /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now ceop-audit-verify.timer
+
+# 状態確認
+sudo systemctl list-timers ceop-audit-verify.timer
+sudo journalctl -u ceop-audit-verify.service -n 20 --no-pager
+```
+
+検証失敗（exit 2）は監査証跡の不正を示す重大事象として RUNBOOK §5 のインシデント対応へ
+エスカレーションする。詳細は MONITORING.md を参照。
+
 - Tunnel ingress は `/metrics` を公開しないよう分割すること（`/api/*` のみ API へ）。
 - 確認: `curl http://127.0.0.1:19090/api/v1/targets`・Grafana `http://127.0.0.1:13001`（CEOP Platform ダッシュボード）。
 
@@ -355,6 +383,7 @@ systemctl list-timers ceop-integration-dispatcher.timer
 ```
 
 手動実行:
+
 ```bash
 docker run --rm -u 0 -v /home/kensan/.ceop/data:/data --env-file /home/kensan/.ceop/.env \
   ceop-platform:current node --experimental-strip-types scripts/run-integration-dispatcher.ts --db /data/ceop.db

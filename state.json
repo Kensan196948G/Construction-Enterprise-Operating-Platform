@@ -27,12 +27,15 @@
     "ims_repo_deleted_at": "2026-08-09",
     "v0_11_1_production_deploy": "completed",
     "v0_11_1_production_deploy_at": "2026-08-10"
+    ,
+    "v0_12_0_assessment_hardening": "in_progress",
+    "v0_12_0_branch": "feat/assessment-hardening-v0.12.0"
   },
   "kpi": {
     "success_rate_target": 0.9,
     "ci_success_rate": 1,
     "test_pass_rate": 1,
-    "test_count": 407,
+    "test_count": 534,
     "security_critical": 0,
     "security_high_resolved": 19,
     "blocker_count": 0
@@ -72,6 +75,12 @@
     "v0_8_1_ssr_assets_fix": "completed"
   },
   "completed_issues": [
+    "v0.12.0: 監査チェーン検証 API（GET /api/v1/governance/audit/verify・audit:read・検証自体も監査記録）+ CLI（verify-audit-chain）+ 日次 systemd タイマー",
+    "v0.12.0: verify-restore 拡張（監査チェーン整合性 + ISO レコード番号重複検査）と改ざんバックアップ拒否テスト",
+    "v0.12.0: PWA アイコン 192/512・maskable manifest・apple-touch-icon 追加",
+    "v0.12.0: E2E 拡張（portal / dashboard / viewer 403・計 6 テスト）",
+    "v0.12.0: SqliteAuditLog の any/createRequire 撤廃・node:sqlite 型直接利用",
+    "v0.12.0: SECURITY.md サポートバージョン更新・README/CHANGELOG/OpenAPI/RUNBOOK/MONITORING 同期",
     "v0.11.0: Civil-Construction-IMS 完全吸収 — ISO 9001/14001/45001/55001/19650・監査・是正・ISMS・BCP を iso_records + 統一 ISO API へ再構成（migration 025）",
     "v0.11.0: IMS 互換エイリアス 32 系統（/quality/plans・/environment/aspects・/assets 等）",
     "v0.11.0: 連携先6システム連携基盤 — webhook 受信・イベントキュー・再送・契約一覧（migration 026）",

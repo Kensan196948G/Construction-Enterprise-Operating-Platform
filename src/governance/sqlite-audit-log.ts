@@ -18,7 +18,8 @@
  * process. Writes are serialised by Node.js's single-threaded event loop.
  */
 
-import { createRequire } from "node:module";
+import { DatabaseSync } from "node:sqlite";
+import type { StatementSync } from "node:sqlite";
 import type { AuditEvent } from "../domain/audit-event.ts";
 import {
   type AuditLogEntry,
@@ -28,25 +29,17 @@ import {
   hashAuditEntry,
 } from "./audit-log.ts";
 
-// node:sqlite ships without bundled TypeScript types in Node.js v22/v25.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type DatabaseSync = any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type StatementSync = any;
-
-const _require = createRequire(import.meta.url);
-const _sqlite = _require("node:sqlite") as {
-  DatabaseSync: new (path: string) => DatabaseSync;
-};
-
 export class SqliteAuditLog implements IAuditLog {
   readonly #db: DatabaseSync;
 
-  constructor(dbPath: string) {
-    this.#db = new _sqlite.DatabaseSync(dbPath);
-    this.#db.exec("PRAGMA journal_mode = WAL");
-    this.#db.exec("PRAGMA foreign_keys = ON");
-    this.#initSchema();
+  constructor(dbPath: string, options: { readonly readOnly?: boolean } = {}) {
+    const readOnly = options.readOnly === true;
+    this.#db = new DatabaseSync(dbPath, readOnly ? { readOnly: true } : {});
+    if (!readOnly) {
+      this.#db.exec("PRAGMA journal_mode = WAL");
+      this.#db.exec("PRAGMA foreign_keys = ON");
+      this.#initSchema();
+    }
   }
 
   #initSchema(): void {

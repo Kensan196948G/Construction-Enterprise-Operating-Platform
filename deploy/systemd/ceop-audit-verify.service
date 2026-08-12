@@ -1,0 +1,22 @@
+# CEOP audit chain integrity verification (oneshot).
+#
+# Recomputes the SHA-256 hash chain over the production audit log and exits
+# non-zero when tampering is detected. Run daily by ceop-audit-verify.timer;
+# inspect `systemctl status ceop-audit-verify` or journald on failure.
+#
+# Install:
+#   sudo cp deploy/systemd/ceop-audit-verify.{service,timer} /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now ceop-audit-verify.timer
+
+[Unit]
+Description=CEOP audit chain integrity verification
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/docker run --rm -u 0 \
+  -v /home/kensan/.ceop/data:/data \
+  ceop-platform:current \
+  node --experimental-strip-types scripts/verify-audit-chain.ts /data/ceop.db

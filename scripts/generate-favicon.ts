@@ -175,7 +175,8 @@ function encodeIco(images: readonly { size: number; png: Buffer }[]): Buffer {
 // Main
 // ---------------------------------------------------------------------------
 
-const sizes = [16, 32, 48] as const;
+// 192/512 は PWA ホーム画面アイコン用（manifest.webmanifest が参照する）。
+const sizes = [16, 32, 48, 192, 512] as const;
 mkdirSync(STATIC_DIR, { recursive: true });
 const images = sizes.map((size) => ({ size, png: encodePng(size, draw(size)) }));
 for (const { size, png } of images) {
