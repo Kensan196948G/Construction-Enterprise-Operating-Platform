@@ -21,44 +21,42 @@ systemd 03:00 ── scripts/r2-backup.sh ────────┤
 
 保持方針:
 
-| 場所 | 保持期間 | 世代数目安 |
-|---|---|---:|
-| ローカル | 14 日（既存 backup-retention.ts） | 14 |
-| R2 | 90 日（rclone `--min-age` で整理） | 90 |
-| R2 `latest/` | 常に最新 1 件 | 1 |
+| 場所         | 保持期間                           | 世代数目安 |
+| ------------ | ---------------------------------- | ---------: |
+| ローカル     | 14 日（既存 backup-retention.ts）  |         14 |
+| R2           | 90 日（rclone `--min-age` で整理） |         90 |
+| R2 `latest/` | 常に最新 1 件                      |          1 |
 
 ## 3. 必要となるもの（ユーザー提供）
 
-| 項目 | 説明 | 取得場所 |
-|---|---|---|
-| Cloudflare Account ID | `r2.dev` と API トークンに必要 | Cloudflare Dashboard |
-| R2 API Token | `Object Read & Write` 権限・対象バケット限定 | Dashboard → My Profile → API Tokens |
-| バケット名 | 例: `ceop-backup` | R2 コンソールで作成 |
+| 項目                  | 説明                                         | 取得場所                            |
+| --------------------- | -------------------------------------------- | ----------------------------------- |
+| Cloudflare Account ID | `r2.dev` と API トークンに必要               | Cloudflare Dashboard                |
+| R2 API Token          | `Object Read & Write` 権限・対象バケット限定 | Dashboard → My Profile → API Tokens |
+| バケット名            | 例: `ceop-backup`                            | R2 コンソールで作成                 |
 
 ## 4. セットアップ手順（トークン到着後に実施）
 
 ```bash
-# 1. rclone インストール
+# 1. rclone インストール（済みの場合はスキップ）
 sudo apt-get install -y rclone
 
-# 2. rclone 設定（対話式。以下は最小項目）
-rclone config
-#   n) New remote → 名前: ceop-r2
-#   type: s3
-#   provider: Cloudflare
-#   access_key_id / secret_access_key: R2 API トークン
-#   endpoint: https://<ACCOUNT_ID>.r2.cloudflarestorage.com
-#   region: auto
+# 2. 設定ヘルパーを実行（R2 API トークンの 3 項目を環境変数で渡す）
+sudo -E env \
+  R2_ACCOUNT_ID=<ACCOUNT_ID> \
+  R2_ACCESS_KEY_ID=<ACCESS_KEY_ID> \
+  R2_SECRET_ACCESS_KEY=<SECRET_ACCESS_KEY> \
+  bash scripts/setup-r2-backup.sh
 
-# 3. 設定ファイルを root のみ読める場所へ
-sudo chmod 600 ~/.config/rclone/rclone.conf
-
-# 4. 動作確認
-rclone lsd ceop-r2:
-
-# 5. 一度だけ全量アップロード
-sudo bash scripts/r2-backup.sh --full
+# 3. 一度だけ全量アップロード（転送後に verify-restore で検証される）
+sudo bash scripts/r2-backup.sh
 ```
+
+`scripts/setup-r2-backup.sh` は rclone リモート `ceop-r2` の作成（S3/Cloudflare 互換・
+endpoint 自動設定）・config の 600 化・バケット接続確認・systemd タイマーの有効化まで行います。
+
+> 本スクリプトは実機のローカルリモート（`ceop-test-local`）を使った転送 → 検証 → 保持の
+> エンドツーエンド動作確認済みです（2026-08-12）。R2 は同一手順の S3 互換先として動きます。
 
 ## 5. スクリプト（scripts/r2-backup.sh）
 

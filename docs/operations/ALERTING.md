@@ -17,6 +17,15 @@
 }
 ```
 
+通知フォーマットは URL から自動判定されます。
+
+- `https://hooks.slack.com/...` → Slack 形式（`{"text": ...}`）
+- `https://.../webhookb2/...` → Teams 形式（MessageCard）
+- それ以外 → 汎用 JSON
+
+自動判定を無効にして明示指定したい場合は `CEOP_ALERT_FORMAT=slack|teams|generic` を
+設定します（例: プロキシ経由で Slack URL が別ホストに見える場合）。
+
 ## 2. Slack の場合
 
 ### 2-1. Incoming Webhook の作成（管理者）
@@ -88,3 +97,5 @@ echo "exit=$?"   # 0（RECOVERED 通知）
 - Webhook 配信失敗はプローブ自体の成否を変えません（`NOTIFY_FAILED` として記録）。
 - 通知先を Slack と Teams の両方にしたい場合は、health-probe.sh の `notify()` を
   配列対応に拡張してください（将来のバージョンで対応予定）。
+- 通知フォーマット変換は `scripts/health-probe.test.ts` で自動テストされています
+  （Slack / 汎用 JSON / RECOVERED の 3 パターン）。
