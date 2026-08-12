@@ -28,6 +28,10 @@
     "v0_11_1_production_deploy": "completed",
     "v0_11_1_production_deploy_at": "2026-08-10"
     ,
+    "v0_12_1_field_ops": "in_progress",
+    "v0_12_1_branch": "feat/field-ops-v0.12.1",
+    "v0_12_1_production_deploy": "completed",
+    "v0_12_1_production_deploy_at": "2026-08-12",
     "v0_12_0_assessment_hardening": "in_progress",
     "v0_12_0_branch": "feat/assessment-hardening-v0.12.0",
     "v0_12_0_production_deploy": "completed",
@@ -37,7 +41,7 @@
     "success_rate_target": 0.9,
     "ci_success_rate": 1,
     "test_pass_rate": 1,
-    "test_count": 534,
+    "test_count": 540,
     "security_critical": 0,
     "security_high_resolved": 19,
     "blocker_count": 0
@@ -77,6 +81,12 @@
     "v0_8_1_ssr_assets_fix": "completed"
   },
   "completed_issues": [
+    "v0.12.1: 本番デプロイ（2026-08-12）— predeploy バックアップ（ceop-predeploy-v0.12.1-20260812T095941Z.db）・旧 v0.12.0 を ceop-platform-prev-0120 として rename 保持・公開スモーク（info=0.12.1・health/ready・daily-reports 401・metrics トークン 200）・Tunnel 経路に /daily-reports 追加（public 401 確認）・ceop-platform:current 更新・監査チェーン CLI valid=true・Prometheus UP",
+    "v0.12.1: 日報管理コンソール（/daily-reports・案件選択・作成/編集・提出/承認・viewer 403・E2E 2 件）",
+    "v0.12.1: 実業務データ移行スクリプト（import-business-data・8 種別・ドメイン検証・自然キー重複防止・サンプル 8 件投入検証）",
+    "v0.12.1: オフサイトバックアップ設計（r2-backup.sh + systemd + OFFSITE_BACKUP.md・R2 トークン待ち）",
+    "v0.12.1: アラート通知設定ガイド（ALERTING.md・Slack/Teams・CEOP_ALERT_WEBHOOK_URL 待ち）",
+    "v0.12.1: Neon 移行設計書（NEON_MIGRATION_PLAN.md・Phase A〜D・判断基準）",
     "v0.12.0: 本番デプロイ（2026-08-12）— predeploy バックアップ・旧 v0.11.2 を rename 保持・CEOP_METRICS_TOKEN 導入（.env + Prometheus credentials_file）・公開スモーク（health/ready・info 0.12.0・metrics 401/トークン 200・audit verify 401）・監査チェーン CLI 実地検証（entries=5 valid=true）・日次タイマー導入・journald 成功記録",
     "v0.12.0: 監査チェーン検証 API（GET /api/v1/governance/audit/verify・audit:read・検証自体も監査記録）+ CLI（verify-audit-chain）+ 日次 systemd タイマー",
     "v0.12.0: verify-restore 拡張（監査チェーン整合性 + ISO レコード番号重複検査）と改ざんバックアップ拒否テスト",

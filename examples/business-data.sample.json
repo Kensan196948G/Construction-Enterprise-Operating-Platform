@@ -1,0 +1,102 @@
+{
+  "projects": [
+    {
+      "id": "project-sample-001",
+      "organizationId": "org-hq",
+      "projectCode": "P-SAMPLE-001",
+      "name": "サンプル橋梁補修工事",
+      "clientName": "サンプル市",
+      "siteAddress": "サンプル県サンプル市",
+      "status": "in_progress",
+      "startDate": "2026-04-01",
+      "endDate": "2027-03-31",
+      "budget": 120000000
+    }
+  ],
+  "dailyReports": [
+    {
+      "organizationId": "org-hq",
+      "projectId": "project-sample-001",
+      "reportDate": "2026-08-12",
+      "weather": "cloudy",
+      "temperature": 28.5,
+      "workerCount": 8,
+      "workContent": "橋台コンクリート打設",
+      "safetyCheck": true,
+      "progressRate": 45,
+      "issues": "型枠材の納品遅延を調整中"
+    }
+  ],
+  "safetyChecks": [
+    {
+      "organizationId": "org-hq",
+      "projectId": "project-sample-001",
+      "checkDate": "2026-08-12",
+      "checkType": "daily",
+      "itemsTotal": 5,
+      "itemsOk": 5,
+      "itemsNg": 0,
+      "overallResult": "ok",
+      "notes": "KY 実施済み"
+    }
+  ],
+  "qualityInspections": [
+    {
+      "organizationId": "org-hq",
+      "projectId": "project-sample-001",
+      "inspectionDate": "2026-08-12",
+      "inspectionType": "concrete",
+      "targetItem": "橋台コンクリート",
+      "standardValue": "28N/mm2",
+      "measuredValue": "31.2N/mm2",
+      "result": "pass"
+    }
+  ],
+  "costRecords": [
+    {
+      "organizationId": "org-hq",
+      "projectId": "project-sample-001",
+      "recordDate": "2026-08-12",
+      "category": "material",
+      "description": "生コンクリート 20m3",
+      "budgetedAmount": 600000,
+      "actualAmount": 580000,
+      "vendorName": "サンプル生コン株式会社",
+      "invoiceNumber": "INV-2026-0001"
+    }
+  ],
+  "workHours": [
+    {
+      "organizationId": "org-hq",
+      "projectId": "project-sample-001",
+      "workDate": "2026-08-12",
+      "hours": 8,
+      "workType": "concrete"
+    }
+  ],
+  "purchaseOrders": [
+    {
+      "organizationId": "org-hq",
+      "projectId": "project-sample-001",
+      "orderNumber": "PO-SAMPLE-0001",
+      "supplier": "サンプル建材株式会社",
+      "item": "型枠材（合板）",
+      "quantity": 100,
+      "unitPrice": 1800,
+      "status": "issued"
+    }
+  ],
+  "contracts": [
+    {
+      "organizationId": "org-hq",
+      "projectId": "project-sample-001",
+      "contractNumber": "C-SAMPLE-0001",
+      "title": "橋梁補修工事（下請）",
+      "party": "サンプル建設株式会社",
+      "periodStart": "2026-04-01",
+      "periodEnd": "2027-03-31",
+      "amount": 12000000,
+      "status": "active"
+    }
+  ]
+}

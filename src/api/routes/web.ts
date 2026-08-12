@@ -32,7 +32,7 @@ import {
 import { hasPermission } from "./governance.ts";
 
 /** Write a complete HTML response with browser security headers. */
-function sendHtml(res: ServerResponse, status: number, html: string): void {
+export function sendHtml(res: ServerResponse, status: number, html: string): void {
   const buf = Buffer.from(html, "utf-8");
   res.writeHead(status, {
     "Content-Type": "text/html; charset=utf-8",
@@ -130,6 +130,13 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
     false,
   );
   router.get(
+    "/api/assets/daily-reports.js",
+    async (_req, _ctx, res) => {
+      await sendFile(res, join(staticDir, "daily-reports.js"), "text/javascript; charset=utf-8");
+    },
+    false,
+  );
+  router.get(
     "/api/assets/manifest.webmanifest",
     async (_req, _ctx, res) => {
       await sendFile(res, join(staticDir, "manifest.webmanifest"), "application/manifest+json");
@@ -168,6 +175,13 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
     "/assets/iso.js",
     async (_req, _ctx, res) => {
       await sendFile(res, join(staticDir, "iso.js"), "text/javascript; charset=utf-8");
+    },
+    false,
+  );
+  router.get(
+    "/assets/daily-reports.js",
+    async (_req, _ctx, res) => {
+      await sendFile(res, join(staticDir, "daily-reports.js"), "text/javascript; charset=utf-8");
     },
     false,
   );

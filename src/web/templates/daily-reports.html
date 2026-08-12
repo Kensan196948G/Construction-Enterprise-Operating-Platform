@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>日報管理 — 建設企業プラットフォーム</title>
+    <link rel="icon" href="/api/assets/favicon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/api/assets/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/api/assets/favicon-192.png" />
+    <link rel="stylesheet" href="/api/assets/app.css" />
+  </head>
+  <body>
+    <input type="hidden" id="ceopToken" value="{{API_TOKEN}}" />
+
+    <header class="header">
+      <button class="hamburger" id="hamburgerBtn" aria-label="メニューを開閉">☰</button>
+      <a class="header__logo" href="/dashboard">
+        <span class="header__title">🏗️ CEOP</span>
+        <span class="header__subtitle">日報管理</span>
+      </a>
+      <div class="header__right">
+        <span class="badge badge-muted">v{{VERSION}}</span>
+        <button class="btn-icon" id="refreshBtn" aria-label="一覧を更新">更新</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <nav class="sidebar" id="sidebar" aria-label="メインメニュー">
+        <a class="nav-item" href="/dashboard"><span class="nav-icon">📊</span> ダッシュボード</a>
+        <a class="nav-item" href="/governance"><span class="nav-icon">🛡</span> ガバナンス</a>
+        <a class="nav-item" href="/iso"><span class="nav-icon">📋</span> ISO 統合マネジメント</a>
+        <a class="nav-item active" href="/daily-reports"><span class="nav-icon">📝</span> 日報管理</a>
+        <a class="nav-item" href="/portal"><span class="nav-icon">🏛️</span> ポータル</a>
+      </nav>
+
+      <main class="main" id="mainContent">
+        <div class="page-head">
+          <h1 class="page-title" id="pageTitle">日報管理</h1>
+          <p class="page-subtitle">現場の日報を登録・提出・承認します（draft → submitted → approved）</p>
+        </div>
+
+        <section class="section">
+          <div class="section-head">
+            <label for="projectSelect" class="field-label">対象案件</label>
+            <select id="projectSelect" class="select">
+              <option value="">案件を選択してください</option>
+            </select>
+            <button class="btn btn-primary" id="newReportBtn" disabled>新規日報</button>
+          </div>
+        </section>
+
+        <section class="section" id="reportsSection" hidden>
+          <div class="section-title">日報一覧</div>
+          <div class="table-wrap">
+            <table class="table" id="reportsTable">
+              <thead>
+                <tr>
+                  <th>日付</th>
+                  <th>天候</th>
+                  <th>作業員数</th>
+                  <th>作業内容</th>
+                  <th>進捗率</th>
+                  <th>安全確認</th>
+                  <th>状態</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="reportsTableBody"></tbody>
+            </table>
+          </div>
+          <p id="reportsEmpty" class="muted" hidden>日報はまだありません。「新規日報」から作成してください。</p>
+        </section>
+
+        <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+      </main>
+    </div>
+
+    <!-- 日報作成・編集ダイアログ -->
+    <div class="dialog" id="reportDialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle" hidden>
+      <div class="dialog__panel">
+        <div class="dialog__head">
+          <h2 class="dialog__title" id="dialogTitle">新規日報</h2>
+          <button class="btn-icon" id="dialogClose" aria-label="閉じる">✕</button>
+        </div>
+        <form id="reportForm" class="form">
+          <input type="hidden" id="reportId" />
+          <div class="form-grid">
+            <label class="field">
+              <span class="field-label">日付（必須）</span>
+              <input type="date" id="reportDate" class="input" required />
+            </label>
+            <label class="field">
+              <span class="field-label">天候</span>
+              <select id="reportWeather" class="select">
+                <option value="sunny">晴れ</option>
+                <option value="cloudy">曇り</option>
+                <option value="rainy">雨</option>
+                <option value="snowy">雪</option>
+              </select>
+            </label>
+            <label class="field">
+              <span class="field-label">気温（℃）</span>
+              <input type="number" id="reportTemperature" class="input" min="-50" max="60" step="0.1" />
+            </label>
+            <label class="field">
+              <span class="field-label">作業員数</span>
+              <input type="number" id="reportWorkerCount" class="input" min="0" step="1" value="0" />
+            </label>
+            <label class="field">
+              <span class="field-label">進捗率（%）</span>
+              <input type="number" id="reportProgressRate" class="input" min="0" max="100" step="1" />
+            </label>
+            <label class="field field--wide">
+              <span class="field-label">作業内容</span>
+              <textarea id="reportWorkContent" class="textarea" rows="3"></textarea>
+            </label>
+            <label class="field field--wide">
+              <span class="field-label">課題・懸案</span>
+              <textarea id="reportIssues" class="textarea" rows="2"></textarea>
+            </label>
+            <label class="field field--wide checkbox-row">
+              <input type="checkbox" id="reportSafetyCheck" />
+              <span>安全確認済み</span>
+            </label>
+            <label class="field field--wide">
+              <span class="field-label">安全メモ</span>
+              <textarea id="reportSafetyNotes" class="textarea" rows="2"></textarea>
+            </label>
+          </div>
+          <div class="dialog__actions">
+            <button type="button" class="btn" id="dialogCancel">キャンセル</button>
+            <button type="submit" class="btn btn-primary">保存</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="/api/assets/daily-reports.js"></script>
+  </body>
+</html>

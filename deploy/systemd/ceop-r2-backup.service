@@ -1,0 +1,23 @@
+# CEOP off-site backup to Cloudflare R2 (oneshot).
+#
+# Uploads the newest local SQLite backup to R2 via rclone and verifies the
+# stored artifact. Run daily by ceop-r2-backup.timer.
+#
+# Install:
+#   sudo cp deploy/systemd/ceop-r2-backup.{service,timer} /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now ceop-r2-backup.timer
+#
+# Prerequisites: rclone installed and configured (see
+# docs/operations/OFFSITE_BACKUP.md). The rclone config is read from the
+# root user's home, so run this unit as root.
+
+[Unit]
+Description=CEOP off-site backup to Cloudflare R2
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/bin/bash /home/kensan/Projects/Mirai-DX-Project/Construction-Enterprise-Operating-Platform/scripts/r2-backup.sh

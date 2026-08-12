@@ -5,7 +5,7 @@
 # (this is a production route change and requires an approved Approval PR).
 #
 # Routing:
-#   /api/*, /health*, /dashboard*, /governance* → API container (localhost:3120)
+#   /api/*, /health*, /dashboard*, /governance*, /daily-reports → API container (localhost:3120)
 #   everything else (incl. /healthz, /assets/*)  → WebUI service  (localhost:3130)
 #
 # cloudflared evaluates ingress rules top-down; `path` is a regex matched
@@ -17,7 +17,7 @@ credentials-file: /home/kensan/.cloudflared/21a24cec-9ac1-4aa8-aa92-c64867bece8b
 
 ingress:
   - hostname: ceop.mirai-dx-platform.com
-    path: ^/(api|health|dashboard|governance|iso|iso-app|portal)(/.*)?$
+    path: ^/(api|health|dashboard|governance|iso|iso-app|portal|daily-reports)(/.*)?$
     service: http://localhost:3120
   - hostname: ceop.mirai-dx-platform.com
     service: http://localhost:3130
