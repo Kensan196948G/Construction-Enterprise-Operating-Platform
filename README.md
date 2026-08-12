@@ -4,7 +4,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-22.13+-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Zero Runtime Deps](https://img.shields.io/badge/runtime%20deps-zero-brightgreen)](package.json)
 [![CI](https://img.shields.io/github/actions/workflow/status/Kensan196948G/Construction-Enterprise-Operating-Platform/ci.yml?label=CI&logo=github)](/.github/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-534%20pass-brightgreen)](src/)
+[![Tests](https://img.shields.io/badge/tests-540%20pass-brightgreen)](src/)
 [![Security](https://img.shields.io/badge/security-hardened-blue)](src/api/middleware/auth.ts)
 [![License](https://img.shields.io/badge/license-proprietary-lightgrey)](LICENSE.md)
 
@@ -15,18 +15,18 @@
 
 ## 📌 概要
 
-| 項目         | 内容                                                                                                |
-| ------------ | --------------------------------------------------------------------------------------------------- |
-| 役割         | 統制・ガバナンス・共通ワークフローの調整基盤                                                        |
-| バージョン   | v0.12.0（ガバナンス・監査・ISO・連携基盤 + 監査チェーン検証 API/CLI/systemd・バックアップ検証拡張） |
-| 言語         | TypeScript 5.7（strict / `noUncheckedIndexedAccess` / 例外を投げない設計）                          |
-| ランタイム   | Node.js v22.13+（ネイティブ TS 実行・ビルトインテストランナー）                                     |
-| HTTP サーバ  | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                                            |
-| 依存方針     | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）                    |
-| パッケージ   | pnpm 10.26.2                                                                                        |
-| テスト       | 534 tests pass（node:test ビルトインランナー）＋ Playwright E2E 6 テスト                            |
-| コンテナ     | Docker multi-stage build（non-root・HEALTHCHECK 付き）                                              |
-| セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限                   |
+| 項目         | 内容                                                                                                   |
+| ------------ | ------------------------------------------------------------------------------------------------------ |
+| 役割         | 統制・ガバナンス・共通ワークフローの調整基盤                                                           |
+| バージョン   | v0.12.1（v0.12.0 + 日報管理コンソール・実データ移行スクリプト・R2 オフサイト設計・アラート設定ガイド） |
+| 言語         | TypeScript 5.7（strict / `noUncheckedIndexedAccess` / 例外を投げない設計）                             |
+| ランタイム   | Node.js v22.13+（ネイティブ TS 実行・ビルトインテストランナー）                                        |
+| HTTP サーバ  | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                                               |
+| 依存方針     | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）                       |
+| パッケージ   | pnpm 10.26.2                                                                                           |
+| テスト       | 540 tests pass（node:test ビルトインランナー）＋ Playwright E2E 8 テスト                               |
+| コンテナ     | Docker multi-stage build（non-root・HEALTHCHECK 付き）                                                 |
+| セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限                      |
 
 ---
 
@@ -615,7 +615,7 @@ bash scripts/webui-deploy.sh
 ## 🧪 テスト実行
 
 ```bash
-# 全テスト実行（534 tests）
+# 全テスト実行（540 tests）
 pnpm run test
 
 # typecheck + lint + test 一括
@@ -636,14 +636,17 @@ pnpm run build
 
 ## 📋 運用ドキュメント（v0.6.0）
 
-| 文書                                                     | 内容                                           |
-| -------------------------------------------------------- | ---------------------------------------------- |
-| [Runbook](docs/operations/RUNBOOK.md)                    | デプロイ・更新・rollback・インシデント対応     |
-| [バックアップ/復元](docs/operations/BACKUP_RESTORE.md)   | SQLite スナップショット手順・RPO/RTO・復元試験 |
-| [監視設計](docs/operations/MONITORING.md)                | SLI/SLO・監視項目・アラート                    |
-| [運用台帳](docs/operations/OPERATIONS_LEDGER.md)         | 日次〜年次の運用タスク                         |
-| [セキュリティ対応](docs/operations/SECURITY_RESPONSE.md) | P0 対応・秘密ローテーション                    |
-| [総合評価](docs/assessment/ROOT-ASSESSMENT.md)           | 現状評価・ギャップ・決定記録                   |
+| 文書                                                        | 内容                                           |
+| ----------------------------------------------------------- | ---------------------------------------------- |
+| [Runbook](docs/operations/RUNBOOK.md)                       | デプロイ・更新・rollback・インシデント対応     |
+| [バックアップ/復元](docs/operations/BACKUP_RESTORE.md)      | SQLite スナップショット手順・RPO/RTO・復元試験 |
+| [オフサイトバックアップ](docs/operations/OFFSITE_BACKUP.md) | Cloudflare R2 + rclone の設計・設定・復元手順  |
+| [アラート通知](docs/operations/ALERTING.md)                 | Slack / Teams Webhook の設定・動作確認手順     |
+| [Neon 移行設計](docs/integration/NEON_MIGRATION_PLAN.md)    | PostgreSQL 移行の判断基準・Phase A〜D          |
+| [監視設計](docs/operations/MONITORING.md)                   | SLI/SLO・監視項目・アラート                    |
+| [運用台帳](docs/operations/OPERATIONS_LEDGER.md)            | 日次〜年次の運用タスク                         |
+| [セキュリティ対応](docs/operations/SECURITY_RESPONSE.md)    | P0 対応・秘密ローテーション                    |
+| [総合評価](docs/assessment/ROOT-ASSESSMENT.md)              | 現状評価・ギャップ・決定記録                   |
 
 バックアップ実行:
 
@@ -657,7 +660,7 @@ node --experimental-strip-types scripts/sqlite-backup.ts /data/ceop.db /backup/c
 | --------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | typecheck | ✅ pass        | strict・`noUncheckedIndexedAccess`・0 error                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | lint      | ✅ pass        | ESLint flat config + typescript-eslint・0 warning                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| test      | ✅ 534/534     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud + governance-crud + sqlite-audit-log + workflow-crud + workflow-instance + audit-coverage + audit-verify + migrate + rate-limit（CF-IP 分離含む）+ tenant-scope + audit-tenant-scope + jwt-org + webui + client-ip + backup-retention + auth-keys + api-key-repository + web-assets + favicon + ai-actions + device-ingest + P3 domain/routes + notification + compliance + documents + work-schedules + purchase-orders + webhook + health-probe + verify-audit-chain + verify-restore + iso + integrations + load-smoke |
+| test      | ✅ 540/540     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud + governance-crud + sqlite-audit-log + workflow-crud + workflow-instance + audit-coverage + audit-verify + migrate + rate-limit（CF-IP 分離含む）+ tenant-scope + audit-tenant-scope + jwt-org + webui + client-ip + backup-retention + auth-keys + api-key-repository + web-assets + favicon + ai-actions + device-ingest + P3 domain/routes + notification + compliance + documents + work-schedules + purchase-orders + webhook + health-probe + verify-audit-chain + verify-restore + iso + integrations + load-smoke |
 | build     | ✅ pass        | `dist/` に型定義付き出力                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | CI        | ✅ 設定済み    | `.github/workflows/ci.yml`（push / PR トリガー）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | Docker    | ✅ multi-stage | non-root ユーザー・HEALTHCHECK 付き                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
@@ -1075,6 +1078,13 @@ migration `008`（`projects` テーブル）を追加。
 | `GET /api/v1/projects/{projectId}/daily-reports/export.csv` | `daily-report:read`  | CSV エクスポート（案件配下の日報一括・式インジェクション対策済み） |
 
 migration `009`（`daily_reports` テーブル）を追加。
+
+### 🖥️ 日報管理コンソール（v0.12.1）
+
+`GET /daily-reports`（要 `daily-report:read`）で、案件選択 → 日報一覧 → 新規作成/編集 →
+提出（submitted）→ 承認（approved）をブラウザから操作できます。認証トークンは SSR が
+hidden input へ埋め込み、localStorage は使用しません（CSP `script-src 'self'` 準拠）。
+実データの投入は `scripts/import-business-data.ts`（[DATA_MIGRATION.md](docs/operations/DATA_MIGRATION.md)）を使用します。
 
 ---
 

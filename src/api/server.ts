@@ -41,6 +41,7 @@ import { registerComplianceRoutes } from "./routes/compliance.ts";
 import { registerNotificationTemplateRoutes } from "./routes/notification-templates.ts";
 import { registerMonitoringRoutes } from "./routes/monitoring.ts";
 import { registerPortalRoute } from "./routes/portal.ts";
+import { registerDailyReportUiRoutes } from "./routes/daily-reports-ui.ts";
 import { registerIsoRoutes } from "./routes/iso.ts";
 import { registerIntegrationRoutes } from "./routes/integrations.ts";
 import type { GatewayService } from "../domain/gateway-service.ts";
@@ -119,6 +120,7 @@ export function createServer(config: ServerConfig, container: AppContainer): Ser
   registerIsoRoutes(router, container);
   registerIntegrationRoutes(router, container);
   registerPortalRoute(router);
+  registerDailyReportUiRoutes(router, container);
   registerWebRoutes(router, container);
 
   const server = httpCreateServer((req: IncomingMessage, res: ServerResponse): void => {

@@ -39,6 +39,36 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 
 - **README テスト数不整合** — バッジ・表・品質状態セクションのテスト数を実測（523 pass）に修正
 
+## [0.12.1] - 2026-08-12
+
+### Added
+
+- **日報管理コンソール** — `/daily-reports`（SSR・`daily-report:read` 必須）。案件選択 → 日報一覧 →
+  新規作成/編集（draft）→ 提出（submitted）→ 承認（approved）をブラウザで操作可能に。
+  JWT は SSR で hidden input へ埋め込み（localStorage 不使用・CSP `script-src 'self'` 準拠）。
+- **実業務データ移行スクリプト** — `scripts/import-business-data.ts`（projects / daily-reports /
+  safety-checks / quality-inspections / cost-records / work-hours / purchase-orders / contracts）。
+  ドメイン検証を通過したレコードのみ投入し、無効・重複（自然キー）は fail-closed で報告。
+- **サンプル移行データ** — `examples/business-data.sample.json` と
+  `docs/operations/DATA_MIGRATION.md`（ドライラン → 検証 → 本番投入の手順・受入れ基準）。
+- **オフサイトバックアップ設計** — `scripts/r2-backup.sh`（rclone + Cloudflare R2・転送後
+  verify-restore 検証・90 日保持）と `deploy/systemd/ceop-r2-backup.{service,timer}`。
+  セットアップ手順は `docs/operations/OFFSITE_BACKUP.md`。
+- **アラート通知設定ガイド** — `docs/operations/ALERTING.md`（Slack / Teams の Webhook 設定・
+  ペイロード変換例・動作確認手順）。
+- **Neon 移行設計書** — `docs/integration/NEON_MIGRATION_PLAN.md`（判断基準・並行稼働方式・
+  スキーマ変換・リスク・Phase A〜D）。
+
+### Changed
+
+- バージョン 0.12.1（src/version.ts / package.json / Dockerfile / OpenAPI 一元更新）
+- デモシードに案件（project-demo-1）を追加（E2E の日報フロー検証用）
+- テスト 540/540 pass・E2E 8/8 pass（日報コンソール 2 件追加）
+
+### Fixed
+
+- なし（本リリースは機能追加のみ）
+
 ## [0.12.0] - 2026-08-12
 
 ### Added

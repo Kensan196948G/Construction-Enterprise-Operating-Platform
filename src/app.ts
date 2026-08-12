@@ -14,6 +14,7 @@ import { createDevice } from "./domain/device.ts";
 import { createApplication } from "./domain/application.ts";
 import { createPolicy } from "./domain/policy.ts";
 import { createIsoRecord } from "./domain/iso.ts";
+import { createProject } from "./domain/project.ts";
 import { AuditLog } from "./governance/audit-log.ts";
 import { SqliteAuditLog } from "./governance/sqlite-audit-log.ts";
 import { createInMemoryRepositories } from "./persistence/in-memory/index.ts";
@@ -271,6 +272,22 @@ export async function createApp(): Promise<AppContainer> {
       }),
     );
     await repositories.devices.save(tablet);
+
+    // ── 6.5 Demo project (daily report console E2E) ─────────────────────────
+
+    const demoProject = mustOk(
+      "demo project",
+      createProject({
+        id: "project-demo-1",
+        organizationId: "org-hq",
+        projectCode: "DEMO-2026-001",
+        name: "橋梁補修工事（デモ）",
+        description: "日報コンソールの動作確認用デモ案件",
+        status: "in_progress",
+        createdAt,
+      }),
+    );
+    await repositories.projects.save(demoProject);
 
     // ── 7. API keys ───────────────────────────────────────────────────────────
 

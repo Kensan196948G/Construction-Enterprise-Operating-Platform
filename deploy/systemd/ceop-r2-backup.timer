@@ -1,0 +1,10 @@
+[Unit]
+Description=CEOP off-site backup timer (daily 03:00 JST)
+
+[Timer]
+OnCalendar=*-*-* 03:00:00
+RandomizedDelaySec=300
+Unit=ceop-r2-backup.service
+
+[Install]
+WantedBy=timers.target
