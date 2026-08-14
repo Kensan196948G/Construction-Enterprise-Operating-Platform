@@ -9,7 +9,8 @@ const E2E_CRED = "e2e-admin:e2e-secret";
 test("ISO console rejects anonymous access", async ({ browser }) => {
   const page = await browser.newPage();
   await page.goto("/iso-app");
-  await expect(page.locator("body")).toContainText(/Unauthorized|401/);
+  // Demo mode redirects unauthenticated browser loads to the demo login page.
+  await expect(page).toHaveURL(/\/demo-login/);
   await page.close();
 });
 

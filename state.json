@@ -42,7 +42,9 @@
     "v0_13_0_branch": "feat/mvp-operable-demo-v0.13.0",
     "v0_13_0_production_deploy": "not_planned",
     "v0_13_1_demo_login": "in_progress",
-    "v0_13_1_branch": "feat/mvp-demo-login-v0.13.1"
+    "v0_13_1_branch": "feat/mvp-demo-login-v0.13.1",
+    "v0_13_2_auth_redirect": "in_progress",
+    "v0_13_2_branch": "feat/mvp-auth-redirect-v0.13.2"
   },
   "kpi": {
     "success_rate_target": 0.9,
