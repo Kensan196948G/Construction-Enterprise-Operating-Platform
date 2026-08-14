@@ -4,6 +4,39 @@ All notable changes to the Construction Enterprise Operating Platform are docume
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [0.13.0] - Unreleased
+
+### Added
+
+- **リッチ架空デモデータセット（MVP/Prototype）** — `src/persistence/rich-demo.ts`。
+  案件 5・日報 6（状態遷移例）・ISO 32 種（親子リンク）・契約 6 + 法的証跡 5・発注 6・
+  安全 3・品質 4・原価 5・工数 6・工程 5・写真 5・図面文書 6・ナレッジ 6・AI 統制 4・
+  通知（テンプレート 3/設定 3/配信 4）・承認ワークフロー（定義 3/インスタンス 4）・
+  連携イベント 6・監査証跡 10 を、参照整合性を満たす架空データとして投入。
+  起動時は `CEOP_SEED_RICH_DEMO=true`、`production` では起動拒否
+- **デモ起動/シード CLI** — `pnpm run start:demo`（In-Memory）と
+  `scripts/seed-demo.ts --db <path>`（SQLite・migration 自動適用・既存業務データ保護・冪等）
+- **MVP デモ E2E** — `e2e/mvp-demo.spec.ts`（KPI・日報・ISO・権限ゲートの 4 テスト）
+- **デモガイド** — `docs/operations/MVP_DEMO_GUIDE.md`
+- **テスト追加** — rich-demo（整合性/冪等性/監査チェーン）3 件・アプリ統合 2 件・
+  PWA アイコン配信 1 件（計 553/553）
+
+### Fixed
+
+- **PWA アイコン 404** — manifest と apple-touch-icon が参照する
+  `favicon-{16,32,48,192,512}.png` とルート `/favicon.ico` が未配信だったのを解消
+  （`/api/assets/*` とレガシー `/assets/*` の両方）
+- **start.ts の NODE_ENV 表示と実体の乖離** — 未設定時にログは `production` を表示する一方、
+  実体は開発モード相当で動いていたのを修正（未設定時は `development` を明示設定）
+- **README の `pnpm start` 未定義** — npm scripts に `start`/`start:demo`/`seed:demo` を追加
+
+### Changed
+
+- バージョン 0.13.0（`src/version.ts` / `package.json` / `Dockerfile` ラベル / OpenAPI）
+- README: テスト数 553・E2E 12・デモ手順・環境変数 `CEOP_SEED_RICH_DEMO` を追記
+
+## [0.12.1] - 2026-08-12
+
 ## [Unreleased]
 
 ### Added

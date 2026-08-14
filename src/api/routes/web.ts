@@ -143,20 +143,35 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
     },
     false,
   );
-  router.get(
-    "/api/assets/favicon.svg",
-    async (_req, _ctx, res) => {
-      await sendFile(res, join(staticDir, "favicon.svg"), "image/svg+xml; charset=utf-8");
-    },
-    false,
-  );
-  router.get(
-    "/api/assets/favicon.ico",
-    async (_req, _ctx, res) => {
-      await sendFile(res, join(staticDir, "favicon.ico"), "image/x-icon");
-    },
-    false,
-  );
+  // Favicon / PWA icons shared by every SSR page. Serves the SVG, multi-size
+  // ICO, and the PNG sizes referenced by manifest.webmanifest and the
+  // apple-touch-icon links. Registered under both /api/assets/* (public
+  // ingress path-split) and the legacy /assets/* prefix.
+  const iconAssets: ReadonlyArray<readonly [string, string]> = [
+    ["favicon.svg", "image/svg+xml; charset=utf-8"],
+    ["favicon.ico", "image/x-icon"],
+    ["favicon-16.png", "image/png"],
+    ["favicon-32.png", "image/png"],
+    ["favicon-48.png", "image/png"],
+    ["favicon-192.png", "image/png"],
+    ["favicon-512.png", "image/png"],
+  ];
+  for (const [file, contentType] of iconAssets) {
+    router.get(
+      `/api/assets/${file}`,
+      async (_req, _ctx, res) => {
+        await sendFile(res, join(staticDir, file), contentType);
+      },
+      false,
+    );
+    router.get(
+      `/assets/${file}`,
+      async (_req, _ctx, res) => {
+        await sendFile(res, join(staticDir, file), contentType);
+      },
+      false,
+    );
+  }
   router.get(
     "/assets/app.css",
     async (_req, _ctx, res) => {
@@ -192,15 +207,9 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
     },
     false,
   );
+  // Browsers request /favicon.ico even when pages declare SVG icons.
   router.get(
-    "/assets/favicon.svg",
-    async (_req, _ctx, res) => {
-      await sendFile(res, join(staticDir, "favicon.svg"), "image/svg+xml; charset=utf-8");
-    },
-    false,
-  );
-  router.get(
-    "/assets/favicon.ico",
+    "/favicon.ico",
     async (_req, _ctx, res) => {
       await sendFile(res, join(staticDir, "favicon.ico"), "image/x-icon");
     },

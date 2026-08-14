@@ -6,8 +6,8 @@
     "registered_at": "2026-06-25",
     "phase_mode": "maintenance"
   },
-  "goal": "Civil-Construction-IMS 統合（v0.11.0）— 本番デプロイ・連携 URL 設定・IMS 削除まで完了。統合完了報告書提出済み",
-  "phase": "release",
+  "goal": "MVP/Prototype v0.13.0 — 全業務ドメインの架空デモデータ一式・デモ起動/シード CLI・PWA アイコン修正・E2E 拡充を完成し検証（PR/CI 完了）",
+  "phase": "verify",
   "release": {
     "v0_1_0_foundation": "release_ready",
     "v0_2_0_api_gateway": "release_ready",
@@ -37,13 +37,16 @@
     "v0_12_0_assessment_hardening": "in_progress",
     "v0_12_0_branch": "feat/assessment-hardening-v0.12.0",
     "v0_12_0_production_deploy": "completed",
-    "v0_12_0_production_deploy_at": "2026-08-12"
+    "v0_12_0_production_deploy_at": "2026-08-12",
+    "v0_13_0_mvp_prototype": "in_progress",
+    "v0_13_0_branch": "feat/mvp-operable-demo-v0.13.0",
+    "v0_13_0_production_deploy": "not_planned"
   },
   "kpi": {
     "success_rate_target": 0.9,
     "ci_success_rate": 1,
     "test_pass_rate": 1,
-    "test_count": 547,
+    "test_count": 553,
     "security_critical": 0,
     "security_high_resolved": 19,
     "blocker_count": 0

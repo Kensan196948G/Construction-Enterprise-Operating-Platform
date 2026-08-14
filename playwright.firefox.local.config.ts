@@ -1,12 +1,14 @@
+/**
+ * LOCAL-ONLY E2E configuration (not used by CI, not part of the default suite).
+ *
+ * Some developer machines cannot launch the bundled Chromium (SIGTRAP on
+ * startup, e.g. after a glibc update). This config runs the same specs on
+ * Firefox so the browser flows can still be verified locally. CI keeps using
+ * the default chromium config on ubuntu-latest.
+ */
+
 import { defineConfig } from "@playwright/test";
 
-/**
- * Browser E2E for the CEOP SSR console.
- *
- * The web server runs in development mode with demo data and a stable E2E
- * credential injected via `CEOP_E2E_API_KEY_ID` / `CEOP_E2E_API_KEY_SECRET`
- * (see src/app.ts). This hook is non-production only.
- */
 export default defineConfig({
   testDir: "./e2e",
   timeout: 60_000,
@@ -15,7 +17,7 @@ export default defineConfig({
   reporter: [["list"]],
   use: {
     baseURL: "http://127.0.0.1:3210",
-    channel: "chromium",
+    browserName: "firefox",
     trace: "retain-on-failure",
   },
   webServer: {

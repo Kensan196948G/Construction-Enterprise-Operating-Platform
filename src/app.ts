@@ -30,6 +30,7 @@ import { createJwtIssuer, generateJwtSecret } from "./api/middleware/jwt.ts";
 import { createServer } from "./api/server.ts";
 import { loadGatewayServices } from "./api/gateway/config.ts";
 import type { AppContainer } from "./api/types.ts";
+import { seedRichDemo } from "./persistence/rich-demo.ts";
 
 // ---------------------------------------------------------------------------
 // Timestamp helper — new Date().toISOString() is always valid ISO 8601.
@@ -385,6 +386,18 @@ export async function createApp(): Promise<AppContainer> {
       );
     }
   } // end demo seeding
+
+  // Rich fictional demo dataset (MVP / prototype review). Opt-in and
+  // explicitly forbidden in production — this data must never reach a
+  // production database. The dataset is self-contained, so it also works
+  // when the minimal demo seed above did not run (e.g. SQLite persistence).
+  if (process.env["CEOP_SEED_RICH_DEMO"] === "true") {
+    if (isProduction) {
+      throw new Error("CEOP_SEED_RICH_DEMO must not be set in production (NODE_ENV=production)");
+    }
+    const summary = await seedRichDemo(repositories, { auditLog });
+    console.error(`[app] rich demo dataset seeded: ${JSON.stringify(summary)}`);
+  }
 
   const gatewayServicesResult = loadGatewayServices();
   if (!gatewayServicesResult.ok) {

@@ -6,7 +6,8 @@
  *
  * Environment variables (see .env.example for full list):
  *   PORT             — TCP port to listen on (default: 3000)
- *   NODE_ENV         — "development" | "production" (default: "production")
+ *   NODE_ENV         — "development" | "production" (default: "development"
+ *                      when running outside the production container)
  *   LOG_LEVEL        — "debug" | "info" | "warn" | "error" (default: "info")
  *   PLATFORM_NAME    — Override displayed platform name
  */
@@ -23,7 +24,10 @@ if (!Number.isInteger(rawPort) || rawPort < 1 || rawPort > 65535) {
   process.exit(1);
 }
 const port = rawPort;
-const env = process.env["NODE_ENV"] ?? "production";
+// The application container treats an unset NODE_ENV as development (the
+// production image sets NODE_ENV=production explicitly). Materialise the
+// default here so the startup log and the runtime guards agree.
+const env = (process.env["NODE_ENV"] ??= "development");
 const logLevel = process.env["LOG_LEVEL"] ?? "info";
 const platformName = process.env["PLATFORM_NAME"] ?? "Construction Enterprise Operating Platform";
 

@@ -1,0 +1,18 @@
+# Cloudflare Tunnel ingress for the MVP/Prototype review environment.
+#
+#   https://ceop-mvp.mirai-dx-platform.com  →  local MVP API/SSR server (4480)
+#
+# This tunnel is SEPARATE from the production `ceop` tunnel
+# (deploy/cloudflared/ceop-config.yml → ceop.mirai-dx-platform.com). It never
+# touches the production tunnel, DNS name, ports 3120/3130, or production data.
+#
+# Local file: /home/kensan/.cloudflared/ceop-mvp-config.yml
+# (the credentials file lives outside the repository and is never committed).
+
+tunnel: fe5cecff-998a-4a67-98ec-56978b532dcf
+credentials-file: /home/kensan/.cloudflared/fe5cecff-998a-4a67-98ec-56978b532dcf.json
+
+ingress:
+  - hostname: ceop-mvp.mirai-dx-platform.com
+    service: http://localhost:4480
+  - service: http_status:404
