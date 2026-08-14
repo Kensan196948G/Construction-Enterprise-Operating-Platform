@@ -78,3 +78,17 @@
 | 21:1x | データ移行・復旧実演（import 3 件 → backup → delete → restore 3 件） | ✅ |
 | 21:1x | `pnpm run verify` 398/398・parity 27/27・build・audit 0 | ✅ |
 | 21:0x | PR `feat/ims-integration-v0.11.0`（#40）CI 全ジョブ成功 | ✅ |
+
+## 実行記録（2026-08-14・v0.13.x MVP/Prototype + 本番ダミーデータ置換）
+
+| 日時 (JST) | 内容 | 結果 |
+| --- | --- | --- |
+| 08:5x | MVP/Prototype 実装（架空デモデータ一式・デモ CLI・PWA アイコン修正・E2E 拡充）→ PR #50 マージ（ade9efd） | ✅ |
+| 09:1x | ブラウザ用デモログイン `/demo-login`（Cookie/JWT・本番無効）→ PR #51 マージ（372ac17） | ✅ |
+| 09:3x | MVP 公開 URL `ceop-mvp.mirai-dx-platform.com`（専用 Tunnel `ceop-mvp`）公開 | ✅ |
+| 09:4x | 未認証ブラウザアクセスを `/demo-login` へ自動リダイレクト → PR #52 マージ（49dd015） | ✅ |
+| 10:1x | 本番 DB 確認: 業務テーブル全 0 件（api_keys 2・audit_log 5・migration 026） | ✅ |
+| 10:2x | 本番 DB 事前バックアップ `ceop-predemo-v0.13.2-20260814T012400Z.db` | ✅ |
+| 10:2x | 本番 DB へ全架空デモデータ投入（seed-demo・監査チェーン 15 件 valid） | ✅ |
+| 10:2x | 本番コンテナ v0.12.1 → v0.13.2 差し替え（旧 `ceop-platform-prev-0121` 保持・ハーデニング維持） | ✅ |
+| 10:2x | 本番スモーク: healthy・version=0.13.2・projects=5・ISO=32・監査/連携/通知 API 正常 | ✅ |
