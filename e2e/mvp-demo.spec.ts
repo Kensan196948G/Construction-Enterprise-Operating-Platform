@@ -53,6 +53,7 @@ test("ISO console shows seeded records across quality and analytics tabs", async
   await expect(page.locator("#isoAnalyticsGrid")).toContainText("品質計画");
   await expect(page.locator("#isoAnalyticsGrid")).toContainText("資産台帳");
 
+  await page.locator("details.nav-group summary", { hasText: "ISO 管理コンソール" }).click();
   await page.click('[data-tab="quality"]');
   await expect(page.locator("#isoTableBody")).toContainText("橋梁補修工事 品質計画（デモ）");
   await page.selectOption("#isoKindSelect", "nonconformity");
@@ -82,6 +83,7 @@ test("dashboard left menu renders the users list in the right pane", async ({ pa
   await page.goto("/demo-login");
   await page.click("#demoQuickLoginBtn");
   await expect(page).toHaveURL(/\/dashboard/);
+  await page.locator("details.nav-group summary", { hasText: "コンプライアンス" }).click();
   await page.click('nav a[href="/dashboard#users"]');
   await expect(page.locator("#users")).toBeVisible();
   await expect(page.locator("#userTableBody")).toContainText("システム管理者（デモ）");
@@ -91,6 +93,7 @@ test("dashboard API menu items render JSON in the right pane", async ({ page }) 
   await page.goto("/demo-login");
   await page.click("#demoQuickLoginBtn");
   await expect(page).toHaveURL(/\/dashboard/);
+  await page.locator("details.nav-group summary", { hasText: "🔌 API" }).click();
   await page.click('nav a[data-api="/api/v1/dashboard"]');
   await expect(page.locator("#apiViewer")).toBeVisible();
   await expect(page.locator("#apiViewerBody")).toContainText("governance");
