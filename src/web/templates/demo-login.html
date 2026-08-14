@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>CEOP デモログイン</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="stylesheet" href="/api/assets/app.css" />
+    <link rel="icon" href="/api/assets/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body class="demo-login-body">
+    <main class="demo-login">
+      <div class="demo-login__card card">
+        <p class="demo-login__eyebrow">MVP / Prototype — デモ専用</p>
+        <h1 class="demo-login__title">CEOP デモログイン</h1>
+        <p class="demo-login__desc">
+          API キーでログインすると、ダッシュボード・日報・ISO コンソールをブラウザからそのまま操作できます。
+        </p>
+        <form
+          class="demo-login__form"
+          id="demoLoginForm"
+          method="post"
+          action="/api/v1/auth/demo-login"
+        >
+          <label class="demo-login__label" for="keyId">Key ID</label>
+          <input
+            class="input"
+            id="keyId"
+            name="keyId"
+            value="{{DEMO_KEY}}"
+            autocomplete="username"
+            spellcheck="false"
+            required
+          />
+          <label class="demo-login__label" for="secret">Secret</label>
+          <input
+            class="input"
+            id="secret"
+            name="secret"
+            type="password"
+            value="{{DEMO_SECRET}}"
+            autocomplete="current-password"
+            required
+          />
+          <button class="btn btn-primary" type="submit" id="demoLoginBtn">ログイン</button>
+          <button class="btn btn-secondary" type="button" id="demoQuickLoginBtn" hidden>
+            1 クリックでデモログイン
+          </button>
+          <p class="demo-login__error" id="demoLoginError" role="alert" hidden></p>
+        </form>
+        <p class="demo-login__note">
+          デモ資格情報: <code>e2e-admin:e2e-secret</code> / <code>e2e-viewer:e2e-viewer-secret</code>
+          （開発・評価専用。本番環境では無効）
+        </p>
+        <p class="demo-login__version">CEOP v{{VERSION}}</p>
+      </div>
+    </main>
+    <script src="/api/assets/demo-login.js"></script>
+  </body>
+</html>

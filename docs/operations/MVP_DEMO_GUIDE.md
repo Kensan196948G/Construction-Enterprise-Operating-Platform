@@ -25,6 +25,18 @@ CEOP_SQLITE_FILE=/tmp/ceop-demo.db pnpm start
 `seed-demo.ts` は既に案件データが存在する DB への上書きを拒否します（本番データ保護）。
 デモ DB を作り直す場合は明示的に `--force` を付けてください。
 
+### 1-c. ブラウザでのログイン（推奨）
+
+```bash
+open http://localhost:3000/demo-login
+# 公開 MVP: https://ceop-mvp.mirai-dx-platform.com/demo-login
+```
+
+ログイン画面でデモ API キーを入力（または「1 クリックでデモログイン」）すると、
+HttpOnly の JWT セッション Cookie が発行され、`/dashboard` `/daily-reports` `/iso-app` を
+ブラウザからそのまま操作できます。このログイン経路は開発/デモモード専用で、
+`NODE_ENV=production` では登録されません。
+
 ## 2. ダミーデータの構成（すべて架空）
 
 | 区分             | 内容（件数）                                                                            |
