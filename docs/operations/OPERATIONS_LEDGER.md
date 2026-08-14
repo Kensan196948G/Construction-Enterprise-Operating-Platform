@@ -94,3 +94,5 @@
 | 10:2x | 本番スモーク: healthy・version=0.13.2・projects=5・ISO=32・監査/連携/通知 API 正常 | ✅ |
 | 11:0x | UI 修正（/iso→/iso-app 302・#users セクション・右ペイン JSON ビューアー・CSP beacon 許可）→ PR #54 マージ | ✅ |
 | 11:1x | 本番 v0.13.3 差し替え（旧 `ceop-platform-prev-0132` 保持）・スモーク healthy/version=0.13.3/iso 302 | ✅ |
+| 11:2x | 左サイドバー大項目アコーディオン化（メインメニューのみ初期展開・全4画面統一）→ PR #56 マージ | ✅ |
+| 11:2x | 本番 v0.13.4 差し替え（旧 `ceop-platform-prev-0133` 保持）・スモーク healthy/version=0.13.4 | ✅ |

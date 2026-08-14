@@ -57,8 +57,11 @@
     "v0_13_3_production_deploy_at": "2026-08-14",
     "v0_13_3_rollback_container": "ceop-platform-prev-0132"
     ,
-    "v0_13_4_accordion_sidebar": "in_progress",
-    "v0_13_4_branch": "feat/ui-accordion-v0.13.4"
+    "v0_13_4_accordion_sidebar": "completed",
+    "v0_13_4_branch": "feat/ui-accordion-v0.13.4",
+    "v0_13_4_production_deploy": "completed",
+    "v0_13_4_production_deploy_at": "2026-08-14",
+    "v0_13_4_rollback_container": "ceop-platform-prev-0133"
   },
   "kpi": {
     "success_rate_target": 0.9,
