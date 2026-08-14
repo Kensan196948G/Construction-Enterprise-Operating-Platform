@@ -25,6 +25,7 @@ test("ISO console renders analytics, CRUD, and integration contracts", async ({ 
   await expect(page.locator("#isoAnalyticsGrid .stat-card").first()).toBeVisible();
 
   // 品質タブで新規レコード作成（プロジェクト ID は ISO レコードの参照として使用）
+  await page.locator("details.nav-group summary", { hasText: "ISO 管理コンソール" }).click();
   await page.click('[data-tab="quality"]');
   await expect(page.locator("#recordsSection")).toBeVisible();
   await page.click("#isoNewBtn");

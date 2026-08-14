@@ -27,32 +27,74 @@
 
     <div class="layout">
       <nav class="sidebar" id="sidebar">
-        <div class="sidebar__section-label">メインメニュー</div>
-        <a class="nav-item" href="/dashboard"><span class="nav-icon">📊</span> ダッシュボード</a>
-        <a class="nav-item active" href="/governance"
-          ><span class="nav-icon">🛡</span> ガバナンス</a
-        >
-        <hr class="sidebar__divider" />
-        <div class="sidebar__section-label">リソース</div>
-        <a class="nav-item" href="/dashboard#users"><span class="nav-icon">👥</span> ユーザー</a>
-        <a class="nav-item" href="/dashboard#devices"><span class="nav-icon">📱</span> デバイス</a>
-        <a class="nav-item" href="/dashboard#applications"
-          ><span class="nav-icon">🔧</span> アプリケーション</a
-        >
-        <hr class="sidebar__divider" />
-        <div class="sidebar__section-label">コンプライアンス</div>
-        <a class="nav-item" href="/dashboard#audit"><span class="nav-icon">📋</span> 監査ログ</a>
-        <a class="nav-item" href="/dashboard#approvals"
-          ><span class="nav-icon">✅</span> 承認キュー</a
-        >
-        <hr class="sidebar__divider" />
-        <div class="sidebar__section-label">API</div>
-        <a class="nav-item" href="/api/v1/dashboard" target="_blank" rel="noopener"
-          ><span class="nav-icon">🔌</span> REST API</a
-        >
-        <a class="nav-item" href="/api/v1/governance/audit" target="_blank" rel="noopener"
-          ><span class="nav-icon">📑</span> 監査API</a
-        >
+        <details class="nav-group" open>
+          <summary class="nav-group__summary">🏠 メインメニュー</summary>
+          <div class="nav-group__body">
+            <a class="nav-item" href="/dashboard"
+              ><span class="nav-icon">📊</span> ダッシュボード</a
+            >
+            <a class="nav-item active" href="/governance"
+              ><span class="nav-icon">🛡</span> ガバナンス</a
+            >
+            <a class="nav-item" href="/daily-reports"
+              ><span class="nav-icon">📝</span> 日報管理コンソール</a
+            >
+            <a class="nav-item" href="/portal"><span class="nav-icon">🏛️</span> ポータル</a>
+          </div>
+        </details>
+        <details class="nav-group">
+          <summary class="nav-group__summary">📋 ISO 統合マネジメント</summary>
+          <div class="nav-group__body">
+            <a class="nav-item nav-sub" href="/iso-app#analytics">📊 分析</a>
+            <a class="nav-item nav-sub" href="/iso-app#quality">✅ 品質 (ISO 9001)</a>
+            <a class="nav-item nav-sub" href="/iso-app#environment">🌿 環境 (ISO 14001)</a>
+            <a class="nav-item nav-sub" href="/iso-app#safety">⛑️ 安全 (ISO 45001)</a>
+            <a class="nav-item nav-sub" href="/iso-app#assets">🏛️ 資産 (ISO 55001)</a>
+            <a class="nav-item nav-sub" href="/iso-app#bim">🏗️ BIM/CIM (ISO 19650)</a>
+            <a class="nav-item nav-sub" href="/iso-app#audit">📋 監査・是正</a>
+            <a class="nav-item nav-sub" href="/iso-app#isms">🔐 ISMS (ISO 27001)</a>
+            <a class="nav-item nav-sub" href="/iso-app#bcp">🔄 事業継続 (BCP)</a>
+          </div>
+        </details>
+        <details class="nav-group">
+          <summary class="nav-group__summary">🗂️ ISO 管理コンソール</summary>
+          <div class="nav-group__body">
+            <a class="nav-item nav-sub" href="/iso-app#analytics">📊 分析ダッシュボード</a>
+            <a class="nav-item nav-sub" href="/iso-app#quality">🗂️ レコード管理</a>
+            <a class="nav-item nav-sub" href="/iso-app#integrations">🔗 連携先システム</a>
+          </div>
+        </details>
+        <details class="nav-group">
+          <summary class="nav-group__summary">🛡️ コンプライアンス</summary>
+          <div class="nav-group__body">
+            <a class="nav-item" href="/dashboard#users"
+              ><span class="nav-icon">👥</span> ユーザー</a
+            >
+            <a class="nav-item" href="/dashboard#devices"
+              ><span class="nav-icon">📱</span> デバイス</a
+            >
+            <a class="nav-item" href="/dashboard#applications"
+              ><span class="nav-icon">🔧</span> アプリケーション</a
+            >
+            <a class="nav-item" href="/dashboard#audit"
+              ><span class="nav-icon">📋</span> 監査ログ</a
+            >
+            <a class="nav-item" href="/dashboard#approvals"
+              ><span class="nav-icon">✅</span> 承認キュー</a
+            >
+          </div>
+        </details>
+        <details class="nav-group">
+          <summary class="nav-group__summary">🔌 API</summary>
+          <div class="nav-group__body">
+            <a class="nav-item" href="/api/v1/dashboard" target="_blank" rel="noopener"
+              ><span class="nav-icon">🔌</span> REST API</a
+            >
+            <a class="nav-item" href="/api/v1/governance/audit" target="_blank" rel="noopener"
+              ><span class="nav-icon">📑</span> 監査API</a
+            >
+          </div>
+        </details>
       </nav>
 
       <main class="main">

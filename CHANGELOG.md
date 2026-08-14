@@ -4,6 +4,19 @@ All notable changes to the Construction Enterprise Operating Platform are docume
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [0.13.4] - Unreleased
+
+### Changed
+
+- **左サイドバーのアコーディオン化** — メインメニュー / ISO 統合マネジメント /
+  ISO 管理コンソール / コンプライアンス / API を大項目アコーディオンに再構成
+  （ネイティブ `details/summary`・CSP 安全・JS 不要）。初期状態はメインメニューのみ展開、
+  他は閉じた状態。ダッシュボード/ガバナンス/日報/ISO コンソールの全画面で統一
+- ISO 統合マネジメントは品質/環境/安全/資産/BIM/監査/ISMS/BCP のサブ項目を展開して
+  `/iso-app#<tab>` を直接開ける
+
+## [0.13.3] - 2026-08-14
+
 ## [0.13.3] - 2026-08-14
 
 ### Fixed

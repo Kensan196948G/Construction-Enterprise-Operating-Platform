@@ -271,6 +271,55 @@ code {
   margin: 12px 8px;
 }
 
+/* ── Accordion navigation (major menu groups) ───────────────────────── */
+
+.nav-group {
+  border-bottom: 1px solid var(--line);
+}
+
+.nav-group:last-child {
+  border-bottom: none;
+}
+
+.nav-group__summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.nav-group__summary::-webkit-details-marker {
+  display: none;
+}
+
+.nav-group__summary::before {
+  content: "▸";
+  width: 12px;
+  color: var(--ink-dim);
+  transition: transform 0.15s ease;
+}
+
+.nav-group[open] > .nav-group__summary::before {
+  transform: rotate(90deg);
+}
+
+.nav-group__body {
+  display: flex;
+  flex-direction: column;
+  padding: 2px 0 8px;
+}
+
+.nav-group__body .nav-item {
+  padding-left: 26px;
+  font-size: 0.79rem;
+}
+
 .main {
   flex: 1;
   min-width: 0;

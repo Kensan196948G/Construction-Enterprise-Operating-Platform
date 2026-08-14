@@ -191,6 +191,14 @@ test("SSR templates reference /api/assets so the Tunnel path-split cannot shadow
   );
   assert.ok(index.includes('src="/api/assets/app.js"'), "index.html JS must use /api/assets");
   assert.ok(
+    index.includes('<details class="nav-group" open>'),
+    "index.html sidebar must use an open main-menu accordion group",
+  );
+  assert.ok(
+    index.includes('summary class="nav-group__summary"'),
+    "index.html sidebar must expose accordion group summaries",
+  );
+  assert.ok(
     governance.includes('href="/api/assets/app.css"'),
     "governance.html CSS must use /api/assets",
   );
