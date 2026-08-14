@@ -76,7 +76,8 @@
 
 ## 5. 残課題・再開ポイント
 
-1. MVP 用公開 URL（`ceop-mvp.mirai-dx-platform.com`）の Tunnel/DNS 作成（Cloudflare 資格情報次第）
+1. ~~MVP 用公開 URL の Tunnel/DNS 作成~~ → ✅ 完了: `https://ceop-mvp.mirai-dx-platform.com`
+   （専用 Tunnel `ceop-mvp`・`deploy/cloudflared/ceop-mvp-config.yml`・実測 200）
 2. PR レビュー・CI グリーン後に main への merge（Auto-merge 手順）
 3. 本番への適用は「人間の判断」対象（本セッションは実施しない）
 4. ローカル main の未 push コミット `d9807f8`（セキュリティ修正）は既存ユーザー作業として温存。

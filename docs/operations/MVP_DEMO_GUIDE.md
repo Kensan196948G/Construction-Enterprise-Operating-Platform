@@ -89,8 +89,10 @@ pnpm run test:e2e        # Playwright（portal/dashboard/daily-reports/iso-app/m
 ## 6. URL 区分
 
 - 本番: `https://ceop.mirai-dx-platform.com`（既存・本ドキュメントの作業では変更しない）
-- MVP/Prototype: `https://ceop-mvp.mirai-dx-platform.com`（別 Tunnel・別ポートで公開する想定。
-  公開状況は最終報告を参照）
+- MVP/Prototype: `https://ceop-mvp.mirai-dx-platform.com`（専用 Tunnel `ceop-mvp` → ローカル
+  4480 で公開済み。設定: `deploy/cloudflared/ceop-mvp-config.yml`）
+- デモ資格情報（開発専用・本番では無効）: `Authorization: Bearer e2e-admin:e2e-secret` /
+  `e2e-viewer:e2e-viewer-secret`
 
 ## 7. 既知制約
 
