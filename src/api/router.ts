@@ -40,6 +40,27 @@ interface Route {
 
 const BEARER_PREFIX = "Bearer ";
 
+/**
+ * HttpOnly session cookie used by the demo-only browser login
+ * (src/api/routes/demo-login.ts). Registered exclusively in demo mode and
+ * never in production.
+ */
+export const DEMO_SESSION_COOKIE = "ceop_demo_session";
+
+/** Extract one cookie value from a Cookie header without a parser dependency. */
+function readCookie(cookieHeader: string | string[] | undefined, name: string): string {
+  if (cookieHeader === undefined) return "";
+  const header = Array.isArray(cookieHeader) ? cookieHeader.join("; ") : cookieHeader;
+  for (const part of header.split(";")) {
+    const eq = part.indexOf("=");
+    if (eq === -1) continue;
+    if (part.slice(0, eq).trim() === name) {
+      return part.slice(eq + 1).trim();
+    }
+  }
+  return "";
+}
+
 // ---------------------------------------------------------------------------
 // Router
 // ---------------------------------------------------------------------------
@@ -217,10 +238,14 @@ export class Router {
     let ctx: ApiKeyContext | null = null;
     if (matched.route.requiresAuth) {
       const header = req.headers["authorization"];
-      const credential =
+      const bearerCredential =
         typeof header === "string" && header.startsWith(BEARER_PREFIX)
           ? header.slice(BEARER_PREFIX.length).trim()
           : "";
+      // Demo-mode browser sessions authenticate via an HttpOnly JWT cookie as
+      // a fallback when no Bearer credential is attached.
+      const cookieCredential = readCookie(req.headers["cookie"], DEMO_SESSION_COOKIE);
+      const credential = bearerCredential !== "" ? bearerCredential : cookieCredential;
 
       if (!credential) {
         writeJson(res, 401, {

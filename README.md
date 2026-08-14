@@ -4,7 +4,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-22.13+-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Zero Runtime Deps](https://img.shields.io/badge/runtime%20deps-zero-brightgreen)](package.json)
 [![CI](https://img.shields.io/github/actions/workflow/status/Kensan196948G/Construction-Enterprise-Operating-Platform/ci.yml?label=CI&logo=github)](/.github/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-553%20pass-brightgreen)](src/)
+[![Tests](https://img.shields.io/badge/tests-558%20pass-brightgreen)](src/)
 [![Security](https://img.shields.io/badge/security-hardened-blue)](src/api/middleware/auth.ts)
 [![License](https://img.shields.io/badge/license-proprietary-lightgrey)](LICENSE.md)
 
@@ -15,18 +15,18 @@
 
 ## 📌 概要
 
-| 項目         | 内容                                                                                                          |
-| ------------ | ------------------------------------------------------------------------------------------------------------- |
-| 役割         | 統制・ガバナンス・共通ワークフローの調整基盤                                                                  |
-| バージョン   | v0.13.0（MVP/Prototype: 全業務ドメインの架空デモデータ一式・デモ起動/シード CLI・PWA アイコン配信・E2E 拡充） |
-| 言語         | TypeScript 5.7（strict / `noUncheckedIndexedAccess` / 例外を投げない設計）                                    |
-| ランタイム   | Node.js v22.13+（ネイティブ TS 実行・ビルトインテストランナー）                                               |
-| HTTP サーバ  | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                                                      |
-| 依存方針     | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）                              |
-| パッケージ   | pnpm 10.26.2                                                                                                  |
-| テスト       | 553 tests pass（node:test ビルトインランナー）＋ Playwright E2E 12 テスト                                     |
-| コンテナ     | Docker multi-stage build（non-root・HEALTHCHECK 付き）                                                        |
-| セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限                             |
+| 項目         | 内容                                                                              |
+| ------------ | --------------------------------------------------------------------------------- |
+| 役割         | 統制・ガバナンス・共通ワークフローの調整基盤                                      |
+| バージョン   | v0.13.1（v0.13.0 + ブラウザ用デモログイン `/demo-login`・Cookie/JWT セッション）  |
+| 言語         | TypeScript 5.7（strict / `noUncheckedIndexedAccess` / 例外を投げない設計）        |
+| ランタイム   | Node.js v22.13+（ネイティブ TS 実行・ビルトインテストランナー）                   |
+| HTTP サーバ  | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                          |
+| 依存方針     | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）  |
+| パッケージ   | pnpm 10.26.2                                                                      |
+| テスト       | 558 tests pass（node:test ビルトインランナー）＋ Playwright E2E 13 テスト         |
+| コンテナ     | Docker multi-stage build（non-root・HEALTHCHECK 付き）                            |
+| セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限 |
 
 ---
 
@@ -430,6 +430,11 @@ open http://localhost:3000/portal
 操作手順・画面・API 例・ダミーデータ構成は
 [docs/operations/MVP_DEMO_GUIDE.md](docs/operations/MVP_DEMO_GUIDE.md) を参照してください。
 
+ブラウザでそのままレビューする場合は `http://localhost:3000/demo-login`
+（公開 MVP: `https://ceop-mvp.mirai-dx-platform.com/demo-login`）を開くと、デモ API キーで
+ログインしてダッシュボード・日報・ISO コンソールを操作できます。このログイン経路は
+開発/デモモード専用で、`NODE_ENV=production` では無効です。
+
 ### Docker
 
 ```bash
@@ -636,7 +641,7 @@ bash scripts/webui-deploy.sh
 ## 🧪 テスト実行
 
 ```bash
-# 全テスト実行（553 tests）
+# 全テスト実行（558 tests）
 pnpm run test
 
 # typecheck + lint + test 一括
@@ -677,15 +682,15 @@ node --experimental-strip-types scripts/sqlite-backup.ts /data/ceop.db /backup/c
 
 ### 📊 現在の品質状態
 
-| ゲート    | 状態           | 備考                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| --------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| typecheck | ✅ pass        | strict・`noUncheckedIndexedAccess`・0 error                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| lint      | ✅ pass        | ESLint flat config + typescript-eslint・0 warning                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| test      | ✅ 553/553     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud + governance-crud + sqlite-audit-log + workflow-crud + workflow-instance + audit-coverage + audit-verify + migrate + rate-limit（CF-IP 分離含む）+ tenant-scope + audit-tenant-scope + jwt-org + webui + client-ip + backup-retention + auth-keys + api-key-repository + web-assets + favicon + ai-actions + device-ingest + P3 domain/routes + notification + compliance + documents + work-schedules + purchase-orders + webhook + health-probe + verify-audit-chain + verify-restore + iso + integrations + load-smoke + rich-demo（架空デモデータ整合性/冪等性/監査チェーン） |
-| build     | ✅ pass        | `dist/` に型定義付き出力                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| CI        | ✅ 設定済み    | `.github/workflows/ci.yml`（push / PR トリガー）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| Docker    | ✅ multi-stage | non-root ユーザー・HEALTHCHECK 付き                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| security  | ✅ hardened    | timingSafeEqual・ボディ制限・権限ゲート・CSP・API セキュリティヘッダ・監査網羅                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ゲート    | 状態           | 備考                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| --------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| typecheck | ✅ pass        | strict・`noUncheckedIndexedAccess`・0 error                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| lint      | ✅ pass        | ESLint flat config + typescript-eslint・0 warning                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| test      | ✅ 558/558     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud + governance-crud + sqlite-audit-log + workflow-crud + workflow-instance + audit-coverage + audit-verify + migrate + rate-limit（CF-IP 分離含む）+ tenant-scope + audit-tenant-scope + jwt-org + webui + client-ip + backup-retention + auth-keys + api-key-repository + web-assets + favicon + ai-actions + device-ingest + P3 domain/routes + notification + compliance + documents + work-schedules + purchase-orders + webhook + health-probe + verify-audit-chain + verify-restore + iso + integrations + load-smoke + rich-demo（架空デモデータ整合性/冪等性/監査チェーン） + demo-login（Cookie/JWT・本番無効化） |
+| build     | ✅ pass        | `dist/` に型定義付き出力                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| CI        | ✅ 設定済み    | `.github/workflows/ci.yml`（push / PR トリガー）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Docker    | ✅ multi-stage | non-root ユーザー・HEALTHCHECK 付き                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| security  | ✅ hardened    | timingSafeEqual・ボディ制限・権限ゲート・CSP・API セキュリティヘッダ・監査網羅                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
 ---
 

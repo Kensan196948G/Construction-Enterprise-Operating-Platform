@@ -69,3 +69,11 @@ test("viewer credential still cannot open protected consoles", async ({ browser 
   await expect(page.locator("body")).toContainText(/Forbidden|403/);
   await context.close();
 });
+
+test("browser login flow authenticates and opens the dashboard", async ({ page }) => {
+  await page.goto("/demo-login");
+  await expect(page.locator("#demoLoginBtn")).toBeVisible();
+  await page.click("#demoQuickLoginBtn");
+  await expect(page).toHaveURL(/\/dashboard/);
+  await expect(page.locator("#appGrid")).toBeVisible();
+});

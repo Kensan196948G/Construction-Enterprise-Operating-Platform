@@ -83,6 +83,16 @@ test("SSR assets: /api/assets/iso.js is served with JS MIME type", async (t) => 
   assert.ok((await res.text()).includes("ISO 統合マネジメントコンソール"));
 });
 
+test("SSR assets: /api/assets/demo-login.js is served with JS MIME type", async (t) => {
+  const h = await buildHarness();
+  t.after(() => h.close());
+
+  const res = await fetch(`${h.baseUrl}/api/assets/demo-login.js`);
+  assert.equal(res.status, 200);
+  assert.match(res.headers.get("content-type") ?? "", /javascript/);
+  assert.ok((await res.text()).includes("demo-login"));
+});
+
 test("SSR assets: /api/assets/manifest.webmanifest is served with manifest MIME", async (t) => {
   const h = await buildHarness();
   t.after(() => h.close());

@@ -40,13 +40,15 @@
     "v0_12_0_production_deploy_at": "2026-08-12",
     "v0_13_0_mvp_prototype": "in_progress",
     "v0_13_0_branch": "feat/mvp-operable-demo-v0.13.0",
-    "v0_13_0_production_deploy": "not_planned"
+    "v0_13_0_production_deploy": "not_planned",
+    "v0_13_1_demo_login": "in_progress",
+    "v0_13_1_branch": "feat/mvp-demo-login-v0.13.1"
   },
   "kpi": {
     "success_rate_target": 0.9,
     "ci_success_rate": 1,
     "test_pass_rate": 1,
-    "test_count": 553,
+    "test_count": 558,
     "security_critical": 0,
     "security_high_resolved": 19,
     "blocker_count": 0

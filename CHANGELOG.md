@@ -4,6 +4,25 @@ All notable changes to the Construction Enterprise Operating Platform are docume
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [0.13.1] - Unreleased
+
+### Added
+
+- **ブラウザ用デモログイン（`/demo-login`）** — API キーを HttpOnly の JWT セッション
+  Cookie（SameSite=Lax・8h）に交換し、`/dashboard` `/daily-reports` `/iso-app` を
+  ブラウザから直接操作可能に。開発/デモモード（CEOP_SEED_DEMO / CEOP_SEED_RICH_DEMO）専用で
+  `NODE_ENV=production` ではルート自体を登録しない（404）。レート制限 10 req/min・
+  timingSafeEqual 検証を維持
+- **テスト追加** — demo-login 統合 4 件（Cookie 認証/不正資格情報/ログアウト/本番無効化）・
+  `demo-login.js` アセット配信 1 件・E2E 1 件（計 558 tests / E2E 13）
+
+### Changed
+
+- バージョン 0.13.1（`src/version.ts` / `package.json` / `Dockerfile` / OpenAPI）
+- README / MVP デモガイドにブラウザログイン手順を追記
+
+## [0.13.0] - 2026-08-14
+
 ## [0.13.0] - Unreleased
 
 ### Added

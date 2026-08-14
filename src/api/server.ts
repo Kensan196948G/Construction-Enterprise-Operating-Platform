@@ -44,6 +44,7 @@ import { registerPortalRoute } from "./routes/portal.ts";
 import { registerDailyReportUiRoutes } from "./routes/daily-reports-ui.ts";
 import { registerIsoRoutes } from "./routes/iso.ts";
 import { registerIntegrationRoutes } from "./routes/integrations.ts";
+import { registerDemoLoginRoutes } from "./routes/demo-login.ts";
 import type { GatewayService } from "../domain/gateway-service.ts";
 import type { AppContainer } from "./types.ts";
 
@@ -82,6 +83,14 @@ export function createServer(config: ServerConfig, container: AppContainer): Ser
     auditLog: container.auditLog,
   });
   registerHealthRoutes(router, container);
+  // Demo-only browser login is registered only in development/demo mode so a
+  // production container can never expose a credential-accepting form.
+  const demoMode =
+    process.env["NODE_ENV"]?.toLowerCase() !== "production" &&
+    (process.env["CEOP_SEED_DEMO"] === "true" || process.env["CEOP_SEED_RICH_DEMO"] === "true");
+  if (demoMode) {
+    registerDemoLoginRoutes(router, container);
+  }
   if (container.jwtIssuer !== undefined) {
     registerAuthRoutes(
       router,

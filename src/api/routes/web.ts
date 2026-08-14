@@ -137,6 +137,13 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
     false,
   );
   router.get(
+    "/api/assets/demo-login.js",
+    async (_req, _ctx, res) => {
+      await sendFile(res, join(staticDir, "demo-login.js"), "text/javascript; charset=utf-8");
+    },
+    false,
+  );
+  router.get(
     "/api/assets/manifest.webmanifest",
     async (_req, _ctx, res) => {
       await sendFile(res, join(staticDir, "manifest.webmanifest"), "application/manifest+json");
@@ -197,6 +204,13 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
     "/assets/daily-reports.js",
     async (_req, _ctx, res) => {
       await sendFile(res, join(staticDir, "daily-reports.js"), "text/javascript; charset=utf-8");
+    },
+    false,
+  );
+  router.get(
+    "/assets/demo-login.js",
+    async (_req, _ctx, res) => {
+      await sendFile(res, join(staticDir, "demo-login.js"), "text/javascript; charset=utf-8");
     },
     false,
   );
