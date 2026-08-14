@@ -204,6 +204,50 @@ test("SSR templates reference /api/assets so the Tunnel path-split cannot shadow
   assert.ok(iso.includes('aria-live="polite"'), "iso.html toasts must be announced");
 });
 
+test("public /iso redirects to the ISO console entry point", async (t) => {
+  const h = await buildHarness();
+  t.after(() => h.close());
+
+  const res = await fetch(`${h.baseUrl}/iso`, { redirect: "manual" });
+  assert.equal(res.status, 302);
+  assert.equal(res.headers.get("location"), "/iso-app");
+});
+
+test("dashboard SSR includes the users section and the right-pane API viewer", async (t) => {
+  const apiKeyStore: ApiKeyStore = new Map();
+  const adminRole = unwrap(
+    createRole({
+      id: "r-admin",
+      name: "Admin",
+      description: "",
+      scope: "global",
+      permissions: ["*:*"],
+    }),
+  );
+  const cred = createApiKey("admin-user", resolvePermissions([adminRole]), apiKeyStore);
+  const server = createServer(
+    { port: 0 },
+    {
+      repositories: createInMemoryRepositories(),
+      auditLog: new AuditLog(),
+      apiKeyStore,
+    },
+  );
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const { port } = server.address() as AddressInfo;
+  const baseUrl = `http://127.0.0.1:${port}`;
+  t.after(() => new Promise<void>((resolve) => server.close(() => resolve())));
+
+  const res = await fetch(`${baseUrl}/dashboard`, {
+    headers: { Authorization: `Bearer ${cred.key}:${cred.secret}` },
+  });
+  assert.equal(res.status, 200);
+  const html = await res.text();
+  assert.match(html, /id="users"/);
+  assert.match(html, /id="userTableBody"/);
+  assert.match(html, /id="apiViewer"/);
+});
+
 test("ISO console requires auth and renders with iso:read permission", async (t) => {
   const apiKeyStore: ApiKeyStore = new Map();
   const role = unwrap(

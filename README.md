@@ -15,18 +15,18 @@
 
 ## 📌 概要
 
-| 項目         | 内容                                                                              |
-| ------------ | --------------------------------------------------------------------------------- |
-| 役割         | 統制・ガバナンス・共通ワークフローの調整基盤                                      |
-| バージョン   | v0.13.2（v0.13.1 + 未認証ブラウザアクセスを `/demo-login` へ自動リダイレクト）    |
-| 言語         | TypeScript 5.7（strict / `noUncheckedIndexedAccess` / 例外を投げない設計）        |
-| ランタイム   | Node.js v22.13+（ネイティブ TS 実行・ビルトインテストランナー）                   |
-| HTTP サーバ  | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                          |
-| 依存方針     | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）  |
-| パッケージ   | pnpm 10.26.2                                                                      |
-| テスト       | 558 tests pass（node:test ビルトインランナー）＋ Playwright E2E 13 テスト         |
-| コンテナ     | Docker multi-stage build（non-root・HEALTHCHECK 付き）                            |
-| セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限 |
+| 項目         | 内容                                                                                            |
+| ------------ | ----------------------------------------------------------------------------------------------- |
+| 役割         | 統制・ガバナンス・共通ワークフローの調整基盤                                                    |
+| バージョン   | v0.13.3（v0.13.2 + 左メニュー→右コンテンツの UI 修正: ユーザー一覧・API ビューアー・/iso 統合） |
+| 言語         | TypeScript 5.7（strict / `noUncheckedIndexedAccess` / 例外を投げない設計）                      |
+| ランタイム   | Node.js v22.13+（ネイティブ TS 実行・ビルトインテストランナー）                                 |
+| HTTP サーバ  | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                                        |
+| 依存方針     | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）                |
+| パッケージ   | pnpm 10.26.2                                                                                    |
+| テスト       | 558 tests pass（node:test ビルトインランナー）＋ Playwright E2E 13 テスト                       |
+| コンテナ     | Docker multi-stage build（non-root・HEALTHCHECK 付き）                                          |
+| セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限               |
 
 ---
 

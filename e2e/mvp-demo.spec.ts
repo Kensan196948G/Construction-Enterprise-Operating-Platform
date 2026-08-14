@@ -77,3 +77,34 @@ test("browser login flow authenticates and opens the dashboard", async ({ page }
   await expect(page).toHaveURL(/\/dashboard/);
   await expect(page.locator("#appGrid")).toBeVisible();
 });
+
+test("dashboard left menu renders the users list in the right pane", async ({ page }) => {
+  await page.goto("/demo-login");
+  await page.click("#demoQuickLoginBtn");
+  await expect(page).toHaveURL(/\/dashboard/);
+  await page.click('nav a[href="/dashboard#users"]');
+  await expect(page.locator("#users")).toBeVisible();
+  await expect(page.locator("#userTableBody")).toContainText("システム管理者（デモ）");
+});
+
+test("dashboard API menu items render JSON in the right pane", async ({ page }) => {
+  await page.goto("/demo-login");
+  await page.click("#demoQuickLoginBtn");
+  await expect(page).toHaveURL(/\/dashboard/);
+  await page.click('nav a[data-api="/api/v1/dashboard"]');
+  await expect(page.locator("#apiViewer")).toBeVisible();
+  await expect(page.locator("#apiViewerBody")).toContainText("governance");
+  await page.click("#apiViewerBack");
+  await expect(page.locator("#appGrid")).toBeVisible();
+});
+
+test("/iso redirects to the working ISO console", async ({ browser }) => {
+  const context = await browser.newContext({
+    extraHTTPHeaders: { Authorization: `Bearer ${ADMIN_CRED}` },
+  });
+  const page = await context.newPage();
+  await page.goto("/iso");
+  await expect(page).toHaveURL(/\/iso-app/);
+  await expect(page.locator("#pageTitle")).toHaveText("ISO 分析ダッシュボード");
+  await context.close();
+});

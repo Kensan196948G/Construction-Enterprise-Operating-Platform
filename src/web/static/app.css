@@ -1261,3 +1261,19 @@ tbody td {
   color: #9ca3af;
   font-size: 11px;
 }
+
+/* ── API JSON viewer (dashboard right pane) ──────────────────────────── */
+
+.code-block {
+  margin: 0;
+  padding: 14px;
+  max-height: 65vh;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  color: #1f2937;
+  background: #f8fafc;
+}

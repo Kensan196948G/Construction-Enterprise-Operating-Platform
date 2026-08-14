@@ -38,9 +38,7 @@
         >
         <a class="nav-item" href="/governance"><span class="nav-icon">🛡</span> ガバナンス</a>
         <a class="nav-item" href="/iso"><span class="nav-icon">📋</span> ISO 統合マネジメント</a>
-        <a class="nav-item" href="/iso-app"
-          ><span class="nav-icon">🗂️</span> ISO 管理コンソール</a
-        >
+        <a class="nav-item" href="/iso-app"><span class="nav-icon">🗂️</span> ISO 管理コンソール</a>
         <hr class="sidebar__divider" />
         <div class="sidebar__section-label">リソース</div>
         <a class="nav-item" href="/dashboard#users"><span class="nav-icon">👥</span> ユーザー</a>
@@ -56,10 +54,13 @@
         >
         <hr class="sidebar__divider" />
         <div class="sidebar__section-label">API</div>
-        <a class="nav-item" href="/api/v1/dashboard" target="_blank" rel="noopener"
+        <a class="nav-item" href="/api/v1/dashboard" data-api="/api/v1/dashboard"
           ><span class="nav-icon">🔌</span> REST API</a
         >
-        <a class="nav-item" href="/api/v1/governance/audit" target="_blank" rel="noopener"
+        <a
+          class="nav-item"
+          href="/api/v1/governance/audit"
+          data-api="/api/v1/governance/audit?limit=20"
           ><span class="nav-icon">📑</span> 監査API</a
         >
       </nav>
@@ -123,6 +124,28 @@
           </div>
         </section>
 
+        <section class="section" id="users">
+          <div class="section-title">ユーザー</div>
+          <div class="card">
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>表示名</th>
+                    <th>メール</th>
+                    <th>組織</th>
+                    <th>ロール</th>
+                    <th>状態</th>
+                  </tr>
+                </thead>
+                <tbody id="userTableBody">
+                  {{USER_ROWS}}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
         <section class="section" id="applications">
           <div class="section-title">アプリケーション健全性</div>
           <div class="app-grid" id="appGrid">{{APP_CARDS}}</div>
@@ -157,6 +180,18 @@
         <section class="section" id="audit">
           <div class="section-title">最新監査イベント（直近10件）</div>
           <div class="audit-list" id="auditList">{{AUDIT_ITEMS}}</div>
+        </section>
+
+        <section class="section" id="apiViewer" hidden>
+          <div class="section-title" id="apiViewerTitle">API レスポンス</div>
+          <div class="btn-row">
+            <button class="btn btn-secondary" type="button" id="apiViewerBack">
+              ← ダッシュボードに戻る
+            </button>
+          </div>
+          <div class="card">
+            <pre class="code-block" id="apiViewerBody">読み込み中…</pre>
+          </div>
         </section>
       </main>
     </div>
