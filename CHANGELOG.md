@@ -4,7 +4,7 @@ All notable changes to the Construction Enterprise Operating Platform are docume
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
-## [0.13.2] - Unreleased
+## [0.13.2] - 2026-08-14
 
 ### Fixed
 
@@ -15,10 +15,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 ### Changed
 
 - バージョン 0.13.2（`src/version.ts` / `package.json` / `Dockerfile` / OpenAPI）
+- 本番デプロイ（v0.13.2）・本番 DB を全架空デモデータへ置き換え（事前バックアップ
+  `ceop-predemo-v0.13.2-20260814T012400Z.db`・旧コンテナ `ceop-platform-prev-0121` 保持）
 
 ## [0.13.1] - 2026-08-14
-
-## [0.13.1] - Unreleased
 
 ### Added
 
@@ -36,8 +36,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 - README / MVP デモガイドにブラウザログイン手順を追記
 
 ## [0.13.0] - 2026-08-14
-
-## [0.13.0] - Unreleased
 
 ### Added
 

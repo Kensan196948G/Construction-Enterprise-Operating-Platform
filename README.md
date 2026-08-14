@@ -483,16 +483,16 @@ curl -H "Authorization: Bearer <jwt>" http://localhost:3000/api/v1/dashboard
 
 ## 🚀 本番デプロイ（M8）
 
-### 🌐 本番環境（v0.8.3 稼働中）
+### 🌐 本番環境（v0.13.2 稼働中）
 
 | 項目           | 値                                                                                                           |
 | -------------- | ------------------------------------------------------------------------------------------------------------ |
 | 本番 URL       | https://ceop.mirai-dx-platform.com                                                                           |
 | 形態           | 本機 Docker コンテナ（`docker run`）+ Cloudflare Tunnel（cloudflared-ceop.service）                          |
-| イメージ       | `ceop-platform:v0.8.3`（GHCR: `ghcr.io/kensan196948g/construction-eop:0.8.3`）                               |
+| イメージ       | `ceop-platform:v0.13.2`（可動エイリアス `current` と同一）                                                   |
 | 可動エイリアス | `ceop-platform:current`（稼働中バージョンを指す。バックアップ cron が参照）                                  |
 | ホスト         | 192.168.0.185（127.0.0.1:3120 → コンテナ 3000）                                                              |
-| DB             | `/home/kensan/.ceop/data/ceop.db`（SQLite WAL、migration 001〜005 適用済み）                                 |
+| DB             | `/home/kensan/.ceop/data/ceop.db`（SQLite WAL、migration 001〜026 適用済み・全業務テーブルは架空デモデータ） |
 | 認証情報       | `/home/kensan/.ceop/admin-credential.txt`・`viewer-credential.txt`（chmod 600。値は Secrets 管理へ移行推奨） |
 | バックアップ   | cron 毎日 02:15 → `/home/kensan/.ceop/backups/`                                                              |
 | ヘルス監視     | cron 毎日 02:30 に `/health/ready` を確認（失敗時のみ `health.log` へ追記）                                  |
