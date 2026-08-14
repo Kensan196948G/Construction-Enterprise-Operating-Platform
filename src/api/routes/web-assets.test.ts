@@ -117,6 +117,24 @@ test("SSR assets: /api/assets/favicon.ico is served as image/x-icon", async (t) 
   assert.deepEqual([...buf.subarray(0, 4)], [0, 0, 1, 0]);
 });
 
+test("SSR assets: PWA PNG icons referenced by the manifest are served", async (t) => {
+  const h = await buildHarness();
+  t.after(() => h.close());
+
+  for (const size of ["16", "32", "48", "192", "512"]) {
+    const res = await fetch(`${h.baseUrl}/api/assets/favicon-${size}.png`);
+    assert.equal(res.status, 200, `favicon-${size}.png status`);
+    assert.equal(res.headers.get("content-type"), "image/png");
+    const buf = Buffer.from(await res.arrayBuffer());
+    // PNG magic bytes.
+    assert.deepEqual([...buf.subarray(0, 4)], [0x89, 0x50, 0x4e, 0x47], `${size}px PNG magic`);
+  }
+
+  const root = await fetch(`${h.baseUrl}/favicon.ico`);
+  assert.equal(root.status, 200);
+  assert.equal(root.headers.get("content-type"), "image/x-icon");
+});
+
 test("SSR assets: legacy /assets/* routes still work for direct deployments", async (t) => {
   const h = await buildHarness();
   t.after(() => h.close());
@@ -130,6 +148,9 @@ test("SSR assets: legacy /assets/* routes still work for direct deployments", as
   const isoJs = await fetch(`${h.baseUrl}/assets/iso.js`);
   assert.equal(isoJs.status, 200);
   assert.match(isoJs.headers.get("content-type") ?? "", /javascript/);
+  const png = await fetch(`${h.baseUrl}/assets/favicon-192.png`);
+  assert.equal(png.status, 200);
+  assert.equal(png.headers.get("content-type"), "image/png");
 });
 
 test("SSR assets: HEAD mirrors GET on /api/assets without a body", async (t) => {

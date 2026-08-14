@@ -4,7 +4,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-22.13+-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Zero Runtime Deps](https://img.shields.io/badge/runtime%20deps-zero-brightgreen)](package.json)
 [![CI](https://img.shields.io/github/actions/workflow/status/Kensan196948G/Construction-Enterprise-Operating-Platform/ci.yml?label=CI&logo=github)](/.github/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-547%20pass-brightgreen)](src/)
+[![Tests](https://img.shields.io/badge/tests-553%20pass-brightgreen)](src/)
 [![Security](https://img.shields.io/badge/security-hardened-blue)](src/api/middleware/auth.ts)
 [![License](https://img.shields.io/badge/license-proprietary-lightgrey)](LICENSE.md)
 
@@ -15,18 +15,18 @@
 
 ## 📌 概要
 
-| 項目         | 内容                                                                                                   |
-| ------------ | ------------------------------------------------------------------------------------------------------ |
-| 役割         | 統制・ガバナンス・共通ワークフローの調整基盤                                                           |
-| バージョン   | v0.12.1（v0.12.0 + 日報管理コンソール・実データ移行スクリプト・R2 オフサイト設計・アラート設定ガイド） |
-| 言語         | TypeScript 5.7（strict / `noUncheckedIndexedAccess` / 例外を投げない設計）                             |
-| ランタイム   | Node.js v22.13+（ネイティブ TS 実行・ビルトインテストランナー）                                        |
-| HTTP サーバ  | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                                               |
-| 依存方針     | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）                       |
-| パッケージ   | pnpm 10.26.2                                                                                           |
-| テスト       | 547 tests pass（node:test ビルトインランナー）＋ Playwright E2E 8 テスト                               |
-| コンテナ     | Docker multi-stage build（non-root・HEALTHCHECK 付き）                                                 |
-| セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限                      |
+| 項目         | 内容                                                                                                          |
+| ------------ | ------------------------------------------------------------------------------------------------------------- |
+| 役割         | 統制・ガバナンス・共通ワークフローの調整基盤                                                                  |
+| バージョン   | v0.13.0（MVP/Prototype: 全業務ドメインの架空デモデータ一式・デモ起動/シード CLI・PWA アイコン配信・E2E 拡充） |
+| 言語         | TypeScript 5.7（strict / `noUncheckedIndexedAccess` / 例外を投げない設計）                                    |
+| ランタイム   | Node.js v22.13+（ネイティブ TS 実行・ビルトインテストランナー）                                               |
+| HTTP サーバ  | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                                                      |
+| 依存方針     | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）                              |
+| パッケージ   | pnpm 10.26.2                                                                                                  |
+| テスト       | 553 tests pass（node:test ビルトインランナー）＋ Playwright E2E 12 テスト                                     |
+| コンテナ     | Docker multi-stage build（non-root・HEALTHCHECK 付き）                                                        |
+| セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限                             |
 
 ---
 
@@ -402,12 +402,33 @@ pnpm install
 # ドメイン + ガバナンス + ダッシュボードのデモを実行
 pnpm run demo
 
-# API サーバを起動（ポート 3000）
-node --experimental-strip-types scripts/start.ts
+# API サーバを起動（ポート 3000・最小デモデータ）
+pnpm start
 
 # ブラウザでアクセス
 open http://localhost:3000/dashboard
 ```
+
+### 🎬 MVP/Prototype デモ（全業務データ入り）
+
+評価用の架空データ一式（案件・日報・ISO 32 種・契約・発注・安全・品質・原価・工数・写真・
+図面文書・ナレッジ・通知・承認ワークフロー・連携イベント・AI 統制・監査証跡）を投入した状態で
+起動します。人物・会社・住所・金額はすべて架空（デモ用）です。
+
+```bash
+# In-Memory（すぐ確認・再起動で初期化）
+pnpm run start:demo
+
+# SQLite 永続化（再起動後もデータ保持・既存データがある DB は --force なしでは拒否）
+pnpm run seed:demo -- --db /tmp/ceop-demo.db
+CEOP_SQLITE_FILE=/tmp/ceop-demo.db pnpm start
+
+# ブラウザ（デモ API キーは起動ログに表示・CEOP_LOG_DEMO_CREDS=true で確認）
+open http://localhost:3000/portal
+```
+
+操作手順・画面・API 例・ダミーデータ構成は
+[docs/operations/MVP_DEMO_GUIDE.md](docs/operations/MVP_DEMO_GUIDE.md) を参照してください。
 
 ### Docker
 
@@ -615,7 +636,7 @@ bash scripts/webui-deploy.sh
 ## 🧪 テスト実行
 
 ```bash
-# 全テスト実行（547 tests）
+# 全テスト実行（553 tests）
 pnpm run test
 
 # typecheck + lint + test 一括
@@ -656,15 +677,15 @@ node --experimental-strip-types scripts/sqlite-backup.ts /data/ceop.db /backup/c
 
 ### 📊 現在の品質状態
 
-| ゲート    | 状態           | 備考                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| --------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| typecheck | ✅ pass        | strict・`noUncheckedIndexedAccess`・0 error                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| lint      | ✅ pass        | ESLint flat config + typescript-eslint・0 warning                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| test      | ✅ 547/547     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud + governance-crud + sqlite-audit-log + workflow-crud + workflow-instance + audit-coverage + audit-verify + migrate + rate-limit（CF-IP 分離含む）+ tenant-scope + audit-tenant-scope + jwt-org + webui + client-ip + backup-retention + auth-keys + api-key-repository + web-assets + favicon + ai-actions + device-ingest + P3 domain/routes + notification + compliance + documents + work-schedules + purchase-orders + webhook + health-probe + verify-audit-chain + verify-restore + iso + integrations + load-smoke |
-| build     | ✅ pass        | `dist/` に型定義付き出力                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| CI        | ✅ 設定済み    | `.github/workflows/ci.yml`（push / PR トリガー）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| Docker    | ✅ multi-stage | non-root ユーザー・HEALTHCHECK 付き                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| security  | ✅ hardened    | timingSafeEqual・ボディ制限・権限ゲート・CSP・API セキュリティヘッダ・監査網羅                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ゲート    | 状態           | 備考                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| --------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| typecheck | ✅ pass        | strict・`noUncheckedIndexedAccess`・0 error                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| lint      | ✅ pass        | ESLint flat config + typescript-eslint・0 warning                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| test      | ✅ 553/553     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud + governance-crud + sqlite-audit-log + workflow-crud + workflow-instance + audit-coverage + audit-verify + migrate + rate-limit（CF-IP 分離含む）+ tenant-scope + audit-tenant-scope + jwt-org + webui + client-ip + backup-retention + auth-keys + api-key-repository + web-assets + favicon + ai-actions + device-ingest + P3 domain/routes + notification + compliance + documents + work-schedules + purchase-orders + webhook + health-probe + verify-audit-chain + verify-restore + iso + integrations + load-smoke + rich-demo（架空デモデータ整合性/冪等性/監査チェーン） |
+| build     | ✅ pass        | `dist/` に型定義付き出力                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| CI        | ✅ 設定済み    | `.github/workflows/ci.yml`（push / PR トリガー）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Docker    | ✅ multi-stage | non-root ユーザー・HEALTHCHECK 付き                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| security  | ✅ hardened    | timingSafeEqual・ボディ制限・権限ゲート・CSP・API セキュリティヘッダ・監査網羅                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 ---
 
@@ -680,6 +701,7 @@ node --experimental-strip-types scripts/sqlite-backup.ts /data/ceop.db /backup/c
 | `CEOP_SQLITE_FILE`             | —（未設定 = 上位モード選択）                 | SQLite DB ファイルパス（例: `/data/ceop.db`）。設定時は SQLite 永続化（最優先）                                                 |
 | `CEOP_DATA_DIR`                | —（未設定 = In-Memory モード）               | ファイル永続化の保存先ディレクトリ。設定時は POSIX-atomic ファイル repo が有効                                                  |
 | `CEOP_SEED_DEMO`               | `false`                                      | `true` のとき起動時にデモデータを投入（In-Memory モードでは常に投入）                                                           |
+| `CEOP_SEED_RICH_DEMO`          | `false`                                      | `true` のとき全業務ドメインの架空デモデータ一式を投入（`production` では起動拒否。MVP/Prototype 評価専用）                      |
 | `CEOP_LOG_DEMO_CREDS`          | `false`                                      | `true` のときデモ API キーの認証情報を stderr に出力（**本番では絶対に `false`**）                                              |
 | `CEOP_RATE_LIMIT_MAX`          | `300`                                        | `/api/v1/*` のグローバルレート制限（1 分あたり・実クライアント IP 単位。loopback プロキシ経由時のみ `CF-Connecting-IP` を信頼） |
 | `CEOP_RATE_LIMIT_WINDOW_MS`    | `60000`                                      | グローバルレート制限のウィンドウ長（ミリ秒）                                                                                    |

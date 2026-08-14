@@ -1,6 +1,6 @@
 {
   "name": "construction-eop",
-  "version": "0.12.1",
+  "version": "0.13.0",
   "private": true,
   "license": "UNLICENSED",
   "description": "Construction Enterprise Operating Platform - governance, portal, field OS, and AI governance coordination layer",
@@ -35,6 +35,9 @@
     "webui:unpack": "node --experimental-strip-types scripts/webui-unpack.ts",
     "webui:serve": "node --experimental-strip-types scripts/webui-serve.ts",
     "integration:dispatch": "node --experimental-strip-types scripts/run-integration-dispatcher.ts",
+    "start": "node --experimental-strip-types scripts/start.ts",
+    "start:demo": "node --experimental-strip-types scripts/start-rich-demo.ts",
+    "seed:demo": "node --experimental-strip-types scripts/seed-demo.ts",
     "setup": "git config core.hooksPath .githooks && echo '✓ git hooks configured'",
     "pre-commit": "pnpm run format:check && pnpm run lint && pnpm run typecheck"
   },
