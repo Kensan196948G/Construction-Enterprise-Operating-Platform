@@ -21,7 +21,8 @@ test("portal is public and lists every module", async ({ page }) => {
 
 test("dashboard rejects anonymous access", async ({ page }) => {
   await page.goto("/dashboard");
-  await expect(page.locator("body")).toContainText(/Unauthorized|401/);
+  // Demo mode redirects unauthenticated browser loads to the demo login page.
+  await expect(page).toHaveURL(/\/demo-login/);
 });
 
 test("dashboard renders KPI cards and app grid for authenticated admin", async ({ browser }) => {

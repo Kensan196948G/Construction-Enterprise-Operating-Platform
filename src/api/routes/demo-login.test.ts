@@ -123,6 +123,27 @@ test("demo login: logout clears the session cookie", async (t) => {
   assert.match(logout.headers.get("set-cookie") ?? "", /Max-Age=0/);
 });
 
+test("demo mode redirects unauthenticated browser page loads to /demo-login", async (t) => {
+  envDemoMode();
+  const h = await buildServer();
+  t.after(async () => {
+    await h.close();
+    delete process.env["NODE_ENV"];
+    delete process.env["CEOP_SEED_RICH_DEMO"];
+  });
+
+  const page = await fetch(`${h.baseUrl}/dashboard`, {
+    headers: { Accept: "text/html" },
+    redirect: "manual",
+  });
+  assert.equal(page.status, 302);
+  assert.equal(page.headers.get("location"), "/demo-login");
+
+  // API-style requests keep the existing 401 JSON contract.
+  const api = await fetch(`${h.baseUrl}/dashboard`);
+  assert.equal(api.status, 401);
+});
+
 test("demo login routes are not registered in production", async (t) => {
   envProduction();
   const h = await buildServer();
@@ -140,4 +161,11 @@ test("demo login routes are not registered in production", async (t) => {
     body: JSON.stringify({ keyId: "demo-key", secret: "demo-secret" }),
   });
   assert.equal(login.status, 404);
+
+  // Production never redirects page loads to the demo login.
+  const dashboardPage = await fetch(`${h.baseUrl}/dashboard`, {
+    headers: { Accept: "text/html" },
+    redirect: "manual",
+  });
+  assert.equal(dashboardPage.status, 401);
 });

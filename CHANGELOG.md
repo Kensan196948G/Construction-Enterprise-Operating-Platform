@@ -4,6 +4,20 @@ All notable changes to the Construction Enterprise Operating Platform are docume
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [0.13.2] - Unreleased
+
+### Fixed
+
+- **未認証ブラウザアクセスの UX** — デモモードで `Accept: text/html` の未認証アクセス
+  （/dashboard 直アクセス等）が生の 401 JSON を返していたのを、`/demo-login` への 302
+  リダイレクトに変更。API 呼び出し（Accept なし）と production の 401 契約は不変
+
+### Changed
+
+- バージョン 0.13.2（`src/version.ts` / `package.json` / `Dockerfile` / OpenAPI）
+
+## [0.13.1] - 2026-08-14
+
 ## [0.13.1] - Unreleased
 
 ### Added

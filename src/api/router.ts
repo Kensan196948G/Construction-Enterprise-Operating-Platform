@@ -61,6 +61,26 @@ function readCookie(cookieHeader: string | string[] | undefined, name: string): 
   return "";
 }
 
+/** True when the request is a browser-style page load rather than an API call. */
+function acceptsHtml(req: IncomingMessage): boolean {
+  const accept = req.headers["accept"];
+  return typeof accept === "string" && accept.includes("text/html");
+}
+
+/** True only in development/demo mode — never in production. */
+function demoLoginMode(): boolean {
+  return (
+    process.env["NODE_ENV"]?.toLowerCase() !== "production" &&
+    (process.env["CEOP_SEED_DEMO"] === "true" || process.env["CEOP_SEED_RICH_DEMO"] === "true")
+  );
+}
+
+/** Send an unauthenticated browser to the demo login page instead of raw 401. */
+function redirectToDemoLogin(res: ServerResponse): void {
+  res.writeHead(302, { Location: "/demo-login", "Cache-Control": "no-store" });
+  res.end();
+}
+
 // ---------------------------------------------------------------------------
 // Router
 // ---------------------------------------------------------------------------
@@ -248,6 +268,11 @@ export class Router {
       const credential = bearerCredential !== "" ? bearerCredential : cookieCredential;
 
       if (!credential) {
+        if (acceptsHtml(req) && demoLoginMode()) {
+          redirectToDemoLogin(res);
+          finish(302);
+          return;
+        }
         writeJson(res, 401, {
           error: "Unauthorized",
           message: "a valid Bearer credential is required",
@@ -269,6 +294,11 @@ export class Router {
         // JWT Bearer token — base64url characters contain only [A-Za-z0-9_-] and ".".
         const result = this.#jwtIssuer.verify(credential);
         if (!result.ok) {
+          if (acceptsHtml(req) && demoLoginMode()) {
+            redirectToDemoLogin(res);
+            finish(302);
+            return;
+          }
           const message = result.reason === "expired" ? "token expired" : "invalid credentials";
           writeJson(res, 401, { error: "Unauthorized", message });
           finish(401);
