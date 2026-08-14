@@ -92,3 +92,5 @@
 | 10:2x | 本番 DB へ全架空デモデータ投入（seed-demo・監査チェーン 15 件 valid） | ✅ |
 | 10:2x | 本番コンテナ v0.12.1 → v0.13.2 差し替え（旧 `ceop-platform-prev-0121` 保持・ハーデニング維持） | ✅ |
 | 10:2x | 本番スモーク: healthy・version=0.13.2・projects=5・ISO=32・監査/連携/通知 API 正常 | ✅ |
+| 11:0x | UI 修正（/iso→/iso-app 302・#users セクション・右ペイン JSON ビューアー・CSP beacon 許可）→ PR #54 マージ | ✅ |
+| 11:1x | 本番 v0.13.3 差し替え（旧 `ceop-platform-prev-0132` 保持）・スモーク healthy/version=0.13.3/iso 302 | ✅ |
