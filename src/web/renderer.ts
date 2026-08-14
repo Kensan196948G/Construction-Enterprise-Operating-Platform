@@ -20,6 +20,7 @@ import type {
   DeviceStatusItem,
   ApprovalRequest,
 } from "../dashboard/dashboard.ts";
+import type { User } from "../domain/user.ts";
 
 // ---------------------------------------------------------------------------
 // Template directory resolution
@@ -177,6 +178,34 @@ function renderDeviceRows(devices: readonly DeviceStatusItem[]): string {
     .join("\n");
 }
 
+const USER_STATUS_LABELS: Readonly<Record<string, string>> = {
+  invited: "招待中",
+  active: "アクティブ",
+  suspended: "停止中",
+  deactivated: "無効",
+};
+
+function renderUserRows(users: readonly User[]): string {
+  if (users.length === 0) {
+    return '<tr><td colspan="5" class="empty-cell">ユーザーが見つかりません</td></tr>';
+  }
+  return users
+    .map((u) => {
+      const statusLabel = USER_STATUS_LABELS[u.status] ?? u.status;
+      const roleIds = u.roleIds.map((id) => `<code class="cell-muted">${esc(id)}</code>`).join(" ");
+      return [
+        "<tr>",
+        `  <td><strong>${esc(u.displayName)}</strong></td>`,
+        `  <td class="cell-soft">${esc(u.email)}</td>`,
+        `  <td><code class="cell-muted">${esc(u.organizationId)}</code></td>`,
+        `  <td class="cell-soft">${roleIds}</td>`,
+        `  <td><span class="device-status ${esc(u.status)}">${esc(statusLabel)}</span></td>`,
+        "</tr>",
+      ].join("\n");
+    })
+    .join("\n");
+}
+
 function renderApprovals(approvals: readonly ApprovalRequest[]): string {
   if (approvals.length === 0) {
     return '<div class="empty-state"><div class="empty-state-icon">✅</div>未処理の承認リクエストはありません</div>';
@@ -230,7 +259,11 @@ export async function renderTemplate(
  * Build the full dashboard HTML from a `DashboardView` snapshot.
  * All data is embedded server-side; the client-side JS provides auto-refresh.
  */
-export async function renderDashboard(data: DashboardView, apiToken = ""): Promise<string> {
+export async function renderDashboard(
+  data: DashboardView,
+  apiToken = "",
+  users: readonly User[] = [],
+): Promise<string> {
   const context: RenderContext = {
     VERSION: esc(_platformVersion),
     VIEWER: esc(data.viewer),
@@ -249,6 +282,7 @@ export async function renderDashboard(data: DashboardView, apiToken = ""): Promi
     // Rendered HTML fragments (already escaped)
     APP_CARDS: renderAppCards(data.applications),
     DEVICE_ROWS: renderDeviceRows(data.devices),
+    USER_ROWS: renderUserRows(users),
     APPROVAL_ITEMS: renderApprovals(data.pendingApprovals),
     // Audit log is fetched client-side for freshness
     AUDIT_ITEMS:

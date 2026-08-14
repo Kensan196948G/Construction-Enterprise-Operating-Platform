@@ -10,13 +10,55 @@
   const API_TOKEN = TOKEN_EL && TOKEN_EL.value ? TOKEN_EL.value : "";
 
   const DOMAINS = [
-    { id: "quality", label: "品質 (ISO 9001)", kinds: ["quality-plan", "quality-inspection", "nonconformity"] },
-    { id: "environment", label: "環境 (ISO 14001)", kinds: ["environmental-aspect", "legal-requirement", "waste-record"] },
-    { id: "safety", label: "安全 (ISO 45001)", kinds: ["hazard", "near-miss", "safety-education", "toolbox-talk", "safety-inspection", "safety-incident"] },
-    { id: "assets", label: "資産 (ISO 55001)", kinds: ["asset", "asset-maintenance-plan", "asset-inspection", "asset-risk-assessment", "asset-disposal", "asset-handover"] },
-    { id: "bim", label: "BIM/CIM (ISO 19650)", kinds: ["bim-eir", "bim-bep", "bim-container", "bim-coordination-issue"] },
-    { id: "audit", label: "監査・是正", kinds: ["audit-plan", "audit-finding", "corrective-action"] },
-    { id: "isms", label: "ISMS (ISO 27001)", kinds: ["isms-asset", "isms-threat", "isms-risk-assessment", "isms-incident"] },
+    {
+      id: "quality",
+      label: "品質 (ISO 9001)",
+      kinds: ["quality-plan", "quality-inspection", "nonconformity"],
+    },
+    {
+      id: "environment",
+      label: "環境 (ISO 14001)",
+      kinds: ["environmental-aspect", "legal-requirement", "waste-record"],
+    },
+    {
+      id: "safety",
+      label: "安全 (ISO 45001)",
+      kinds: [
+        "hazard",
+        "near-miss",
+        "safety-education",
+        "toolbox-talk",
+        "safety-inspection",
+        "safety-incident",
+      ],
+    },
+    {
+      id: "assets",
+      label: "資産 (ISO 55001)",
+      kinds: [
+        "asset",
+        "asset-maintenance-plan",
+        "asset-inspection",
+        "asset-risk-assessment",
+        "asset-disposal",
+        "asset-handover",
+      ],
+    },
+    {
+      id: "bim",
+      label: "BIM/CIM (ISO 19650)",
+      kinds: ["bim-eir", "bim-bep", "bim-container", "bim-coordination-issue"],
+    },
+    {
+      id: "audit",
+      label: "監査・是正",
+      kinds: ["audit-plan", "audit-finding", "corrective-action"],
+    },
+    {
+      id: "isms",
+      label: "ISMS (ISO 27001)",
+      kinds: ["isms-asset", "isms-threat", "isms-risk-assessment", "isms-incident"],
+    },
     { id: "bcp", label: "事業継続 (BCP)", kinds: ["bcp-plan", "bcp-risk-scenario", "bcp-drill"] },
   ];
 
@@ -330,15 +372,37 @@
   function populateStatusOptions(selected) {
     const select = document.getElementById("isoFormStatus");
     select.innerHTML = '<option value="">（既定）</option>';
-    ["draft", "under_review", "approved", "published", "open", "in_progress", "pending_verification", "closed", "cancelled", "planned", "pending", "pass", "fail", "conditional_pass", "active", "inactive", "under_maintenance", "disposed", "work_in_progress", "shared", "archived", "not_initiated", "completed"].forEach(
-      (status) => {
-        const option = document.createElement("option");
-        option.value = status;
-        option.textContent = status;
-        if (status === selected) option.selected = true;
-        select.appendChild(option);
-      },
-    );
+    [
+      "draft",
+      "under_review",
+      "approved",
+      "published",
+      "open",
+      "in_progress",
+      "pending_verification",
+      "closed",
+      "cancelled",
+      "planned",
+      "pending",
+      "pass",
+      "fail",
+      "conditional_pass",
+      "active",
+      "inactive",
+      "under_maintenance",
+      "disposed",
+      "work_in_progress",
+      "shared",
+      "archived",
+      "not_initiated",
+      "completed",
+    ].forEach((status) => {
+      const option = document.createElement("option");
+      option.value = status;
+      option.textContent = status;
+      if (status === selected) option.selected = true;
+      select.appendChild(option);
+    });
   }
 
   function closeDialog() {
@@ -459,7 +523,8 @@
       state.actionId = null;
     });
     const initial = window.location.hash.replace("#", "");
-    setActiveTab(DOMAINS.some((d) => d.id === initial) ? initial : "analytics");
+    const validTabs = DOMAINS.map((d) => d.id).concat(["analytics", "integrations"]);
+    setActiveTab(validTabs.includes(initial) ? initial : "analytics");
   }
 
   if (document.readyState === "loading") {

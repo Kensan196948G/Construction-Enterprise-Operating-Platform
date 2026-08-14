@@ -4,6 +4,24 @@ All notable changes to the Construction Enterprise Operating Platform are docume
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [0.13.3] - Unreleased
+
+### Fixed
+
+- **左メニュー → 右コンテンツの UI 不整合** — `/iso` の静的ランディング（存在しない
+  アンカー・インライン style）を廃止し `/iso-app` へ 302。ダッシュボードに欠落していた
+  `#users` セクション（ユーザー一覧表）を SSR + クライアント更新で追加。サイドバーの
+  REST API / 監査API はページ遷移せず右ペインの JSON ビューアーで表示（戻るボタン付き）
+- **CSP ノイズ** — Cloudflare Web Analytics の beacon を script-src に許可し、
+  コンソールの CSP ブロックエラーを解消
+- **ISO コンソールのディープリンク** — `/iso-app#<tab>` で対象タブを直接開けるよう拡張
+
+### Changed
+
+- バージョン 0.13.3（`src/version.ts` / `package.json` / `Dockerfile` / OpenAPI）
+
+## [0.13.2] - 2026-08-14
+
 ## [0.13.2] - 2026-08-14
 
 ### Fixed

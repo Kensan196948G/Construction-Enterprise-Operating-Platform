@@ -39,7 +39,7 @@ export function sendHtml(res: ServerResponse, status: number, html: string): voi
     "Content-Length": buf.byteLength,
     // default-src 'self' acts as fallback for style-src/script-src, blocking all inline.
     "Content-Security-Policy":
-      "default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; font-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'self'",
+      "default-src 'self'; style-src 'self'; script-src 'self' https://static.cloudflareinsights.com; img-src 'self' data:; font-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'self'",
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "SAMEORIGIN",
     "Referrer-Policy": "same-origin",
@@ -254,6 +254,10 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
         container.repositories.devices.findAll(),
         container.repositories.policies.findAll(),
       ]);
+      const visibleUsers =
+        ctx?.organizationId !== undefined
+          ? users.filter((user) => user.organizationId === ctx.organizationId)
+          : users;
 
       const view = buildDashboard({
         viewer: {
@@ -270,7 +274,7 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
         auditLog: container.auditLog,
       });
 
-      sendHtml(res, 200, await renderDashboard(view, webToken));
+      sendHtml(res, 200, await renderDashboard(view, webToken, visibleUsers));
     },
     true,
   );

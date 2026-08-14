@@ -123,6 +123,34 @@
       .join("");
   }
 
+  const USER_STATUS_LABELS = {
+    invited: "招待中",
+    active: "アクティブ",
+    suspended: "停止中",
+    deactivated: "無効",
+  };
+
+  function renderUserRows(users) {
+    if (!users || users.length === 0) {
+      return '<tr><td colspan="5" class="empty-cell">ユーザーが見つかりません</td></tr>';
+    }
+    return users
+      .map((u) => {
+        const statusLabel = USER_STATUS_LABELS[u.status] || u.status;
+        const roles = (u.roleIds || [])
+          .map((id) => `<code class="cell-muted">${escapeHtml(id)}</code>`)
+          .join(" ");
+        return `<tr>
+          <td><strong>${escapeHtml(u.displayName)}</strong></td>
+          <td class="cell-soft">${escapeHtml(u.email)}</td>
+          <td><code class="cell-muted">${escapeHtml(u.organizationId)}</code></td>
+          <td class="cell-soft">${roles}</td>
+          <td><span class="device-status ${escapeHtml(u.status)}">${escapeHtml(statusLabel)}</span></td>
+        </tr>`;
+      })
+      .join("");
+  }
+
   function renderApprovals(approvals) {
     if (!approvals || approvals.length === 0) {
       return '<div class="empty-state"><div class="empty-state-icon">✅</div>未処理の承認リクエストはありません</div>';
@@ -197,6 +225,24 @@
       if (deviceBody) deviceBody.innerHTML = renderDeviceRows(data.devices);
       const approvalList = document.getElementById("approvalList");
       if (approvalList) approvalList.innerHTML = renderApprovals(data.pendingApprovals);
+
+      // Users require user:read; a viewer without the permission sees a
+      // permission note instead of failing silently.
+      const userBody = document.getElementById("userTableBody");
+      if (userBody) {
+        try {
+          const userRes = await fetch("/api/v1/users?limit=200", { headers: authHeaders() });
+          if (userRes.ok) {
+            const userData = await userRes.json();
+            userBody.innerHTML = renderUserRows(userData.users || []);
+          } else if (userRes.status === 403) {
+            userBody.innerHTML =
+              '<tr><td colspan="5" class="cell-muted empty-cell">user:read 権限がありません</td></tr>';
+          }
+        } catch (_) {
+          /* users fetch is best-effort */
+        }
+      }
 
       try {
         const auditRes = await fetch("/api/v1/governance/audit?limit=10", {
@@ -409,6 +455,39 @@
   }
 
   /* ── Navigation / init ─────────────────────────────────────── */
+  const DASHBOARD_SECTIONS = ["users", "applications", "devices", "approvals", "audit"];
+
+  function showApiViewer(url) {
+    const viewer = document.getElementById("apiViewer");
+    const body = document.getElementById("apiViewerBody");
+    const title = document.getElementById("apiViewerTitle");
+    if (!viewer || !body) return;
+    DASHBOARD_SECTIONS.forEach((id) => {
+      const section = document.getElementById(id);
+      if (section) section.hidden = true;
+    });
+    viewer.hidden = false;
+    if (title) title.textContent = `API レスポンス — ${url}`;
+    body.textContent = "読み込み中…";
+    fetch(url, { headers: authHeaders() })
+      .then((res) => res.text())
+      .then((text) => {
+        body.textContent = text;
+      })
+      .catch((err) => {
+        body.textContent = `取得に失敗しました: ${err.message}`;
+      });
+  }
+
+  function showDashboardSections() {
+    const viewer = document.getElementById("apiViewer");
+    if (viewer) viewer.hidden = true;
+    DASHBOARD_SECTIONS.forEach((id) => {
+      const section = document.getElementById(id);
+      if (section) section.hidden = false;
+    });
+  }
+
   function initDashboard() {
     const hamburger = document.getElementById("hamburgerBtn");
     const sidebar = document.getElementById("sidebar");
@@ -417,6 +496,15 @@
     }
     const refreshBtn = document.getElementById("refreshBtn");
     if (refreshBtn) refreshBtn.addEventListener("click", refreshDashboard);
+
+    const backBtn = document.getElementById("apiViewerBack");
+    if (backBtn) backBtn.addEventListener("click", showDashboardSections);
+    document.querySelectorAll(".nav-item[data-api]").forEach((link) => {
+      link.addEventListener("click", (event) => {
+        event.preventDefault();
+        showApiViewer(link.dataset.api || link.getAttribute("href") || "");
+      });
+    });
 
     const generated = document.getElementById("generatedAt");
     if (generated && generated.textContent.includes("T")) {

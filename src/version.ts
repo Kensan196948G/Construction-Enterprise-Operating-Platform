@@ -3,6 +3,6 @@
  *
  * Keep in sync with package.json `version`; src/version.test.ts enforces this.
  */
-export const PLATFORM_VERSION = "0.13.2";
+export const PLATFORM_VERSION = "0.13.3";
 
 export const PLATFORM_NAME = "Construction Enterprise Operating Platform";
