@@ -4,7 +4,7 @@ All notable changes to the Construction Enterprise Operating Platform are docume
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
-## [0.13.4] - Unreleased
+## [0.13.4] - 2026-08-14
 
 ### Changed
 
@@ -14,6 +14,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
   他は閉じた状態。ダッシュボード/ガバナンス/日報/ISO コンソールの全画面で統一
 - ISO 統合マネジメントは品質/環境/安全/資産/BIM/監査/ISMS/BCP のサブ項目を展開して
   `/iso-app#<tab>` を直接開ける
+- 本番デプロイ（v0.13.4・旧コンテナ `ceop-platform-prev-0133` 保持）と MVP 反映
 
 ## [0.13.3] - 2026-08-14
 
