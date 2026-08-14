@@ -27,6 +27,7 @@ export default defineConfig({
       PORT: "3210",
       NODE_ENV: "development",
       CEOP_SEED_DEMO: "true",
+      CEOP_SEED_RICH_DEMO: "true",
       CEOP_E2E_API_KEY_ID: "e2e-admin",
       CEOP_E2E_API_KEY_SECRET: "e2e-secret",
       CEOP_E2E_VIEWER_API_KEY_ID: "e2e-viewer",
