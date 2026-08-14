@@ -51,8 +51,11 @@
     "v0_13_2_rollback_container": "ceop-platform-prev-0121",
     "v0_13_2_data_backup": "ceop-predemo-v0.13.2-20260814T012400Z.db",
     "v0_13_2_data_replaced_with_dummy": "completed",
-    "v0_13_3_sidebar_ui": "in_progress",
-    "v0_13_3_branch": "feat/ui-sidebar-v0.13.3"
+    "v0_13_3_sidebar_ui": "completed",
+    "v0_13_3_branch": "feat/ui-sidebar-v0.13.3",
+    "v0_13_3_production_deploy": "completed",
+    "v0_13_3_production_deploy_at": "2026-08-14",
+    "v0_13_3_rollback_container": "ceop-platform-prev-0132"
   },
   "kpi": {
     "success_rate_target": 0.9,

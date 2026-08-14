@@ -4,7 +4,7 @@ All notable changes to the Construction Enterprise Operating Platform are docume
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
-## [0.13.3] - Unreleased
+## [0.13.3] - 2026-08-14
 
 ### Fixed
 
@@ -19,6 +19,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
 ### Changed
 
 - バージョン 0.13.3（`src/version.ts` / `package.json` / `Dockerfile` / OpenAPI）
+- 本番デプロイ（v0.13.3・旧コンテナ `ceop-platform-prev-0132` 保持）と MVP 反映
 
 ## [0.13.2] - 2026-08-14
 
