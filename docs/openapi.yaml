@@ -5506,6 +5506,114 @@ Tenant scoping matches `GET /api/v1/governance/audit`. Each row carries `sequenc
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/work-orders:
+    get:
+      operationId: listAllWorkOrders
+      summary: Paginated work orders (organisation scope)
+      tags:
+        - WorkOrders
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/limitParam"
+        - 
+          $ref: "#/components/parameters/offsetParam"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - workOrders
+                  - count
+                  - total
+                  - limit
+                  - offset
+                properties:
+                  workOrders:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/WorkOrder"
+                  count:
+                    type: integer
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/inspections:
+    get:
+      operationId: listAllInspections
+      summary: Paginated inspections (organisation scope)
+      tags:
+        - Inspections
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/limitParam"
+        - 
+          $ref: "#/components/parameters/offsetParam"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - inspections
+                  - count
+                  - total
+                  - limit
+                  - offset
+                properties:
+                  inspections:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Inspection"
+                  count:
+                    type: integer
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /api/v1/projects/{projectId}/work-orders:
     get:
       operationId: listWorkOrders

@@ -1,0 +1,230 @@
+{
+  "project": {
+    "name": "Civil-Construction-AI-Build-Platform",
+    "start_date": "2026-06-15",
+    "registered_at": "2026-06-15",
+    "release_deadline": "2026-12-15",
+    "phase_mode": "maintenance",
+    "description": "土木建設DX案件を量産するためのメタ基盤（企画→要件→モック→検証→運用→ポートフォリオ統制）"
+  },
+  "goal": "Issue #32 P2 hardening 実装中（2026-08-13）。portfolio 制御文字/XSS、backup restore traversal/absolute/symlink、create_project 置換 literal、文書実行ビット、CI agent/** 対象を修正。ローカル bats 207/207・shellcheck・py_compile・secret scan PASS。PR/CI 確認後に完了判定。",
+  "phase": "Maintenance",
+  "kpi": {
+    "success_rate_target": 0.9,
+    "ci_success_rate": 1.0,
+    "test_pass_rate": 1.0,
+    "test_count": 207,
+    "lint_status": "clean",
+    "security_critical": 0,
+    "security_high": 0,
+    "security_high_env": 2,
+    "blocker_count": 0,
+    "test_suites": 8,
+    "assessment_score": 56.8,
+    "substitution_rate": 0.2
+  },
+  "execution": {
+    "max_duration_minutes": 300,
+    "session_started_at": "2026-08-09T17:00:00+09:00",
+    "repair_count": 0,
+    "max_repair": 3,
+    "same_error_limit": 2
+  },
+  "automation": {
+    "auto_issue_generation": true,
+    "self_evolution": true
+  },
+  "milestone": {
+    "production_release": {
+      "number": 1,
+      "due_on": "2026-12-15"
+    }
+  },
+  "completed_issues": [1, 2, 3, 6, 8, 10, 11, 12, 14, 15, 16, 17, 18, 19],
+  "blocked_issues": [],
+  "open_issues": [32],
+  "merged_prs": [
+    {
+      "pr": 4,
+      "merged_at": "2026-06-15T09:54:41Z",
+      "merge_commit": "86a0b83",
+      "closed_issues": [1, 2, 3],
+      "ci_status": "green",
+      "coderabbit": "pass (Critical=0 High=0)"
+    },
+    {
+      "pr": 5,
+      "merged_at": "2026-06-15T09:58:50Z",
+      "merge_commit": "de6e933",
+      "closed_issues": [],
+      "ci_status": "green"
+    },
+    {
+      "pr": 7,
+      "merged_at": "2026-08-06T12:02:00Z",
+      "merge_commit": "03dbe4d",
+      "closed_issues": [6],
+      "ci_status": "green",
+      "coderabbit": "pass (Critical=0 High=0)"
+    },
+    {
+      "pr": 9,
+      "merged_at": "2026-08-06T12:07:00Z",
+      "merge_commit": "fcb79aa",
+      "closed_issues": [8],
+      "ci_status": "green",
+      "coderabbit": "pass (Critical=0 High=0)"
+    },
+    {
+      "pr": 13,
+      "merged_at": "2026-08-06T12:15:00Z",
+      "merge_commit": "77bee73",
+      "closed_issues": [12, 14, 15, 16, 17, 18],
+      "ci_status": "green",
+      "coderabbit": "pass (Critical=0 High=0)"
+    },
+    {
+      "pr": 20,
+      "merged_at": "2026-08-06T12:15:37Z",
+      "merge_commit": "244fd8f",
+      "base": "feature/foundation-v0.4-manage-projects",
+      "closed_issues": [19],
+      "ci_status": "green",
+      "coderabbit": "pass (Critical=0 High=0)"
+    },
+    {
+      "pr": 21,
+      "merged_at": "2026-08-06T12:22:00Z",
+      "merge_commit": "50d9ec3",
+      "closed_issues": [],
+      "ci_status": "green",
+      "coderabbit": "pass (Critical=0 High=0)"
+    },
+    {
+      "pr": 22,
+      "merged_at": "2026-08-06T12:29:00Z",
+      "merge_commit": "b5c0c1a",
+      "closed_issues": [],
+      "ci_status": "green",
+      "coderabbit": "pass (Critical=0 High=0)"
+    },
+    {
+      "pr": 23,
+      "merged_at": "2026-08-06T12:34:00Z",
+      "merge_commit": "7b2f289",
+      "closed_issues": [],
+      "ci_status": "green",
+      "coderabbit": "pass (Critical=0 High=0)"
+    },
+    {
+      "pr": 24,
+      "merged_at": "2026-08-06T12:34:46Z",
+      "merge_commit": "5419391",
+      "closed_issues": [],
+      "ci_status": "green"
+    },
+    {
+      "pr": 25,
+      "merged_at": "2026-08-06T12:39:39Z",
+      "merge_commit": "eb2bbe7",
+      "closed_issues": [],
+      "ci_status": "green"
+    },
+    {
+      "pr": 26,
+      "merged_at": "2026-08-07T00:17:11Z",
+      "merge_commit": "66c7ab9",
+      "closed_issues": [],
+      "ci_status": "green",
+      "coderabbit": "check=pass だがレビュー未実施（Review rate limited）"
+    },
+    {
+      "pr": 27,
+      "merged_at": "2026-08-07T00:16:07Z",
+      "merge_commit": "2fe9b83",
+      "closed_issues": [],
+      "ci_status": "green",
+      "coderabbit": "check=pass だがレビュー未実施（Review rate limited）"
+    },
+    {
+      "pr": 31,
+      "merged_at": "2026-08-11T08:36:37Z",
+      "merge_commit": "51aa8ce",
+      "closed_issues": [],
+      "ci_status": "green",
+      "coderabbit": "レビュー実施済み 20件対応（Major 3 修正・Minor 採用12・スキップ5は理由記録）。最終 head e61df5c の check は rate limited（差分は ci.yml 1行）",
+      "audit": "独立監査（head 2770cde）Critical/High 0。Medium 4件は Issue #32 へ起票"
+    }
+  ],
+  "open_prs": [],
+  "releases": [
+    {
+      "tag": "v0.5.0",
+      "commit": "b5c0c1a",
+      "created_at": "2026-08-06T12:30:00Z",
+      "notes": "Production Ready — 全機能統合・セキュリティレビュー0件・Branch Protection有効"
+    },
+    {
+      "tag": "v0.6.0",
+      "commit": "e7a8c8f",
+      "created_at": "2026-08-07T00:31:05Z",
+      "prs": [26, 27, 28],
+      "ci_run": 31134804756,
+      "notes": "案件管理ダッシュボード プロトタイプ + 三層検証 — bats 127→172件 / 6→7 suite。既知の制約: 実ブラウザでの CSS・フォーカス順序・レスポンシブは未検証（環境で Chromium が SIGTRAP）"
+    },
+    {
+      "tag": "v0.7.0",
+      "commit": "51aa8ce",
+      "created_at": "2026-08-11T08:38:00Z",
+      "prs": [31],
+      "ci_run": 31473973310,
+      "notes": "Assessment & Hardening — 18項目採点 50→56.8点（CONDITIONAL GO）。P0統制4件修正（check_secrets fail-open / CSV injection / 報告経路 / backup CLI 新規）。bats 172→201件・7→8 suite・CI matrix へ backup_projects 追加。独立監査 Critical/High 0、Medium 4件は Issue #32。環境側残課題: A5 公開URL認証 / A6 Neon rotation / A10 Branch Protection（next_session 参照）"
+    }
+  ],
+  "next_session": {
+    "phase": "Maintenance",
+    "tasks": [
+      "【Phase 1 / A5 / Approval PR §17 + ユーザー実行】公開URL ccabp.mirai-dx-platform.com へ Cloudflare Access + Entra ID の認証を付与する（現状認証なし）",
+      "【Phase 1 / A6 / ユーザー実行】Neon 接続文字列のローテーション（露出後未実施）",
+      "【Phase 1 / A10 / Approval PR §17】Branch Protection: 'bats / design_prototype'・'bats / backup_projects' 必須化・enforce_admins=true 有効化",
+      "【Phase 2 / B5】prototype 3系統の統合（design-prototype を正本化）",
+      "【Phase 2 / B7】bridge-inspection の mock を橋梁点検固有データへ差別化",
+      "【Phase 2 / B8】Neon schema・migration 設計と development branch 検証",
+      "【Phase 2 / B10残】sed によるバイナリ置換リスクの評価（rsync 失敗時ゴミ残留は Issue #32 hardening で修正済み）",
+      "【Phase 2 / Issue #32】独立監査 Medium 4件は agent/mvp-prototype-hardening で実装済み。PR/CI/merge 後に open_issues から除外する",
+      "四半期ごとに脆弱性・依存関係・EOL・ライセンス棚卸し（docs/operations.md 参照）",
+      "バックアップ・復元試験を四半期に1回実施（scripts/backup_projects.sh）",
+      "実ブラウザが起動できる環境で docs/design-prototype/ の CSS・フォーカス順序・レスポンシブを検証する（現環境では SIGTRAP で BLOCKED）",
+      "ロードマップ全体は docs/assessment/2026-08-11-reassessment.md の Phase 0-4 を参照"
+    ]
+  },
+  "learning": {
+    "failure_patterns": [
+      "PR の base を確認せずに merge すると feature branch 間マージになる（PR #20 事象・PR #21 で main 統合）",
+      "CI matrix に新規テスト suite を追加しないと README の件数と実検証が乖離する",
+      "破壊的操作を持つ CLI は引数検証（slug 限定）+ パス confine が必須（manage_projects delete 事象）",
+      "無効な GITHUB_TOKEN が環境にあると gh/git が 401 になる。gh は GH_TOKEN → GITHUB_TOKEN → hosts.yml の順で採用するため gh auth login では解消しない（対処: env -u GITHUB_TOKEN／docs/operations.md §6 に記載）",
+      "この実行環境では Chromium 系が全て SIGTRAP（exit 133）で起動できず、実ブラウザでの WebUI 検証ができない（Playwright MCP・システム Chrome・Playwright 同梱バイナリすべてで再現）",
+      "XSS 検証で 'onerror=' の文字列不在を条件にすると誤検知する。esc() 後も本文として残るため、山括弧が実体参照化されタグとして成立しないことを条件にする",
+      "モックデータを追加しても consumer を作らないと孤立ファイルになる（case-management-mock.js が 225 行で参照ゼロだった）",
+      "CodeRabbit の check が pass でも理由が 'Review rate limited' の場合はレビュー内容が生成されていない。緑表示をレビュー実施の証拠にしない（PR #26/#27 で発生）",
+      "state.json の merged_prs がセッション終了時に更新されず PR #24/#25 が欠落していた。リリース時に gh の実測値と突き合わせる"
+    ],
+    "success_patterns": [
+      "bash 組込置換 ${var//a/b} で sed デリミタ問題を回避し任意文字を安全置換",
+      "copy-then-replace でテンプレート(データ)とエンジン(ロジック)を分離",
+      "--date/CCAI_DATE 注入で bats テストを実行日非依存(決定性)に",
+      "mock JSON を恒久データ、prototype/data.js を生成物として single source of truth 化",
+      "CI で全テスト suite を matrix 実行し、py_compile + secret scan を併設",
+      "外部依存ゼロの最小 DOM シム（tests/helpers/dom-shim.js）で init() を実行し、実ブラウザ無しに配線不良・クリック委譲・監査追記を検証する",
+      "認可を can(role, action) の単一経路に閉じ、ロール名での分岐を bats の grep で機械的に禁止して単一真実を保つ",
+      "bash 5.2 の patsub_replacement 既定 ON では replacement の & が特殊解釈される。${var//pat/repl} を使う HTML escape / placeholder replacement は \\& で literal 化し、& と backslash の回帰テストを必ず置く",
+      "tar restore は GNU tar 既定防御に依存せず、展開前に traversal・absolute path・symlink/hardlink を列挙拒否する",
+      "権限（誰が承認できるか）と業務ルール（いつ承認できるか）を分離し、approvalSteps から順序を導出して two_stage の形骸化を防ぐ",
+      "変更操作を attempt() の単一経路に通し、拒否も含めて必ず監査ログを追記する（監査漏れが構造的に起きない）",
+      "node 不在時の skip を CI では失敗に変え、検証が静かに消えるのを防ぐ",
+      "生成物へ流れるデータの厳格検証を追加する際は、先にスケルトン実データの適合性を確認してから制約を入れる（不適合なら既存テストが即FAILするため）",
+      "再評価は改善前と同一基準・同一項目で行い、リポジトリ内で解決できる範囲と環境操作が必要な範囲を分けて採点する（残課題の重みが数字に残る）"
+    ]
+  }
+}

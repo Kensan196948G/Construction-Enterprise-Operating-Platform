@@ -3400,6 +3400,38 @@ const paths: { [k: string]: YamlValue } = {
       },
     },
   },
+  "/api/v1/work-orders": {
+    get: {
+      operationId: "listAllWorkOrders",
+      summary: "Paginated work orders (organisation scope)",
+      tags: ["WorkOrders"],
+      security: authSecurity,
+      parameters: [
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
+      ],
+      responses: {
+        ...jsonResponse(200, paginatedList("workOrders", "WorkOrder")),
+        ...errorResponses(401, 403),
+      },
+    },
+  },
+  "/api/v1/inspections": {
+    get: {
+      operationId: "listAllInspections",
+      summary: "Paginated inspections (organisation scope)",
+      tags: ["Inspections"],
+      security: authSecurity,
+      parameters: [
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
+      ],
+      responses: {
+        ...jsonResponse(200, paginatedList("inspections", "Inspection")),
+        ...errorResponses(401, 403),
+      },
+    },
+  },
   "/api/v1/projects/{projectId}/work-orders": {
     get: {
       operationId: "listWorkOrders",

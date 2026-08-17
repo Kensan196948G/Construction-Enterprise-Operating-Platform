@@ -2760,7 +2760,7 @@ export async function seedRichDemo(
       description: "鉄筋検査に先立ち配筋の確認を行う（デモ）",
       status: "in_progress",
       dueDate: "2026-08-20",
-      assigneeId: "user-site-staff",
+      assigneeId: "user-op-a",
     },
     {
       id: "d-work-order-2",
@@ -2768,7 +2768,7 @@ export async function seedRichDemo(
       title: "残土搬出（第 3 車線）",
       status: "pending",
       dueDate: "2026-08-22",
-      assigneeId: "user-site-staff",
+      assigneeId: "user-op-a",
     },
     {
       id: "d-work-order-3",
@@ -2777,7 +2777,7 @@ export async function seedRichDemo(
       description: "暑中コンクリート養生計画に沿って施工（デモ）",
       status: "in_progress",
       dueDate: "2026-08-19",
-      assigneeId: "user-foreman",
+      assigneeId: "user-op-b",
     },
     {
       id: "d-work-order-4",
@@ -2839,12 +2839,11 @@ export async function seedRichDemo(
       id: "d-inspection-2",
       projectId: "project-demo-1",
       title: "コンクリート打設前検査",
+      description: "打設前の最終確認（デモ・未実施のため pending）",
       result: "pending",
       inspectorId: "user-quality",
-      checklistItems: [
-        { label: "型枠の建込精度", passed: true },
-        { label: "打設計画の承認", passed: false },
-      ],
+      // checklistItems が空のため result は明示値 pending が保持される
+      checklistItems: [],
     },
     {
       id: "d-inspection-3",
@@ -3105,7 +3104,7 @@ export async function seedRichDemo(
       impact: 4,
       riskLevel: "low",
       status: "identified",
-      ownerId: "user-site-manager",
+      ownerId: "user-sm-a",
       reviewDate: "2026-11-30",
     },
     {
@@ -3118,7 +3117,7 @@ export async function seedRichDemo(
       riskLevel: "very_low",
       status: "closed",
       treatmentPlan: "変更図書管理ルール適用（デモ）",
-      ownerId: "user-doc",
+      ownerId: "user-quality",
       reviewDate: "2026-07-31",
     },
   ] as const;
