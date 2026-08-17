@@ -51,6 +51,15 @@ import {
   InMemoryComplianceCheckRepository,
   InMemoryLegalEvidenceRepository,
   InMemoryNotificationTemplateRepository,
+  InMemoryWorkOrderRepository,
+  InMemoryInspectionRepository,
+  InMemorySupplierEvaluationRepository,
+  InMemoryQualityObjectiveRepository,
+  InMemoryRiskRepository,
+  InMemoryManagementReviewRepository,
+  InMemoryAiBuildProjectRepository,
+  InMemoryDxProjectRepository,
+  InMemoryMaterialPhotoLogRepository,
 } from "./business-repositories.ts";
 
 /**
@@ -88,5 +97,14 @@ export function createInMemoryRepositories(): Repositories {
     notificationTemplates: new InMemoryNotificationTemplateRepository(),
     isoRecords: new InMemoryIsoRecordRepository(),
     integrationEvents: new InMemoryIntegrationEventRepository(),
+    workOrders: new InMemoryWorkOrderRepository(),
+    inspections: new InMemoryInspectionRepository(),
+    supplierEvaluations: new InMemorySupplierEvaluationRepository(),
+    qualityObjectives: new InMemoryQualityObjectiveRepository(),
+    risks: new InMemoryRiskRepository(),
+    managementReviews: new InMemoryManagementReviewRepository(),
+    aiBuildProjects: new InMemoryAiBuildProjectRepository(),
+    dxProjects: new InMemoryDxProjectRepository(),
+    materialPhotoLogs: new InMemoryMaterialPhotoLogRepository(),
   };
 }

@@ -57,6 +57,15 @@ import {
   FileComplianceCheckRepository,
   FileLegalEvidenceRepository,
   FileNotificationTemplateRepository,
+  FileWorkOrderRepository,
+  FileInspectionRepository,
+  FileSupplierEvaluationRepository,
+  FileQualityObjectiveRepository,
+  FileRiskRepository,
+  FileManagementReviewRepository,
+  FileAiBuildProjectRepository,
+  FileDxProjectRepository,
+  FileMaterialPhotoLogRepository,
 } from "./business-repositories.ts";
 import { FileIsoRecordRepository, FileIntegrationEventRepository } from "./iso-repositories.ts";
 
@@ -305,5 +314,14 @@ export async function createFileRepositories(dataDir: string): Promise<Repositor
     ),
     isoRecords: new FileIsoRecordRepository(dataDir),
     integrationEvents: new FileIntegrationEventRepository(dataDir),
+    workOrders: new FileWorkOrderRepository(dataDir, "work-orders.json"),
+    inspections: new FileInspectionRepository(dataDir, "inspections.json"),
+    supplierEvaluations: new FileSupplierEvaluationRepository(dataDir, "supplier-evaluations.json"),
+    qualityObjectives: new FileQualityObjectiveRepository(dataDir, "quality-objectives.json"),
+    risks: new FileRiskRepository(dataDir, "risks.json"),
+    managementReviews: new FileManagementReviewRepository(dataDir, "management-reviews.json"),
+    aiBuildProjects: new FileAiBuildProjectRepository(dataDir, "ai-build-projects.json"),
+    dxProjects: new FileDxProjectRepository(dataDir, "dx-projects.json"),
+    materialPhotoLogs: new FileMaterialPhotoLogRepository(dataDir, "material-photo-logs.json"),
   };
 }

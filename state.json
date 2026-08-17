@@ -4,9 +4,9 @@
     "start_date": "2026-06-25",
     "release_deadline": "2026-12-25",
     "registered_at": "2026-06-25",
-    "phase_mode": "maintenance"
+    "phase_mode": "mvp"
   },
-  "goal": "MVP/Prototype v0.13.0 — 全業務ドメインの架空デモデータ一式・デモ起動/シード CLI・PWA アイコン修正・E2E 拡充を完成し検証（PR/CI 完了）",
+  "goal": "MVP v0.14.0 — 統合元4リポジトリ（Management-Platform / AI-Build-Platform / Portfolio-Atlas / Photo-Logger）の全機能をCEOPへ移行（9ドメイン・CRUD API・監査・WebUI /mvp-app・ダミーデータ・テスト）し、ceop-mvp.mirai-dx-platform.com で検証完了",
   "phase": "verify",
   "release": {
     "v0_1_0_foundation": "release_ready",
@@ -18,16 +18,14 @@
     "v0_8_1_ssr_assets_fix": "release_ready",
     "production_deploy": "completed",
     "judged_by": "CTO",
-    "judged_at": "2026-08-06"
-    ,
+    "judged_at": "2026-08-06",
     "v0_11_0_ims_absorption": "release_ready",
     "v0_11_0_judged_at": "2026-08-09",
     "v0_11_0_production_deploy": "completed",
     "ims_repo_deleted": "completed",
     "ims_repo_deleted_at": "2026-08-09",
     "v0_11_1_production_deploy": "completed",
-    "v0_11_1_production_deploy_at": "2026-08-10"
-    ,
+    "v0_11_1_production_deploy_at": "2026-08-10",
     "v0_12_1_field_ops": "in_progress",
     "v0_12_1_branch": "feat/field-ops-v0.12.1",
     "v0_12_1_production_deploy": "completed",
@@ -55,19 +53,20 @@
     "v0_13_3_branch": "feat/ui-sidebar-v0.13.3",
     "v0_13_3_production_deploy": "completed",
     "v0_13_3_production_deploy_at": "2026-08-14",
-    "v0_13_3_rollback_container": "ceop-platform-prev-0132"
-    ,
+    "v0_13_3_rollback_container": "ceop-platform-prev-0132",
     "v0_13_4_accordion_sidebar": "completed",
     "v0_13_4_branch": "feat/ui-accordion-v0.13.4",
     "v0_13_4_production_deploy": "completed",
     "v0_13_4_production_deploy_at": "2026-08-14",
-    "v0_13_4_rollback_container": "ceop-platform-prev-0133"
+    "v0_13_4_rollback_container": "ceop-platform-prev-0133",
+    "v0_14_0_mvp_integration": "in_progress",
+    "v0_14_0_branch": "auto/mvp-v0140-integration"
   },
   "kpi": {
     "success_rate_target": 0.9,
     "ci_success_rate": 1,
     "test_pass_rate": 1,
-    "test_count": 558,
+    "test_count": 627,
     "security_critical": 0,
     "security_high_resolved": 19,
     "blocker_count": 0
@@ -217,8 +216,7 @@
     "L-01 / G-26: 監査証跡エクスポート API（GET /api/v1/governance/audit/export）。audit:export 権限分離・拒否の監査記録・スナップショット順序・チェーン列同梱・CSV 数式インジェクション対策。20 テスト追加（252 件）、5 種の変異をすべて検出",
     "PR #11 merged (db689ac): 監査証跡エクスポート + CSV 数式対策 + compose ハードニング一式を main へ反映",
     "G-27 (P2): Router.#match に HEAD→GET フォールバックを追加し、/health を含む全ルートの HEAD 404 を解消。ルータ層に初のテスト 6 件（変異 3 種検証済み）。監査エクスポート記録へ method を追加し、本文未配信の HEAD プローブを『成功した配信』として証跡に残さないようにした",
-    "G-28 (P2): scripts/health-probe.sh — 連続失敗カウンタ付き外形プローブ（WARN→ALERT 閾値 3・RECOVERED 遷移・成功も必ず記録・状態ファイル破損時は fail-open）。シェルスクリプトを node:test から execFile で 5 テスト固定。MONITORING.md を『実装済み／未実装（目標設計）／当面の手順』3 章へ再構成し、HEALTHCHECK が unless-stopped では誰にも通知しない事実と、失敗時のみ書くログは cron 停止と無障害を判別できない事実を明文化。OPERATIONS_LEDGER を実行可能なコマンドと判定基準へ置換"
-    ,
+    "G-28 (P2): scripts/health-probe.sh — 連続失敗カウンタ付き外形プローブ（WARN→ALERT 閾値 3・RECOVERED 遷移・成功も必ず記録・状態ファイル破損時は fail-open）。シェルスクリプトを node:test から execFile で 5 テスト固定。MONITORING.md を『実装済み／未実装（目標設計）／当面の手順』3 章へ再構成し、HEALTHCHECK が unless-stopped では誰にも通知しない事実と、失敗時のみ書くログは cron 停止と無障害を判別できない事実を明文化。OPERATIONS_LEDGER を実行可能なコマンドと判定基準へ置換",
     "v0.8.0: HSTS を API JSON/添付/SSR/静的アセット/WebUI 全応答へ適用（G-22 解消）",
     "v0.8.0: X-Request-Id（UUID）を API/WebUI 応答と API アクセスログへ追加（SEC-010 解消）",
     "v0.8.0: loopback peer 限定で CF-Connecting-IP を信頼し実クライアント IP 単位のレート制限/アクセスログへ分離（G-25 解消）",

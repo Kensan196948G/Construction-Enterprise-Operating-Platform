@@ -66,6 +66,16 @@ import type {
   IntegrationSystem,
 } from "../domain/integration.ts";
 
+import type { WorkOrder, WorkOrderId } from "../domain/work-order.ts";
+import type { Inspection, InspectionId } from "../domain/inspection.ts";
+import type { SupplierEvaluation, SupplierEvaluationId } from "../domain/supplier.ts";
+import type { QualityObjective, QualityObjectiveId } from "../domain/quality-objective.ts";
+import type { Risk, RiskId } from "../domain/risk.ts";
+import type { ManagementReview, ManagementReviewId } from "../domain/management-review.ts";
+import type { AiBuildProject, AiBuildProjectId } from "../domain/ai-build-project.ts";
+import type { DxProject, DxProjectId } from "../domain/dx-project.ts";
+import type { MaterialPhotoLog, MaterialPhotoLogId } from "../domain/material-photo-log.ts";
+
 // ---------------------------------------------------------------------------
 // Generic repository contract
 // ---------------------------------------------------------------------------
@@ -226,6 +236,48 @@ export interface DailyReportRepository extends Repository<DailyReport, DailyRepo
   findByStatus(status: DailyReportStatus): Promise<readonly DailyReport[]>;
 }
 
+export interface WorkOrderRepository extends Repository<WorkOrder, WorkOrderId> {
+  findByProject(projectId: ProjectId): Promise<readonly WorkOrder[]>;
+}
+export interface InspectionRepository extends Repository<Inspection, InspectionId> {
+  findByProject(projectId: ProjectId): Promise<readonly Inspection[]>;
+}
+export interface SupplierEvaluationRepository extends Repository<
+  SupplierEvaluation,
+  SupplierEvaluationId
+> {
+  findByOrganization(orgId: string): Promise<readonly SupplierEvaluation[]>;
+}
+export interface QualityObjectiveRepository extends Repository<
+  QualityObjective,
+  QualityObjectiveId
+> {
+  findByOrganization(orgId: string): Promise<readonly QualityObjective[]>;
+}
+export interface RiskRepository extends Repository<Risk, RiskId> {
+  findByOrganization(orgId: string): Promise<readonly Risk[]>;
+}
+export interface ManagementReviewRepository extends Repository<
+  ManagementReview,
+  ManagementReviewId
+> {
+  findByOrganization(orgId: string): Promise<readonly ManagementReview[]>;
+}
+export interface AiBuildProjectRepository extends Repository<AiBuildProject, AiBuildProjectId> {
+  findByOrganization(orgId: string): Promise<readonly AiBuildProject[]>;
+}
+export interface DxProjectRepository extends Repository<DxProject, DxProjectId> {
+  findByOrganization(orgId: string): Promise<readonly DxProject[]>;
+  findBySlug(slug: string): Promise<DxProject | null>;
+}
+export interface MaterialPhotoLogRepository extends Repository<
+  MaterialPhotoLog,
+  MaterialPhotoLogId
+> {
+  findByOrganization(orgId: string): Promise<readonly MaterialPhotoLog[]>;
+  findByProjectCode(projectCode: string): Promise<readonly MaterialPhotoLog[]>;
+}
+
 /**
  * Kind-discriminated ISO integrated-management record store (IMS absorption).
  * One repository backs every ISO module (quality, environment, safety,
@@ -283,4 +335,13 @@ export interface Repositories {
   readonly notificationTemplates: NotificationTemplateRepository;
   readonly isoRecords: IsoRecordRepository;
   readonly integrationEvents: IntegrationEventRepository;
+  readonly workOrders: WorkOrderRepository;
+  readonly inspections: InspectionRepository;
+  readonly supplierEvaluations: SupplierEvaluationRepository;
+  readonly qualityObjectives: QualityObjectiveRepository;
+  readonly risks: RiskRepository;
+  readonly managementReviews: ManagementReviewRepository;
+  readonly aiBuildProjects: AiBuildProjectRepository;
+  readonly dxProjects: DxProjectRepository;
+  readonly materialPhotoLogs: MaterialPhotoLogRepository;
 }

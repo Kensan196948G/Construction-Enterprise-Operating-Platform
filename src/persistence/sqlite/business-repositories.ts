@@ -34,6 +34,15 @@ import type {
   NotificationTemplate,
   NotificationTemplateId,
 } from "../../domain/notification-template.ts";
+import type { WorkOrder, WorkOrderId } from "../../domain/work-order.ts";
+import type { Inspection, InspectionId } from "../../domain/inspection.ts";
+import type { SupplierEvaluation, SupplierEvaluationId } from "../../domain/supplier.ts";
+import type { QualityObjective, QualityObjectiveId } from "../../domain/quality-objective.ts";
+import type { Risk, RiskId } from "../../domain/risk.ts";
+import type { ManagementReview, ManagementReviewId } from "../../domain/management-review.ts";
+import type { AiBuildProject, AiBuildProjectId } from "../../domain/ai-build-project.ts";
+import type { DxProject, DxProjectId } from "../../domain/dx-project.ts";
+import type { MaterialPhotoLog, MaterialPhotoLogId } from "../../domain/material-photo-log.ts";
 
 import type {
   PhotoRepository,
@@ -51,6 +60,15 @@ import type {
   ComplianceCheckRepository,
   LegalEvidenceRepository,
   NotificationTemplateRepository,
+  WorkOrderRepository,
+  InspectionRepository,
+  SupplierEvaluationRepository,
+  QualityObjectiveRepository,
+  RiskRepository,
+  ManagementReviewRepository,
+  AiBuildProjectRepository,
+  DxProjectRepository,
+  MaterialPhotoLogRepository,
 } from "../ports.ts";
 import { BaseSqliteRepository } from "./base-sqlite-repository.ts";
 
@@ -643,5 +661,325 @@ export class SqliteNotificationTemplateRepository
     );
     const row = stmt.get(templateKey) as { data: string } | undefined;
     return row !== undefined ? (JSON.parse(row.data) as NotificationTemplate) : null;
+  }
+}
+
+export class SqliteWorkOrderRepository
+  extends BaseSqliteRepository<WorkOrder>
+  implements WorkOrderRepository
+{
+  constructor(db: DatabaseSync) {
+    super(
+      db,
+      "work_orders",
+      [
+        "org_id TEXT NOT NULL",
+        "project_id TEXT NOT NULL REFERENCES projects(id)",
+        "status TEXT NOT NULL",
+      ],
+      [
+        { name: "idx_work_orders_org", columns: ["org_id"] },
+        { name: "idx_work_orders_project", columns: ["project_id"] },
+        { name: "idx_work_orders_status", columns: ["status"] },
+      ],
+      ["org_id", "project_id", "status"],
+    );
+  }
+  protected override extraValues(w: WorkOrder): readonly unknown[] {
+    return [w.organizationId, w.projectId as string, w.status];
+  }
+  override async findById(id: WorkOrderId): Promise<WorkOrder | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: WorkOrderId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByProject(projectId: ProjectId): Promise<readonly WorkOrder[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM work_orders WHERE project_id = ?");
+    const rows = stmt.all(projectId as string) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as WorkOrder);
+  }
+}
+
+export class SqliteInspectionRepository
+  extends BaseSqliteRepository<Inspection>
+  implements InspectionRepository
+{
+  constructor(db: DatabaseSync) {
+    super(
+      db,
+      "inspections",
+      [
+        "org_id TEXT NOT NULL",
+        "project_id TEXT NOT NULL REFERENCES projects(id)",
+        "result TEXT NOT NULL",
+      ],
+      [
+        { name: "idx_inspections_org", columns: ["org_id"] },
+        { name: "idx_inspections_project", columns: ["project_id"] },
+        { name: "idx_inspections_result", columns: ["result"] },
+      ],
+      ["org_id", "project_id", "result"],
+    );
+  }
+  protected override extraValues(i: Inspection): readonly unknown[] {
+    return [i.organizationId, i.projectId as string, i.result];
+  }
+  override async findById(id: InspectionId): Promise<Inspection | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: InspectionId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByProject(projectId: ProjectId): Promise<readonly Inspection[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM inspections WHERE project_id = ?");
+    const rows = stmt.all(projectId as string) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as Inspection);
+  }
+}
+
+export class SqliteSupplierEvaluationRepository
+  extends BaseSqliteRepository<SupplierEvaluation>
+  implements SupplierEvaluationRepository
+{
+  constructor(db: DatabaseSync) {
+    super(
+      db,
+      "supplier_evaluations",
+      ["org_id TEXT NOT NULL", "status TEXT NOT NULL"],
+      [
+        { name: "idx_supplier_evals_org", columns: ["org_id"] },
+        { name: "idx_supplier_evals_status", columns: ["status"] },
+      ],
+      ["org_id", "status"],
+    );
+  }
+  protected override extraValues(s: SupplierEvaluation): readonly unknown[] {
+    return [s.organizationId, s.status];
+  }
+  override async findById(id: SupplierEvaluationId): Promise<SupplierEvaluation | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: SupplierEvaluationId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByOrganization(orgId: string): Promise<readonly SupplierEvaluation[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM supplier_evaluations WHERE org_id = ?");
+    const rows = stmt.all(orgId) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as SupplierEvaluation);
+  }
+}
+
+export class SqliteQualityObjectiveRepository
+  extends BaseSqliteRepository<QualityObjective>
+  implements QualityObjectiveRepository
+{
+  constructor(db: DatabaseSync) {
+    super(
+      db,
+      "quality_objectives",
+      ["org_id TEXT NOT NULL", "status TEXT NOT NULL"],
+      [
+        { name: "idx_quality_objectives_org", columns: ["org_id"] },
+        { name: "idx_quality_objectives_status", columns: ["status"] },
+      ],
+      ["org_id", "status"],
+    );
+  }
+  protected override extraValues(o: QualityObjective): readonly unknown[] {
+    return [o.organizationId, o.status];
+  }
+  override async findById(id: QualityObjectiveId): Promise<QualityObjective | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: QualityObjectiveId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByOrganization(orgId: string): Promise<readonly QualityObjective[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM quality_objectives WHERE org_id = ?");
+    const rows = stmt.all(orgId) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as QualityObjective);
+  }
+}
+
+export class SqliteRiskRepository extends BaseSqliteRepository<Risk> implements RiskRepository {
+  constructor(db: DatabaseSync) {
+    super(
+      db,
+      "risks",
+      ["org_id TEXT NOT NULL", "status TEXT NOT NULL"],
+      [
+        { name: "idx_risks_org", columns: ["org_id"] },
+        { name: "idx_risks_status", columns: ["status"] },
+      ],
+      ["org_id", "status"],
+    );
+  }
+  protected override extraValues(r: Risk): readonly unknown[] {
+    return [r.organizationId, r.status];
+  }
+  override async findById(id: RiskId): Promise<Risk | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: RiskId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByOrganization(orgId: string): Promise<readonly Risk[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM risks WHERE org_id = ?");
+    const rows = stmt.all(orgId) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as Risk);
+  }
+}
+
+export class SqliteManagementReviewRepository
+  extends BaseSqliteRepository<ManagementReview>
+  implements ManagementReviewRepository
+{
+  constructor(db: DatabaseSync) {
+    super(
+      db,
+      "management_reviews",
+      ["org_id TEXT NOT NULL", "status TEXT NOT NULL"],
+      [
+        { name: "idx_management_reviews_org", columns: ["org_id"] },
+        { name: "idx_management_reviews_status", columns: ["status"] },
+      ],
+      ["org_id", "status"],
+    );
+  }
+  protected override extraValues(r: ManagementReview): readonly unknown[] {
+    return [r.organizationId, r.status];
+  }
+  override async findById(id: ManagementReviewId): Promise<ManagementReview | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: ManagementReviewId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByOrganization(orgId: string): Promise<readonly ManagementReview[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM management_reviews WHERE org_id = ?");
+    const rows = stmt.all(orgId) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as ManagementReview);
+  }
+}
+
+export class SqliteAiBuildProjectRepository
+  extends BaseSqliteRepository<AiBuildProject>
+  implements AiBuildProjectRepository
+{
+  constructor(db: DatabaseSync) {
+    super(
+      db,
+      "ai_build_projects",
+      ["org_id TEXT NOT NULL", "status TEXT NOT NULL"],
+      [
+        { name: "idx_ai_build_projects_org", columns: ["org_id"] },
+        { name: "idx_ai_build_projects_status", columns: ["status"] },
+      ],
+      ["org_id", "status"],
+    );
+  }
+  protected override extraValues(p: AiBuildProject): readonly unknown[] {
+    return [p.organizationId, p.status];
+  }
+  override async findById(id: AiBuildProjectId): Promise<AiBuildProject | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: AiBuildProjectId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByOrganization(orgId: string): Promise<readonly AiBuildProject[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM ai_build_projects WHERE org_id = ?");
+    const rows = stmt.all(orgId) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as AiBuildProject);
+  }
+}
+
+export class SqliteDxProjectRepository
+  extends BaseSqliteRepository<DxProject>
+  implements DxProjectRepository
+{
+  constructor(db: DatabaseSync) {
+    super(
+      db,
+      "dx_projects",
+      ["org_id TEXT NOT NULL", "slug TEXT NOT NULL", "lifecycle_state TEXT NOT NULL"],
+      [
+        { name: "idx_dx_projects_org", columns: ["org_id"] },
+        { name: "idx_dx_projects_slug", columns: ["slug"], unique: true },
+        { name: "idx_dx_projects_lifecycle", columns: ["lifecycle_state"] },
+      ],
+      ["org_id", "slug", "lifecycle_state"],
+    );
+  }
+  protected override extraValues(p: DxProject): readonly unknown[] {
+    return [p.organizationId, p.slug, p.lifecycleState];
+  }
+  override async findById(id: DxProjectId): Promise<DxProject | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: DxProjectId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByOrganization(orgId: string): Promise<readonly DxProject[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM dx_projects WHERE org_id = ?");
+    const rows = stmt.all(orgId) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as DxProject);
+  }
+  async findBySlug(slug: string): Promise<DxProject | null> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM dx_projects WHERE slug = ?");
+    const row = stmt.get(slug) as { data: string } | undefined;
+    return row !== undefined ? (JSON.parse(row.data) as DxProject) : null;
+  }
+}
+
+export class SqliteMaterialPhotoLogRepository
+  extends BaseSqliteRepository<MaterialPhotoLog>
+  implements MaterialPhotoLogRepository
+{
+  constructor(db: DatabaseSync) {
+    super(
+      db,
+      "material_photo_logs",
+      ["org_id TEXT NOT NULL", "project_code TEXT NOT NULL", "inspection_status TEXT NOT NULL"],
+      [
+        { name: "idx_material_photo_org", columns: ["org_id"] },
+        { name: "idx_material_photo_project_code", columns: ["project_code"] },
+        { name: "idx_material_photo_status", columns: ["inspection_status"] },
+      ],
+      ["org_id", "project_code", "inspection_status"],
+    );
+  }
+  protected override extraValues(l: MaterialPhotoLog): readonly unknown[] {
+    return [l.organizationId, l.projectCode, l.inspectionStatus];
+  }
+  override async findById(id: MaterialPhotoLogId): Promise<MaterialPhotoLog | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: MaterialPhotoLogId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByOrganization(orgId: string): Promise<readonly MaterialPhotoLog[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM material_photo_logs WHERE org_id = ?");
+    const rows = stmt.all(orgId) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as MaterialPhotoLog);
+  }
+  async findByProjectCode(projectCode: string): Promise<readonly MaterialPhotoLog[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare(
+      "SELECT data FROM material_photo_logs WHERE project_code = ?",
+    );
+    const rows = stmt.all(projectCode) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as MaterialPhotoLog);
   }
 }

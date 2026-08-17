@@ -55,6 +55,8 @@ HttpOnly の JWT セッション Cookie が発行され、`/dashboard` `/daily-r
 | 通知             | テンプレート 3・購読設定 3・配信 4（sent/pending/failed/retry・未読 3）                 |
 | 承認ワークフロー | 日報/発注/安全の定義 3・インスタンス 4（承認/却下/保留）                                |
 | 連携             | 6 システム契約 + イベント 6（inbound received / outbound sent/retrying/failed）         |
+| 統合モジュール（v0.14.0） | 作業指示 5 / 検査 4（チェックリスト付き）/ 供給者評価 5 / 品質目標 4 / リスク 5 / マネジメントレビュー 3 / AI ビルド案件 4 / DX 案件 6 / 材料写真ログ 6 |
+
 | 監査証跡         | ハッシュチェーン済み 10 件（`GET /api/v1/governance/audit/export` で CSV 出力可）       |
 
 人物名・会社名・住所・メール・金額・ハッシュはすべて架空です（`mirai-dx-demo.example` 等）。
@@ -70,6 +72,7 @@ HttpOnly の JWT セッション Cookie が発行され、`/dashboard` `/daily-r
 | `/iso-app`       | 分析タブ → 品質タブ → 種類絞り込み | 32 種の規格別件数・検索・状態遷移・連携契約 6 システム          |
 | `/governance`    | ポリシー評価・監査閲覧             | 評価実行と監査証跡の確認                                        |
 | `/iso`           | ランディング                       | ISO 統合マネジメント入口                                        |
+| `/mvp-app`       | 統合モジュール 4 タブを切替        | 現場管理/AI ビルド/DX ポートフォリオ/材料フォトログの一覧と新規作成・CSV 出力 |
 
 ## 4. API 例（admin キー使用）
 
@@ -83,6 +86,9 @@ curl -s -H "Authorization: Bearer $CRED" "$BASE/api/v1/iso?limit=50"
 curl -s -H "Authorization: Bearer $CRED" $BASE/api/v1/notifications/unread-count
 curl -s -H "Authorization: Bearer $CRED" $BASE/api/v1/workflow-instances
 curl -s -H "Authorization: Bearer $CRED" $BASE/api/v1/integrations/events
+curl -s -H "Authorization: Bearer $CRED" $BASE/api/v1/work-orders
+curl -s -H "Authorization: Bearer $CRED" $BASE/api/v1/dx-projects
+curl -s -H "Authorization: Bearer $CRED" $BASE/api/v1/material-photo-logs/export.csv
 curl -s -H "Authorization: Bearer $CRED" $BASE/api/v1/governance/audit/export
 ```
 
