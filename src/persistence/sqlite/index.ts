@@ -64,6 +64,17 @@ import {
   SqliteNotificationTemplateRepository,
 } from "./business-repositories.ts";
 import { SqliteIsoRecordRepository, SqliteIntegrationEventRepository } from "./iso-repositories.ts";
+import {
+  SqliteWorkOrderRepository,
+  SqliteInspectionRepository,
+  SqliteSupplierEvaluationRepository,
+  SqliteQualityObjectiveRepository,
+  SqliteRiskRepository,
+  SqliteManagementReviewRepository,
+  SqliteAiBuildProjectRepository,
+  SqliteDxProjectRepository,
+  SqliteMaterialPhotoLogRepository,
+} from "./business-repositories.ts";
 
 // ---------------------------------------------------------------------------
 // Concrete repositories
@@ -583,6 +594,15 @@ export function createSqliteRepositories(dbPath: string): Repositories {
     notificationTemplates: new SqliteNotificationTemplateRepository(db),
     isoRecords: new SqliteIsoRecordRepository(db),
     integrationEvents: new SqliteIntegrationEventRepository(db),
+    workOrders: new SqliteWorkOrderRepository(db),
+    inspections: new SqliteInspectionRepository(db),
+    supplierEvaluations: new SqliteSupplierEvaluationRepository(db),
+    qualityObjectives: new SqliteQualityObjectiveRepository(db),
+    risks: new SqliteRiskRepository(db),
+    managementReviews: new SqliteManagementReviewRepository(db),
+    aiBuildProjects: new SqliteAiBuildProjectRepository(db),
+    dxProjects: new SqliteDxProjectRepository(db),
+    materialPhotoLogs: new SqliteMaterialPhotoLogRepository(db),
   };
 }
 

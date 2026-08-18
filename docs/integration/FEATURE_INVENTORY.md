@@ -90,3 +90,42 @@
 - **優先移植（P2）**: Issue→Approval→Audit、AI Gateway 統制、端末エージェント受信
 - **統合サービス接続（P1/P3）**: 業務サービスは CEOP Gateway 配下で稼働
 - **対象外/設計後**: ロボティクス・船舶・データレイク・Federation は外部連携または別設計
+
+## 7. 統合元 4 リポジトリ（2026-08-17 機能移行・統合後リポジトリ削除）
+
+> v0.14.0 で Civil-Construction-Management-Platform / Civil-Construction-AI-Build-Platform /
+> DX-Project-Portfolio-Atlas / Civil-Material-Photo-Logger の全機能を CEOP へ移行。
+> 全データはダミー（`rich-demo.ts`）で、CRUD API + 監査 + WebUI（`/mvp-app`）+ テストを備える。
+> 統合元リポジトリは移行完了後に GitHub から削除（既削除はスキップ）。
+
+### 7-1. Civil-Construction-Management-Platform（現場管理・ISO 運用）
+
+| #    | 機能                 | 内容                                             | CEOP 対応                                  | 状態 |
+| ---- | -------------------- | ------------------------------------------------ | ------------------------------------------ | ---- |
+| C-01 | 作業指示             | WorkItem（title/status/dueDate/担当）CRUD        | 📦 work-order ドメイン + API + 監査         | ✅   |
+| C-02 | 検査・チェックリスト | Inspection + ChecklistItem（合否導出）CRUD       | 📦 inspection ドメイン + API + 監査         | ✅   |
+| C-03 | 供給者評価           | SupplierEvaluation（スコア/状態/ISO 条項）CRUD   | 📦 supplier ドメイン + API + 監査           | ✅   |
+| C-04 | 品質目標             | QualityObjective（基準値/目標値/状態）CRUD       | 📦 quality-objective ドメイン + API + 監査  | ✅   |
+| C-05 | リスク管理           | Risk（5×5 マトリクス/処置/状態遷移）CRUD         | 📦 risk ドメイン + API + 監査               | ✅   |
+| C-06 | マネジメントレビュー | ManagementReview（開催/次回/議題/結論）CRUD      | 📦 management-review ドメイン + API + 監査  | ✅   |
+
+### 7-2. Civil-Construction-AI-Build-Platform（AI 案件生成）
+
+| #    | 機能             | 内容                                               | CEOP 対応                                   | 状態 |
+| ---- | ---------------- | -------------------------------------------------- | ------------------------------------------- | ---- |
+| B-01 | 案件生成レジストリ | 生成案件（name/theme/purpose/scope）登録           | 📦 ai-build-project ドメイン + API + 監査    | ✅   |
+| B-02 | 生成ライフサイクル | generated/archived/restored/deleted・placeholder 検査 | 📦 ai-build-project 状態遷移（API PUT）     | ✅   |
+
+### 7-3. DX-Project-Portfolio-Atlas（DX 案件ポートフォリオ）
+
+| #    | 機能         | 内容                                                   | CEOP 対応                              | 状態 |
+| ---- | ------------ | ------------------------------------------------------ | -------------------------------------- | ---- |
+| P-01 | ポートフォリオ台帳 | DX 案件（slug/名称/種別/ライフサイクル/重要度）CRUD | 📦 dx-project ドメイン + API + 監査     | ✅   |
+| P-02 | 進捗・レビュー管理 | approvedProgress / milestone / 次回レビュー日       | 📦 dx-project フィールド（API PUT）     | ✅   |
+
+### 7-4. Civil-Material-Photo-Logger（材料写真ログ）
+
+| #    | 機能         | 内容                                                   | CEOP 対応                                  | 状態 |
+| ---- | ------------ | ------------------------------------------------------ | ------------------------------------------ | ---- |
+| M-01 | 写真ログ登録 | 案件番号/材料名/数量/置場/座標のメタデータ CRUD        | 📦 material-photo-log ドメイン + API + 監査 | ✅   |
+| M-02 | CSV エクスポート | 固定カラム順の CSV 出力（Excel 台帳取込用）          | 📦 /api/v1/material-photo-logs/export.csv | ✅   |

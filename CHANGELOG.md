@@ -4,6 +4,39 @@ All notable changes to the Construction Enterprise Operating Platform are docume
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [0.14.0] - 2026-08-17
+
+### Added
+
+- **統合元 4 リポジトリの全機能を CEOP へ移行（MVP / ceop-mvp）** — 9 ドメインを新規追加し、
+  全箇所にダミーデータを投入。統合元リポジトリは移行完了後に GitHub から削除
+  （既に削除済みの Civil-Construction-IMS はスキップ）
+  - Civil-Construction-Management-Platform: 作業指示 / 検査・チェックリスト /
+    供給者評価 / 品質目標 / リスク（5×5 マトリクス）/ マネジメントレビュー
+  - Civil-Construction-AI-Build-Platform: AI 案件生成レジストリ（生成→アーカイブ→復元→削除）
+  - DX-Project-Portfolio-Atlas: DX 案件ポートフォリオ台帳（ライフサイクル・重要度・進捗）
+  - Civil-Material-Photo-Logger: 材料写真ログ（メタデータ + CSV エクスポート）
+- **統合モジュールコンソール `/mvp-app`** — 現場管理 / AI ビルド / DX ポートフォリオ /
+  材料フォトログの 4 タブで一覧・新規作成・CSV 出力を操作可能（SSR + クライアント JS、
+  既存 CSP 準拠）。ポータル `/portal` にリンク追加
+- **CRUD API + 監査 + テスト** — 各ドメインの list/create/get/update/delete を
+  権限ゲート（`work-order` / `inspection` / `supplier` / `quality-objective` / `risk` /
+  `management-review` / `ai-build-project` / `dx-project` / `material-photo-log`）付きで実装。
+  監査ログ（`recordAudit`）を全 mutation に適用
+- **OpenAPI 仕様更新** — 9 ドメインの schema + エンドポイントを `docs/openapi.yaml` に反映
+
+### Changed
+
+- バージョン 0.13.4 → 0.14.0（`src/version.ts` / `package.json`）
+- `FEATURE_INVENTORY.md` §7 に統合元 4 リポジトリの機能インベントリを追加（parity 対象）
+- `REPOSITORY_MASTER_PLAN.md` を更新（統合元 5・維持・機能連携 2 の構成に再編）
+
+### Notes
+
+- ダミーデータ: workOrders 5 / inspections 4 / supplierEvaluations 5 / qualityObjectives 4 /
+  risks 5 / managementReviews 3 / aiBuildProjects 4 / dxProjects 6 / materialPhotoLogs 6
+- 品質ゲート: `pnpm run verify`（format / openapi / typecheck / lint / test 627 / build / parity 44/65）
+
 ## [0.13.4] - 2026-08-14
 
 ### Changed

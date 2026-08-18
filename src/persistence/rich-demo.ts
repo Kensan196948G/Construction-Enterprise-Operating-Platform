@@ -31,6 +31,15 @@ import { createPurchaseOrder } from "../domain/purchase-order.ts";
 import { createSafetyCheck, createQualityInspection } from "../domain/safety.ts";
 import { createCostRecord, createWorkHour } from "../domain/cost.ts";
 import { createWorkSchedule } from "../domain/work-schedule.ts";
+import { createWorkOrder } from "../domain/work-order.ts";
+import { createInspection } from "../domain/inspection.ts";
+import { createSupplierEvaluation } from "../domain/supplier.ts";
+import { createQualityObjective } from "../domain/quality-objective.ts";
+import { createRisk } from "../domain/risk.ts";
+import { createManagementReview } from "../domain/management-review.ts";
+import { createAiBuildProject } from "../domain/ai-build-project.ts";
+import { createDxProject } from "../domain/dx-project.ts";
+import { createMaterialPhotoLog } from "../domain/material-photo-log.ts";
 import { createPhoto } from "../domain/photo.ts";
 import { createDocument } from "../domain/document.ts";
 import { createKnowledgeArticle } from "../domain/knowledge.ts";
@@ -98,6 +107,15 @@ export interface RichDemoSummary {
   readonly isoRecords: number;
   readonly integrationEvents: number;
   readonly auditEvents: number;
+  readonly workOrders: number;
+  readonly inspections: number;
+  readonly supplierEvaluations: number;
+  readonly qualityObjectives: number;
+  readonly risks: number;
+  readonly managementReviews: number;
+  readonly aiBuildProjects: number;
+  readonly dxProjects: number;
+  readonly materialPhotoLogs: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -2595,7 +2613,922 @@ export async function seedRichDemo(
     ),
   );
 
-  // ── 22. Audit history (optional, so the evidence chain demos are non-empty)
+  // ── 22. Migrated construction-enterprise domains (dummy data) ────────────
+  // Source systems (all features migrated, originals deleted after merge):
+  //   Civil-Construction-Management-Platform (work-orders / inspections /
+  //     supplier-evaluations / quality-objectives / risks / management-reviews)
+  //   Civil-Construction-AI-Build-Platform (ai-build-projects)
+  //   DX-Project-Portfolio-Atlas (dx-projects)
+  //   Civil-Material-Photo-Logger (material-photo-logs)
+
+  interface WorkOrderSeedItem {
+    readonly id: string;
+    readonly projectId: string;
+    readonly title: string;
+    readonly description?: string;
+    readonly status: "pending" | "in_progress" | "completed" | "cancelled";
+    readonly dueDate: string;
+    readonly completedAt?: IsoTimestamp;
+    readonly assigneeId?: string;
+  }
+  interface InspectionSeedItem {
+    readonly id: string;
+    readonly projectId: string;
+    readonly title: string;
+    readonly description?: string;
+    readonly result: "pass" | "fail" | "pending";
+    readonly inspectedAt?: string;
+    readonly inspectorId?: string;
+    readonly checklistItems: readonly { readonly label: string; readonly passed: boolean }[];
+  }
+  interface SupplierSeedItem {
+    readonly id: string;
+    readonly supplierName: string;
+    readonly supplierCode?: string;
+    readonly category?: string;
+    readonly status: "pending" | "approved" | "conditional" | "rejected";
+    readonly evaluationDate: string;
+    readonly nextEvaluationDate?: string;
+    readonly score?: number;
+    readonly isoClause?: string;
+    readonly notes?: string;
+  }
+  interface ObjectiveSeedItem {
+    readonly id: string;
+    readonly title: string;
+    readonly description?: string;
+    readonly isoClause?: string;
+    readonly target?: string;
+    readonly unit?: string;
+    readonly baseline?: number;
+    readonly targetValue?: number;
+    readonly status: "active" | "achieved" | "cancelled";
+    readonly dueDate?: string;
+    readonly ownerId?: string;
+  }
+  interface RiskSeedItem {
+    readonly id: string;
+    readonly objectiveId?: string;
+    readonly title: string;
+    readonly description?: string;
+    readonly isoClause?: string;
+    readonly likelihood: number;
+    readonly impact: number;
+    readonly riskLevel: "very_low" | "low" | "medium" | "high" | "very_high";
+    readonly status: "identified" | "assessed" | "mitigated" | "accepted" | "closed";
+    readonly treatmentPlan?: string;
+    readonly residualRisk?: string;
+    readonly ownerId?: string;
+    readonly reviewDate?: string;
+  }
+  interface ReviewSeedItem {
+    readonly id: string;
+    readonly title: string;
+    readonly status: "scheduled" | "in_progress" | "completed" | "cancelled";
+    readonly reviewDate: string;
+    readonly nextReviewDate?: string;
+    readonly agenda?: string;
+    readonly outcomes?: string;
+    readonly isoClause?: string;
+    readonly facilitatorId?: string;
+  }
+  interface AiBuildSeedItem {
+    readonly id: string;
+    readonly projectId?: string;
+    readonly name: string;
+    readonly theme: string;
+    readonly purpose?: string;
+    readonly scope?: string;
+    readonly targetUsers?: string;
+    readonly templateVersion: string;
+    readonly status: "generated" | "archived" | "restored" | "deleted";
+    readonly placeholderChecked: boolean;
+    readonly generatedAt: IsoTimestamp;
+  }
+  interface DxProjectSeedItem {
+    readonly id: string;
+    readonly slug: string;
+    readonly nameJa: string;
+    readonly nameEn?: string;
+    readonly shortName?: string;
+    readonly summary?: string;
+    readonly portfolioType: "internal" | "external" | "common" | "unclassified";
+    readonly companyAssetUse: "yes" | "no" | "review";
+    readonly domainCode?: string;
+    readonly lifecycleState:
+      | "planning"
+      | "requirements"
+      | "development"
+      | "verification"
+      | "production_ready"
+      | "production"
+      | "paused"
+      | "merging"
+      | "retired"
+      | "deleted";
+    readonly importance: number;
+    readonly ownerTeam?: string;
+    readonly approvedProgress?: number;
+    readonly progressMilestone?: string;
+    readonly progressEvidenceUrl?: string;
+    readonly nextReviewAt?: string;
+  }
+  interface PhotoLogSeedItem {
+    readonly id: string;
+    readonly projectCode: string;
+    readonly materialName: string;
+    readonly materialCategory?: string;
+    readonly quantity?: number;
+    readonly unit?: string;
+    readonly storagePlace?: string;
+    readonly memo?: string;
+    readonly transactionType: "received" | "placed" | "used" | "returned";
+    readonly inspectionStatus: "pending" | "passed" | "failed" | "review";
+    readonly needsReview?: boolean;
+    readonly capturedAt: IsoTimestamp;
+    readonly latitude?: number;
+    readonly longitude?: number;
+    readonly objectKey?: string;
+  }
+
+  // 22-a. Work orders (作業指示)
+  const workOrderSeed: readonly WorkOrderSeedItem[] = [
+    {
+      id: "d-work-order-1",
+      projectId: "project-demo-1",
+      title: "A ブロック基礎配筋完了検査立会",
+      description: "鉄筋検査に先立ち配筋の確認を行う（デモ）",
+      status: "in_progress",
+      dueDate: "2026-08-20",
+      assigneeId: "user-op-a",
+    },
+    {
+      id: "d-work-order-2",
+      projectId: "project-demo-1",
+      title: "残土搬出（第 3 車線）",
+      status: "pending",
+      dueDate: "2026-08-22",
+      assigneeId: "user-op-a",
+    },
+    {
+      id: "d-work-order-3",
+      projectId: "d-project-tunnel",
+      title: "高架橋沓座コンクリート打設",
+      description: "暑中コンクリート養生計画に沿って施工（デモ）",
+      status: "in_progress",
+      dueDate: "2026-08-19",
+      assigneeId: "user-op-b",
+    },
+    {
+      id: "d-work-order-4",
+      projectId: "d-project-tunnel",
+      title: "床版防水層の検査申請",
+      status: "completed",
+      dueDate: "2026-08-15",
+      completedAt: ts("2026-08-15T09:30:00.000Z"),
+      assigneeId: "user-quality",
+    },
+    {
+      id: "d-work-order-5",
+      projectId: "d-project-road",
+      title: "仮設足場の安全点検",
+      description: "台風後の緊急点検（デモ）",
+      status: "completed",
+      dueDate: "2026-08-14",
+      completedAt: ts("2026-08-14T16:00:00.000Z"),
+      assigneeId: "user-safety",
+    },
+  ] as const;
+  for (const item of workOrderSeed) {
+    await repos.workOrders.save(
+      must(
+        createWorkOrder({
+          id: item.id,
+          organizationId: "org-hq",
+          projectId: item.projectId,
+          title: item.title,
+          description: item.description,
+          status: item.status,
+          dueDate: item.dueDate,
+          ...(item.completedAt !== undefined ? { completedAt: item.completedAt } : {}),
+          assigneeId: item.assigneeId,
+          createdAt: ts("2026-08-10T08:00:00.000Z"),
+        }),
+        item.id,
+      ),
+    );
+  }
+
+  // 22-b. Inspections (検査・チェックリスト)
+  const inspectionSeed: readonly InspectionSeedItem[] = [
+    {
+      id: "d-inspection-1",
+      projectId: "project-demo-1",
+      title: "基礎鉄筋検査（A ブロック）",
+      description: "配筋間隔・かぶり厚の確認（デモ）",
+      result: "pass",
+      inspectedAt: "2026-08-16",
+      inspectorId: "user-quality",
+      checklistItems: [
+        { label: "主筋間隔が設計図書どおり", passed: true },
+        { label: "かぶり厚さが基準値以上", passed: true },
+        { label: "結束線の本数・位置", passed: true },
+      ],
+    },
+    {
+      id: "d-inspection-2",
+      projectId: "project-demo-1",
+      title: "コンクリート打設前検査",
+      description: "打設前の最終確認（デモ・未実施のため pending）",
+      result: "pending",
+      inspectorId: "user-quality",
+      // checklistItems が空のため result は明示値 pending が保持される
+      checklistItems: [],
+    },
+    {
+      id: "d-inspection-3",
+      projectId: "d-project-tunnel",
+      title: "床版防水層検査",
+      description: "部分竣工前の仕上り確認（デモ）",
+      result: "fail",
+      inspectedAt: "2026-08-15",
+      inspectorId: "user-quality",
+      checklistItems: [
+        { label: "防水シートの重ね幅", passed: true },
+        { label: "端部処理の密着", passed: false },
+      ],
+    },
+    {
+      id: "d-inspection-4",
+      projectId: "d-project-tunnel",
+      title: "高欄手すり取付検査",
+      result: "pass",
+      inspectedAt: "2026-08-12",
+      inspectorId: "user-quality",
+      checklistItems: [
+        { label: "高さ・間隔の基準適合", passed: true },
+        { label: "溶接部の外観", passed: true },
+      ],
+    },
+  ] as const;
+  for (const item of inspectionSeed) {
+    await repos.inspections.save(
+      must(
+        createInspection({
+          id: item.id,
+          organizationId: "org-hq",
+          projectId: item.projectId,
+          title: item.title,
+          description: item.description,
+          result: item.result,
+          inspectedAt: item.inspectedAt,
+          inspectorId: item.inspectorId,
+          checklistItems: item.checklistItems,
+          createdAt: ts("2026-08-10T08:00:00.000Z"),
+        }),
+        item.id,
+      ),
+    );
+  }
+
+  // 22-c. Supplier evaluations (供給者評価)
+  const supplierSeed: readonly SupplierSeedItem[] = [
+    {
+      id: "d-supplier-1",
+      supplierName: "デモ生コン株式会社",
+      supplierCode: "SUP-0001",
+      category: "生コンクリート",
+      status: "approved",
+      evaluationDate: "2026-07-01",
+      nextEvaluationDate: "2027-06-30",
+      score: 88,
+      isoClause: "8.4 外部提供者",
+    },
+    {
+      id: "d-supplier-2",
+      supplierName: "デモ鉄筋加工センター",
+      supplierCode: "SUP-0002",
+      category: "鉄筋加工",
+      status: "conditional",
+      evaluationDate: "2026-07-10",
+      nextEvaluationDate: "2026-10-10",
+      score: 72,
+      isoClause: "8.4 外部提供者",
+      notes: "納期遅延 1 件・改善計画提出済み（デモ）",
+    },
+    {
+      id: "d-supplier-3",
+      supplierName: "デモ測量サービス",
+      supplierCode: "SUP-0003",
+      category: "測量",
+      status: "approved",
+      evaluationDate: "2026-06-20",
+      nextEvaluationDate: "2027-06-19",
+      score: 92,
+      isoClause: "8.4 外部提供者",
+    },
+    {
+      id: "d-supplier-4",
+      supplierName: "デモ安全用品販売",
+      supplierCode: "SUP-0004",
+      category: "安全用品",
+      status: "pending",
+      evaluationDate: "2026-08-05",
+      score: 65,
+      isoClause: "8.4 外部提供者",
+    },
+    {
+      id: "d-supplier-5",
+      supplierName: "デモ仮設資材リース",
+      supplierCode: "SUP-0005",
+      category: "仮設資材",
+      status: "rejected",
+      evaluationDate: "2026-05-15",
+      nextEvaluationDate: "2026-11-15",
+      score: 48,
+      isoClause: "8.4 外部提供者",
+      notes: "品質基準未達（デモ）",
+    },
+  ] as const;
+  for (const item of supplierSeed) {
+    await repos.supplierEvaluations.save(
+      must(
+        createSupplierEvaluation({
+          id: item.id,
+          organizationId: "org-hq",
+          supplierName: item.supplierName,
+          supplierCode: item.supplierCode,
+          category: item.category,
+          status: item.status,
+          evaluationDate: item.evaluationDate,
+          nextEvaluationDate: item.nextEvaluationDate,
+          score: item.score,
+          isoClause: item.isoClause,
+          notes: item.notes,
+          evaluatorId: "user-quality",
+          createdAt: ts("2026-07-01T08:00:00.000Z"),
+        }),
+        item.id,
+      ),
+    );
+  }
+
+  // 22-d. Quality objectives (品質目標)
+  const objectiveSeed: readonly ObjectiveSeedItem[] = [
+    {
+      id: "d-objective-1",
+      title: "コンクリート圧縮強度の合格率 100% 維持",
+      description: "全打設ロットで基準強度以上を確保（デモ）",
+      isoClause: "6.2 品質目標",
+      target: "合格率",
+      unit: "%",
+      baseline: 98,
+      targetValue: 100,
+      status: "active",
+      dueDate: "2026-12-31",
+      ownerId: "user-quality",
+    },
+    {
+      id: "d-objective-2",
+      title: "重大災害ゼロ",
+      description: "休業災害を発生させない（デモ）",
+      isoClause: "6.2 品質目標",
+      target: "重大災害件数",
+      unit: "件",
+      baseline: 1,
+      targetValue: 0,
+      status: "active",
+      dueDate: "2026-12-31",
+      ownerId: "user-safety",
+    },
+    {
+      id: "d-objective-3",
+      title: "顧客満足度アンケート 4.5 以上",
+      isoClause: "6.2 品質目標",
+      target: "平均点",
+      unit: "点",
+      baseline: 4.2,
+      targetValue: 4.5,
+      status: "achieved",
+      dueDate: "2026-06-30",
+      ownerId: "user-admin",
+    },
+    {
+      id: "d-objective-4",
+      title: "検査不合格件数ゼロ",
+      isoClause: "6.2 品質目標",
+      target: "不合格件数",
+      unit: "件",
+      baseline: 2,
+      targetValue: 0,
+      status: "cancelled",
+      dueDate: "2026-03-31",
+      ownerId: "user-quality",
+    },
+  ] as const;
+  for (const item of objectiveSeed) {
+    await repos.qualityObjectives.save(
+      must(
+        createQualityObjective({
+          id: item.id,
+          organizationId: "org-hq",
+          title: item.title,
+          description: item.description,
+          isoClause: item.isoClause,
+          target: item.target,
+          unit: item.unit,
+          baseline: item.baseline,
+          targetValue: item.targetValue,
+          status: item.status,
+          dueDate: item.dueDate,
+          ownerId: item.ownerId,
+          createdAt: ts("2026-04-01T08:00:00.000Z"),
+        }),
+        item.id,
+      ),
+    );
+  }
+
+  // 22-e. Risks (リスク)
+  const riskSeed: readonly RiskSeedItem[] = [
+    {
+      id: "d-risk-1",
+      objectiveId: "d-objective-1",
+      title: "暑中期のコンクリート品質低下",
+      description: "高温時の凝結遅延・強度低下（デモ）",
+      isoClause: "6.1 リスク及び機会",
+      likelihood: 4,
+      impact: 5,
+      riskLevel: "very_high",
+      status: "assessed",
+      treatmentPlan: "暑中コンクリート施工計画の適用・養生温度管理（デモ）",
+      residualRisk: "低",
+      ownerId: "user-quality",
+      reviewDate: "2026-08-31",
+    },
+    {
+      id: "d-risk-2",
+      objectiveId: "d-objective-2",
+      title: "足場上作業の墜落・転落",
+      description: "高所作業時の墜落リスク（デモ）",
+      isoClause: "6.1 リスク及び機会",
+      likelihood: 3,
+      impact: 5,
+      riskLevel: "high",
+      status: "mitigated",
+      treatmentPlan: "手すり先行工法・安全帯二重掛け（デモ）",
+      residualRisk: "中",
+      ownerId: "user-safety",
+      reviewDate: "2026-09-15",
+    },
+    {
+      id: "d-risk-3",
+      title: "下請けの納期遅延",
+      description: "鉄筋加工の遅延リスク（デモ）",
+      isoClause: "6.1 リスク及び機会",
+      likelihood: 3,
+      impact: 3,
+      riskLevel: "medium",
+      status: "accepted",
+      treatmentPlan: "納期週次確認・代替業者確保（デモ）",
+      residualRisk: "低",
+      ownerId: "user-admin",
+      reviewDate: "2026-10-31",
+    },
+    {
+      id: "d-risk-4",
+      title: "地盤沈下による近隣影響",
+      description: "工事中の地盤変位リスク（デモ）",
+      isoClause: "6.1 リスク及び機会",
+      likelihood: 2,
+      impact: 4,
+      riskLevel: "low",
+      status: "identified",
+      ownerId: "user-sm-a",
+      reviewDate: "2026-11-30",
+    },
+    {
+      id: "d-risk-5",
+      title: "図面変更の伝達漏れ",
+      description: "変更図の現場周知不足（デモ）",
+      isoClause: "6.1 リスク及び機会",
+      likelihood: 2,
+      impact: 2,
+      riskLevel: "very_low",
+      status: "closed",
+      treatmentPlan: "変更図書管理ルール適用（デモ）",
+      ownerId: "user-quality",
+      reviewDate: "2026-07-31",
+    },
+  ] as const;
+  for (const item of riskSeed) {
+    await repos.risks.save(
+      must(
+        createRisk({
+          id: item.id,
+          organizationId: "org-hq",
+          objectiveId: item.objectiveId,
+          title: item.title,
+          description: item.description,
+          isoClause: item.isoClause,
+          likelihood: item.likelihood,
+          impact: item.impact,
+          riskLevel: item.riskLevel,
+          status: item.status,
+          treatmentPlan: item.treatmentPlan,
+          residualRisk: item.residualRisk,
+          ownerId: item.ownerId,
+          reviewDate: item.reviewDate,
+          createdAt: ts("2026-04-01T08:00:00.000Z"),
+        }),
+        item.id,
+      ),
+    );
+  }
+
+  // 22-f. Management reviews (マネジメントレビュー)
+  const reviewSeed: readonly ReviewSeedItem[] = [
+    {
+      id: "d-review-1",
+      title: "2026 年度第 1 四半期マネジメントレビュー",
+      status: "completed",
+      reviewDate: "2026-07-10",
+      nextReviewDate: "2026-10-10",
+      agenda: "品質目標達成状況・不適合の分析・外部提供者評価（デモ）",
+      outcomes: "品質目標を継続・暑中対策の強化を決定（デモ）",
+      isoClause: "9.3 マネジメントレビュー",
+      facilitatorId: "user-admin",
+    },
+    {
+      id: "d-review-2",
+      title: "2026 年度第 2 四半期マネジメントレビュー",
+      status: "scheduled",
+      reviewDate: "2026-10-10",
+      nextReviewDate: "2027-01-10",
+      agenda: "リスクの見直し・是正処置の有効性評価（デモ）",
+      isoClause: "9.3 マネジメントレビュー",
+      facilitatorId: "user-admin",
+    },
+    {
+      id: "d-review-3",
+      title: "安全管理特別レビュー",
+      status: "in_progress",
+      reviewDate: "2026-08-18",
+      nextReviewDate: "2026-09-18",
+      agenda: "ヒヤリハット分析・安全パトロール結果（デモ）",
+      isoClause: "9.3 マネジメントレビュー",
+      facilitatorId: "user-safety",
+    },
+  ] as const;
+  for (const item of reviewSeed) {
+    await repos.managementReviews.save(
+      must(
+        createManagementReview({
+          id: item.id,
+          organizationId: "org-hq",
+          title: item.title,
+          status: item.status,
+          reviewDate: item.reviewDate,
+          nextReviewDate: item.nextReviewDate,
+          agenda: item.agenda,
+          outcomes: item.outcomes,
+          isoClause: item.isoClause,
+          facilitatorId: item.facilitatorId,
+          createdAt: ts("2026-04-01T08:00:00.000Z"),
+        }),
+        item.id,
+      ),
+    );
+  }
+
+  // 22-g. AI build projects (AI 案件生成)
+  const aiBuildSeed: readonly AiBuildSeedItem[] = [
+    {
+      id: "d-ai-build-1",
+      projectId: "project-demo-1",
+      name: "bridge-inspection-2026",
+      theme: "橋梁点検記録の DX",
+      purpose: "点検記録の電子化 PoC（デモ）",
+      scope: "目視点検〜帳票出力",
+      targetUsers: "点検技術者/発注者",
+      templateVersion: "1.0.0",
+      status: "generated",
+      placeholderChecked: true,
+      generatedAt: ts("2026-08-11T09:00:00.000Z"),
+    },
+    {
+      id: "d-ai-build-2",
+      projectId: "d-project-tunnel",
+      name: "asphalt-paving-log",
+      theme: "舗装修繕工事の品質記録 DX",
+      purpose: "施工記録の自動化検証（デモ）",
+      scope: "舗装工事の出来高・品質記録",
+      targetUsers: "現場監督",
+      templateVersion: "1.1.0",
+      status: "generated",
+      placeholderChecked: true,
+      generatedAt: ts("2026-08-12T10:30:00.000Z"),
+    },
+    {
+      id: "d-ai-build-3",
+      name: "crane-safety-check",
+      theme: "クレーン作業の安全チェック DX",
+      purpose: "指差呼称・KY の記録 PoC（デモ）",
+      scope: "クレーン作業前点検",
+      targetUsers: "作業員/安全管理者",
+      templateVersion: "1.0.0",
+      status: "archived",
+      placeholderChecked: false,
+      generatedAt: ts("2026-07-20T08:00:00.000Z"),
+    },
+    {
+      id: "d-ai-build-4",
+      name: "soil-survey-portal",
+      theme: "地質調査結果の共有基盤",
+      purpose: "調査データの一元管理（デモ）",
+      scope: "ボーリング調査結果の登録・閲覧",
+      targetUsers: "設計/施工",
+      templateVersion: "0.9.0",
+      status: "deleted",
+      placeholderChecked: false,
+      generatedAt: ts("2026-06-15T08:00:00.000Z"),
+    },
+  ] as const;
+  for (const item of aiBuildSeed) {
+    await repos.aiBuildProjects.save(
+      must(
+        createAiBuildProject({
+          id: item.id,
+          organizationId: "org-hq",
+          projectId: item.projectId,
+          name: item.name,
+          theme: item.theme,
+          purpose: item.purpose,
+          scope: item.scope,
+          targetUsers: item.targetUsers,
+          templateVersion: item.templateVersion,
+          status: item.status,
+          placeholderChecked: item.placeholderChecked,
+          generatedAt: item.generatedAt,
+          createdAt: item.generatedAt,
+        }),
+        item.id,
+      ),
+    );
+  }
+
+  // 22-h. DX project portfolio (DX 案件ポートフォリオ)
+  const dxProjectSeed: readonly DxProjectSeedItem[] = [
+    {
+      id: "d-dx-1",
+      slug: "construction-eop",
+      nameJa: "建設企業オペレーティングプラットフォーム",
+      nameEn: "Construction Enterprise Operating Platform",
+      shortName: "CEOP",
+      summary: "全社業務・建設 DX・現場管理・承認・AI ガバナンスの中核基盤（デモ）",
+      portfolioType: "internal",
+      companyAssetUse: "yes",
+      domainCode: "platform",
+      lifecycleState: "production",
+      importance: 5,
+      ownerTeam: "IT-DX 本部",
+      approvedProgress: 95,
+      progressMilestone: "v0.13.4 本番運用",
+      progressEvidenceUrl: "https://ceop.mirai-dx-platform.com",
+      nextReviewAt: "2026-09-30",
+    },
+    {
+      id: "d-dx-2",
+      slug: "civil-4d-planner",
+      nameJa: "土木 4D 工程計画",
+      nameEn: "Civil 4D AI Planner",
+      shortName: "4D プランナー",
+      summary: "AI による 4D 工程計画シミュレーション（デモ）",
+      portfolioType: "internal",
+      companyAssetUse: "review",
+      domainCode: "planning",
+      lifecycleState: "production_ready",
+      importance: 4,
+      ownerTeam: "技術本部",
+      approvedProgress: 80,
+      progressMilestone: "v1.2 詳細設計完了",
+      nextReviewAt: "2026-09-15",
+    },
+    {
+      id: "d-dx-3",
+      slug: "dx-project-atlas",
+      nameJa: "DX プロジェクトアトラス",
+      nameEn: "DX Project Portfolio Atlas",
+      shortName: "DX Atlas",
+      summary: "DX プロジェクト・ポートフォリオ可視化基盤（デモ）",
+      portfolioType: "internal",
+      companyAssetUse: "yes",
+      domainCode: "portfolio",
+      lifecycleState: "production",
+      importance: 4,
+      ownerTeam: "IT-DX 本部",
+      approvedProgress: 90,
+      progressMilestone: "v0.6.0 本番運用",
+      nextReviewAt: "2026-10-31",
+    },
+    {
+      id: "d-dx-4",
+      slug: "material-photo-logger",
+      nameJa: "材料フォトロガー",
+      nameEn: "Civil Material Photo Logger",
+      shortName: "フォトロガー",
+      summary: "現場材料の写真記録アプリ（デモ）",
+      portfolioType: "common",
+      companyAssetUse: "yes",
+      domainCode: "field",
+      lifecycleState: "production",
+      importance: 3,
+      ownerTeam: "現場 DX 室",
+      approvedProgress: 85,
+      progressMilestone: "TestFlight 配信中",
+      nextReviewAt: "2026-09-30",
+    },
+    {
+      id: "d-dx-5",
+      slug: "ai-build-platform",
+      nameJa: "AI ビルドプラットフォーム",
+      nameEn: "Civil Construction AI Build Platform",
+      shortName: "AI Build",
+      summary: "DX 案件を量産する案件生成エンジン（デモ）",
+      portfolioType: "internal",
+      companyAssetUse: "review",
+      domainCode: "ai",
+      lifecycleState: "verification",
+      importance: 4,
+      ownerTeam: "AI 推進室",
+      approvedProgress: 70,
+      progressMilestone: "hardening 検証中",
+      nextReviewAt: "2026-09-10",
+    },
+    {
+      id: "d-dx-6",
+      slug: "construction-dx-idea",
+      nameJa: "建設 DX アイデアボックス",
+      nameEn: "Construction DX Idea",
+      shortName: "DX Idea",
+      summary: "現場からの DX アイデア受付・審査（デモ）",
+      portfolioType: "common",
+      companyAssetUse: "review",
+      domainCode: "idea",
+      lifecycleState: "production",
+      importance: 3,
+      ownerTeam: "IT-DX 本部",
+      approvedProgress: 75,
+      progressMilestone: "公開運用中",
+      nextReviewAt: "2026-12-31",
+    },
+  ] as const;
+  for (const item of dxProjectSeed) {
+    await repos.dxProjects.save(
+      must(
+        createDxProject({
+          id: item.id,
+          organizationId: "org-hq",
+          slug: item.slug,
+          nameJa: item.nameJa,
+          nameEn: item.nameEn,
+          shortName: item.shortName,
+          summary: item.summary,
+          portfolioType: item.portfolioType,
+          companyAssetUse: item.companyAssetUse,
+          domainCode: item.domainCode,
+          lifecycleState: item.lifecycleState,
+          importance: item.importance,
+          ownerTeam: item.ownerTeam,
+          approvedProgress: item.approvedProgress,
+          progressMilestone: item.progressMilestone,
+          progressEvidenceUrl: item.progressEvidenceUrl,
+          nextReviewAt: item.nextReviewAt,
+          createdAt: ts("2026-04-01T08:00:00.000Z"),
+        }),
+        item.id,
+      ),
+    );
+  }
+
+  // 22-i. Material photo logs (材料写真ログ)
+  const photoLogSeed: readonly PhotoLogSeedItem[] = [
+    {
+      id: "d-photo-log-1",
+      projectCode: "DEMO-2026-001",
+      materialName: "鉄筋 D16",
+      materialCategory: "鉄筋",
+      quantity: 120,
+      unit: "本",
+      storagePlace: "A ヤード",
+      memo: "ロット番号 R-2026-0712（デモ）",
+      transactionType: "received",
+      inspectionStatus: "passed",
+      capturedAt: ts("2026-08-11T10:15:00.000Z"),
+      latitude: 35.681236,
+      longitude: 139.767125,
+      objectKey: "photos/demo-photo-1.jpg",
+    },
+    {
+      id: "d-photo-log-2",
+      projectCode: "DEMO-2026-001",
+      materialName: "生コンクリート 24-12-20",
+      materialCategory: "生コンクリート",
+      quantity: 6,
+      unit: "m3",
+      storagePlace: "打設箇所",
+      memo: "納入伝票 No. 1042（デモ）",
+      transactionType: "used",
+      inspectionStatus: "passed",
+      capturedAt: ts("2026-08-12T13:40:00.000Z"),
+      objectKey: "photos/demo-photo-2.jpg",
+    },
+    {
+      id: "d-photo-log-3",
+      projectCode: "DEMO-2026-002",
+      materialName: "高欄手すり（アルミ）",
+      materialCategory: "金属製品",
+      quantity: 40,
+      unit: "本",
+      storagePlace: "B ヤード",
+      memo: "傷有り 2 本 → 要確認（デモ）",
+      transactionType: "received",
+      inspectionStatus: "review",
+      needsReview: true,
+      capturedAt: ts("2026-08-13T09:05:00.000Z"),
+      objectKey: "photos/demo-photo-3.jpg",
+    },
+    {
+      id: "d-photo-log-4",
+      projectCode: "DEMO-2026-002",
+      materialName: "防水シート",
+      materialCategory: "シート",
+      quantity: 8,
+      unit: "巻",
+      storagePlace: "C 倉庫",
+      memo: "端部処理不良 → 返却（デモ）",
+      transactionType: "returned",
+      inspectionStatus: "failed",
+      capturedAt: ts("2026-08-14T15:20:00.000Z"),
+      objectKey: "photos/demo-photo-4.jpg",
+    },
+    {
+      id: "d-photo-log-5",
+      projectCode: "DEMO-2026-003",
+      materialName: "仮設足場パイプ",
+      materialCategory: "仮設資材",
+      quantity: 200,
+      unit: "本",
+      storagePlace: "D ヤード",
+      memo: "点検済み（デモ）",
+      transactionType: "received",
+      inspectionStatus: "pending",
+      capturedAt: ts("2026-08-15T08:30:00.000Z"),
+      objectKey: "photos/demo-photo-5.jpg",
+    },
+    {
+      id: "d-photo-log-6",
+      projectCode: "DEMO-2026-004",
+      materialName: "路盤材（クラッシャラン）",
+      materialCategory: "骨材",
+      quantity: 15,
+      unit: "t",
+      storagePlace: "E ヤード",
+      memo: "含水比管理値以内（デモ）",
+      transactionType: "placed",
+      inspectionStatus: "passed",
+      capturedAt: ts("2026-08-09T11:00:00.000Z"),
+      objectKey: "photos/demo-photo-6.jpg",
+    },
+  ] as const;
+  for (const item of photoLogSeed) {
+    await repos.materialPhotoLogs.save(
+      must(
+        createMaterialPhotoLog({
+          id: item.id,
+          organizationId: "org-hq",
+          projectCode: item.projectCode,
+          materialName: item.materialName,
+          materialCategory: item.materialCategory,
+          quantity: item.quantity,
+          unit: item.unit,
+          storagePlace: item.storagePlace,
+          memo: item.memo,
+          transactionType: item.transactionType,
+          inspectionStatus: item.inspectionStatus,
+          needsReview: item.needsReview ?? false,
+          capturedAt: item.capturedAt,
+          latitude: item.latitude,
+          longitude: item.longitude,
+          objectKey: item.objectKey,
+          createdAt: item.capturedAt,
+        }),
+        item.id,
+      ),
+    );
+  }
+
+  // ── 23. Audit history (optional, so the evidence chain demos are non-empty)
 
   let auditEvents = 0;
   if (options?.auditLog !== undefined) {
@@ -2718,5 +3651,14 @@ export async function seedRichDemo(
     isoRecords: isoRecords.length,
     integrationEvents: 6,
     auditEvents,
+    workOrders: workOrderSeed.length,
+    inspections: inspectionSeed.length,
+    supplierEvaluations: supplierSeed.length,
+    qualityObjectives: objectiveSeed.length,
+    risks: riskSeed.length,
+    managementReviews: reviewSeed.length,
+    aiBuildProjects: aiBuildSeed.length,
+    dxProjects: dxProjectSeed.length,
+    materialPhotoLogs: photoLogSeed.length,
   };
 }

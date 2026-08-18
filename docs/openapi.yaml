@@ -1,7 +1,7 @@
 openapi: "3.1.0"
 info:
   title: Construction Enterprise Operating Platform API
-  version: "0.13.4"
+  version: "0.14.0"
   description: Unified enterprise operating platform for construction company governance, business portal, field OS, and AI governance.
   contact:
     name: Platform Team
@@ -99,6 +99,33 @@ tags:
   - 
     name: DailyReports
     description: Site daily reports (ServiceHub S-02)
+  - 
+    name: WorkOrders
+    description: Site work orders (Civil-Construction-Management-Platform)
+  - 
+    name: Inspections
+    description: Site inspections (Civil-Construction-Management-Platform)
+  - 
+    name: Suppliers
+    description: Supplier evaluations (Civil-Construction-Management-Platform)
+  - 
+    name: QualityObjectives
+    description: Quality objectives (Civil-Construction-Management-Platform)
+  - 
+    name: Risks
+    description: Risk register (Civil-Construction-Management-Platform)
+  - 
+    name: ManagementReviews
+    description: Management reviews (Civil-Construction-Management-Platform)
+  - 
+    name: AiBuildProjects
+    description: AI build projects (Civil-Construction-AI-Build-Platform)
+  - 
+    name: DxProjects
+    description: DX project portfolio (DX-Project-Portfolio-Atlas)
+  - 
+    name: MaterialPhotoLogs
+    description: Material photo logs (Civil-Material-Photo-Logger)
   - 
     name: IntegrationGateway
     description: CEOP gateway reverse proxy for integration services (P1)
@@ -5479,6 +5506,2910 @@ Tenant scoping matches `GET /api/v1/governance/audit`. Each row carries `sequenc
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/work-orders:
+    get:
+      operationId: listAllWorkOrders
+      summary: Paginated work orders (organisation scope)
+      tags:
+        - WorkOrders
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/limitParam"
+        - 
+          $ref: "#/components/parameters/offsetParam"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - workOrders
+                  - count
+                  - total
+                  - limit
+                  - offset
+                properties:
+                  workOrders:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/WorkOrder"
+                  count:
+                    type: integer
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/inspections:
+    get:
+      operationId: listAllInspections
+      summary: Paginated inspections (organisation scope)
+      tags:
+        - Inspections
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/limitParam"
+        - 
+          $ref: "#/components/parameters/offsetParam"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - inspections
+                  - count
+                  - total
+                  - limit
+                  - offset
+                properties:
+                  inspections:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Inspection"
+                  count:
+                    type: integer
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/projects/{projectId}/work-orders:
+    get:
+      operationId: listWorkOrders
+      summary: Paginated work orders for a project (Management-Platform)
+      tags:
+        - WorkOrders
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/limitParam"
+        - 
+          $ref: "#/components/parameters/offsetParam"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - workOrders
+                  - count
+                  - total
+                  - limit
+                  - offset
+                properties:
+                  workOrders:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/WorkOrder"
+                  count:
+                    type: integer
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createWorkOrder
+      summary: Create a site work order (Management-Platform)
+      tags:
+        - WorkOrders
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                status:
+                  type: string
+                  enum:
+                    - pending
+                    - in_progress
+                    - completed
+                    - cancelled
+                dueDate:
+                  type: string
+                  format: date
+                assigneeId:
+                  type: string
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - workOrder
+                properties:
+                  workOrder:
+                    $ref: "#/components/schemas/WorkOrder"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/work-orders/{id}:
+    get:
+      operationId: getWorkOrder
+      summary: Work order detail
+      tags:
+        - WorkOrders
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - workOrder
+                properties:
+                  workOrder:
+                    $ref: "#/components/schemas/WorkOrder"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateWorkOrder
+      summary: Update a work order
+      tags:
+        - WorkOrders
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                status:
+                  type: string
+                  enum:
+                    - pending
+                    - in_progress
+                    - completed
+                    - cancelled
+                dueDate:
+                  type: string
+                  format: date
+                completedAt:
+                  type: string
+                  format: date-time
+                assigneeId:
+                  type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - workOrder
+                properties:
+                  workOrder:
+                    $ref: "#/components/schemas/WorkOrder"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteWorkOrder
+      summary: Delete a work order
+      tags:
+        - WorkOrders
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      responses:
+        204:
+          description: Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/projects/{projectId}/inspections:
+    get:
+      operationId: listInspections
+      summary: Paginated inspections for a project (Management-Platform)
+      tags:
+        - Inspections
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/limitParam"
+        - 
+          $ref: "#/components/parameters/offsetParam"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - inspections
+                  - count
+                  - total
+                  - limit
+                  - offset
+                properties:
+                  inspections:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Inspection"
+                  count:
+                    type: integer
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createInspection
+      summary: Create an inspection with checklist items
+      tags:
+        - Inspections
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                inspectedAt:
+                  type: string
+                  format: date
+                inspectorId:
+                  type: string
+                checklistItems:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - label
+                      - passed
+                    properties:
+                      label:
+                        type: string
+                      passed:
+                        type: boolean
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - inspection
+                properties:
+                  inspection:
+                    $ref: "#/components/schemas/Inspection"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/inspections/{id}:
+    get:
+      operationId: getInspection
+      summary: Inspection detail
+      tags:
+        - Inspections
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - inspection
+                properties:
+                  inspection:
+                    $ref: "#/components/schemas/Inspection"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateInspection
+      summary: Update an inspection
+      tags:
+        - Inspections
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                inspectedAt:
+                  type: string
+                  format: date
+                inspectorId:
+                  type: string
+                checklistItems:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - label
+                      - passed
+                    properties:
+                      label:
+                        type: string
+                      passed:
+                        type: boolean
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - inspection
+                properties:
+                  inspection:
+                    $ref: "#/components/schemas/Inspection"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteInspection
+      summary: Delete an inspection
+      tags:
+        - Inspections
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      responses:
+        204:
+          description: Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/supplier-evaluations:
+    get:
+      operationId: listSupplierEvaluations
+      summary: Paginated supplier evaluations (Management-Platform)
+      tags:
+        - Suppliers
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/limitParam"
+        - 
+          $ref: "#/components/parameters/offsetParam"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - supplierEvaluations
+                  - count
+                  - total
+                  - limit
+                  - offset
+                properties:
+                  supplierEvaluations:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/SupplierEvaluation"
+                  count:
+                    type: integer
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createSupplierEvaluation
+      summary: Create a supplier evaluation
+      tags:
+        - Suppliers
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - supplierName
+                - evaluationDate
+              properties:
+                organizationId:
+                  type: string
+                supplierName:
+                  type: string
+                supplierCode:
+                  type: string
+                category:
+                  type: string
+                status:
+                  type: string
+                  enum:
+                    - pending
+                    - approved
+                    - conditional
+                    - rejected
+                evaluationDate:
+                  type: string
+                  format: date
+                nextEvaluationDate:
+                  type: string
+                  format: date
+                score:
+                  type: integer
+                  minimum: 0
+                  maximum: 100
+                isoClause:
+                  type: string
+                notes:
+                  type: string
+                evaluatorId:
+                  type: string
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - supplierEvaluation
+                properties:
+                  supplierEvaluation:
+                    $ref: "#/components/schemas/SupplierEvaluation"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/supplier-evaluations/{id}:
+    get:
+      operationId: getSupplierEvaluation
+      summary: Supplier evaluation detail
+      tags:
+        - Suppliers
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - supplierEvaluation
+                properties:
+                  supplierEvaluation:
+                    $ref: "#/components/schemas/SupplierEvaluation"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateSupplierEvaluation
+      summary: Update a supplier evaluation
+      tags:
+        - Suppliers
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                supplierName:
+                  type: string
+                supplierCode:
+                  type: string
+                category:
+                  type: string
+                status:
+                  type: string
+                  enum:
+                    - pending
+                    - approved
+                    - conditional
+                    - rejected
+                evaluationDate:
+                  type: string
+                  format: date
+                nextEvaluationDate:
+                  type: string
+                  format: date
+                score:
+                  type: integer
+                  minimum: 0
+                  maximum: 100
+                isoClause:
+                  type: string
+                notes:
+                  type: string
+                evaluatorId:
+                  type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - supplierEvaluation
+                properties:
+                  supplierEvaluation:
+                    $ref: "#/components/schemas/SupplierEvaluation"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteSupplierEvaluation
+      summary: Delete a supplier evaluation
+      tags:
+        - Suppliers
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      responses:
+        204:
+          description: Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/quality-objectives:
+    get:
+      operationId: listQualityObjectives
+      summary: Paginated quality objectives (Management-Platform)
+      tags:
+        - QualityObjectives
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/limitParam"
+        - 
+          $ref: "#/components/parameters/offsetParam"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - qualityObjectives
+                  - count
+                  - total
+                  - limit
+                  - offset
+                properties:
+                  qualityObjectives:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/QualityObjective"
+                  count:
+                    type: integer
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createQualityObjective
+      summary: Create a quality objective
+      tags:
+        - QualityObjectives
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+              properties:
+                organizationId:
+                  type: string
+                title:
+                  type: string
+                description:
+                  type: string
+                isoClause:
+                  type: string
+                target:
+                  type: string
+                unit:
+                  type: string
+                baseline:
+                  type: number
+                targetValue:
+                  type: number
+                status:
+                  type: string
+                  enum:
+                    - active
+                    - achieved
+                    - cancelled
+                dueDate:
+                  type: string
+                  format: date
+                ownerId:
+                  type: string
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - qualityObjective
+                properties:
+                  qualityObjective:
+                    $ref: "#/components/schemas/QualityObjective"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/quality-objectives/{id}:
+    get:
+      operationId: getQualityObjective
+      summary: Quality objective detail
+      tags:
+        - QualityObjectives
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - qualityObjective
+                properties:
+                  qualityObjective:
+                    $ref: "#/components/schemas/QualityObjective"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateQualityObjective
+      summary: Update a quality objective
+      tags:
+        - QualityObjectives
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                isoClause:
+                  type: string
+                target:
+                  type: string
+                unit:
+                  type: string
+                baseline:
+                  type: number
+                targetValue:
+                  type: number
+                status:
+                  type: string
+                  enum:
+                    - active
+                    - achieved
+                    - cancelled
+                dueDate:
+                  type: string
+                  format: date
+                ownerId:
+                  type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - qualityObjective
+                properties:
+                  qualityObjective:
+                    $ref: "#/components/schemas/QualityObjective"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteQualityObjective
+      summary: Delete a quality objective
+      tags:
+        - QualityObjectives
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      responses:
+        204:
+          description: Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/risks:
+    get:
+      operationId: listRisks
+      summary: Paginated risk register (Management-Platform)
+      tags:
+        - Risks
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/limitParam"
+        - 
+          $ref: "#/components/parameters/offsetParam"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - risks
+                  - count
+                  - total
+                  - limit
+                  - offset
+                properties:
+                  risks:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Risk"
+                  count:
+                    type: integer
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createRisk
+      summary: Create a risk register entry
+      tags:
+        - Risks
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+              properties:
+                organizationId:
+                  type: string
+                objectiveId:
+                  type: string
+                title:
+                  type: string
+                description:
+                  type: string
+                isoClause:
+                  type: string
+                likelihood:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                impact:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                riskLevel:
+                  type: string
+                  enum:
+                    - very_low
+                    - low
+                    - medium
+                    - high
+                    - very_high
+                status:
+                  type: string
+                  enum:
+                    - identified
+                    - assessed
+                    - mitigated
+                    - accepted
+                    - closed
+                treatmentPlan:
+                  type: string
+                residualRisk:
+                  type: string
+                ownerId:
+                  type: string
+                reviewDate:
+                  type: string
+                  format: date
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - risk
+                properties:
+                  risk:
+                    $ref: "#/components/schemas/Risk"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/risks/{id}:
+    get:
+      operationId: getRisk
+      summary: Risk detail
+      tags:
+        - Risks
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - risk
+                properties:
+                  risk:
+                    $ref: "#/components/schemas/Risk"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateRisk
+      summary: Update a risk
+      tags:
+        - Risks
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                isoClause:
+                  type: string
+                likelihood:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                impact:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                riskLevel:
+                  type: string
+                  enum:
+                    - very_low
+                    - low
+                    - medium
+                    - high
+                    - very_high
+                status:
+                  type: string
+                  enum:
+                    - identified
+                    - assessed
+                    - mitigated
+                    - accepted
+                    - closed
+                treatmentPlan:
+                  type: string
+                residualRisk:
+                  type: string
+                ownerId:
+                  type: string
+                reviewDate:
+                  type: string
+                  format: date
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - risk
+                properties:
+                  risk:
+                    $ref: "#/components/schemas/Risk"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteRisk
+      summary: Delete a risk
+      tags:
+        - Risks
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      responses:
+        204:
+          description: Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/management-reviews:
+    get:
+      operationId: listManagementReviews
+      summary: Paginated management reviews (Management-Platform)
+      tags:
+        - ManagementReviews
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/limitParam"
+        - 
+          $ref: "#/components/parameters/offsetParam"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - managementReviews
+                  - count
+                  - total
+                  - limit
+                  - offset
+                properties:
+                  managementReviews:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ManagementReview"
+                  count:
+                    type: integer
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createManagementReview
+      summary: Create a management review
+      tags:
+        - ManagementReviews
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - reviewDate
+              properties:
+                organizationId:
+                  type: string
+                title:
+                  type: string
+                status:
+                  type: string
+                  enum:
+                    - scheduled
+                    - in_progress
+                    - completed
+                    - cancelled
+                reviewDate:
+                  type: string
+                  format: date
+                nextReviewDate:
+                  type: string
+                  format: date
+                agenda:
+                  type: string
+                outcomes:
+                  type: string
+                isoClause:
+                  type: string
+                facilitatorId:
+                  type: string
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - managementReview
+                properties:
+                  managementReview:
+                    $ref: "#/components/schemas/ManagementReview"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/management-reviews/{id}:
+    get:
+      operationId: getManagementReview
+      summary: Management review detail
+      tags:
+        - ManagementReviews
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - managementReview
+                properties:
+                  managementReview:
+                    $ref: "#/components/schemas/ManagementReview"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateManagementReview
+      summary: Update a management review
+      tags:
+        - ManagementReviews
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                status:
+                  type: string
+                  enum:
+                    - scheduled
+                    - in_progress
+                    - completed
+                    - cancelled
+                reviewDate:
+                  type: string
+                  format: date
+                nextReviewDate:
+                  type: string
+                  format: date
+                agenda:
+                  type: string
+                outcomes:
+                  type: string
+                isoClause:
+                  type: string
+                facilitatorId:
+                  type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - managementReview
+                properties:
+                  managementReview:
+                    $ref: "#/components/schemas/ManagementReview"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteManagementReview
+      summary: Delete a management review
+      tags:
+        - ManagementReviews
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      responses:
+        204:
+          description: Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/ai-build-projects:
+    get:
+      operationId: listAiBuildProjects
+      summary: Paginated AI build projects (AI-Build-Platform)
+      tags:
+        - AiBuildProjects
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/limitParam"
+        - 
+          $ref: "#/components/parameters/offsetParam"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - aiBuildProjects
+                  - count
+                  - total
+                  - limit
+                  - offset
+                properties:
+                  aiBuildProjects:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AiBuildProject"
+                  count:
+                    type: integer
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createAiBuildProject
+      summary: Register a generated AI build project
+      tags:
+        - AiBuildProjects
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - theme
+              properties:
+                organizationId:
+                  type: string
+                projectId:
+                  type: string
+                name:
+                  type: string
+                theme:
+                  type: string
+                purpose:
+                  type: string
+                scope:
+                  type: string
+                targetUsers:
+                  type: string
+                templateVersion:
+                  type: string
+                status:
+                  type: string
+                  enum:
+                    - generated
+                    - archived
+                    - restored
+                    - deleted
+                placeholderChecked:
+                  type: boolean
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - aiBuildProject
+                properties:
+                  aiBuildProject:
+                    $ref: "#/components/schemas/AiBuildProject"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/ai-build-projects/{id}:
+    get:
+      operationId: getAiBuildProject
+      summary: AI build project detail
+      tags:
+        - AiBuildProjects
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - aiBuildProject
+                properties:
+                  aiBuildProject:
+                    $ref: "#/components/schemas/AiBuildProject"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateAiBuildProject
+      summary: Update an AI build project
+      tags:
+        - AiBuildProjects
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                theme:
+                  type: string
+                purpose:
+                  type: string
+                scope:
+                  type: string
+                targetUsers:
+                  type: string
+                templateVersion:
+                  type: string
+                status:
+                  type: string
+                  enum:
+                    - generated
+                    - archived
+                    - restored
+                    - deleted
+                placeholderChecked:
+                  type: boolean
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - aiBuildProject
+                properties:
+                  aiBuildProject:
+                    $ref: "#/components/schemas/AiBuildProject"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteAiBuildProject
+      summary: Delete an AI build project
+      tags:
+        - AiBuildProjects
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      responses:
+        204:
+          description: Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/dx-projects:
+    get:
+      operationId: listDxProjects
+      summary: Paginated DX project portfolio (Portfolio-Atlas)
+      tags:
+        - DxProjects
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/limitParam"
+        - 
+          $ref: "#/components/parameters/offsetParam"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - dxProjects
+                  - count
+                  - total
+                  - limit
+                  - offset
+                properties:
+                  dxProjects:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DxProject"
+                  count:
+                    type: integer
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createDxProject
+      summary: Register a DX project in the portfolio
+      tags:
+        - DxProjects
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - slug
+                - nameJa
+              properties:
+                organizationId:
+                  type: string
+                slug:
+                  type: string
+                nameJa:
+                  type: string
+                nameEn:
+                  type: string
+                shortName:
+                  type: string
+                summary:
+                  type: string
+                portfolioType:
+                  type: string
+                  enum:
+                    - internal
+                    - external
+                    - common
+                    - unclassified
+                companyAssetUse:
+                  type: string
+                  enum:
+                    - yes
+                    - no
+                    - review
+                domainCode:
+                  type: string
+                lifecycleState:
+                  type: string
+                  enum:
+                    - planning
+                    - requirements
+                    - development
+                    - verification
+                    - production_ready
+                    - production
+                    - paused
+                    - merging
+                    - retired
+                    - deleted
+                importance:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                ownerTeam:
+                  type: string
+                approvedProgress:
+                  type: number
+                  minimum: 0
+                  maximum: 100
+                progressMilestone:
+                  type: string
+                progressEvidenceUrl:
+                  type: string
+                nextReviewAt:
+                  type: string
+                  format: date
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - dxProject
+                properties:
+                  dxProject:
+                    $ref: "#/components/schemas/DxProject"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        409:
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/dx-projects/{id}:
+    get:
+      operationId: getDxProject
+      summary: DX project detail
+      tags:
+        - DxProjects
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - dxProject
+                properties:
+                  dxProject:
+                    $ref: "#/components/schemas/DxProject"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateDxProject
+      summary: Update a DX project
+      tags:
+        - DxProjects
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nameJa:
+                  type: string
+                nameEn:
+                  type: string
+                shortName:
+                  type: string
+                summary:
+                  type: string
+                portfolioType:
+                  type: string
+                  enum:
+                    - internal
+                    - external
+                    - common
+                    - unclassified
+                companyAssetUse:
+                  type: string
+                  enum:
+                    - yes
+                    - no
+                    - review
+                domainCode:
+                  type: string
+                lifecycleState:
+                  type: string
+                  enum:
+                    - planning
+                    - requirements
+                    - development
+                    - verification
+                    - production_ready
+                    - production
+                    - paused
+                    - merging
+                    - retired
+                    - deleted
+                importance:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                ownerTeam:
+                  type: string
+                approvedProgress:
+                  type: number
+                  minimum: 0
+                  maximum: 100
+                progressMilestone:
+                  type: string
+                progressEvidenceUrl:
+                  type: string
+                nextReviewAt:
+                  type: string
+                  format: date
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - dxProject
+                properties:
+                  dxProject:
+                    $ref: "#/components/schemas/DxProject"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteDxProject
+      summary: Delete a DX project
+      tags:
+        - DxProjects
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      responses:
+        204:
+          description: Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/material-photo-logs:
+    get:
+      operationId: listMaterialPhotoLogs
+      summary: Paginated material photo logs (Photo-Logger)
+      tags:
+        - MaterialPhotoLogs
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/limitParam"
+        - 
+          $ref: "#/components/parameters/offsetParam"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - materialPhotoLogs
+                  - count
+                  - total
+                  - limit
+                  - offset
+                properties:
+                  materialPhotoLogs:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/MaterialPhotoLog"
+                  count:
+                    type: integer
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createMaterialPhotoLog
+      summary: Register a material photo log entry
+      tags:
+        - MaterialPhotoLogs
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - projectCode
+                - materialName
+              properties:
+                organizationId:
+                  type: string
+                projectCode:
+                  type: string
+                materialName:
+                  type: string
+                materialCategory:
+                  type: string
+                quantity:
+                  type: number
+                unit:
+                  type: string
+                storagePlace:
+                  type: string
+                memo:
+                  type: string
+                transactionType:
+                  type: string
+                  enum:
+                    - received
+                    - placed
+                    - used
+                    - returned
+                inspectionStatus:
+                  type: string
+                  enum:
+                    - pending
+                    - passed
+                    - failed
+                    - review
+                needsReview:
+                  type: boolean
+                capturedAt:
+                  type: string
+                  format: date-time
+                latitude:
+                  type: number
+                longitude:
+                  type: number
+                objectKey:
+                  type: string
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - materialPhotoLog
+                properties:
+                  materialPhotoLog:
+                    $ref: "#/components/schemas/MaterialPhotoLog"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/material-photo-logs/export.csv:
+    get:
+      operationId: exportMaterialPhotoLogsCsv
+      summary: Export material photo logs as CSV
+      tags:
+        - MaterialPhotoLogs
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      responses:
+        200:
+          description: CSV file
+          content:
+            text/csv:
+              schema:
+                type: string
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/material-photo-logs/{id}:
+    get:
+      operationId: getMaterialPhotoLog
+      summary: Material photo log detail
+      tags:
+        - MaterialPhotoLogs
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - materialPhotoLog
+                properties:
+                  materialPhotoLog:
+                    $ref: "#/components/schemas/MaterialPhotoLog"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateMaterialPhotoLog
+      summary: Update a material photo log entry
+      tags:
+        - MaterialPhotoLogs
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                materialName:
+                  type: string
+                materialCategory:
+                  type: string
+                quantity:
+                  type: number
+                unit:
+                  type: string
+                storagePlace:
+                  type: string
+                memo:
+                  type: string
+                transactionType:
+                  type: string
+                  enum:
+                    - received
+                    - placed
+                    - used
+                    - returned
+                inspectionStatus:
+                  type: string
+                  enum:
+                    - pending
+                    - passed
+                    - failed
+                    - review
+                needsReview:
+                  type: boolean
+                capturedAt:
+                  type: string
+                  format: date-time
+                latitude:
+                  type: number
+                longitude:
+                  type: number
+                objectKey:
+                  type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - materialPhotoLog
+                properties:
+                  materialPhotoLog:
+                    $ref: "#/components/schemas/MaterialPhotoLog"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteMaterialPhotoLog
+      summary: Delete a material photo log entry
+      tags:
+        - MaterialPhotoLogs
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      responses:
+        204:
+          description: Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /api/v1/itsm/incidents:
     get:
       operationId: listItsmIncidents
@@ -8480,6 +11411,493 @@ components:
           format: date-time
           description: Provisioning time (SQLite mode)
       description: API key metadata. The secret hash is never returned.
+    WorkOrder:
+      type: object
+      required:
+        - id
+        - organizationId
+        - projectId
+        - title
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        organizationId:
+          type: string
+        projectId:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum:
+            - pending
+            - in_progress
+            - completed
+            - cancelled
+        dueDate:
+          type: string
+          format: date
+        completedAt:
+          type: string
+          format: date-time
+        assigneeId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    Inspection:
+      type: object
+      required:
+        - id
+        - organizationId
+        - projectId
+        - title
+        - result
+        - checklistItems
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        organizationId:
+          type: string
+        projectId:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        result:
+          type: string
+          enum:
+            - pass
+            - fail
+            - pending
+        inspectedAt:
+          type: string
+          format: date
+        inspectorId:
+          type: string
+        checklistItems:
+          type: array
+          items:
+            type: object
+            required:
+              - label
+              - passed
+            properties:
+              label:
+                type: string
+              passed:
+                type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    SupplierEvaluation:
+      type: object
+      required:
+        - id
+        - organizationId
+        - supplierName
+        - status
+        - evaluationDate
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        organizationId:
+          type: string
+        supplierName:
+          type: string
+        supplierCode:
+          type: string
+        category:
+          type: string
+        status:
+          type: string
+          enum:
+            - pending
+            - approved
+            - conditional
+            - rejected
+        evaluationDate:
+          type: string
+          format: date
+        nextEvaluationDate:
+          type: string
+          format: date
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+        isoClause:
+          type: string
+        notes:
+          type: string
+        evaluatorId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    QualityObjective:
+      type: object
+      required:
+        - id
+        - organizationId
+        - title
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        organizationId:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        isoClause:
+          type: string
+        target:
+          type: string
+        unit:
+          type: string
+        baseline:
+          type: number
+        targetValue:
+          type: number
+        status:
+          type: string
+          enum:
+            - active
+            - achieved
+            - cancelled
+        dueDate:
+          type: string
+          format: date
+        ownerId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    Risk:
+      type: object
+      required:
+        - id
+        - organizationId
+        - title
+        - likelihood
+        - impact
+        - riskLevel
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        organizationId:
+          type: string
+        objectiveId:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        isoClause:
+          type: string
+        likelihood:
+          type: integer
+          minimum: 1
+          maximum: 5
+        impact:
+          type: integer
+          minimum: 1
+          maximum: 5
+        riskLevel:
+          type: string
+          enum:
+            - very_low
+            - low
+            - medium
+            - high
+            - very_high
+        status:
+          type: string
+          enum:
+            - identified
+            - assessed
+            - mitigated
+            - accepted
+            - closed
+        treatmentPlan:
+          type: string
+        residualRisk:
+          type: string
+        ownerId:
+          type: string
+        reviewDate:
+          type: string
+          format: date
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ManagementReview:
+      type: object
+      required:
+        - id
+        - organizationId
+        - title
+        - status
+        - reviewDate
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        organizationId:
+          type: string
+        title:
+          type: string
+        status:
+          type: string
+          enum:
+            - scheduled
+            - in_progress
+            - completed
+            - cancelled
+        reviewDate:
+          type: string
+          format: date
+        nextReviewDate:
+          type: string
+          format: date
+        agenda:
+          type: string
+        outcomes:
+          type: string
+        isoClause:
+          type: string
+        facilitatorId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    AiBuildProject:
+      type: object
+      required:
+        - id
+        - organizationId
+        - name
+        - theme
+        - templateVersion
+        - status
+        - placeholderChecked
+        - generatedAt
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        organizationId:
+          type: string
+        projectId:
+          type: string
+        name:
+          type: string
+        theme:
+          type: string
+        purpose:
+          type: string
+        scope:
+          type: string
+        targetUsers:
+          type: string
+        templateVersion:
+          type: string
+        status:
+          type: string
+          enum:
+            - generated
+            - archived
+            - restored
+            - deleted
+        placeholderChecked:
+          type: boolean
+        generatedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    DxProject:
+      type: object
+      required:
+        - id
+        - organizationId
+        - slug
+        - nameJa
+        - portfolioType
+        - companyAssetUse
+        - lifecycleState
+        - importance
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        organizationId:
+          type: string
+        slug:
+          type: string
+        nameJa:
+          type: string
+        nameEn:
+          type: string
+        shortName:
+          type: string
+        summary:
+          type: string
+        portfolioType:
+          type: string
+          enum:
+            - internal
+            - external
+            - common
+            - unclassified
+        companyAssetUse:
+          type: string
+          enum:
+            - yes
+            - no
+            - review
+        domainCode:
+          type: string
+        lifecycleState:
+          type: string
+          enum:
+            - planning
+            - requirements
+            - development
+            - verification
+            - production_ready
+            - production
+            - paused
+            - merging
+            - retired
+            - deleted
+        importance:
+          type: integer
+          minimum: 1
+          maximum: 5
+        ownerTeam:
+          type: string
+        approvedProgress:
+          type: number
+          minimum: 0
+          maximum: 100
+        progressMilestone:
+          type: string
+        progressEvidenceUrl:
+          type: string
+        nextReviewAt:
+          type: string
+          format: date
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    MaterialPhotoLog:
+      type: object
+      required:
+        - id
+        - organizationId
+        - projectCode
+        - materialName
+        - transactionType
+        - inspectionStatus
+        - needsReview
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        organizationId:
+          type: string
+        projectCode:
+          type: string
+        materialName:
+          type: string
+        materialCategory:
+          type: string
+        quantity:
+          type: number
+        unit:
+          type: string
+        storagePlace:
+          type: string
+        memo:
+          type: string
+        transactionType:
+          type: string
+          enum:
+            - received
+            - placed
+            - used
+            - returned
+        inspectionStatus:
+          type: string
+          enum:
+            - pending
+            - passed
+            - failed
+            - review
+        needsReview:
+          type: boolean
+        capturedAt:
+          type: string
+          format: date-time
+        latitude:
+          type: number
+        longitude:
+          type: number
+        objectKey:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
   parameters:
     limitParam:
       name: limit

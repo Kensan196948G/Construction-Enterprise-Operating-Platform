@@ -1,31 +1,36 @@
 # レポジトリ統廃合・機能連携 マスタープラン
 
-日付: 2026-08-11 / 責任者: CTO（主任エージェント）
+日付: 2026-08-11 / 更新: 2026-08-17（v0.14.0 統合元 4 リポジトリ機能移行） / 責任者: CTO（主任エージェント）
 
-対象: Construction Enterprise 系リポジトリ群（中核 1・統合元 1・維持・機能連携 6）
+対象: Construction Enterprise 系リポジトリ群（中核 1・統合元 5・維持・機能連携 2）
 
 ## 1. 全体方針
 
 - **中核**: Construction-Enterprise-Operating-Platform（CEOP）が
   全社業務・建設DX・現場管理・承認・経営管理・AI ガバナンス・DX 案件管理の単一基盤を所有する。
-- **統合元**: Civil-Construction-IMS は完全機能統合（吸収）後に GitHub から削除する。
-  削除済みの場合はスキップし、履歴・データは保全済みであることを確認する。
-- **維持・機能連携**: 6 リポジトリは吸収・削除せず、各システムの専門性と独立性を維持する。
-  CEOP は Webhook 受信・イベントキュー・認証・監査・再送・冪等性を一元的に提供する
-  疎結合の調整レイヤーとなる。
+- **統合元（全機能を CEOP へ移行し、統合後に GitHub から削除）**:
+  Civil-Construction-IMS は v0.11.0 で完全吸収・削除済み。
+  **v0.14.0（2026-08-17）で Civil-Construction-Management-Platform /
+  Civil-Construction-AI-Build-Platform / DX-Project-Portfolio-Atlas /
+  Civil-Material-Photo-Logger の全機能を CEOP へ移行**（9 ドメイン・CRUD API・監査・
+  WebUI `/mvp-app`・ダミーデータ・テスト）。削除済みの場合はスキップし、
+  履歴・データは保全済みであることを確認する。
+- **維持・機能連携**: Civil-4D-AI-Planner / Construction-DX-Idea は吸収・削除せず、
+  各システムの専門性と独立性を維持する。CEOP は Webhook 受信・イベントキュー・認証・監査・
+  再送・冪等性を一元的に提供する疎結合の調整レイヤーとなる。
 
-## 2. リポジトリ一覧と現状（2026-08-11 確認）
+## 2. リポジトリ一覧と現状（2026-08-17 確認）
 
 | 区分 | リポジトリ | GitHub 状態 | CEOP 側実装 | 根拠文書 |
 |---|---|---|---|---|
 | 中核 | Construction-Enterprise-Operating-Platform | 稼働中（main） | — | 本リポジトリ |
 | 統合元 | Civil-Construction-IMS | **削除済み（2026-08-09・Y 承認）** | v0.11.0 で完全吸収（ISO 9001/14001/45001/55001/19650・監査・是正・ISMS・BCP・BIM/CIM） | `IMS_MIGRATION_LEDGER.md` / `IMS_INTEGRATION_REPORT.md` |
+| 統合元 | Civil-Construction-Management-Platform | 移行対象（feat/platform-foundation） | **v0.14.0 で移行**（作業指示/検査/供給者評価/品質目標/リスク/マネジメントレビュー） | `FEATURE_INVENTORY.md` §7-1 |
+| 統合元 | Civil-Construction-AI-Build-Platform | 移行対象（main） | **v0.14.0 で移行**（AI 案件生成レジストリ） | `FEATURE_INVENTORY.md` §7-2 |
+| 統合元 | DX-Project-Portfolio-Atlas | 移行対象（master） | **v0.14.0 で移行**（DX 案件ポートフォリオ台帳） | `FEATURE_INVENTORY.md` §7-3 |
+| 統合元 | Civil-Material-Photo-Logger | 移行対象（main） | **v0.14.0 で移行**（材料写真ログ + CSV 出力） | `FEATURE_INVENTORY.md` §7-4 |
 | 維持・連携 | Civil-4D-AI-Planner | 生存（main） | 連携基盤実装済み（webhook/event/contract） | `LINKED_INTEGRATION_SPEC.md` §1 |
 | 維持・連携 | Construction-DX-Idea | 生存（main） | 連携基盤実装済み | `LINKED_INTEGRATION_SPEC.md` §2 |
-| 維持・連携 | Civil-Construction-Management-Platform | 生存（feat/platform-foundation） | 連携基盤実装済み | `LINKED_INTEGRATION_SPEC.md` §3 |
-| 維持・連携 | Civil-Construction-AI-Build-Platform | 生存（main） | 連携基盤実装済み | `LINKED_INTEGRATION_SPEC.md` §4 |
-| 維持・連携 | DX-Project-Portfolio-Atlas | 生存（master） | 連携基盤実装済み | `LINKED_INTEGRATION_SPEC.md` §5 |
-| 維持・連携 | Civil-Material-Photo-Logger | 生存（main） | 連携基盤実装済み | `LINKED_INTEGRATION_SPEC.md` §6 |
 
 参考: 旧 5 リポジトリ（ServiceHub-Construction-Platform / Construction-Enterprise-OS /
 Construction-DX-OnePlatform / Construction-DX-OS / Synapse-OS）は 2026-08-07 に

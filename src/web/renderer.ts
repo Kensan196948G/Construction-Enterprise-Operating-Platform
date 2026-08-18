@@ -33,6 +33,7 @@ export const TEMPLATES = {
   INDEX: join(TEMPLATES_DIR, "index.html"),
   GOVERNANCE: join(TEMPLATES_DIR, "governance.html"),
   ISO: join(TEMPLATES_DIR, "iso.html"),
+  MVP_APP: join(TEMPLATES_DIR, "mvp-app.html"),
 } as const;
 
 /** The platform version string. Callers may override at bootstrap. */
@@ -363,4 +364,16 @@ export async function renderIsoPage(apiToken = ""): Promise<string> {
     API_TOKEN: esc(apiToken),
   };
   return renderTemplate(TEMPLATES.ISO, context);
+}
+
+/**
+ * Build the integrated module console HTML shell (v0.14.0 MVP). All data is
+ * loaded client-side from the migrated-domain APIs.
+ */
+export async function renderMvpAppPage(apiToken = ""): Promise<string> {
+  const context: RenderContext = {
+    VERSION: esc(_platformVersion),
+    API_TOKEN: esc(apiToken),
+  };
+  return renderTemplate(TEMPLATES.MVP_APP, context);
 }

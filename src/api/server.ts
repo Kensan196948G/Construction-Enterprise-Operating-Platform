@@ -45,6 +45,15 @@ import { registerDailyReportUiRoutes } from "./routes/daily-reports-ui.ts";
 import { registerIsoRoutes } from "./routes/iso.ts";
 import { registerIntegrationRoutes } from "./routes/integrations.ts";
 import { registerDemoLoginRoutes } from "./routes/demo-login.ts";
+import { registerWorkOrderRoutes } from "./routes/work-orders.ts";
+import { registerInspectionRoutes } from "./routes/inspections.ts";
+import { registerSupplierEvaluationRoutes } from "./routes/suppliers.ts";
+import { registerQualityObjectiveRoutes } from "./routes/quality-objectives.ts";
+import { registerRiskRoutes } from "./routes/risks.ts";
+import { registerManagementReviewRoutes } from "./routes/management-reviews.ts";
+import { registerAiBuildProjectRoutes } from "./routes/ai-build-projects.ts";
+import { registerDxProjectRoutes } from "./routes/dx-projects.ts";
+import { registerMaterialPhotoLogRoutes } from "./routes/material-photo-logs.ts";
 import type { GatewayService } from "../domain/gateway-service.ts";
 import type { AppContainer } from "./types.ts";
 
@@ -130,6 +139,15 @@ export function createServer(config: ServerConfig, container: AppContainer): Ser
   registerIntegrationRoutes(router, container);
   registerPortalRoute(router);
   registerDailyReportUiRoutes(router, container);
+  registerWorkOrderRoutes(router, container);
+  registerInspectionRoutes(router, container);
+  registerSupplierEvaluationRoutes(router, container);
+  registerQualityObjectiveRoutes(router, container);
+  registerRiskRoutes(router, container);
+  registerManagementReviewRoutes(router, container);
+  registerAiBuildProjectRoutes(router, container);
+  registerDxProjectRoutes(router, container);
+  registerMaterialPhotoLogRoutes(router, container);
   registerWebRoutes(router, container);
 
   const server = httpCreateServer((req: IncomingMessage, res: ServerResponse): void => {

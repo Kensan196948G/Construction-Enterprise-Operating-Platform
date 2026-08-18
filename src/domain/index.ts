@@ -36,6 +36,15 @@ export * from "./project.ts";
 export * from "./purchase-order.ts";
 export * from "./safety.ts";
 export * from "./work-schedule.ts";
+export * from "./work-order.ts";
+export * from "./inspection.ts";
+export * from "./supplier.ts";
+export * from "./quality-objective.ts";
+export * from "./risk.ts";
+export * from "./management-review.ts";
+export * from "./ai-build-project.ts";
+export * from "./dx-project.ts";
+export * from "./material-photo-log.ts";
 // iso.ts は DOCUMENT_STATUSES を document.ts と同名でエクスポートするため
 // `export *` ではなく明示列挙で再エクスポートする（競合名はエイリアス化）。
 export {

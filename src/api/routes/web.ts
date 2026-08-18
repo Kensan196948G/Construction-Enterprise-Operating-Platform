@@ -27,6 +27,7 @@ import {
   renderDashboard,
   renderGovernance,
   renderIsoPage,
+  renderMvpAppPage,
   type GovernancePolicyRow,
 } from "../../web/renderer.ts";
 import { hasPermission } from "./governance.ts";
@@ -126,6 +127,13 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
     "/api/assets/iso.js",
     async (_req, _ctx, res) => {
       await sendFile(res, join(staticDir, "iso.js"), "text/javascript; charset=utf-8");
+    },
+    false,
+  );
+  router.get(
+    "/api/assets/mvp-app.js",
+    async (_req, _ctx, res) => {
+      await sendFile(res, join(staticDir, "mvp-app.js"), "text/javascript; charset=utf-8");
     },
     false,
   );
@@ -316,6 +324,41 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
           ? container.jwtIssuer.issue(ctx!.subject, ctx!.permissions, ctx!.organizationId)
           : "";
       sendHtml(res, 200, await renderIsoPage(webToken));
+    },
+    true,
+  );
+
+  router.get(
+    "/mvp-app",
+    async (_req, ctx, res) => {
+      // The integrated module console requires read access to at least one of
+      // the migrated domains. Admin (*:*) passes; read-only users without any
+      // migrated-domain permission are denied.
+      if (
+        ![
+          "work-order",
+          "inspection",
+          "supplier",
+          "quality-objective",
+          "risk",
+          "management-review",
+          "ai-build-project",
+          "dx-project",
+          "material-photo-log",
+        ].some((resName) => hasPermission(ctx, resName, "read"))
+      ) {
+        sendHtml(
+          res,
+          403,
+          "<html><body><h1>403 Forbidden</h1><p>requires read permission on a migrated module</p></body></html>",
+        );
+        return;
+      }
+      const webToken =
+        container.jwtIssuer !== undefined
+          ? container.jwtIssuer.issue(ctx!.subject, ctx!.permissions, ctx!.organizationId)
+          : "";
+      sendHtml(res, 200, await renderMvpAppPage(webToken));
     },
     true,
   );

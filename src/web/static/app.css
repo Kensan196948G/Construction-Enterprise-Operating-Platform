@@ -1326,3 +1326,83 @@ tbody td {
   color: #1f2937;
   background: #f8fafc;
 }
+
+/* ── MVP integrated modules (v0.14.0) ──────────────────────── */
+.page-desc {
+  color: var(--ink-soft);
+  font-size: 0.84rem;
+  margin: -6px 0 18px;
+}
+.tab-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.panel-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-sm);
+}
+.panel-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.panel-card__head h3 {
+  margin: 0;
+  font-size: 0.92rem;
+}
+.nav-item.nav-tab {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+.nav-item.nav-tab:hover {
+  background: var(--surface-soft);
+}
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+.dialog-field {
+  margin-bottom: 12px;
+}
+.dialog-field label {
+  display: block;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--ink-dim);
+  margin-bottom: 4px;
+}
+.dialog-field input,
+.dialog-field select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  font-size: 0.86rem;
+  background: var(--surface);
+  color: var(--ink);
+}
+dialog {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-lg);
+  max-width: 480px;
+  width: 100%;
+}
+dialog::backdrop {
+  background: rgba(15, 23, 42, 0.45);
+}
