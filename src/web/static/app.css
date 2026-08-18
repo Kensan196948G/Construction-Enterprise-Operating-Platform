@@ -1477,3 +1477,70 @@ dialog::backdrop {
   align-items: center;
   gap: 10px;
 }
+
+/* ── 日報管理 案件プルダウン改善 (v0.14.5) ─────────────────── */
+.project-select-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+#projectSelect {
+  display: inline-block;
+  box-sizing: border-box;
+  min-width: 340px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #fff;
+  color: #1f2937;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+#projectSelect:hover {
+  border-color: #94a3b8;
+}
+#projectSelect:focus {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
+  border-color: #2563eb;
+}
+#projectSelect optgroup {
+  font-weight: 700;
+  color: #475569;
+  font-size: 12px;
+}
+#projectSelect option {
+  font-weight: 400;
+  color: #1f2937;
+  font-size: 13.5px;
+  padding: 6px 4px;
+}
+.project-status-chip {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  background: #e2e8f0;
+  color: #334155;
+}
+.project-status-chip.in_progress {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+.project-status-chip.planning {
+  background: #fef3c7;
+  color: #92400e;
+}
+.project-status-chip.completed {
+  background: #dcfce7;
+  color: #15803d;
+}

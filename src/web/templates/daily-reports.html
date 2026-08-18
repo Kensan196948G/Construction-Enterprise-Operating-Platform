@@ -76,10 +76,13 @@
         <section class="section">
           <div class="section-head">
             <label for="projectSelect" class="field-label">対象案件</label>
-            <select id="projectSelect" class="select">
-              <option value="">案件を選択してください</option>
-            </select>
-            <button class="btn btn-primary" id="newReportBtn" disabled>新規日報</button>
+            <div class="project-select-wrap">
+              <select id="projectSelect" class="select">
+                <option value="">案件を選択してください</option>
+              </select>
+              <span class="project-status-chip" id="projectStatusChip" hidden></span>
+              <button class="btn btn-primary" id="newReportBtn" disabled>新規日報</button>
+            </div>
           </div>
         </section>
 

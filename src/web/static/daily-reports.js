@@ -61,17 +61,44 @@
   }
 
   // ── 案件・日報の読み込み ─────────────────────────────────────────────────
+  const STATUS_LABELS = {
+    planning: "計画中",
+    in_progress: "進行中",
+    completed: "完了",
+    suspended: "中断",
+    cancelled: "取消",
+  };
+
   async function loadProjects() {
     const data = await api("/api/v1/projects");
     projects = data.projects;
+    // ステータス順（進行中 → 計画 → 完了 → 中断 → 取消）で optgroup に分類。
+    const order = ["in_progress", "planning", "completed", "suspended", "cancelled"];
+    const groups = new Map();
+    for (const p of projects) {
+      const status = STATUS_LABELS[p.status] ?? p.status ?? "その他";
+      if (!groups.has(status)) groups.set(status, []);
+      groups.get(status).push(p);
+    }
+    // 選択肢を「コード — 案件名（予算）」の形式で見やすく表示。
+    const optionsHtml = Array.from(groups.entries())
+      .sort((a, b) => order.indexOf(a[0]) - order.indexOf(b[0]))
+      .map(
+        ([status, list]) =>
+          `<optgroup label="${escapeHtml(status)}（${list.length}件）">` +
+          list
+            .map(
+              (p) =>
+                `<option value="${escapeHtml(p.id)}">${escapeHtml(p.projectCode)} — ${escapeHtml(p.name)}${
+                  p.budget !== undefined ? `（予算 ¥${Number(p.budget).toLocaleString("ja-JP")}）` : ""
+                }</option>`,
+            )
+            .join("") +
+          "</optgroup>",
+      )
+      .join("");
     projectSelect.innerHTML =
-      '<option value="">案件を選択してください</option>' +
-      projects
-        .map(
-          (p) =>
-            `<option value="${escapeHtml(p.id)}">${escapeHtml(p.projectCode)} — ${escapeHtml(p.name)}</option>`,
-        )
-        .join("");
+      '<option value="">案件を選択してください</option>' + optionsHtml;
   }
 
   async function loadReports(projectId) {
@@ -208,6 +235,16 @@
   projectSelect.addEventListener("change", async () => {
     currentProjectId = projectSelect.value;
     newReportBtn.disabled = !currentProjectId;
+    // 選択中の案件ステータスをチップで表示。
+    const chip = document.getElementById("projectStatusChip");
+    const selected = projects.find((p) => p.id === currentProjectId);
+    if (selected) {
+      chip.textContent = STATUS_LABELS[selected.status] ?? selected.status ?? "";
+      chip.className = `project-status-chip ${selected.status ?? ""}`;
+      chip.hidden = false;
+    } else if (chip) {
+      chip.hidden = true;
+    }
     if (currentProjectId) {
       try {
         await loadReports(currentProjectId);

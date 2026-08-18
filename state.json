@@ -79,7 +79,9 @@
     "v0_14_3_ui_system_fixes": "in_progress",
     "v0_14_3_branch": "auto/ui-v0143-fixes",
     "v0_14_4_iso_sidebar_unify": "in_progress",
-    "v0_14_4_branch": "auto/ui-v0144-iso-unify"
+    "v0_14_4_branch": "auto/ui-v0144-iso-unify",
+    "v0_14_5_daily_iso_fixes": "in_progress",
+    "v0_14_5_branch": "auto/ui-v0145-fixes"
   },
   "kpi": {
     "success_rate_target": 0.9,
