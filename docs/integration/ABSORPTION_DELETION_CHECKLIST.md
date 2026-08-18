@@ -10,7 +10,7 @@
 - [x] `pnpm run verify` PASS（test 627 / parity 44/65）
 - [x] `pnpm run test:e2e` 18 PASS
 - [x] 公開検証: `https://ceop-mvp.mirai-dx-platform.com` で全機能動作確認
-- [ ] PR #59 マージ（CI 全必須チェック PASS 後）
+- [x] PR #59 マージ（2026-08-18・CI 全必須チェック PASS・Squash Merge）
 
 ## 2. 保全確認（削除前に必須）
 
@@ -35,5 +35,19 @@ gh repo delete Kensan196948G/Civil-Material-Photo-Logger --yes
 
 ## 4. 削除後確認
 
-- [ ] `gh repo view` が 404 になること（4 リポジトリ）
+- [x] `gh repo view` が 404 になること（4 リポジトリ・2026-08-18 実測）
 - [ ] 削除記録を `OPERATIONS_LEDGER.md`・`state.json`・`CHANGELOG.md` に追記
+
+## 5. 削除実施記録（2026-08-18）
+
+| リポジトリ | 削除日時 | GitHub 確認 |
+|---|---|---|
+| Civil-Construction-Management-Platform | 2026-08-18 | ✅ 404（削除済み） |
+| Civil-Construction-AI-Build-Platform | 2026-08-18 | ✅ 404（削除済み） |
+| DX-Project-Portfolio-Atlas | 2026-08-18 | ✅ 404（削除済み） |
+| Civil-Material-Photo-Logger | 2026-08-18 | ✅ 404（削除済み） |
+
+削除後も参照は以下で可能:
+- 保全アーカイブ: `/home/kensan/Projects/Mirai-DX-Project/.ceop-absorption-archive-20260818/`（GitHub zip + git bundle 全履歴）
+- 設計文書: `integrations/<リポジトリ名>/docs/`（CEOP リポジトリ内）
+- ローカル clone: `/home/kensan/Projects/Mirai-DX-Project/<リポジトリ名>/`

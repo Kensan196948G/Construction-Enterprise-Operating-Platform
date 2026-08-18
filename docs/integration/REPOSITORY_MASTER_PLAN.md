@@ -25,10 +25,10 @@
 |---|---|---|---|---|
 | 中核 | Construction-Enterprise-Operating-Platform | 稼働中（main） | — | 本リポジトリ |
 | 統合元 | Civil-Construction-IMS | **削除済み（2026-08-09・Y 承認）** | v0.11.0 で完全吸収（ISO 9001/14001/45001/55001/19650・監査・是正・ISMS・BCP・BIM/CIM） | `IMS_MIGRATION_LEDGER.md` / `IMS_INTEGRATION_REPORT.md` |
-| 統合元 | Civil-Construction-Management-Platform | 移行対象（feat/platform-foundation） | **v0.14.0 で移行**（作業指示/検査/供給者評価/品質目標/リスク/マネジメントレビュー） | `FEATURE_INVENTORY.md` §7-1 |
-| 統合元 | Civil-Construction-AI-Build-Platform | 移行対象（main） | **v0.14.0 で移行**（AI 案件生成レジストリ） | `FEATURE_INVENTORY.md` §7-2 |
-| 統合元 | DX-Project-Portfolio-Atlas | 移行対象（master） | **v0.14.0 で移行**（DX 案件ポートフォリオ台帳） | `FEATURE_INVENTORY.md` §7-3 |
-| 統合元 | Civil-Material-Photo-Logger | 移行対象（main） | **v0.14.0 で移行**（材料写真ログ + CSV 出力） | `FEATURE_INVENTORY.md` §7-4 |
+| 統合元 | Civil-Construction-Management-Platform | **削除済み（2026-08-18）** | **v0.14.0 で移行**（作業指示/検査/供給者評価/品質目標/リスク/マネジメントレビュー） | `FEATURE_INVENTORY.md` §7-1 |
+| 統合元 | Civil-Construction-AI-Build-Platform | **削除済み（2026-08-18）** | **v0.14.0 で移行**（AI 案件生成レジストリ） | `FEATURE_INVENTORY.md` §7-2 |
+| 統合元 | DX-Project-Portfolio-Atlas | **削除済み（2026-08-18）** | **v0.14.0 で移行**（DX 案件ポートフォリオ台帳） | `FEATURE_INVENTORY.md` §7-3 |
+| 統合元 | Civil-Material-Photo-Logger | **削除済み（2026-08-18）** | **v0.14.0 で移行**（材料写真ログ + CSV 出力） | `FEATURE_INVENTORY.md` §7-4 |
 | 維持・連携 | Civil-4D-AI-Planner | 生存（main） | 連携基盤実装済み（webhook/event/contract） | `LINKED_INTEGRATION_SPEC.md` §1 |
 | 維持・連携 | Construction-DX-Idea | 生存（main） | 連携基盤実装済み | `LINKED_INTEGRATION_SPEC.md` §2 |
 

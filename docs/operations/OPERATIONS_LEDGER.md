@@ -96,3 +96,13 @@
 | 11:1x | 本番 v0.13.3 差し替え（旧 `ceop-platform-prev-0132` 保持）・スモーク healthy/version=0.13.3/iso 302 | ✅ |
 | 11:2x | 左サイドバー大項目アコーディオン化（メインメニューのみ初期展開・全4画面統一）→ PR #56 マージ | ✅ |
 | 11:2x | 本番 v0.13.4 差し替え（旧 `ceop-platform-prev-0133` 保持）・スモーク healthy/version=0.13.4 | ✅ |
+
+## 実行記録（2026-08-18）— v0.14.0 統合元 4 リポジトリ機能移行・削除
+
+| 日時 (JST) | 内容 | 結果 |
+|---|---|---|
+| 2026-08-18 | v0.14.0 統合元 4 リポジトリの全機能を CEOP へ移行（9 ドメイン・CRUD API・監査・`/mvp-app`・ダミーデータ） | ✅ `pnpm run verify` PASS（test 627 / parity 44/65）・E2E 18 PASS |
+| 2026-08-18 | PR #59 マージ（Squash Merge・CI 全必須チェック PASS・auto-merge） | ✅ mergeCommit `b3e03ff` |
+| 2026-08-18 | MVP 公開検証: `https://ceop-mvp.mirai-dx-platform.com`（専用 Tunnel `ceop-mvp` → localhost:4480） | ✅ /health 200・全 9 ドメイン API・CSV 出力・/mvp-app 動作 |
+| 2026-08-18 | 統合元 4 リポジトリ保全（GitHub zip + git bundle 全履歴 + integrations/ 設計文書） | ✅ 保全先 `/home/kensan/Projects/Mirai-DX-Project/.ceop-absorption-archive-20260818/` |
+| 2026-08-18 | 統合元 4 リポジトリを GitHub から削除（ユーザー指示） | ✅ 全 4 リポジトリ 404 確認（Management-Platform / AI-Build-Platform / Portfolio-Atlas / Photo-Logger） |
