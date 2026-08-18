@@ -28,6 +28,7 @@ import {
   renderGovernance,
   renderIsoPage,
   renderMvpAppPage,
+  renderSystemPage,
   type GovernancePolicyRow,
 } from "../../web/renderer.ts";
 import { hasPermission } from "./governance.ts";
@@ -134,6 +135,13 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
     "/api/assets/mvp-app.js",
     async (_req, _ctx, res) => {
       await sendFile(res, join(staticDir, "mvp-app.js"), "text/javascript; charset=utf-8");
+    },
+    false,
+  );
+  router.get(
+    "/api/assets/system.js",
+    async (_req, _ctx, res) => {
+      await sendFile(res, join(staticDir, "system.js"), "text/javascript; charset=utf-8");
     },
     false,
   );
@@ -359,6 +367,20 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
           ? container.jwtIssuer.issue(ctx!.subject, ctx!.permissions, ctx!.organizationId)
           : "";
       sendHtml(res, 200, await renderMvpAppPage(webToken));
+    },
+    true,
+  );
+
+  router.get(
+    "/system",
+    async (_req, ctx, res) => {
+      // System settings: platform info, API keys, audit export, metrics.
+      // Requires authentication (any authenticated subject may view).
+      const webToken =
+        container.jwtIssuer !== undefined
+          ? container.jwtIssuer.issue(ctx!.subject, ctx!.permissions, ctx!.organizationId)
+          : "";
+      sendHtml(res, 200, await renderSystemPage(webToken));
     },
     true,
   );

@@ -1442,3 +1442,38 @@ dialog::backdrop {
   color: var(--ink-soft);
   line-height: 1.5;
 }
+
+/* ── System settings (v0.14.3) ─────────────────────────────── */
+.kv-table {
+  width: 100%;
+}
+.kv-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.86rem;
+}
+.kv-table td:first-child {
+  width: 200px;
+  white-space: nowrap;
+}
+.kv-table tr:last-child td {
+  border-bottom: none;
+}
+.metrics-pre {
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  font-size: 0.74rem;
+  line-height: 1.6;
+  overflow-x: auto;
+  max-height: 320px;
+  overflow-y: auto;
+  white-space: pre;
+}
+.header__right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}

@@ -19,27 +19,27 @@ test("mvp-app shows seeded migrated-domain data across tabs", async ({ browser }
   await page.goto("/mvp-app");
 
   // Site ops tab is the default: work orders table populated with dummy rows.
-  await expect(page.locator("#workOrdersBody tr")).toHaveCount(5);
+  await expect(page.locator("#workOrdersBody tr")).toHaveCount(10);
   await expect(page.locator("#workOrdersBody")).toContainText("基礎配筋完了検査立会");
-  await expect(page.locator("#inspectionsBody tr")).toHaveCount(4);
-  await expect(page.locator("#suppliersBody tr")).toHaveCount(5);
-  await expect(page.locator("#objectivesBody tr")).toHaveCount(4);
-  await expect(page.locator("#risksBody tr")).toHaveCount(5);
-  await expect(page.locator("#reviewsBody tr")).toHaveCount(3);
+  await expect(page.locator("#inspectionsBody tr")).toHaveCount(10);
+  await expect(page.locator("#suppliersBody tr")).toHaveCount(10);
+  await expect(page.locator("#objectivesBody tr")).toHaveCount(10);
+  await expect(page.locator("#risksBody tr")).toHaveCount(10);
+  await expect(page.locator("#reviewsBody tr")).toHaveCount(10);
 
   // Switch to AI build tab.
   await page.locator('button[data-tab="ai-build"]').click();
-  await expect(page.locator("#aiBuildBody tr")).toHaveCount(4);
+  await expect(page.locator("#aiBuildBody tr")).toHaveCount(10);
   await expect(page.locator("#aiBuildBody")).toContainText("bridge-inspection-2026");
 
   // DX portfolio tab.
   await page.locator('button[data-tab="dx-portfolio"]').click();
-  await expect(page.locator("#dxProjectsBody tr")).toHaveCount(6);
+  await expect(page.locator("#dxProjectsBody tr")).toHaveCount(10);
   await expect(page.locator("#dxProjectsBody")).toContainText("construction-eop");
 
   // Material photo log tab.
   await page.locator('button[data-tab="photo-logger"]').click();
-  await expect(page.locator("#photoLogsBody tr")).toHaveCount(6);
+  await expect(page.locator("#photoLogsBody tr")).toHaveCount(10);
   await expect(page.locator("#photoLogsBody")).toContainText("鉄筋 D16");
 
   await context.close();

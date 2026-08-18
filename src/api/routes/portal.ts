@@ -21,6 +21,7 @@ function renderPortal(): string {
       "現場管理・AI ビルド・DX ポートフォリオ・材料フォトログ",
     ],
     ["/daily-reports", "📝 日報管理コンソール", "日報の作成・提出・承認"],
+    ["/system", "⚙️ システム設定", "プラットフォーム情報・API キー・監査・メトリクス"],
     ["/api/v1/info", "ℹ️ プラットフォーム情報", "ビルド・環境・バージョン"],
     ["/metrics", "📈 Prometheus メトリクス", "リクエスト・ランタイム・キュー"],
   ];
@@ -70,7 +71,7 @@ function renderPortal(): string {
             <a class="nav-item" href="/daily-reports"><span class="nav-icon">📝</span> 日報管理コンソール</a>
           </div>
         </details>
-        <details class="nav-group">
+        <details class="nav-group" open>
           <summary class="nav-group__summary">📋 ISO 統合マネジメント</summary>
           <div class="nav-group__body">
             <a class="nav-item nav-sub" href="/iso-app#analytics">📊 分析</a>
@@ -93,10 +94,10 @@ function renderPortal(): string {
         <details class="nav-group">
           <summary class="nav-group__summary">⚙️ システム設定</summary>
           <div class="nav-group__body">
-            <a class="nav-item" href="/api/v1/info"><span class="nav-icon">ℹ️</span> プラットフォーム情報</a>
-            <a class="nav-item" href="/api/v1/governance/audit/export"><span class="nav-icon">📑</span> 監査エクスポート</a>
-            <a class="nav-item" href="/metrics"><span class="nav-icon">📈</span> メトリクス</a>
-            <a class="nav-item" href="/api/v1/auth/keys"><span class="nav-icon">🔑</span> API キー</a>
+            <a class="nav-item" href="/system#info"><span class="nav-icon">ℹ️</span> プラットフォーム情報</a>
+            <a class="nav-item" href="/system#keys"><span class="nav-icon">🔑</span> API キー</a>
+            <a class="nav-item" href="/system#audit"><span class="nav-icon">📑</span> 監査エクスポート</a>
+            <a class="nav-item" href="/system#metrics"><span class="nav-icon">📈</span> メトリクス</a>
           </div>
         </details>
       </nav>
