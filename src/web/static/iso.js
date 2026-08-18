@@ -185,6 +185,9 @@
       document.getElementById("pageSubtitle").textContent =
         "全レコードは CEOP の認証・監査・組織スコープで保護されます";
       populateKindSelect();
+      // v0.14.5: タブ切替時は全種別（kind フィルタなし）を表示し、
+      // そのタブに投入された全ダミーデータ（各 10 件）を一覧する。
+      document.getElementById("isoKindSelect").value = "";
       loadRecords();
     }
   }

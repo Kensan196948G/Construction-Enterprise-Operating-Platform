@@ -4,6 +4,29 @@ All notable changes to the Construction Enterprise Operating Platform are docume
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [0.14.5] - 2026-08-18
+
+### Changed
+
+- **日報管理の「対象案件」プルダウンを改善** —
+  案件をステータス別（進行中 / 計画中 / 完了 / 中断 / 取消）の optgroup に分類して
+  選択しやすくし、選択肢に「案件コード — 案件名（予算）」を表示。
+  選択時にステータスチップを表示し、セレクト自体も大きめ・見やすいスタイルに変更
+- **ISO 統合マネジメントの各項目に投入されるダミーデータを 10 件ずつに** —
+  品質 / 環境 / 安全 / 資産 / BIM / 監査・是正 / ISMS / 事業継続 の各タブに
+  シード 10 件（合計 80 件）を投入。タブ切替時は全種別を一覧表示するよう改善
+  （従来は最初の種別のみ表示されていた）
+
+### Changed
+
+- バージョン 0.14.4 → 0.14.5（`src/version.ts` / `package.json` / `Dockerfile`）
+- `e2e/v0145-fixes.spec.ts` 新規: 案件プルダウンのグループ化 / ISO 各タブ 10 件の E2E を追加
+
+### Notes
+
+- 品質ゲート: `pnpm run verify`（format / openapi / typecheck / lint / test 627 / build / parity 44/65）
+- `pnpm run test:e2e`: 28 pass（既存 26 + 新規 2）
+
 ## [0.14.4] - 2026-08-18
 
 ### Changed
