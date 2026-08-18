@@ -37,6 +37,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and the proj
   risks 5 / managementReviews 3 / aiBuildProjects 4 / dxProjects 6 / materialPhotoLogs 6
 - 品質ゲート: `pnpm run verify`（format / openapi / typecheck / lint / test 627 / build / parity 44/65）
 
+### 統合元リポジトリ削除（2026-08-18・ユーザー指示）
+
+- PR #59 マージ後に統合元 4 リポジトリを GitHub から完全削除（保全済み）
+  - Civil-Construction-Management-Platform / Civil-Construction-AI-Build-Platform /
+    DX-Project-Portfolio-Atlas / Civil-Material-Photo-Logger
+- 保全: GitHub zip + git bundle（全履歴）+ `integrations/` 設計文書 +
+  ローカル clone（`/home/kensan/Projects/Mirai-DX-Project/`）
+- 削除後も機能は CEOP（`/mvp-app`・API・ダミーデータ）で継続利用可能
+
 ## [0.13.4] - 2026-08-14
 
 ### Changed

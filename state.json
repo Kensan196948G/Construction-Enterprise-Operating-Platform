@@ -7,7 +7,7 @@
     "phase_mode": "mvp"
   },
   "goal": "MVP v0.14.0 — 統合元4リポジトリ（Management-Platform / AI-Build-Platform / Portfolio-Atlas / Photo-Logger）の全機能をCEOPへ移行（9ドメイン・CRUD API・監査・WebUI /mvp-app・ダミーデータ・テスト）し、ceop-mvp.mirai-dx-platform.com で検証完了",
-  "phase": "verify",
+  "phase": "completed",
   "release": {
     "v0_1_0_foundation": "release_ready",
     "v0_2_0_api_gateway": "release_ready",
@@ -59,8 +59,19 @@
     "v0_13_4_production_deploy": "completed",
     "v0_13_4_production_deploy_at": "2026-08-14",
     "v0_13_4_rollback_container": "ceop-platform-prev-0133",
-    "v0_14_0_mvp_integration": "in_progress",
-    "v0_14_0_branch": "auto/mvp-v0140-integration"
+    "v0_14_0_mvp_integration": "completed",
+    "v0_14_0_branch": "auto/mvp-v0140-integration",
+    "v0_14_0_merged_at": "2026-08-18",
+    "v0_14_0_pr": "#59",
+    "absorption_repos_deleted": "completed",
+    "absorption_repos_deleted_at": "2026-08-18",
+    "absorption_repos_deleted_list": [
+      "Civil-Construction-Management-Platform",
+      "Civil-Construction-AI-Build-Platform",
+      "DX-Project-Portfolio-Atlas",
+      "Civil-Material-Photo-Logger"
+    ],
+    "absorption_archive": "/home/kensan/Projects/Mirai-DX-Project/.ceop-absorption-archive-20260818"
   },
   "kpi": {
     "success_rate_target": 0.9,
