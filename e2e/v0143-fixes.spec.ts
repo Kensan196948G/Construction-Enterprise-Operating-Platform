@@ -46,7 +46,7 @@ test("system settings page renders readable content instead of raw API", async (
   // Platform info section visible with version.
   await expect(page.locator("#infoSection")).toBeVisible();
   await expect(page.locator("#infoBody")).toContainText("construction-eop");
-  await expect(page.locator("#infoBody")).toContainText("0.14.3");
+  await expect(page.locator("#infoBody")).toContainText("0.14.4");
 
   // API keys tab: org-scoped admin sees a readable notice (not a 403 JSON dump).
   await page.locator('a[href="#keys"]').first().click();
