@@ -539,6 +539,25 @@
         });
       }
     });
+
+    // v0.14.3: also bind every sidebar link that targets a console tab
+    // (a[href="/iso-app#…"]) directly, so a click always switches the
+    // right-hand content immediately — even when the hash is unchanged or
+    // the browser does not fire hashchange (e.g. same-hash re-click).
+    document.querySelectorAll('a[href^="/iso-app#"]').forEach((link) => {
+      link.addEventListener("click", (event) => {
+        const next = (link.getAttribute("href") ?? "").split("#")[1] ?? "";
+        if (!validTabs.includes(next)) return;
+        event.preventDefault();
+        if (window.location.hash !== `#${next}`) {
+          window.location.hash = next;
+        }
+        setActiveTab(next);
+        document.querySelectorAll(".iso-tab").forEach((el) => {
+          el.classList.toggle("active", el.dataset.tab === next);
+        });
+      });
+    });
   }
 
   if (document.readyState === "loading") {

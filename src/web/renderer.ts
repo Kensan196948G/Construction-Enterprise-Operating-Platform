@@ -34,6 +34,7 @@ export const TEMPLATES = {
   GOVERNANCE: join(TEMPLATES_DIR, "governance.html"),
   ISO: join(TEMPLATES_DIR, "iso.html"),
   MVP_APP: join(TEMPLATES_DIR, "mvp-app.html"),
+  SYSTEM: join(TEMPLATES_DIR, "system.html"),
 } as const;
 
 /** The platform version string. Callers may override at bootstrap. */
@@ -376,4 +377,16 @@ export async function renderMvpAppPage(apiToken = ""): Promise<string> {
     API_TOKEN: esc(apiToken),
   };
   return renderTemplate(TEMPLATES.MVP_APP, context);
+}
+
+/**
+ * Build the system settings console HTML shell (v0.14.3). All data is loaded
+ * client-side from the authenticated system APIs.
+ */
+export async function renderSystemPage(apiToken = ""): Promise<string> {
+  const context: RenderContext = {
+    VERSION: esc(_platformVersion),
+    API_TOKEN: esc(apiToken),
+  };
+  return renderTemplate(TEMPLATES.SYSTEM, context);
 }

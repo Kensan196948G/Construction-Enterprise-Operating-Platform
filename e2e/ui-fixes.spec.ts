@@ -17,11 +17,12 @@ test("portal has sidebar + main layout with module cards", async ({ page }) => {
   await expect(page.locator(".nav-group__summary")).toContainText(["⚙️ システム設定"]);
   // Right-hand content: module cards
   await expect(page.locator(".portal-grid")).toBeVisible();
-  await expect(page.locator(".portal-card")).toHaveCount(7);
+  await expect(page.locator(".portal-card")).toHaveCount(8);
   await expect(page.locator("main.main")).toContainText("モジュール一覧");
   // Cards link to modules
   await expect(page.locator('.portal-card[href="/dashboard"]')).toBeVisible();
   await expect(page.locator('.portal-card[href="/mvp-app"]')).toBeVisible();
+  await expect(page.locator('.portal-card[href="/system"]')).toBeVisible();
 });
 
 test("ISO 統合マネジメント sidebar links switch the right-hand tab", async ({ browser }) => {
@@ -34,8 +35,7 @@ test("ISO 統合マネジメント sidebar links switch the right-hand tab", asy
   // Default tab is analytics.
   await expect(page.locator("#pageTitle")).toContainText("分析");
 
-  // Open the 📋 ISO 統合マネジメント accordion group, then click 品質 (ISO 9001).
-  await page.locator('.nav-group__summary:has-text("ISO 統合マネジメント")').first().click();
+  // The 📋 ISO 統合マネジメント group is open by default; click 品質 (ISO 9001).
   await page.locator('a[href="/iso-app#quality"]').first().click();
   await page.waitForTimeout(600);
   await expect(page.locator("#pageTitle")).toContainText("品質");
@@ -65,11 +65,11 @@ test("system settings group is present and opens on every screen", async ({ brow
       page.locator('.nav-group__summary:has-text("システム設定")'),
       `system settings group on ${path}`,
     ).toBeVisible();
-    // Open the group and confirm the platform-info link is reachable.
+    // Open the group and confirm the system-settings link is reachable.
     await page.locator('.nav-group__summary:has-text("システム設定")').first().click();
     await expect(
-      page.locator('.nav-group__body a[href="/api/v1/info"]'),
-      `info link on ${path}`,
+      page.locator('.nav-group__body a[href="/system#info"]'),
+      `system link on ${path}`,
     ).toBeVisible();
   }
   await context.close();

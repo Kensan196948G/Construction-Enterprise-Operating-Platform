@@ -27,7 +27,7 @@ RUN pnpm run build
 # The project has zero runtime npm dependencies, so node_modules is NOT copied.
 FROM node:22-alpine AS runtime
 
-LABEL org.opencontainers.image.version="0.14.2" \
+LABEL org.opencontainers.image.version="0.14.3" \
       org.opencontainers.image.authors="kensan1969@gmail.com" \
       org.opencontainers.image.description="Construction Enterprise Operating Platform — governance, portal, field OS, and AI governance coordination layer"
 

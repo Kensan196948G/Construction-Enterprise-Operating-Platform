@@ -4,6 +4,32 @@ All notable changes to the Construction Enterprise Operating Platform are docume
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [0.14.3] - 2026-08-18
+
+### Fixed
+
+- **ISO 統合マネジメントの左サイドメニュー項目クリックで右側が反応しない問題を根本解消** —
+  サイドバーの「📋 ISO 統合マネジメント」グループを初期表示で開いた状態に変更し、
+  `iso.js` に `/iso-app#…` リンクの直接クリックハンドラを追加（hash が変わらない場合や
+  再クリックでも確実に右側タブへ追従）
+- **システム設定項目のエラー表示を解消** — `/system` SSR ページを新設し、
+  プラットフォーム情報 / API キー / 監査エクスポート / メトリクスを人間が読める形で表示。
+  従来の生 JSON・403・CSV 直リンクを廃止し、全サイドバーから `/system#…` へ変更
+- **ダミーデータを全ドメイン 10 件ずつに拡充** — 統合モジュール（/mvp-app）の
+  9 ドメイン（作業指示 / 検査 / 供給者評価 / 品質目標 / リスク / マネジメントレビュー /
+  AI ビルド案件 / DX 案件 / 材料写真ログ）を各 10 件に
+
+### Changed
+
+- バージョン 0.14.2 → 0.14.3（`src/version.ts` / `package.json` / `Dockerfile`）
+- `e2e/v0143-fixes.spec.ts` 新規: ISO タブ切替 / システム設定 SSR / 10 件表示の E2E を追加
+- 既存 E2E（mvp-integration / ui-fixes）を新仕様（10 件・8 カード・/system リンク）に追随
+
+### Notes
+
+- 品質ゲート: `pnpm run verify`（format / openapi / typecheck / lint / test 627 / build / parity 44/65）
+- `pnpm run test:e2e`: 24 pass（既存 21 + 新規 3）
+
 ## [0.14.2] - 2026-08-18
 
 ### Removed

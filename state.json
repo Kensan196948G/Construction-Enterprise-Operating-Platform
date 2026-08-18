@@ -75,7 +75,9 @@
     "v0_14_1_ui_fixes": "in_progress",
     "v0_14_1_branch": "auto/ui-v0141-fixes",
     "v0_14_2_remove_portal_menu": "in_progress",
-    "v0_14_2_branch": "auto/ui-v0142-remove-portal-menu"
+    "v0_14_2_branch": "auto/ui-v0142-remove-portal-menu",
+    "v0_14_3_ui_system_fixes": "in_progress",
+    "v0_14_3_branch": "auto/ui-v0143-fixes"
   },
   "kpi": {
     "success_rate_target": 0.9,
