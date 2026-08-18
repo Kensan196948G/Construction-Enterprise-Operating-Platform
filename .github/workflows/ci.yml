@@ -192,8 +192,17 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # GitHub-hosted ubuntu runners ship the Playwright browser deps; skip
+      # --with-deps (apt-get) which stalls on some runners. Cache the browser
+      # binary so installs are fast and deterministic.
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
       - name: Install Playwright Chromium
-        run: pnpm exec playwright install --with-deps chromium
+        run: pnpm exec playwright install chromium
 
       - name: Run E2E tests
         run: pnpm run test:e2e

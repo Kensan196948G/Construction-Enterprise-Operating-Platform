@@ -36,18 +36,18 @@ test("ISO 統合マネジメント sidebar links switch the right-hand tab", asy
   await expect(page.locator("#pageTitle")).toContainText("分析");
 
   // The 📋 ISO 統合マネジメント group is open by default; click 品質 (ISO 9001).
-  await page.locator('a[href="/iso-app#quality"]').first().click();
+  await page.locator('.iso-tab[data-tab="quality"]').first().click();
   await page.waitForTimeout(600);
   await expect(page.locator("#pageTitle")).toContainText("品質");
   await expect(page.locator("#recordsSection")).toBeVisible();
 
   // Click 安全 (ISO 45001).
-  await page.locator('a[href="/iso-app#safety"]').first().click();
+  await page.locator('.iso-tab[data-tab="safety"]').first().click();
   await page.waitForTimeout(600);
   await expect(page.locator("#pageTitle")).toContainText("安全");
 
   // Click 分析 to return.
-  await page.locator('a[href="/iso-app#analytics"]').first().click();
+  await page.locator('.iso-tab[data-tab="analytics"]').first().click();
   await page.waitForTimeout(600);
   await expect(page.locator("#pageTitle")).toContainText("分析");
   await context.close();
