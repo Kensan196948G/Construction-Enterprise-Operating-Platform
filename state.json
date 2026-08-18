@@ -4,10 +4,10 @@
     "start_date": "2026-06-25",
     "release_deadline": "2026-12-25",
     "registered_at": "2026-06-25",
-    "phase_mode": "mvp"
+    "phase_mode": "maintenance"
   },
-  "goal": "MVP v0.14.0 — 統合元4リポジトリ（Management-Platform / AI-Build-Platform / Portfolio-Atlas / Photo-Logger）の全機能をCEOPへ移行（9ドメイン・CRUD API・監査・WebUI /mvp-app・ダミーデータ・テスト）し、ceop-mvp.mirai-dx-platform.com で検証完了",
-  "phase": "completed",
+  "goal": "UI修正 v0.14.1 — ポータルを左サイドバー＋右側詳細コンテンツに改修・ISO統合マネジメントのhashchange対応・全画面に「システム設定」大項目追加・E2E 21件検証",
+  "phase": "verify",
   "release": {
     "v0_1_0_foundation": "release_ready",
     "v0_2_0_api_gateway": "release_ready",
@@ -71,7 +71,9 @@
       "DX-Project-Portfolio-Atlas",
       "Civil-Material-Photo-Logger"
     ],
-    "absorption_archive": "/home/kensan/Projects/Mirai-DX-Project/.ceop-absorption-archive-20260818"
+    "absorption_archive": "/home/kensan/Projects/Mirai-DX-Project/.ceop-absorption-archive-20260818",
+    "v0_14_1_ui_fixes": "in_progress",
+    "v0_14_1_branch": "auto/ui-v0141-fixes"
   },
   "kpi": {
     "success_rate_target": 0.9,

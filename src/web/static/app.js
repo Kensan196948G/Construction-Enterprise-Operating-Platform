@@ -542,5 +542,13 @@
   document.addEventListener("DOMContentLoaded", () => {
     if (document.getElementById("statsGrid")) initDashboard();
     if (document.getElementById("policyTable")) initGovernance();
+    // Portal (v0.14.1): standalone left-sidebar layout with module cards.
+    if (document.querySelector(".portal-grid")) {
+      const hamburger = document.getElementById("hamburgerBtn");
+      const sidebar = document.getElementById("sidebar");
+      if (hamburger && sidebar) {
+        hamburger.addEventListener("click", () => sidebar.classList.toggle("open"));
+      }
+    }
   });
 })();

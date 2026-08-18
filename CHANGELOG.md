@@ -4,6 +4,30 @@ All notable changes to the Construction Enterprise Operating Platform are docume
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [0.14.1] - 2026-08-18
+
+### Fixed
+
+- **ポータル（/portal）を左サイドバー＋右側詳細コンテンツのレイアウトに改修** —
+  従来は認証なしのカード一覧のみだったが、他画面と同一のヘッダー＋アコーディオンサイドバー＋
+  右側モジュールカード（portal-grid）構成に刷新。ハンバーガー開閉・「⚙️ システム設定」グループ対応
+- **ISO 統合マネジメントの左サイドメニュー項目クリックで右側タブが切り替わらない問題を解消** —
+  `/iso-app#quality` 等のアンカーリンクは同一ページ内では hash のみ変化するため、
+  `hashchange` リスナーを追加して右側コンテンツ（分析/品質/環境/安全/資産/BIM/監査/ISMS/BCP/連携）を追従
+- **全画面サイドバーに大項目「⚙️ システム設定」を追加** —
+  ダッシュボード / ガバナンス / 日報 / ISO コンソール / 統合モジュール / ポータル の全画面に
+  プラットフォーム情報・監査エクスポート・メトリクス・API キーのリンク群を追加
+
+### Changed
+
+- バージョン 0.14.0 → 0.14.1（`src/version.ts` / `package.json` / `Dockerfile`）
+- `e2e/ui-fixes.spec.ts` 新規: ポータルレイアウト / ISO タブ切替 / システム設定グループの E2E を追加
+
+### Notes
+
+- 品質ゲート: `pnpm run verify`（format / openapi / typecheck / lint / test 627 / build / parity 44/65）
+- `pnpm run test:e2e`: 21 pass（既存 18 + 新規 3）
+
 ## [0.14.0] - 2026-08-17
 
 ### Added
