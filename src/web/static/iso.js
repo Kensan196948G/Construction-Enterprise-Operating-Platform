@@ -525,6 +525,20 @@
     const initial = window.location.hash.replace("#", "");
     const validTabs = DOMAINS.map((d) => d.id).concat(["analytics", "integrations"]);
     setActiveTab(validTabs.includes(initial) ? initial : "analytics");
+
+    // v0.14.1: sidebar links (e.g. /iso-app#quality from the メインメニュー /
+    // ISO 統合マネジメント groups) change only the hash when already on this
+    // page. Listen for hashchange so the right-hand content follows the click.
+    window.addEventListener("hashchange", () => {
+      const next = window.location.hash.replace("#", "");
+      if (validTabs.includes(next)) {
+        setActiveTab(next);
+        // Update the active state of the console-side tab items too.
+        document.querySelectorAll(".iso-tab").forEach((el) => {
+          el.classList.toggle("active", el.dataset.tab === next);
+        });
+      }
+    });
   }
 
   if (document.readyState === "loading") {
