@@ -68,7 +68,6 @@ function renderPortal(): string {
             <a class="nav-item" href="/dashboard"><span class="nav-icon">📊</span> ダッシュボード</a>
             <a class="nav-item" href="/governance"><span class="nav-icon">🛡</span> ガバナンス</a>
             <a class="nav-item" href="/daily-reports"><span class="nav-icon">📝</span> 日報管理コンソール</a>
-            <a class="nav-item active" href="/portal"><span class="nav-icon">🏛️</span> ポータル</a>
           </div>
         </details>
         <details class="nav-group">

@@ -4,6 +4,24 @@ All notable changes to the Construction Enterprise Operating Platform are docume
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [0.14.2] - 2026-08-18
+
+### Removed
+
+- **全画面の左サイドバーから「🏛️ ポータル」メニュー項目を削除** —
+  ダッシュボード / ガバナンス / 日報 / ISO コンソール / 統合モジュール / ポータル自身の
+  サイドバーからポータルへのリンク項目を削除（ユーザー指示）。ポータルページ自体（`/portal`）は
+  ヘッダーロゴからの入口として維持
+
+### Changed
+
+- バージョン 0.14.1 → 0.14.2（`src/version.ts` / `package.json` / `Dockerfile`）
+
+### Notes
+
+- 品質ゲート: `pnpm run verify`（format / openapi / typecheck / lint / test 627 / build / parity 44/65）
+- `pnpm run test:e2e`: 21 pass
+
 ## [0.14.1] - 2026-08-18
 
 ### Fixed

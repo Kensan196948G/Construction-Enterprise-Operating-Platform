@@ -73,7 +73,9 @@
     ],
     "absorption_archive": "/home/kensan/Projects/Mirai-DX-Project/.ceop-absorption-archive-20260818",
     "v0_14_1_ui_fixes": "in_progress",
-    "v0_14_1_branch": "auto/ui-v0141-fixes"
+    "v0_14_1_branch": "auto/ui-v0141-fixes",
+    "v0_14_2_remove_portal_menu": "in_progress",
+    "v0_14_2_branch": "auto/ui-v0142-remove-portal-menu"
   },
   "kpi": {
     "success_rate_target": 0.9,
