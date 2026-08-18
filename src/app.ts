@@ -13,7 +13,6 @@ import { createRole } from "./domain/role.ts";
 import { createDevice } from "./domain/device.ts";
 import { createApplication } from "./domain/application.ts";
 import { createPolicy } from "./domain/policy.ts";
-import { createIsoRecord } from "./domain/iso.ts";
 import { createProject } from "./domain/project.ts";
 import { AuditLog } from "./governance/audit-log.ts";
 import { SqliteAuditLog } from "./governance/sqlite-audit-log.ts";
@@ -327,51 +326,6 @@ export async function createApp(): Promise<AppContainer> {
         e2eViewerSecret,
       );
     }
-
-    // ── 8. ISO demo records ─────────────────────────────────────────────────
-
-    const demoQualityPlan = mustOk(
-      "demo quality plan",
-      createIsoRecord({
-        id: "iso-demo-quality-plan",
-        kind: "quality-plan",
-        organizationId: "org-hq",
-        projectId: "project-demo-1",
-        title: "品質計画（デモ）",
-        payload: { planNo: "QP-DEMO-001" },
-        createdBy: "user-admin",
-        createdAt,
-      }),
-    );
-    await repositories.isoRecords.save(demoQualityPlan);
-
-    const demoAsset = mustOk(
-      "demo asset",
-      createIsoRecord({
-        id: "iso-demo-asset",
-        kind: "asset",
-        organizationId: "org-hq",
-        title: "橋梁A（デモ）",
-        payload: { assetType: "structure", name: "橋梁A" },
-        createdBy: "user-admin",
-        createdAt,
-      }),
-    );
-    await repositories.isoRecords.save(demoAsset);
-
-    const demoCorrective = mustOk(
-      "demo corrective action",
-      createIsoRecord({
-        id: "iso-demo-corrective",
-        kind: "corrective-action",
-        organizationId: "org-hq",
-        title: "是正処置（デモ）",
-        payload: { sourceType: "audit_finding", description: "監査指摘対応" },
-        createdBy: "user-admin",
-        createdAt,
-      }),
-    );
-    await repositories.isoRecords.save(demoCorrective);
 
     // Explicit opt-in only — never log secret material by default.
     // Blocked outside interactive terminals to prevent credentials leaking into CI logs.
