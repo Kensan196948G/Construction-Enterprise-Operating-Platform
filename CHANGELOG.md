@@ -4,6 +4,27 @@ All notable changes to the Construction Enterprise Operating Platform are docume
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [0.14.4] - 2026-08-18
+
+### Changed
+
+- **サイドバーの ISO ナビゲーションを「📋 ISO 統合マネジメント」に統一** —
+  重複していた「🗂️ ISO 管理コンソール」グループを全画面から削除し、
+  「📋 ISO 統合マネジメント」に 10 項目（分析 / 品質 / 環境 / 安全 / 資産 / BIM/CIM /
+  監査・是正 / ISMS / 事業継続 / 連携先システム）を集約。
+  ISO コンソール（/iso-app）では全項目がタブ切替（iso-tab）として機能
+
+### Changed
+
+- バージョン 0.14.3 → 0.14.4（`src/version.ts` / `package.json` / `Dockerfile`）
+- `e2e/iso-unified.spec.ts` 新規: グループ統合（10 項目・連携先システムタブ）の E2E を追加
+- 既存 E2E（iso-app / mvp-demo / ui-fixes / v0143-fixes）を統合後のタブ構造に追随
+
+### Notes
+
+- 品質ゲート: `pnpm run verify`（format / openapi / typecheck / lint / test 627 / build / parity 44/65）
+- `pnpm run test:e2e`: 26 pass（既存 24 + 新規 2）
+
 ## [0.14.3] - 2026-08-18
 
 ### Fixed

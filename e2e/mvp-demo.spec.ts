@@ -53,8 +53,7 @@ test("ISO console shows seeded records across quality and analytics tabs", async
   await expect(page.locator("#isoAnalyticsGrid")).toContainText("品質計画");
   await expect(page.locator("#isoAnalyticsGrid")).toContainText("資産台帳");
 
-  await page.locator("details.nav-group summary", { hasText: "ISO 管理コンソール" }).click();
-  await page.click('[data-tab="quality"]');
+  await page.click('.iso-tab[data-tab="quality"]');
   await expect(page.locator("#isoTableBody")).toContainText("橋梁補修工事 品質計画（デモ）");
   await page.selectOption("#isoKindSelect", "nonconformity");
   await expect(page.locator("#isoTableBody")).toContainText("鉄筋かぶり厚不足（デモ）");

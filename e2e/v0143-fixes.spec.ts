@@ -19,18 +19,18 @@ test("ISO 統合マネジメント sidebar items switch the right-hand tab", asy
   await expect(page.locator("#pageTitle")).toContainText("分析");
 
   // Click 品質 from the 📋 ISO 統合マネジメント group.
-  await page.locator('a[href="/iso-app#quality"]').first().click();
+  await page.locator('.iso-tab[data-tab="quality"]').first().click();
   await page.waitForTimeout(600);
   await expect(page.locator("#pageTitle")).toContainText("品質");
   await expect(page.locator("#recordsSection")).toBeVisible();
 
   // Click 環境.
-  await page.locator('a[href="/iso-app#environment"]').first().click();
+  await page.locator('.iso-tab[data-tab="environment"]').first().click();
   await page.waitForTimeout(600);
   await expect(page.locator("#pageTitle")).toContainText("環境");
 
   // Click 分析 back.
-  await page.locator('a[href="/iso-app#analytics"]').first().click();
+  await page.locator('.iso-tab[data-tab="analytics"]').first().click();
   await page.waitForTimeout(600);
   await expect(page.locator("#pageTitle")).toContainText("分析");
   await context.close();

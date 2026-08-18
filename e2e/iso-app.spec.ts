@@ -25,8 +25,8 @@ test("ISO console renders analytics, CRUD, and integration contracts", async ({ 
   await expect(page.locator("#isoAnalyticsGrid .stat-card").first()).toBeVisible();
 
   // 品質タブで新規レコード作成（プロジェクト ID は ISO レコードの参照として使用）
-  await page.locator("details.nav-group summary", { hasText: "ISO 管理コンソール" }).click();
-  await page.click('[data-tab="quality"]');
+  // v0.14.4: グループ統合後は 📋 ISO 統合マネジメント 内の iso-tab を直接クリック
+  await page.click('.iso-tab[data-tab="quality"]');
   await expect(page.locator("#recordsSection")).toBeVisible();
   await page.click("#isoNewBtn");
   await page.selectOption("#isoFormKind", "quality-plan");
