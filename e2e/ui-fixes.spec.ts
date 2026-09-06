@@ -17,7 +17,7 @@ test("portal has sidebar + main layout with module cards", async ({ page }) => {
   await expect(page.locator(".nav-group__summary")).toContainText(["⚙️ システム設定"]);
   // Right-hand content: module cards
   await expect(page.locator(".portal-grid")).toBeVisible();
-  await expect(page.locator(".portal-card")).toHaveCount(8);
+  await expect(page.locator(".portal-card")).toHaveCount(9);
   await expect(page.locator("main.main")).toContainText("モジュール一覧");
   // Cards link to modules
   await expect(page.locator('.portal-card[href="/dashboard"]')).toBeVisible();
