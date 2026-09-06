@@ -14,27 +14,42 @@
  * well-known source of subtle bugs, and `pdf-lib` is the lightest actively
  * used library that gets that right.
  *
- * Known limitation (documented, not silently hidden): pages are drawn with
- * the built-in Helvetica standard font, which uses WinAnsi encoding and has
- * no Japanese/CJK glyphs. `sanitizeForStandardFont` below replaces any
- * character the font cannot render with "?" so generation never throws for
- * real Japanese content (site notes, work content, checklist labels, etc.)
- * — but those characters currently render as "?" rather than the original
- * glyphs. Rendering real Japanese text requires embedding a CJK-capable
- * font (e.g. IPA Gothic, redistributable under the IPA Font License and
- * already present on this platform's build hosts at
- * `/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf`) via `pdf-lib` +
- * `@pdf-lib/fontkit` with glyph subsetting so the *embedded* font stays
- * small even though the source font is ~6MB. That is a meaningfully bigger
- * change (new dependency + a multi-MB binary asset committed to the repo)
- * so it is intentionally left as a follow-up rather than bundled into this
- * change.
+ * Japanese text rendering: these are Japanese business documents (工事日報 /
+ * 資材写真台帳 / 検査記録), so the built-in Helvetica standard font (WinAnsi
+ * encoding, no CJK glyphs) is not an option. Instead this adapter embeds IPA
+ * Gothic — a CJK-capable TrueType font redistributable under the IPA Font
+ * License v1.0 (see `assets/fonts/LICENSE_IPAFONT.txt`) — via `pdf-lib` +
+ * `@pdf-lib/fontkit`. The font file is bundled as a repository asset
+ * (`assets/fonts/ipag.ttf`) rather than read from a system path, because
+ * production runtimes are not guaranteed to have the OS-level IPA font
+ * package installed. `embedFont(..., { subset: true })` makes `pdf-lib`
+ * subset the embedded font per generated document, so each PDF only carries
+ * the glyphs its own text actually uses, independent of the ~6MB source
+ * font's full size.
+ *
+ * The same embedded font is used for both regular and "bold" (heading)
+ * text: IPA Gothic does not ship a bold weight, so headings are set larger
+ * rather than rendered in a heavier stroke. This is a cosmetic trade-off
+ * only — correct Japanese glyph rendering (the point of this adapter) is
+ * unaffected.
  */
 
-import { type PDFFont, type PDFPage, PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import fontkit from "@pdf-lib/fontkit";
+import { type PDFFont, type PDFPage, PDFDocument, rgb } from "pdf-lib";
 import type { DailyReport } from "../domain/daily-report.ts";
 import type { Inspection, InspectionChecklistItem } from "../domain/inspection.ts";
 import type { MaterialPhotoLog } from "../domain/material-photo-log.ts";
+
+const JAPANESE_FONT_PATH = fileURLToPath(new URL("./assets/fonts/ipag.ttf", import.meta.url));
+
+/** Lazily read + cache the embedded font's bytes; the file never changes at runtime. */
+let cachedFontBytes: Buffer | undefined;
+function loadJapaneseFontBytes(): Buffer {
+  cachedFontBytes ??= readFileSync(JAPANESE_FONT_PATH);
+  return cachedFontBytes;
+}
 
 const PAGE_WIDTH = 595.28; // A4 portrait, in PDF points (72 dpi).
 const PAGE_HEIGHT = 841.89;
@@ -55,31 +70,15 @@ interface Writer {
 
 async function createWriter(): Promise<Writer> {
   const doc = await PDFDocument.create();
+  doc.registerFontkit(fontkit);
   doc.setProducer("Construction Enterprise Operating Platform");
   doc.setCreator("Construction Enterprise Operating Platform");
-  const font = await doc.embedFont(StandardFonts.Helvetica);
-  const bold = await doc.embedFont(StandardFonts.HelveticaBold);
+  // IPA Gothic has no bold weight, so the same embedded font is used for
+  // both regular and "bold" (heading) text — see the file-level comment.
+  const font = await doc.embedFont(loadJapaneseFontBytes(), { subset: true });
+  const bold = font;
   const page = doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
   return { doc, font, bold, page, y: PAGE_HEIGHT - MARGIN };
-}
-
-/**
- * Replace characters the WinAnsi-encoded standard font cannot render with
- * "?" instead of letting `pdf-lib` throw. Checked per-character (not by a
- * hardcoded code-point range) so the behaviour tracks whatever encoding the
- * embedded font actually uses.
- */
-function sanitizeForStandardFont(font: PDFFont, value: string): string {
-  return Array.from(value)
-    .map((char) => {
-      try {
-        font.widthOfTextAtSize(char, BODY_SIZE);
-        return char;
-      } catch {
-        return "?";
-      }
-    })
-    .join("");
 }
 
 function ensureSpace(writer: Writer, lines = 1): void {
@@ -91,7 +90,7 @@ function ensureSpace(writer: Writer, lines = 1): void {
 
 function writeTitle(writer: Writer, text: string): void {
   ensureSpace(writer, 2);
-  writer.page.drawText(sanitizeForStandardFont(writer.bold, text), {
+  writer.page.drawText(text, {
     x: MARGIN,
     y: writer.y,
     size: TITLE_SIZE,
@@ -105,7 +104,7 @@ function writeSectionHeading(writer: Writer, text: string): void {
   ensureSpace(writer, 1);
   writer.y -= LINE_HEIGHT * 0.4;
   ensureSpace(writer, 1);
-  writer.page.drawText(sanitizeForStandardFont(writer.bold, text), {
+  writer.page.drawText(text, {
     x: MARGIN,
     y: writer.y,
     size: BODY_SIZE + 1,
@@ -156,13 +155,13 @@ function writeField(
 ): void {
   const text = value === undefined || value === "" ? "-" : String(value);
   ensureSpace(writer, 1);
-  writer.page.drawText(sanitizeForStandardFont(writer.bold, `${label}:`), {
+  writer.page.drawText(`${label}:`, {
     x: MARGIN,
     y: writer.y,
     size: BODY_SIZE,
     font: writer.bold,
   });
-  writer.page.drawText(sanitizeForStandardFont(writer.font, text), {
+  writer.page.drawText(text, {
     x: MARGIN + LABEL_WIDTH,
     y: writer.y,
     size: BODY_SIZE,
@@ -173,7 +172,7 @@ function writeField(
 
 function writeMultilineField(writer: Writer, label: string, value: string | undefined): void {
   ensureSpace(writer, 1);
-  writer.page.drawText(sanitizeForStandardFont(writer.bold, `${label}:`), {
+  writer.page.drawText(`${label}:`, {
     x: MARGIN,
     y: writer.y,
     size: BODY_SIZE,
@@ -183,7 +182,7 @@ function writeMultilineField(writer: Writer, label: string, value: string | unde
   const lines = value === undefined || value.length === 0 ? ["-"] : wrap(value, MAX_LINE_CHARS);
   for (const line of lines) {
     ensureSpace(writer, 1);
-    writer.page.drawText(sanitizeForStandardFont(writer.font, line), {
+    writer.page.drawText(line, {
       x: MARGIN + 12,
       y: writer.y,
       size: BODY_SIZE,
@@ -249,7 +248,7 @@ function writeChecklist(writer: Writer, items: readonly InspectionChecklistItem[
   for (const item of items) {
     ensureSpace(writer, 1);
     const mark = item.passed ? "[PASS]" : "[FAIL]";
-    writer.page.drawText(sanitizeForStandardFont(writer.font, `${mark} ${item.label}`), {
+    writer.page.drawText(`${mark} ${item.label}`, {
       x: MARGIN + 12,
       y: writer.y,
       size: BODY_SIZE,
