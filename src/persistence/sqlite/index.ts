@@ -77,6 +77,7 @@ import {
   SqliteAiBuildProjectRepository,
   SqliteDxProjectRepository,
   SqliteMaterialPhotoLogRepository,
+  SqliteLaborAttendanceRepository,
 } from "./business-repositories.ts";
 
 // ---------------------------------------------------------------------------
@@ -609,6 +610,7 @@ export function createSqliteRepositories(dbPath: string): Repositories {
     aiBuildProjects: new SqliteAiBuildProjectRepository(db),
     dxProjects: new SqliteDxProjectRepository(db),
     materialPhotoLogs: new SqliteMaterialPhotoLogRepository(db),
+    laborAttendances: new SqliteLaborAttendanceRepository(db),
   };
 }
 

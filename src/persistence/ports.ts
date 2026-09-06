@@ -83,6 +83,7 @@ import type { ManagementReview, ManagementReviewId } from "../domain/management-
 import type { AiBuildProject, AiBuildProjectId } from "../domain/ai-build-project.ts";
 import type { DxProject, DxProjectId } from "../domain/dx-project.ts";
 import type { MaterialPhotoLog, MaterialPhotoLogId } from "../domain/material-photo-log.ts";
+import type { LaborAttendance, LaborAttendanceId } from "../domain/labor-attendance.ts";
 
 // ---------------------------------------------------------------------------
 // Generic repository contract
@@ -232,6 +233,9 @@ export interface PurchaseOrderRepository extends Repository<PurchaseOrder, Purch
   findByProject(projectId: ProjectId): Promise<readonly PurchaseOrder[]>;
   findByNumber(orderNumber: string): Promise<PurchaseOrder | null>;
 }
+export interface LaborAttendanceRepository extends Repository<LaborAttendance, LaborAttendanceId> {
+  findByProject(projectId: ProjectId): Promise<readonly LaborAttendance[]>;
+}
 export interface NotificationPreferenceRepository extends Repository<
   NotificationPreference,
   NotificationPreferenceId
@@ -364,6 +368,7 @@ export interface Repositories {
   readonly documents: DocumentRepository;
   readonly workSchedules: WorkScheduleRepository;
   readonly purchaseOrders: PurchaseOrderRepository;
+  readonly laborAttendances: LaborAttendanceRepository;
   readonly notificationPreferences: NotificationPreferenceRepository;
   readonly complianceChecks: ComplianceCheckRepository;
   readonly legalEvidences: LegalEvidenceRepository;

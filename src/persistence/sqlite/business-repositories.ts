@@ -51,6 +51,7 @@ import type { ManagementReview, ManagementReviewId } from "../../domain/manageme
 import type { AiBuildProject, AiBuildProjectId } from "../../domain/ai-build-project.ts";
 import type { DxProject, DxProjectId } from "../../domain/dx-project.ts";
 import type { MaterialPhotoLog, MaterialPhotoLogId } from "../../domain/material-photo-log.ts";
+import type { LaborAttendance, LaborAttendanceId } from "../../domain/labor-attendance.ts";
 
 import type {
   PhotoRepository,
@@ -80,6 +81,7 @@ import type {
   AiBuildProjectRepository,
   DxProjectRepository,
   MaterialPhotoLogRepository,
+  LaborAttendanceRepository,
 } from "../ports.ts";
 import { BaseSqliteRepository } from "./base-sqlite-repository.ts";
 
@@ -1150,5 +1152,45 @@ export class SqliteMaterialPhotoLogRepository
     );
     const rows = stmt.all(projectCode) as { data: string }[];
     return rows.map((r) => JSON.parse(r.data) as MaterialPhotoLog);
+  }
+}
+
+export class SqliteLaborAttendanceRepository
+  extends BaseSqliteRepository<LaborAttendance>
+  implements LaborAttendanceRepository
+{
+  constructor(db: DatabaseSync) {
+    super(
+      db,
+      "labor_attendances",
+      [
+        "org_id TEXT NOT NULL",
+        "project_id TEXT NOT NULL REFERENCES projects(id)",
+        "status TEXT NOT NULL",
+      ],
+      [
+        { name: "idx_labor_attendances_org", columns: ["org_id"] },
+        { name: "idx_labor_attendances_project", columns: ["project_id"] },
+        { name: "idx_labor_attendances_status", columns: ["status"] },
+      ],
+      ["org_id", "project_id", "status"],
+    );
+  }
+  protected override extraValues(a: LaborAttendance): readonly unknown[] {
+    return [a.organizationId, a.projectId as string, a.status];
+  }
+  override async findById(id: LaborAttendanceId): Promise<LaborAttendance | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: LaborAttendanceId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByProject(projectId: ProjectId): Promise<readonly LaborAttendance[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare(
+      "SELECT data FROM labor_attendances WHERE project_id = ?",
+    );
+    const rows = stmt.all(projectId as string) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as LaborAttendance);
   }
 }
