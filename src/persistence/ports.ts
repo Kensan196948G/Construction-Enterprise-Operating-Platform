@@ -7,6 +7,7 @@
  */
 
 import type { Application, ApplicationId } from "../domain/application.ts";
+import type { SearchService } from "../domain/search.ts";
 import type { Device, DeviceId } from "../domain/device.ts";
 import type { Organization, OrganizationId } from "../domain/organization.ts";
 import type { Policy, PolicyId } from "../domain/policy.ts";
@@ -344,4 +345,11 @@ export interface Repositories {
   readonly aiBuildProjects: AiBuildProjectRepository;
   readonly dxProjects: DxProjectRepository;
   readonly materialPhotoLogs: MaterialPhotoLogRepository;
+  /**
+   * Cross-domain full-text search (Issue #86). SQLite tier uses FTS5;
+   * in-memory/file tiers use a substring-scan fallback. Always populated by
+   * the three `create*Repositories()` factories — optional only so a bespoke
+   * test double can omit it.
+   */
+  readonly search?: SearchService;
 }

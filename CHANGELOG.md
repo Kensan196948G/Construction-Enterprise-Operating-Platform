@@ -4,6 +4,34 @@ All notable changes to the Construction Enterprise Operating Platform are docume
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [0.15.0] - 2026-09-06
+
+### Added
+
+- **横断全文検索基盤（Issue #86）** — `GET /api/v1/search?q=...&type=...` を新設。
+  日報 / 契約 / 文書 / 検査の 4 ドメインを横断検索し、
+  `{ results: [{ domain, id, title, summary?, score?, organizationId, projectId? }], count, query, type? }`
+  の統一フォーマットで返却
+  - SQLite バックエンド: `search_fts`（FTS5・`tokenize='trigram'`）仮想テーブルを
+    各テーブルの INSERT/UPDATE/DELETE トリガーで同期（`src/persistence/sqlite/search-index.ts`）。
+    `trigram` を採用したのは日本語（分かち書きなし）を既定の `unicode61` では実用的に
+    索引できないため。3 文字未満のクエリはトークナイザーの仕様上マッチしない既知の制約
+  - in-memory / file バックエンド: `Repository#findAll()` を走査する大小文字非依存の
+    部分一致フォールバック（`src/persistence/search-fallback.ts`）
+  - `Repositories.search`（`SearchService`）としてバックエンド抽象を維持し、ルート実装は
+    ストレージ種別を意識しない
+  - `?type=` 省略時は資格情報が読み取り権限を持つドメインへ自動的に絞り込み、
+    無許可ドメインを明示指定した場合は `403`
+- `docs/openapi.yaml` に `Search` タグ・`/api/v1/search` パス・`SearchResultItem` スキーマを追加
+
+### Changed
+
+- バージョン 0.14.5 → 0.15.0（`src/version.ts` / `package.json` / `Dockerfile`）
+
+### Notes
+
+- 品質ゲート: `pnpm run verify`（format / openapi / typecheck / lint / test 647 / build / parity 44/65）
+
 ## [0.14.5] - 2026-08-18
 
 ### Changed
