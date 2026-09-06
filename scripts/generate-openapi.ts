@@ -2308,6 +2308,33 @@ const paths: { [k: string]: YamlValue } = {
       },
     },
   },
+  "/api/v1/governance/audit-report.pdf": {
+    get: {
+      operationId: "generateAuditReport",
+      summary: "Quarterly audit report — aggregated PDF (requires audit:export)",
+      description:
+        "Aggregates the audit log, compliance checks, and management reviews for one " +
+        "calendar quarter and renders the result as a printable PDF. `period` defaults " +
+        "to the quarter containing the current time when omitted.",
+      tags: ["Governance"],
+      security: authSecurity,
+      parameters: [
+        {
+          name: "period",
+          in: "query",
+          schema: { type: "string" },
+          description: "Quarter to summarize, formatted as YYYY-Q# (e.g. 2026-Q3)",
+        },
+      ],
+      responses: {
+        "200": {
+          description: "PDF file",
+          content: { "application/pdf": { schema: { type: "string", format: "binary" } } },
+        },
+        ...errorResponses(400, 401, 403),
+      },
+    },
+  },
   "/api/v1/governance/access-inventory": {
     get: {
       operationId: "getAccessInventory",
@@ -3134,6 +3161,22 @@ const paths: { [k: string]: YamlValue } = {
           properties: { dailyReport: { $ref: "#/components/schemas/DailyReport" } },
         }),
         ...errorResponses(400, 401, 403, 404),
+      },
+    },
+  },
+  "/api/v1/daily-reports/{id}/export.pdf": {
+    get: {
+      operationId: "exportDailyReportPdf",
+      summary: "Export a daily report as a printable PDF",
+      tags: ["DailyReports"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        "200": {
+          description: "PDF file",
+          content: { "application/pdf": { schema: { type: "string", format: "binary" } } },
+        },
+        ...errorResponses(401, 403, 404),
       },
     },
   },
@@ -4378,6 +4421,22 @@ const paths: { [k: string]: YamlValue } = {
       },
     },
   },
+  "/api/v1/inspections/{id}/export.pdf": {
+    get: {
+      operationId: "exportInspectionPdf",
+      summary: "Export an inspection as a printable PDF",
+      tags: ["Inspections"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        "200": {
+          description: "PDF file",
+          content: { "application/pdf": { schema: { type: "string", format: "binary" } } },
+        },
+        ...errorResponses(401, 403, 404),
+      },
+    },
+  },
   "/api/v1/supplier-evaluations": {
     get: {
       operationId: "listSupplierEvaluations",
@@ -5344,6 +5403,22 @@ const paths: { [k: string]: YamlValue } = {
       parameters: [{ $ref: "#/components/parameters/idPath" }],
       responses: {
         ...jsonResponse(204, { type: "object", properties: {} }),
+        ...errorResponses(401, 403, 404),
+      },
+    },
+  },
+  "/api/v1/material-photo-logs/{id}/export.pdf": {
+    get: {
+      operationId: "exportMaterialPhotoLogPdf",
+      summary: "Export a material photo log entry as a printable PDF",
+      tags: ["MaterialPhotoLogs"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        "200": {
+          description: "PDF file",
+          content: { "application/pdf": { schema: { type: "string", format: "binary" } } },
+        },
         ...errorResponses(401, 403, 404),
       },
     },

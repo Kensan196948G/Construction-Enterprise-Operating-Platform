@@ -2061,6 +2061,51 @@ Tenant scoping matches `GET /api/v1/governance/audit`. Each row carries `sequenc
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/governance/audit-report.pdf:
+    get:
+      operationId: generateAuditReport
+      summary: "Quarterly audit report — aggregated PDF (requires audit:export)"
+      description: Aggregates the audit log, compliance checks, and management reviews for one calendar quarter and renders the result as a printable PDF. `period` defaults to the quarter containing the current time when omitted.
+      tags:
+        - Governance
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          name: period
+          in: query
+          schema:
+            type: string
+          description: "Quarter to summarize, formatted as YYYY-Q# (e.g. 2026-Q3)"
+      responses:
+        200:
+          description: PDF file
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /api/v1/governance/access-inventory:
     get:
       operationId: getAccessInventory
@@ -3963,6 +4008,46 @@ Tenant scoping matches `GET /api/v1/governance/audit`. Each row carries `sequenc
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/daily-reports/{id}/export.pdf:
+    get:
+      operationId: exportDailyReportPdf
+      summary: Export a daily report as a printable PDF
+      tags:
+        - DailyReports
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      responses:
+        200:
+          description: PDF file
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
         401:
           description: Unauthorized
           content:
@@ -7234,6 +7319,46 @@ Tenant scoping matches `GET /api/v1/governance/audit`. Each row carries `sequenc
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/inspections/{id}/export.pdf:
+    get:
+      operationId: exportInspectionPdf
+      summary: Export an inspection as a printable PDF
+      tags:
+        - Inspections
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      responses:
+        200:
+          description: PDF file
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /api/v1/supplier-evaluations:
     get:
       operationId: listSupplierEvaluations
@@ -9435,6 +9560,46 @@ Tenant scoping matches `GET /api/v1/governance/audit`. Each row carries `sequenc
               schema:
                 type: object
                 properties: {}
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/material-photo-logs/{id}/export.pdf:
+    get:
+      operationId: exportMaterialPhotoLogPdf
+      summary: Export a material photo log entry as a printable PDF
+      tags:
+        - MaterialPhotoLogs
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      responses:
+        200:
+          description: PDF file
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
         401:
           description: Unauthorized
           content:

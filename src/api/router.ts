@@ -503,13 +503,14 @@ export function writeBinaryAttachment(
   filename: string,
   body: Buffer,
 ): void {
+  const payload = typeof body === "string" ? Buffer.from(body, "utf-8") : Buffer.from(body);
   res.writeHead(status, {
     "Content-Type": contentType,
     "Content-Length": body.length,
     "Content-Disposition": `attachment; filename="${filename}"`,
     ...BASELINE_SECURITY_HEADERS,
   });
-  res.end(body);
+  res.end(payload);
 }
 
 /** Parse a URL query string into a flat record; duplicate keys keep the last value. */

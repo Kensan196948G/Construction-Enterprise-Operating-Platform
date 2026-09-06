@@ -32,165 +32,28 @@
  * rather than rendered in a heavier stroke. This is a cosmetic trade-off
  * only — correct Japanese glyph rendering (the point of this adapter) is
  * unaffected.
+ *
+ * The font embedding and page/cursor bookkeeping ("Writer") below are
+ * shared with `audit-report-adapter.ts` (issue #85) via `pdf-writer.ts` —
+ * see that module's header comment. This file keeps only what is specific
+ * to the single-record document types it renders.
  */
 
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import fontkit from "@pdf-lib/fontkit";
-import { type PDFFont, type PDFPage, PDFDocument, rgb } from "pdf-lib";
-import type { DailyReport } from "../domain/daily-report.ts";
 import type { Inspection, InspectionChecklistItem } from "../domain/inspection.ts";
+import type { DailyReport } from "../domain/daily-report.ts";
 import type { MaterialPhotoLog } from "../domain/material-photo-log.ts";
-
-const JAPANESE_FONT_PATH = fileURLToPath(new URL("./assets/fonts/ipag.ttf", import.meta.url));
-
-/** Lazily read + cache the embedded font's bytes; the file never changes at runtime. */
-let cachedFontBytes: Buffer | undefined;
-function loadJapaneseFontBytes(): Buffer {
-  cachedFontBytes ??= readFileSync(JAPANESE_FONT_PATH);
-  return cachedFontBytes;
-}
-
-const PAGE_WIDTH = 595.28; // A4 portrait, in PDF points (72 dpi).
-const PAGE_HEIGHT = 841.89;
-const MARGIN = 48;
-const LINE_HEIGHT = 16;
-const LABEL_WIDTH = 150;
-const BODY_SIZE = 10;
-const TITLE_SIZE = 16;
-const MAX_LINE_CHARS = 78;
-
-interface Writer {
-  readonly doc: PDFDocument;
-  readonly font: PDFFont;
-  readonly bold: PDFFont;
-  page: PDFPage;
-  y: number;
-}
-
-async function createWriter(): Promise<Writer> {
-  const doc = await PDFDocument.create();
-  doc.registerFontkit(fontkit);
-  doc.setProducer("Construction Enterprise Operating Platform");
-  doc.setCreator("Construction Enterprise Operating Platform");
-  // IPA Gothic has no bold weight, so the same embedded font is used for
-  // both regular and "bold" (heading) text — see the file-level comment.
-  const font = await doc.embedFont(loadJapaneseFontBytes(), { subset: true });
-  const bold = font;
-  const page = doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-  return { doc, font, bold, page, y: PAGE_HEIGHT - MARGIN };
-}
-
-function ensureSpace(writer: Writer, lines = 1): void {
-  if (writer.y - lines * LINE_HEIGHT < MARGIN) {
-    writer.page = writer.doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-    writer.y = PAGE_HEIGHT - MARGIN;
-  }
-}
-
-function writeTitle(writer: Writer, text: string): void {
-  ensureSpace(writer, 2);
-  writer.page.drawText(text, {
-    x: MARGIN,
-    y: writer.y,
-    size: TITLE_SIZE,
-    font: writer.bold,
-    color: rgb(0, 0, 0),
-  });
-  writer.y -= TITLE_SIZE + LINE_HEIGHT;
-}
-
-function writeSectionHeading(writer: Writer, text: string): void {
-  ensureSpace(writer, 1);
-  writer.y -= LINE_HEIGHT * 0.4;
-  ensureSpace(writer, 1);
-  writer.page.drawText(text, {
-    x: MARGIN,
-    y: writer.y,
-    size: BODY_SIZE + 1,
-    font: writer.bold,
-  });
-  writer.y -= LINE_HEIGHT;
-}
-
-/** Split long text into fixed-width chunks so it wraps onto multiple lines. */
-function wrap(text: string, maxChars: number): string[] {
-  const words = text.split(/\s+/).filter((w) => w.length > 0);
-  if (words.length === 0) {
-    return [""];
-  }
-  const lines: string[] = [];
-  let current = "";
-  for (const word of words) {
-    // A single "word" longer than the line width (common once Japanese
-    // sentences are treated as one unbroken token) is hard-split instead of
-    // overflowing the page.
-    let remaining = word;
-    while (remaining.length > maxChars) {
-      if (current.length > 0) {
-        lines.push(current);
-        current = "";
-      }
-      lines.push(remaining.slice(0, maxChars));
-      remaining = remaining.slice(maxChars);
-    }
-    const candidate = current.length === 0 ? remaining : `${current} ${remaining}`;
-    if (candidate.length > maxChars) {
-      lines.push(current);
-      current = remaining;
-    } else {
-      current = candidate;
-    }
-  }
-  if (current.length > 0 || lines.length === 0) {
-    lines.push(current);
-  }
-  return lines;
-}
-
-function writeField(
-  writer: Writer,
-  label: string,
-  value: string | number | boolean | undefined,
-): void {
-  const text = value === undefined || value === "" ? "-" : String(value);
-  ensureSpace(writer, 1);
-  writer.page.drawText(`${label}:`, {
-    x: MARGIN,
-    y: writer.y,
-    size: BODY_SIZE,
-    font: writer.bold,
-  });
-  writer.page.drawText(text, {
-    x: MARGIN + LABEL_WIDTH,
-    y: writer.y,
-    size: BODY_SIZE,
-    font: writer.font,
-  });
-  writer.y -= LINE_HEIGHT;
-}
-
-function writeMultilineField(writer: Writer, label: string, value: string | undefined): void {
-  ensureSpace(writer, 1);
-  writer.page.drawText(`${label}:`, {
-    x: MARGIN,
-    y: writer.y,
-    size: BODY_SIZE,
-    font: writer.bold,
-  });
-  writer.y -= LINE_HEIGHT;
-  const lines = value === undefined || value.length === 0 ? ["-"] : wrap(value, MAX_LINE_CHARS);
-  for (const line of lines) {
-    ensureSpace(writer, 1);
-    writer.page.drawText(line, {
-      x: MARGIN + 12,
-      y: writer.y,
-      size: BODY_SIZE,
-      font: writer.font,
-    });
-    writer.y -= LINE_HEIGHT;
-  }
-}
+import {
+  BODY_SIZE,
+  MARGIN,
+  LINE_HEIGHT,
+  type Writer,
+  createWriter,
+  ensureSpace,
+  writeField,
+  writeMultilineField,
+  writeSectionHeading,
+  writeTitle,
+} from "./pdf-writer.ts";
 
 /** Render a daily construction report (工事日報) as a single-record PDF. */
 export async function renderDailyReportPdf(report: DailyReport): Promise<Uint8Array> {
