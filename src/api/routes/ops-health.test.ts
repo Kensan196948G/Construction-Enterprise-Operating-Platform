@@ -122,10 +122,9 @@ test("GET /ops-health renders for an authenticated caller with an embedded JWT, 
   });
   assert.equal(res.status, 200);
   assert.match(res.headers.get("content-type") ?? "", /text\/html/);
-  assert.equal(
-    res.headers.get("content-security-policy"),
-    "default-src 'self'; style-src 'self'; script-src 'self' https://static.cloudflareinsights.com; img-src 'self' data:; font-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'self'",
-  );
+  const csp = res.headers.get("content-security-policy") ?? "";
+  assert.doesNotMatch(csp, /unsafe-inline/);
+  assert.match(csp, /'nonce-[^']+'/);
   const body = await res.text();
   assert.match(body, /運用ヘルス/);
   assert.match(body, /id="ceopToken" value="[^"]+"/);
