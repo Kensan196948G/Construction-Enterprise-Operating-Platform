@@ -115,6 +115,8 @@ export function registerDxProjectRoutes(router: Router, container: AppContainer)
       progressMilestone: str(req.body, "progressMilestone"),
       progressEvidenceUrl: str(req.body, "progressEvidenceUrl"),
       nextReviewAt: str(req.body, "nextReviewAt"),
+      latitude: num(req.body, "latitude"),
+      longitude: num(req.body, "longitude"),
       createdAt: nowTs(),
     });
     if (!created.ok) {
@@ -214,6 +216,8 @@ export function registerDxProjectRoutes(router: Router, container: AppContainer)
       progressMilestone: str(req.body, "progressMilestone"),
       progressEvidenceUrl: str(req.body, "progressEvidenceUrl"),
       nextReviewAt: str(req.body, "nextReviewAt"),
+      latitude: num(req.body, "latitude"),
+      longitude: num(req.body, "longitude"),
       updatedAt: nowTs(),
     });
     if (!updated.ok) {

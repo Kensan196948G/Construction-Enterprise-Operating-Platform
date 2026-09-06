@@ -55,6 +55,9 @@ import {
   SqliteNotificationDeliveryRepository,
   SqliteKnowledgeRepository,
   SqliteContractRepository,
+  SqliteProgressBillingInvoiceRepository,
+  SqlitePaymentRecordRepository,
+  SqliteAdvancePaymentRepository,
   SqliteDocumentRepository,
   SqliteWorkScheduleRepository,
   SqlitePurchaseOrderRepository,
@@ -74,6 +77,7 @@ import {
   SqliteAiBuildProjectRepository,
   SqliteDxProjectRepository,
   SqliteMaterialPhotoLogRepository,
+  SqliteLaborAttendanceRepository,
 } from "./business-repositories.ts";
 
 // ---------------------------------------------------------------------------
@@ -585,6 +589,9 @@ export function createSqliteRepositories(dbPath: string): Repositories {
     notificationDeliveries: new SqliteNotificationDeliveryRepository(db),
     knowledgeArticles: new SqliteKnowledgeRepository(db),
     contracts: new SqliteContractRepository(db),
+    progressBillingInvoices: new SqliteProgressBillingInvoiceRepository(db),
+    paymentRecords: new SqlitePaymentRecordRepository(db),
+    advancePayments: new SqliteAdvancePaymentRepository(db),
     documents: new SqliteDocumentRepository(db),
     workSchedules: new SqliteWorkScheduleRepository(db),
     purchaseOrders: new SqlitePurchaseOrderRepository(db),
@@ -603,6 +610,7 @@ export function createSqliteRepositories(dbPath: string): Repositories {
     aiBuildProjects: new SqliteAiBuildProjectRepository(db),
     dxProjects: new SqliteDxProjectRepository(db),
     materialPhotoLogs: new SqliteMaterialPhotoLogRepository(db),
+    laborAttendances: new SqliteLaborAttendanceRepository(db),
   };
 }
 

@@ -86,6 +86,28 @@ export function badRequest(res: ServerResponse, details: unknown): void {
   writeJson(res, 400, { error: "Bad Request", message: "validation failed", details });
 }
 
+// ---------------------------------------------------------------------------
+// CSV バルクインポート
+// ---------------------------------------------------------------------------
+
+/** 1 行分のバリデーション失敗詳細（CSV バルクインポート用、1-based 行番号付き）。 */
+export interface RowValidationIssue {
+  readonly row: number;
+  readonly path: string;
+  readonly message: string;
+}
+
+/**
+ * ドメインの `create*` が返す `ValidationIssue[]`（`{path, message}`）を、
+ * どの CSV 行が失敗したか分かるよう 1-based 行番号付きに変換する。
+ */
+export function rowErrors(
+  row: number,
+  issues: readonly { readonly path: string; readonly message: string }[],
+): RowValidationIssue[] {
+  return issues.map((issue) => ({ row, path: issue.path, message: issue.message }));
+}
+
 /**
  * 204 No Content — 削除成功などの空応答。
  */

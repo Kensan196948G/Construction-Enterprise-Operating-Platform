@@ -2,7 +2,14 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createCostRecord, createWorkHour } from "./cost.ts";
+import {
+  createCostRecord,
+  createCostRecordFromLaborAttendance,
+  createWorkHour,
+  laborAttendanceCostAmount,
+  laborAttendanceToCostRecordInput,
+} from "./cost.ts";
+import { createLaborAttendance } from "./labor-attendance.ts";
 
 const NOW = "2026-08-07T06:00:00.000Z";
 
@@ -236,4 +243,69 @@ test("work hour domain stores optional workerId and workType", () => {
   assert.equal(r.value.hours, 7.5);
   assert.equal(r.value.workType, "overtime");
   assert.equal(r.value.updatedAt, NOW);
+});
+
+// ---------------------------------------------------------------------------
+// Labor cost integration (issue #74)
+// ---------------------------------------------------------------------------
+
+function buildAttendance(overrides: Partial<Parameters<typeof createLaborAttendance>[0]> = {}) {
+  const r = createLaborAttendance({
+    id: "la-cost-1",
+    organizationId: "org",
+    projectId: "p-1",
+    workerName: "山田太郎",
+    attendanceDate: "2026-08-07",
+    dailyRate: 16000,
+    createdAt: NOW as never,
+    ...overrides,
+  });
+  assert.ok(r.ok);
+  return r.value;
+}
+
+test("laborAttendanceCostAmount returns dailyRate alone when there is no overtime", () => {
+  const attendance = buildAttendance({ overtimeHours: 0 });
+  assert.equal(laborAttendanceCostAmount(attendance), 16000);
+});
+
+test("laborAttendanceCostAmount adds a 25% premium on the derived hourly rate for overtime", () => {
+  const attendance = buildAttendance({ overtimeHours: 2 });
+  // hourly = 16000 / 8 = 2000; overtime pay = 2 * 2000 * 1.25 = 5000
+  assert.equal(laborAttendanceCostAmount(attendance), 16000 + 5000);
+});
+
+test("laborAttendanceCostAmount honors an explicit overtimeHourlyRate and multiplier", () => {
+  const attendance = buildAttendance({ overtimeHours: 1 });
+  const amount = laborAttendanceCostAmount(attendance, {
+    overtimeHourlyRate: 3000,
+    overtimeMultiplier: 1.5,
+  });
+  assert.equal(amount, 16000 + 3000 * 1.5);
+});
+
+test("laborAttendanceToCostRecordInput maps labor attendance fields into a cost record input", () => {
+  const attendance = buildAttendance({
+    affiliation: "subcontractor",
+    subcontractorName: "協力建設株式会社",
+    overtimeHours: 0,
+  });
+  const input = laborAttendanceToCostRecordInput(attendance, "cost-from-la-1", NOW as never);
+  assert.equal(input.organizationId, "org");
+  assert.equal(input.projectId, "p-1");
+  assert.equal(input.recordDate, "2026-08-07");
+  assert.equal(input.category, "labor");
+  assert.match(input.description, /山田太郎/);
+  assert.match(input.description, /協力建設株式会社/);
+  assert.equal(input.actualAmount, 16000);
+});
+
+test("createCostRecordFromLaborAttendance produces a valid CostRecord", () => {
+  const attendance = buildAttendance({ overtimeHours: 4 });
+  const result = createCostRecordFromLaborAttendance(attendance, "cost-from-la-2", NOW as never);
+  assert.ok(result.ok);
+  assert.equal(result.value.category, "labor");
+  assert.equal(result.value.projectId, "p-1");
+  // hourly = 2000, overtime pay = 4 * 2000 * 1.25 = 10000
+  assert.equal(result.value.actualAmount, 26000);
 });

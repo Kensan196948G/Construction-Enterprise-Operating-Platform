@@ -608,7 +608,146 @@ const schemas: { [k: string]: YamlValue } = {
       quantity: { type: "number" },
       unitPrice: { type: "number" },
       amount: { type: "number" },
-      status: { type: "string", enum: ["draft", "issued", "approved", "received", "cancelled"] },
+      status: {
+        type: "string",
+        enum: [
+          "draft",
+          "issued",
+          "approved",
+          "received",
+          "delivered",
+          "inspected",
+          "paid",
+          "cancelled",
+        ],
+      },
+      notes: { type: "string" },
+      createdAt: { type: "string", format: "date-time" },
+      updatedAt: { type: "string", format: "date-time" },
+    },
+  },
+  ProgressBillingInvoice: {
+    type: "object",
+    required: [
+      "id",
+      "organizationId",
+      "projectId",
+      "contractId",
+      "invoiceNumber",
+      "billingDate",
+      "progressPercentage",
+      "billedAmount",
+      "cumulativeBilledAmount",
+      "approvalStatus",
+      "createdAt",
+      "updatedAt",
+    ],
+    properties: {
+      id: { type: "string" },
+      organizationId: { type: "string" },
+      projectId: { type: "string" },
+      contractId: { type: "string" },
+      invoiceNumber: { type: "string" },
+      billingDate: { type: "string", format: "date" },
+      periodStart: { type: "string", format: "date" },
+      periodEnd: { type: "string", format: "date" },
+      progressPercentage: { type: "number" },
+      billedAmount: { type: "number" },
+      cumulativeBilledAmount: { type: "number" },
+      approvalStatus: {
+        type: "string",
+        enum: ["draft", "submitted", "approved", "rejected"],
+      },
+      notes: { type: "string" },
+      createdAt: { type: "string", format: "date-time" },
+      updatedAt: { type: "string", format: "date-time" },
+    },
+  },
+  PaymentRecord: {
+    type: "object",
+    required: [
+      "id",
+      "organizationId",
+      "projectId",
+      "contractId",
+      "paymentDate",
+      "amount",
+      "paymentMethod",
+      "createdAt",
+      "updatedAt",
+    ],
+    properties: {
+      id: { type: "string" },
+      organizationId: { type: "string" },
+      projectId: { type: "string" },
+      contractId: { type: "string" },
+      invoiceId: { type: "string" },
+      paymentDate: { type: "string", format: "date" },
+      amount: { type: "number" },
+      paymentMethod: { type: "string", enum: ["bank_transfer", "cash", "check", "other"] },
+      notes: { type: "string" },
+      createdAt: { type: "string", format: "date-time" },
+      updatedAt: { type: "string", format: "date-time" },
+    },
+  },
+  AdvancePayment: {
+    type: "object",
+    required: [
+      "id",
+      "organizationId",
+      "projectId",
+      "contractId",
+      "paymentDate",
+      "amount",
+      "recoveredAmount",
+      "status",
+      "createdAt",
+      "updatedAt",
+    ],
+    properties: {
+      id: { type: "string" },
+      organizationId: { type: "string" },
+      projectId: { type: "string" },
+      contractId: { type: "string" },
+      paymentDate: { type: "string", format: "date" },
+      amount: { type: "number" },
+      recoveredAmount: { type: "number" },
+      purpose: { type: "string" },
+      status: {
+        type: "string",
+        enum: ["outstanding", "partially_recovered", "recovered"],
+      },
+      notes: { type: "string" },
+      createdAt: { type: "string", format: "date-time" },
+      updatedAt: { type: "string", format: "date-time" },
+    },
+  },
+  LaborAttendance: {
+    type: "object",
+    required: [
+      "id",
+      "organizationId",
+      "projectId",
+      "workerName",
+      "affiliation",
+      "attendanceDate",
+      "dailyRate",
+      "overtimeHours",
+      "status",
+      "createdAt",
+      "updatedAt",
+    ],
+    properties: {
+      id: { type: "string" },
+      organizationId: { type: "string" },
+      projectId: { type: "string" },
+      workerName: { type: "string" },
+      affiliation: { type: "string", enum: ["in_house", "subcontractor"] },
+      subcontractorName: { type: "string" },
+      attendanceDate: { type: "string", format: "date" },
+      dailyRate: { type: "number" },
+      overtimeHours: { type: "number" },
+      status: { type: "string", enum: ["draft", "submitted", "approved", "rejected"] },
       notes: { type: "string" },
       createdAt: { type: "string", format: "date-time" },
       updatedAt: { type: "string", format: "date-time" },
@@ -709,6 +848,67 @@ const schemas: { [k: string]: YamlValue } = {
         description: "SHA-256 of previous entry hash + this entry (tamper-evident chain)",
       },
       metadata: { type: "object", additionalProperties: { type: "string" } },
+      archived: {
+        type: "boolean",
+        description:
+          "Whether the retention batch (issue #83) has classified this entry as archived. " +
+          "Archived entries are never removed or mutated — this only reflects the side " +
+          "index used to answer retention queries.",
+      },
+      archivedAt: {
+        type: "string",
+        format: "date-time",
+        description: "When this entry was archived; present only when `archived` is true",
+      },
+    },
+  },
+  AccessInventoryRole: {
+    type: "object",
+    required: ["id", "name", "scope"],
+    properties: {
+      id: { type: "string" },
+      name: { type: "string" },
+      scope: { type: "string", enum: ["global", "organization", "site"] },
+    },
+  },
+  AccessInventoryEntry: {
+    type: "object",
+    required: [
+      "userId",
+      "organizationId",
+      "displayName",
+      "email",
+      "status",
+      "roles",
+      "permissions",
+      "unresolvedRoleIds",
+    ],
+    properties: {
+      userId: { type: "string" },
+      organizationId: { type: "string" },
+      displayName: { type: "string" },
+      email: { type: "string", format: "email" },
+      status: { type: "string", enum: ["invited", "active", "suspended", "deactivated"] },
+      roles: { type: "array", items: { $ref: "#/components/schemas/AccessInventoryRole" } },
+      permissions: { type: "array", items: { type: "string" } },
+      unresolvedRoleIds: {
+        type: "array",
+        items: { type: "string" },
+        description: "roleIds assigned to the user that no longer resolve to an existing role",
+      },
+    },
+  },
+  AccessInventorySummary: {
+    type: "object",
+    required: ["totalUsers", "totalRoles", "usersByPermission"],
+    properties: {
+      totalUsers: { type: "integer" },
+      totalRoles: { type: "integer" },
+      usersByPermission: {
+        type: "object",
+        additionalProperties: { type: "integer" },
+        description: "Number of distinct users holding each permission, keyed by permission",
+      },
     },
   },
   TokenResponse: {
@@ -987,6 +1187,8 @@ const schemas: { [k: string]: YamlValue } = {
       progressMilestone: { type: "string" },
       progressEvidenceUrl: { type: "string" },
       nextReviewAt: { type: "string", format: "date" },
+      latitude: { type: "number" },
+      longitude: { type: "number" },
       createdAt: { type: "string", format: "date-time" },
       updatedAt: { type: "string", format: "date-time" },
     },
@@ -1853,7 +2055,11 @@ const paths: { [k: string]: YamlValue } = {
         "Organization-scoped credentials receive only entries attributed to their own " +
         "organization; globally-scoped credentials receive the whole chain. Entries " +
         "recorded before tenant attribution existed carry no organization and are " +
-        "withheld from scoped credentials.",
+        "withheld from scoped credentials.\n\n" +
+        "Every entry is annotated with `archived`/`archivedAt` (issue #83): archiving " +
+        "classifies old entries via a side index and never removes or mutates them, so " +
+        "they remain fully visible through this same endpoint. Pass `archived` to filter " +
+        "to just one side of that classification.",
       tags: ["Governance"],
       security: authSecurity,
       parameters: [
@@ -1868,6 +2074,14 @@ const paths: { [k: string]: YamlValue } = {
           in: "query",
           schema: { type: "integer", default: 0, minimum: 0 },
           description: "Number of most-recent entries to skip",
+        },
+        {
+          name: "archived",
+          in: "query",
+          schema: { type: "boolean" },
+          description:
+            "Filter by archive status: true for archived-only, false for active-only. " +
+            "Omit to return both (default).",
         },
       ],
       responses: {
@@ -2001,6 +2215,172 @@ const paths: { [k: string]: YamlValue } = {
                   valid: { type: "boolean" },
                   brokenAt: { type: "integer", minimum: 0 },
                   checkedAt: { type: "string", format: "date-time" },
+                },
+              },
+            },
+          },
+        },
+        ...errorResponses(401, 403),
+      },
+    },
+  },
+  "/api/v1/governance/audit/archive": {
+    post: {
+      operationId: "archiveAuditLog",
+      summary: "Run the audit-event retention batch (requires audit:archive)",
+      description:
+        "Marks every audit entry older than `retentionDays` (default 2555 days / ~7 " +
+        "years) as archived in a side index, without ever rewriting, reordering, or " +
+        "removing a hash-chain entry — `GET /audit/verify` is unaffected by archival. " +
+        "Idempotent: entries already archived are skipped rather than re-marked, so " +
+        "this is safe to call repeatedly (e.g. from a daily scheduled job). Requires a " +
+        "globally-scoped credential — archival is a platform-wide retention decision, " +
+        "not a per-tenant one — in addition to `audit:archive`, which is deliberately " +
+        "separate from `audit:read`/`audit:export`. Denied attempts are themselves " +
+        "recorded in the chain.",
+      tags: ["Governance"],
+      security: authSecurity,
+      requestBody: {
+        required: false,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                retentionDays: {
+                  type: "integer",
+                  minimum: 1,
+                  description: "Override the default retention window, in days",
+                },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        "200": {
+          description: "Archive batch result",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: [
+                  "archivedCount",
+                  "archivedSequences",
+                  "totalArchived",
+                  "cutoff",
+                  "retentionDays",
+                ],
+                properties: {
+                  archivedCount: {
+                    type: "integer",
+                    description: "Entries newly archived by this run",
+                  },
+                  archivedSequences: {
+                    type: "array",
+                    items: { type: "integer" },
+                    description: "Hash-chain sequence numbers newly archived by this run",
+                  },
+                  totalArchived: {
+                    type: "integer",
+                    description: "Total archived entries after this run",
+                  },
+                  cutoff: {
+                    type: "string",
+                    format: "date-time",
+                    description: "Retention cutoff used for this run",
+                  },
+                  retentionDays: { type: "integer" },
+                },
+              },
+            },
+          },
+        },
+        ...errorResponses(400, 401, 403),
+        "503": {
+          description: "No audit archive store is configured for this deployment",
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/ErrorResponse" },
+            },
+          },
+        },
+      },
+    },
+  },
+  "/api/v1/governance/audit-report.pdf": {
+    get: {
+      operationId: "generateAuditReport",
+      summary: "Quarterly audit report — aggregated PDF (requires audit:export)",
+      description:
+        "Aggregates the audit log, compliance checks, and management reviews for one " +
+        "calendar quarter and renders the result as a printable PDF. `period` defaults " +
+        "to the quarter containing the current time when omitted.",
+      tags: ["Governance"],
+      security: authSecurity,
+      parameters: [
+        {
+          name: "period",
+          in: "query",
+          schema: { type: "string" },
+          description: "Quarter to summarize, formatted as YYYY-Q# (e.g. 2026-Q3)",
+        },
+      ],
+      responses: {
+        "200": {
+          description: "PDF file",
+          content: { "application/pdf": { schema: { type: "string", format: "binary" } } },
+        },
+        ...errorResponses(400, 401, 403),
+      },
+    },
+  },
+  "/api/v1/governance/access-inventory": {
+    get: {
+      operationId: "getAccessInventory",
+      summary: "RBAC access inventory — who can access what (requires audit:read)",
+      description:
+        "For every user in scope, resolves their assigned roles into the union of " +
+        "permissions those roles grant, plus a platform-wide summary of how many " +
+        "users hold each permission. Organization-scoped credentials receive only " +
+        "users in their own organization; globally-scoped credentials receive every " +
+        "user. `unresolvedRoleIds` on an entry flags a roleId assigned to the user " +
+        "that no longer resolves to an existing role (e.g. the role was deleted " +
+        "after assignment). A successful read is itself recorded in the audit log, " +
+        "since the report enumerates every grant in scope.",
+      tags: ["Governance"],
+      security: authSecurity,
+      parameters: [
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
+      ],
+      responses: {
+        "200": {
+          description: "Access inventory report",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: [
+                  "generatedAt",
+                  "summary",
+                  "entries",
+                  "count",
+                  "total",
+                  "limit",
+                  "offset",
+                ],
+                properties: {
+                  generatedAt: { type: "string", format: "date-time" },
+                  summary: { $ref: "#/components/schemas/AccessInventorySummary" },
+                  entries: {
+                    type: "array",
+                    items: { $ref: "#/components/schemas/AccessInventoryEntry" },
+                  },
+                  count: { type: "integer" },
+                  total: { type: "integer" },
+                  limit: { type: "integer" },
+                  offset: { type: "integer" },
                 },
               },
             },
@@ -2784,6 +3164,22 @@ const paths: { [k: string]: YamlValue } = {
       },
     },
   },
+  "/api/v1/daily-reports/{id}/export.pdf": {
+    get: {
+      operationId: "exportDailyReportPdf",
+      summary: "Export a daily report as a printable PDF",
+      tags: ["DailyReports"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        "200": {
+          description: "PDF file",
+          content: { "application/pdf": { schema: { type: "string", format: "binary" } } },
+        },
+        ...errorResponses(401, 403, 404),
+      },
+    },
+  },
 
   "/api/v1/projects/{projectId}/photos": {
     get: {
@@ -3400,6 +3796,356 @@ const paths: { [k: string]: YamlValue } = {
       },
     },
   },
+  "/api/v1/contracts/{contractId}/billing-invoices": {
+    get: {
+      operationId: "listBillingInvoices",
+      summary: "Paginated progress billing invoices for a contract (#84)",
+      tags: ["Billing"],
+      security: authSecurity,
+      parameters: [
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
+      ],
+      responses: {
+        ...jsonResponse(200, paginatedList("billingInvoices", "ProgressBillingInvoice")),
+        ...errorResponses(401, 403, 404),
+      },
+    },
+    post: {
+      operationId: "createBillingInvoice",
+      summary: "Create a progress billing invoice against a contract (#84)",
+      tags: ["Billing"],
+      security: authSecurity,
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["invoiceNumber", "billingDate", "progressPercentage", "billedAmount"],
+              properties: {
+                invoiceNumber: { type: "string" },
+                billingDate: { type: "string", format: "date" },
+                periodStart: { type: "string", format: "date" },
+                periodEnd: { type: "string", format: "date" },
+                progressPercentage: { type: "number" },
+                billedAmount: { type: "number" },
+                cumulativeBilledAmount: { type: "number" },
+                approvalStatus: {
+                  type: "string",
+                  enum: ["draft", "submitted", "approved", "rejected"],
+                },
+                notes: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(201, {
+          type: "object",
+          required: ["billingInvoice"],
+          properties: { billingInvoice: { $ref: "#/components/schemas/ProgressBillingInvoice" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+  },
+  "/api/v1/billing-invoices/{id}": {
+    get: {
+      operationId: "getBillingInvoice",
+      summary: "Billing invoice detail",
+      tags: ["Billing"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["billingInvoice"],
+          properties: { billingInvoice: { $ref: "#/components/schemas/ProgressBillingInvoice" } },
+        }),
+        ...errorResponses(401, 403, 404),
+      },
+    },
+    put: {
+      operationId: "updateBillingInvoice",
+      summary: "Update a progress billing invoice",
+      tags: ["Billing"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                billingDate: { type: "string", format: "date" },
+                periodStart: { type: "string", format: "date" },
+                periodEnd: { type: "string", format: "date" },
+                progressPercentage: { type: "number" },
+                billedAmount: { type: "number" },
+                cumulativeBilledAmount: { type: "number" },
+                approvalStatus: {
+                  type: "string",
+                  enum: ["draft", "submitted", "approved", "rejected"],
+                },
+                notes: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["billingInvoice"],
+          properties: { billingInvoice: { $ref: "#/components/schemas/ProgressBillingInvoice" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+    delete: {
+      operationId: "deleteBillingInvoice",
+      summary: "Delete a progress billing invoice",
+      tags: ["Billing"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(204, { type: "object", properties: {} }),
+        ...errorResponses(401, 403, 404),
+      },
+    },
+  },
+  "/api/v1/contracts/{contractId}/payments": {
+    get: {
+      operationId: "listPayments",
+      summary: "Paginated payment records for a contract (#84)",
+      tags: ["Billing"],
+      security: authSecurity,
+      parameters: [
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
+      ],
+      responses: {
+        ...jsonResponse(200, paginatedList("payments", "PaymentRecord")),
+        ...errorResponses(401, 403, 404),
+      },
+    },
+    post: {
+      operationId: "createPayment",
+      summary: "Record a payment against a contract (#84)",
+      tags: ["Billing"],
+      security: authSecurity,
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["paymentDate", "amount"],
+              properties: {
+                invoiceId: { type: "string" },
+                paymentDate: { type: "string", format: "date" },
+                amount: { type: "number" },
+                paymentMethod: {
+                  type: "string",
+                  enum: ["bank_transfer", "cash", "check", "other"],
+                },
+                notes: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(201, {
+          type: "object",
+          required: ["payment"],
+          properties: { payment: { $ref: "#/components/schemas/PaymentRecord" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+  },
+  "/api/v1/payments/{id}": {
+    get: {
+      operationId: "getPayment",
+      summary: "Payment record detail",
+      tags: ["Billing"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["payment"],
+          properties: { payment: { $ref: "#/components/schemas/PaymentRecord" } },
+        }),
+        ...errorResponses(401, 403, 404),
+      },
+    },
+    put: {
+      operationId: "updatePayment",
+      summary: "Update a payment record",
+      tags: ["Billing"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                paymentDate: { type: "string", format: "date" },
+                amount: { type: "number" },
+                paymentMethod: {
+                  type: "string",
+                  enum: ["bank_transfer", "cash", "check", "other"],
+                },
+                notes: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["payment"],
+          properties: { payment: { $ref: "#/components/schemas/PaymentRecord" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+    delete: {
+      operationId: "deletePayment",
+      summary: "Delete a payment record",
+      tags: ["Billing"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(204, { type: "object", properties: {} }),
+        ...errorResponses(401, 403, 404),
+      },
+    },
+  },
+  "/api/v1/contracts/{contractId}/advance-payments": {
+    get: {
+      operationId: "listAdvancePayments",
+      summary: "Paginated advance payments for a contract (#84)",
+      tags: ["Billing"],
+      security: authSecurity,
+      parameters: [
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
+      ],
+      responses: {
+        ...jsonResponse(200, paginatedList("advancePayments", "AdvancePayment")),
+        ...errorResponses(401, 403, 404),
+      },
+    },
+    post: {
+      operationId: "createAdvancePayment",
+      summary: "Record an advance payment against a contract (#84)",
+      tags: ["Billing"],
+      security: authSecurity,
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["paymentDate", "amount"],
+              properties: {
+                paymentDate: { type: "string", format: "date" },
+                amount: { type: "number" },
+                recoveredAmount: { type: "number" },
+                purpose: { type: "string" },
+                status: {
+                  type: "string",
+                  enum: ["outstanding", "partially_recovered", "recovered"],
+                },
+                notes: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(201, {
+          type: "object",
+          required: ["advancePayment"],
+          properties: { advancePayment: { $ref: "#/components/schemas/AdvancePayment" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+  },
+  "/api/v1/advance-payments/{id}": {
+    get: {
+      operationId: "getAdvancePayment",
+      summary: "Advance payment detail",
+      tags: ["Billing"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["advancePayment"],
+          properties: { advancePayment: { $ref: "#/components/schemas/AdvancePayment" } },
+        }),
+        ...errorResponses(401, 403, 404),
+      },
+    },
+    put: {
+      operationId: "updateAdvancePayment",
+      summary: "Update an advance payment",
+      tags: ["Billing"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                paymentDate: { type: "string", format: "date" },
+                amount: { type: "number" },
+                recoveredAmount: { type: "number" },
+                purpose: { type: "string" },
+                status: {
+                  type: "string",
+                  enum: ["outstanding", "partially_recovered", "recovered"],
+                },
+                notes: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["advancePayment"],
+          properties: { advancePayment: { $ref: "#/components/schemas/AdvancePayment" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+    delete: {
+      operationId: "deleteAdvancePayment",
+      summary: "Delete an advance payment",
+      tags: ["Billing"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(204, { type: "object", properties: {} }),
+        ...errorResponses(401, 403, 404),
+      },
+    },
+  },
   "/api/v1/work-orders": {
     get: {
       operationId: "listAllWorkOrders",
@@ -3671,6 +4417,22 @@ const paths: { [k: string]: YamlValue } = {
       parameters: [{ $ref: "#/components/parameters/idPath" }],
       responses: {
         ...jsonResponse(204, { type: "object", properties: {} }),
+        ...errorResponses(401, 403, 404),
+      },
+    },
+  },
+  "/api/v1/inspections/{id}/export.pdf": {
+    get: {
+      operationId: "exportInspectionPdf",
+      summary: "Export an inspection as a printable PDF",
+      tags: ["Inspections"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        "200": {
+          description: "PDF file",
+          content: { "application/pdf": { schema: { type: "string", format: "binary" } } },
+        },
         ...errorResponses(401, 403, 404),
       },
     },
@@ -4381,6 +5143,8 @@ const paths: { [k: string]: YamlValue } = {
                 progressMilestone: { type: "string" },
                 progressEvidenceUrl: { type: "string" },
                 nextReviewAt: { type: "string", format: "date" },
+                latitude: { type: "number" },
+                longitude: { type: "number" },
               },
             },
           },
@@ -4456,6 +5220,8 @@ const paths: { [k: string]: YamlValue } = {
                 progressMilestone: { type: "string" },
                 progressEvidenceUrl: { type: "string" },
                 nextReviewAt: { type: "string", format: "date" },
+                latitude: { type: "number" },
+                longitude: { type: "number" },
               },
             },
           },
@@ -4637,6 +5403,22 @@ const paths: { [k: string]: YamlValue } = {
       parameters: [{ $ref: "#/components/parameters/idPath" }],
       responses: {
         ...jsonResponse(204, { type: "object", properties: {} }),
+        ...errorResponses(401, 403, 404),
+      },
+    },
+  },
+  "/api/v1/material-photo-logs/{id}/export.pdf": {
+    get: {
+      operationId: "exportMaterialPhotoLogPdf",
+      summary: "Export a material photo log entry as a printable PDF",
+      tags: ["MaterialPhotoLogs"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        "200": {
+          description: "PDF file",
+          content: { "application/pdf": { schema: { type: "string", format: "binary" } } },
+        },
         ...errorResponses(401, 403, 404),
       },
     },
@@ -4888,7 +5670,16 @@ const paths: { [k: string]: YamlValue } = {
                 unitPrice: { type: "number" },
                 status: {
                   type: "string",
-                  enum: ["draft", "issued", "approved", "received", "cancelled"],
+                  enum: [
+                    "draft",
+                    "issued",
+                    "approved",
+                    "received",
+                    "delivered",
+                    "inspected",
+                    "paid",
+                    "cancelled",
+                  ],
                 },
                 notes: { type: "string" },
               },
@@ -4920,6 +5711,225 @@ const paths: { [k: string]: YamlValue } = {
           properties: { purchaseOrder: { $ref: "#/components/schemas/PurchaseOrder" } },
         }),
         ...errorResponses(401, 403, 404),
+      },
+    },
+  },
+  "/api/v1/purchase-orders/{id}/transition": {
+    post: {
+      operationId: "transitionPurchaseOrder",
+      summary:
+        "Transition a purchase order (draft → issued → approved → received → delivered → inspected → paid)",
+      tags: ["PurchaseOrders"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["status"],
+              properties: {
+                status: {
+                  type: "string",
+                  enum: [
+                    "draft",
+                    "issued",
+                    "approved",
+                    "received",
+                    "delivered",
+                    "inspected",
+                    "paid",
+                    "cancelled",
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["purchaseOrder"],
+          properties: { purchaseOrder: { $ref: "#/components/schemas/PurchaseOrder" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+  },
+  "/api/v1/projects/{projectId}/labor-attendance": {
+    get: {
+      operationId: "listLaborAttendance",
+      summary: "Paginated list of labor attendance records for a project (HR)",
+      tags: ["LaborAttendance"],
+      security: authSecurity,
+      parameters: [
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
+        {
+          name: "status",
+          in: "query",
+          schema: { type: "string", enum: ["draft", "submitted", "approved", "rejected"] },
+        },
+      ],
+      responses: {
+        ...jsonResponse(200, paginatedList("laborAttendances", "LaborAttendance")),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+    post: {
+      operationId: "createLaborAttendance",
+      summary: "Create a labor attendance record (HR)",
+      tags: ["LaborAttendance"],
+      security: authSecurity,
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["workerName", "attendanceDate", "dailyRate"],
+              properties: {
+                workerName: { type: "string" },
+                affiliation: { type: "string", enum: ["in_house", "subcontractor"] },
+                subcontractorName: { type: "string" },
+                attendanceDate: { type: "string", format: "date" },
+                dailyRate: { type: "number" },
+                overtimeHours: { type: "number" },
+                status: {
+                  type: "string",
+                  enum: ["draft", "submitted", "approved", "rejected"],
+                },
+                notes: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(201, {
+          type: "object",
+          required: ["laborAttendance"],
+          properties: { laborAttendance: { $ref: "#/components/schemas/LaborAttendance" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+  },
+  "/api/v1/labor-attendance/{id}": {
+    get: {
+      operationId: "getLaborAttendance",
+      summary: "Labor attendance detail",
+      tags: ["LaborAttendance"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["laborAttendance"],
+          properties: { laborAttendance: { $ref: "#/components/schemas/LaborAttendance" } },
+        }),
+        ...errorResponses(401, 403, 404),
+      },
+    },
+    patch: {
+      operationId: "updateLaborAttendance",
+      summary: "Update mutable fields of a labor attendance record",
+      tags: ["LaborAttendance"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                workerName: { type: "string" },
+                affiliation: { type: "string", enum: ["in_house", "subcontractor"] },
+                subcontractorName: { type: "string" },
+                dailyRate: { type: "number" },
+                overtimeHours: { type: "number" },
+                notes: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["laborAttendance"],
+          properties: { laborAttendance: { $ref: "#/components/schemas/LaborAttendance" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+  },
+  "/api/v1/labor-attendance/{id}/transition": {
+    post: {
+      operationId: "transitionLaborAttendance",
+      summary: "Transition a labor attendance record (draft → submitted → approved/rejected)",
+      tags: ["LaborAttendance"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["status"],
+              properties: {
+                status: {
+                  type: "string",
+                  enum: ["draft", "submitted", "approved", "rejected"],
+                },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["laborAttendance"],
+          properties: { laborAttendance: { $ref: "#/components/schemas/LaborAttendance" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+  },
+  "/api/v1/labor-attendance/{id}/post-to-cost": {
+    post: {
+      operationId: "postLaborAttendanceToCost",
+      summary:
+        "Fold a labor attendance record's cost into project cost aggregation as a CostRecord",
+      tags: ["LaborAttendance"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      requestBody: {
+        required: false,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                overtimeHourlyRate: { type: "number" },
+                overtimeMultiplier: { type: "number" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(201, {
+          type: "object",
+          required: ["costRecord"],
+          properties: { costRecord: { $ref: "#/components/schemas/CostRecord" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
       },
     },
   },
@@ -5269,10 +6279,16 @@ const spec: { [k: string]: YamlValue } = {
     { name: "Notifications", description: "Notification deliveries (ServiceHub S-09)" },
     { name: "Knowledge", description: "Knowledge articles (ServiceHub S-06)" },
     { name: "Contracts", description: "Legal contracts (ServiceHub S-07)" },
+    {
+      name: "Billing",
+      description:
+        "Progress billing invoices, payment records, and advance payments against a contract (#84)",
+    },
     { name: "Itsm", description: "ITSM adapter (ServiceHub S-08)" },
     { name: "Documents", description: "Drawings/documents (Enterprise-OS E-03)" },
     { name: "WorkSchedules", description: "Site work schedules (Enterprise-OS E-02)" },
     { name: "PurchaseOrders", description: "Purchase orders / ERP (Enterprise-OS E-05)" },
+    { name: "LaborAttendance", description: "Labor attendance / 労務・勤怠管理 (HR)" },
     { name: "Compliance", description: "Compliance checks (ServiceHub S-07)" },
     { name: "LegalEvidence", description: "Legal evidence timeline (ServiceHub S-07)" },
     { name: "Projects", description: "Construction project management (ServiceHub S-01)" },
