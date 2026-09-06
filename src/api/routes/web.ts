@@ -28,6 +28,7 @@ import {
   renderGovernance,
   renderIsoPage,
   renderMvpAppPage,
+  renderOpsHealthPage,
   renderSystemPage,
   type GovernancePolicyRow,
 } from "../../web/renderer.ts";
@@ -142,6 +143,13 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
     "/api/assets/system.js",
     async (_req, _ctx, res) => {
       await sendFile(res, join(staticDir, "system.js"), "text/javascript; charset=utf-8");
+    },
+    false,
+  );
+  router.get(
+    "/api/assets/ops-health.js",
+    async (_req, _ctx, res) => {
+      await sendFile(res, join(staticDir, "ops-health.js"), "text/javascript; charset=utf-8");
     },
     false,
   );
@@ -381,6 +389,21 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
           ? container.jwtIssuer.issue(ctx!.subject, ctx!.permissions, ctx!.organizationId)
           : "";
       sendHtml(res, 200, await renderSystemPage(webToken));
+    },
+    true,
+  );
+
+  router.get(
+    "/ops-health",
+    async (_req, ctx, res) => {
+      // Operational visibility dashboard (Issue #89): container/DB/health-probe
+      // status. Same authorization posture as /system — any authenticated
+      // subject may view; the underlying JSON API applies the same rule.
+      const webToken =
+        container.jwtIssuer !== undefined
+          ? container.jwtIssuer.issue(ctx!.subject, ctx!.permissions, ctx!.organizationId)
+          : "";
+      sendHtml(res, 200, await renderOpsHealthPage(webToken));
     },
     true,
   );

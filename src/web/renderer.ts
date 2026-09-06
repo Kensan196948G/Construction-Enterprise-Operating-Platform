@@ -35,6 +35,7 @@ export const TEMPLATES = {
   ISO: join(TEMPLATES_DIR, "iso.html"),
   MVP_APP: join(TEMPLATES_DIR, "mvp-app.html"),
   SYSTEM: join(TEMPLATES_DIR, "system.html"),
+  OPS_HEALTH: join(TEMPLATES_DIR, "ops-health.html"),
 } as const;
 
 /** The platform version string. Callers may override at bootstrap. */
@@ -389,4 +390,16 @@ export async function renderSystemPage(apiToken = ""): Promise<string> {
     API_TOKEN: esc(apiToken),
   };
   return renderTemplate(TEMPLATES.SYSTEM, context);
+}
+
+/**
+ * Build the ops health dashboard HTML shell (Issue #89). All data is loaded
+ * client-side from GET /api/v1/ops/health.
+ */
+export async function renderOpsHealthPage(apiToken = ""): Promise<string> {
+  const context: RenderContext = {
+    VERSION: esc(_platformVersion),
+    API_TOKEN: esc(apiToken),
+  };
+  return renderTemplate(TEMPLATES.OPS_HEALTH, context);
 }
