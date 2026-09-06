@@ -16,6 +16,7 @@ import { createPolicy } from "./domain/policy.ts";
 import { createProject } from "./domain/project.ts";
 import { AuditLog } from "./governance/audit-log.ts";
 import { SqliteAuditLog } from "./governance/sqlite-audit-log.ts";
+import { InMemoryAuditArchiveStore, SqliteAuditArchiveStore } from "./governance/audit-archive.ts";
 import { createInMemoryRepositories } from "./persistence/in-memory/index.ts";
 import { createFileRepositories } from "./persistence/file/index.ts";
 import { createSqliteRepositories, loadApiKeysFromSqlite } from "./persistence/sqlite/index.ts";
@@ -73,6 +74,12 @@ export async function createApp(): Promise<AppContainer> {
       : createInMemoryRepositories();
 
   const auditLog = sqliteFile ? new SqliteAuditLog(sqliteFile) : new AuditLog();
+  // Same persistence-tier split as the audit log itself: the SQLite-backed
+  // archive store shares the audit log's own file so "archived" survives
+  // restarts wherever the chain does; in-memory mode gets an in-memory store.
+  const auditArchive = sqliteFile
+    ? new SqliteAuditArchiveStore(sqliteFile)
+    : new InMemoryAuditArchiveStore();
   const apiKeyStore: AppContainer["apiKeyStore"] = new Map();
 
   // In SQLite mode, load provisioned API keys from the api_keys table.
@@ -363,6 +370,7 @@ export async function createApp(): Promise<AppContainer> {
   return {
     repositories,
     auditLog,
+    auditArchive,
     apiKeyStore,
     ...(apiKeyRepository !== undefined ? { apiKeyRepository } : {}),
     storageTier: sqliteFile ? "sqlite" : dataDir ? "file" : "in-memory",
