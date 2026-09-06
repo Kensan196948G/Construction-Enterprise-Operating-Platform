@@ -6,7 +6,7 @@
     "registered_at": "2026-06-25",
     "phase_mode": "maintenance"
   },
-  "goal": "UI修正 v0.14.1 — ポータルを左サイドバー＋右側詳細コンテンツに改修・ISO統合マネジメントのhashchange対応・全画面に「システム設定」大項目追加・E2E 21件検証",
+  "goal": "22項目の機能ギャップ分析に基づく17機能PR統合 — PDF出力・PWA・全文検索・経理/労務ドメイン等（v0.15.0リリース完了）",
   "phase": "verify",
   "release": {
     "v0_1_0_foundation": "release_ready",
@@ -81,13 +81,39 @@
     "v0_14_4_iso_sidebar_unify": "in_progress",
     "v0_14_4_branch": "auto/ui-v0144-iso-unify",
     "v0_14_5_daily_iso_fixes": "in_progress",
-    "v0_14_5_branch": "auto/ui-v0145-fixes"
+    "v0_14_5_branch": "auto/ui-v0145-fixes",
+    "v0_15_0_feature_batch": "completed",
+    "v0_15_0_pr_numbers": [
+      68,
+      69,
+      70,
+      71,
+      72,
+      73,
+      74,
+      83,
+      84,
+      85,
+      86,
+      87,
+      88,
+      89,
+      90,
+      91,
+      98,
+      109,
+      110,
+      112,
+      113
+    ],
+    "v0_15_0_judged_by": "CTO",
+    "v0_15_0_judged_at": "2026-09-06"
   },
   "kpi": {
     "success_rate_target": 0.9,
     "ci_success_rate": 1,
     "test_pass_rate": 1,
-    "test_count": 627,
+    "test_count": 801,
     "security_critical": 0,
     "security_high_resolved": 19,
     "blocker_count": 0
@@ -250,11 +276,39 @@
     "v0.8.0: API キー管理 API（GET/DELETE /api/v1/auth/keys・SQLite 永続化・監査記録・組織スコープ拒否）を追加（SEC-013 解消）",
     "v0.8.0: health-probe.sh に Webhook 通知（CEOP_ALERT_WEBHOOK_URL・ALERT/RECOVERED・配送失敗記録）を追加（G-28 通知経路実装）",
     "v0.8.0: WebUI 展開時のマニフェスト UUID 形式検証でパストラバーサルを防御",
-    "v0.8.0: /api/v1/info に environment/nodeVersion を追加"
+    "v0.8.0: /api/v1/info に environment/nodeVersion を追加",
+    "#67",
+    "#68",
+    "#69",
+    "#70",
+    "#71",
+    "#72",
+    "#73",
+    "#74",
+    "#83",
+    "#84",
+    "#85",
+    "#86",
+    "#87",
+    "#88",
+    "#89",
+    "#90",
+    "#91",
+    "#98",
+    "#111"
   ],
-  "blocked_issues": [],
+  "blocked_issues": [
+    "Neon PostgreSQL移行（本番接続文字列が未提供のため保留）",
+    "外部システム実アダプタ接続 CMDB/ITSM/IMS/LegalOps/BCP（実資格情報が未提供のため保留）",
+    "オフサイトバックアップ実運用接続（実バックアップ先の資格情報が未提供のため保留）",
+    "通知ディスパッチャー実接続検証 SMTP/Slack/Teams（実資格情報が未提供のため保留）",
+    "AI RAG検索（LLM/ベクトルDB基盤の選定が未決のため保留）"
+  ],
   "learning": {
-    "failure_patterns": [],
+    "failure_patterns": [
+      "central-auto-merge rulesetはE2E(Playwright)含む5チェックが必須（classic branch protectionの3チェックのみでは判断誤り）。job名をマトリクス化する際は元の必須チェック名を維持すること。",
+      "CSPノンス値をエスケープせずnew RegExp()に埋め込むテストは、ノンスに'+'を含む場合(~30%)に量指定子として誤解釈され間欠的に失敗する。動的値の比較は正規表現でなく文字列includes()を使うこと。"
+    ],
     "success_patterns": [
       "Node v22+ native TS execution + node:test enables zero-runtime-dependency, verifiable foundation",
       "TS 5.7 rewriteRelativeImportExtensions bridges native .ts imports and emitted .js build",
@@ -275,7 +329,8 @@
       "HEAD 対応はルータの 1 箇所（メソッド照合のフォールバック）で足りる。node:http が HEAD 応答の本文を抑止しヘッダは保持するため、ハンドラを触る必要がない",
       "失敗時のみ書き込むログは『一度も失敗していない』と『ジョブが一度も動いていない』を判別できない。成功も必ず記録する（実際に health.log が存在せず判別不能だった）",
       "Docker HEALTHCHECK は restart policy と連動しない。unless-stopped はコンテナ終了時のみ再起動するため、unhealthy は誰にも通知されない状態になる",
-      "運用シェルスクリプトのロジック（連続失敗カウンタ等）は node:test から execFile で実プロセスとして試験できる。閉じポートで決定的に失敗を再現する"
+      "運用シェルスクリプトのロジック（連続失敗カウンタ等）は node:test から execFile で実プロセスとして試験できる。閉じポートで決定的に失敗を再現する",
+      "17件の独立機能PRを並列worktreeエージェントで実装→順次update-branch/マージのキュー処理で収束させる手法が有効。共有ファイル(openapi生成スクリプト,server.ts,web.ts,renderer.ts,portal.ts)の競合は同一挿入位置への追記型変更がほとんどで、両者を残す形で機械的に解消可能だった。"
     ]
   },
   "notes": {
