@@ -369,6 +369,58 @@ test("dx-projects CRUD + unique slug conflict", async () => {
   }
 });
 
+test("dx-projects accepts and round-trips optional latitude/longitude (issue #91)", async () => {
+  const h = await buildHarness();
+  try {
+    await seedOrg(h);
+    const auth = { Authorization: `Bearer ${h.adminCred}` };
+
+    const created = await fetch(`${h.baseUrl}/api/v1/dx-projects`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...auth },
+      body: JSON.stringify({
+        organizationId: "org-demo",
+        slug: "gis-site",
+        nameJa: "GIS 現場",
+        latitude: 35.6812,
+        longitude: 139.7671,
+      }),
+    });
+    assert.equal(created.status, 201);
+    const createdBody = (await created.json()) as {
+      dxProject: { id: string; latitude?: number; longitude?: number };
+    };
+    assert.equal(createdBody.dxProject.latitude, 35.6812);
+    assert.equal(createdBody.dxProject.longitude, 139.7671);
+
+    const invalid = await fetch(`${h.baseUrl}/api/v1/dx-projects`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...auth },
+      body: JSON.stringify({
+        organizationId: "org-demo",
+        slug: "gis-invalid",
+        nameJa: "不正な座標",
+        latitude: 999,
+      }),
+    });
+    assert.equal(invalid.status, 400);
+
+    const updated = await fetch(`${h.baseUrl}/api/v1/dx-projects/${createdBody.dxProject.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...auth },
+      body: JSON.stringify({ latitude: 34.6937, longitude: 135.5023 }),
+    });
+    assert.equal(updated.status, 200);
+    const updatedBody = (await updated.json()) as {
+      dxProject: { latitude?: number; longitude?: number };
+    };
+    assert.equal(updatedBody.dxProject.latitude, 34.6937);
+    assert.equal(updatedBody.dxProject.longitude, 135.5023);
+  } finally {
+    await h.close();
+  }
+});
+
 test("material-photo-logs CRUD + CSV export", async () => {
   const h = await buildHarness();
   try {
