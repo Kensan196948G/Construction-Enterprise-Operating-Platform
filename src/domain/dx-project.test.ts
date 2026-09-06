@@ -138,6 +138,100 @@ test("dx project keeps optional fields", () => {
   assert.equal(r.value.approvedProgress, 90);
 });
 
+test("dx project accepts optional latitude/longitude (issue #91)", () => {
+  const r = createDxProject({
+    id: "dx-gis-1",
+    organizationId: "org",
+    slug: "gis-site",
+    nameJa: "GIS 現場",
+    latitude: 35.6812,
+    longitude: 139.7671,
+    createdAt: NOW as never,
+  });
+  assert.ok(r.ok);
+  assert.equal(r.value.latitude, 35.6812);
+  assert.equal(r.value.longitude, 139.7671);
+});
+
+test("dx project omits latitude/longitude when absent (backward compatible)", () => {
+  const r = createDxProject({
+    id: "dx-gis-2",
+    organizationId: "org",
+    slug: "no-gis",
+    nameJa: "座標なし",
+    createdAt: NOW as never,
+  });
+  assert.ok(r.ok);
+  assert.equal(r.value.latitude, undefined);
+  assert.equal(r.value.longitude, undefined);
+});
+
+test("dx project rejects out-of-range latitude/longitude", () => {
+  assert.ok(
+    !createDxProject({
+      id: "d",
+      organizationId: "org",
+      slug: "ok",
+      nameJa: "x",
+      latitude: 91,
+      createdAt: NOW as never,
+    }).ok,
+  );
+  assert.ok(
+    !createDxProject({
+      id: "d",
+      organizationId: "org",
+      slug: "ok",
+      nameJa: "x",
+      latitude: -91,
+      createdAt: NOW as never,
+    }).ok,
+  );
+  assert.ok(
+    !createDxProject({
+      id: "d",
+      organizationId: "org",
+      slug: "ok",
+      nameJa: "x",
+      longitude: 181,
+      createdAt: NOW as never,
+    }).ok,
+  );
+  assert.ok(
+    !createDxProject({
+      id: "d",
+      organizationId: "org",
+      slug: "ok",
+      nameJa: "x",
+      longitude: -181,
+      createdAt: NOW as never,
+    }).ok,
+  );
+});
+
+test("dx project update sets and rejects latitude/longitude", () => {
+  const base = createDxProject({
+    id: "dx-3",
+    organizationId: "org",
+    slug: "update-gis",
+    nameJa: "更新対象",
+    createdAt: NOW as never,
+  });
+  assert.ok(base.ok);
+
+  const updated = updateDxProject(base.value, {
+    latitude: 34.6937,
+    longitude: 135.5023,
+    updatedAt: NOW as never,
+  });
+  assert.ok(updated.ok);
+  assert.equal(updated.value.latitude, 34.6937);
+  assert.equal(updated.value.longitude, 135.5023);
+
+  assert.ok(!updateDxProject(base.value, { latitude: 999, updatedAt: NOW as never }).ok);
+  assert.ok(!updateDxProject(base.value, { longitude: -999, updatedAt: NOW as never }).ok);
+});
+
 test("dx project update merges", () => {
   const base = createDxProject({
     id: "dx-1",

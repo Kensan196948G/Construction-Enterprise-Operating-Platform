@@ -240,6 +240,27 @@
 
           <div class="panel-card">
             <div class="panel-card__head">
+              <h3>🗺️ 現場位置マップ（簡易プロット）</h3>
+            </div>
+            <p class="page-desc">
+              緯度・経度が登録された案件を、外部地図サービスを使わずに相対座標で表示します（軸ラベルなしの散布図）。
+            </p>
+            <div id="dxProjectsMapWrap">
+              <svg
+                id="dxProjectsMapSvg"
+                viewBox="0 0 400 260"
+                preserveAspectRatio="xMidYMid meet"
+                role="img"
+                aria-label="現場位置の簡易散布図"
+              ></svg>
+            </div>
+            <div id="dxProjectsMapEmpty" class="empty-state" hidden>
+              緯度経度が登録された案件がありません
+            </div>
+          </div>
+
+          <div class="panel-card">
+            <div class="panel-card__head">
               <h3>📁 DX 案件（Dx Projects）</h3>
               <button class="btn btn-sm" data-create="dx-projects">新規登録</button>
             </div>
