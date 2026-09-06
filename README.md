@@ -2,9 +2,9 @@
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-22.13+-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
-[![Zero Runtime Deps](https://img.shields.io/badge/runtime%20deps-zero-brightgreen)](package.json)
+[![Runtime Deps](https://img.shields.io/badge/runtime%20deps-pdf--lib%20%2B%20fontkit-blue)](package.json)
 [![CI](https://img.shields.io/github/actions/workflow/status/Kensan196948G/Construction-Enterprise-Operating-Platform/ci.yml?label=CI&logo=github)](/.github/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-558%20pass-brightgreen)](src/)
+[![Tests](https://img.shields.io/badge/tests-801%20pass-brightgreen)](src/)
 [![Security](https://img.shields.io/badge/security-hardened-blue)](src/api/middleware/auth.ts)
 [![License](https://img.shields.io/badge/license-proprietary-lightgrey)](LICENSE.md)
 
@@ -18,15 +18,15 @@
 | 項目         | 内容                                                                              |
 | ------------ | --------------------------------------------------------------------------------- |
 | 役割         | 統制・ガバナンス・共通ワークフローの調整基盤                                      |
-| バージョン   | v0.13.4（v0.13.3 + 左サイドバーを大項目アコーディオン化）                         |
+| バージョン   | v0.15.0（PDF帳票出力・PWA化・全文検索・経理/労務ドメイン等 17機能を統合）         |
 | 言語         | TypeScript 5.7（strict / `noUncheckedIndexedAccess` / 例外を投げない設計）        |
 | ランタイム   | Node.js v22.13+（ネイティブ TS 実行・ビルトインテストランナー）                   |
 | HTTP サーバ  | node:http ベースの軽量ルーター（フレームワーク依存ゼロ）                          |
-| 依存方針     | コア実装は **ランタイム依存ゼロ**（devDependencies に typescript / eslint のみ）  |
+| 依存方針     | コアはランタイム依存を最小化（PDF生成に `pdf-lib` / `@pdf-lib/fontkit` のみ使用） |
 | パッケージ   | pnpm 10.26.2                                                                      |
-| テスト       | 558 tests pass（node:test ビルトインランナー）＋ Playwright E2E 13 テスト         |
+| テスト       | 801 tests pass（node:test ビルトインランナー）＋ Playwright E2E 28 テスト         |
 | コンテナ     | Docker multi-stage build（non-root・HEALTHCHECK 付き）                            |
-| セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP ヘッダ・1 MiB 制限 |
+| セキュリティ | HMAC-SHA256 + HS256 JWT・timingSafeEqual・RBAC 権限ゲート・CSP nonce・1 MiB 制限  |
 
 ---
 
@@ -326,6 +326,27 @@ SSR 時の CSP から `unsafe-inline` を撤廃しています。SSR 時に短�
   "action": "read"
 }
 ```
+
+### 🆕 v0.15.0 で追加された主な API・画面
+
+> 詳細な仕様は `docs/openapi.yaml`（`pnpm run openapi:gen` で再生成）を参照してください。
+
+| 種別     | パス                                                                                                            | 説明                                                        |
+| -------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| GET      | `/api/v1/search?q=&type=&limit=`                                                                                | 日報/契約/文書/検査を横断する全文検索（Issue #86）          |
+| GET      | `/api/v1/governance/access-inventory`                                                                           | RBAC 権限棚卸しレポート（Issue #68）                        |
+| POST     | `/api/v1/governance/audit/archive`                                                                              | 監査証跡の長期保持バッチ（Issue #83）                       |
+| GET      | `/api/v1/governance/audit-report.pdf?period=`                                                                   | 四半期監査サマリ PDF（Issue #85）                           |
+| GET      | `/api/v1/{daily-reports,inspections,material-photo-logs}/{id}/export.pdf`                                       | 帳票 PDF 出力（Issue #71）                                  |
+| POST     | `/api/v1/purchase-orders/{id}/transition`                                                                       | 発注ライフサイクル遷移（Issue #73）                         |
+| CRUD     | `/api/v1/projects/{projectId}/labor-attendance`                                                                 | 労務・勤怠管理（Issue #74）                                 |
+| CRUD     | `/api/v1/contracts/{contractId}/{billing-invoices,payments,advance-payments}`                                   | 経理・請求管理（Issue #84）                                 |
+| CSV/XLSX | `/api/v1/{daily-reports,contracts,cost-records,work-hours,purchase-orders}/{import.csv,export.csv,export.xlsx}` | バルクインポート/エクスポート（Issue #88）                  |
+| 画面     | `/webhooks`                                                                                                     | Webhook 配信管理コンソール（Issue #87）                     |
+| 画面     | `/ops-health`                                                                                                   | 運用ヘルスダッシュボード（Issue #89）                       |
+| 画面     | `/mvp-app`（DX ポートフォリオタブ）                                                                             | 現場位置 GIS マップ可視化（Issue #91）                      |
+| PWA      | `/sw.js`                                                                                                        | Service Worker・オフライン日報スプール（Issue #72）         |
+| SDK      | `pnpm run sdk:gen` → `sdk/`                                                                                     | OpenAPI からの TypeScript クライアント自動生成（Issue #70） |
 
 ---
 
@@ -641,7 +662,7 @@ bash scripts/webui-deploy.sh
 ## 🧪 テスト実行
 
 ```bash
-# 全テスト実行（558 tests）
+# 全テスト実行（801 tests）
 pnpm run test
 
 # typecheck + lint + test 一括
@@ -682,15 +703,15 @@ node --experimental-strip-types scripts/sqlite-backup.ts /data/ceop.db /backup/c
 
 ### 📊 現在の品質状態
 
-| ゲート    | 状態           | 備考                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| --------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| typecheck | ✅ pass        | strict・`noUncheckedIndexedAccess`・0 error                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| lint      | ✅ pass        | ESLint flat config + typescript-eslint・0 warning                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| test      | ✅ 558/558     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud + governance-crud + sqlite-audit-log + workflow-crud + workflow-instance + audit-coverage + audit-verify + migrate + rate-limit（CF-IP 分離含む）+ tenant-scope + audit-tenant-scope + jwt-org + webui + client-ip + backup-retention + auth-keys + api-key-repository + web-assets + favicon + ai-actions + device-ingest + P3 domain/routes + notification + compliance + documents + work-schedules + purchase-orders + webhook + health-probe + verify-audit-chain + verify-restore + iso + integrations + load-smoke + rich-demo（架空デモデータ整合性/冪等性/監査チェーン） + demo-login（Cookie/JWT・本番無効化） |
-| build     | ✅ pass        | `dist/` に型定義付き出力                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| CI        | ✅ 設定済み    | `.github/workflows/ci.yml`（push / PR トリガー）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| Docker    | ✅ multi-stage | non-root ユーザー・HEALTHCHECK 付き                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| security  | ✅ hardened    | timingSafeEqual・ボディ制限・権限ゲート・CSP・API セキュリティヘッダ・監査網羅                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ゲート    | 状態           | 備考                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| --------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| typecheck | ✅ pass        | strict・`noUncheckedIndexedAccess`・0 error                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| lint      | ✅ pass        | ESLint flat config + typescript-eslint・0 warning                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| test      | ✅ 801/801     | domain + governance + dashboard + adapters + API + JWT + file-repo + sqlite-repo + entity-crud + governance-crud + sqlite-audit-log + workflow-crud + workflow-instance + audit-coverage + audit-verify + audit-archive + migrate + rate-limit（CF-IP 分離含む）+ tenant-scope + audit-tenant-scope + jwt-org + webui + client-ip + backup-retention + auth-keys + api-key-repository + web-assets + favicon + ai-actions + device-ingest + P3 domain/routes + notification + compliance + documents + work-schedules + purchase-orders + webhook + health-probe + verify-audit-chain + verify-restore + iso + integrations + load-smoke + rich-demo（架空デモデータ整合性/冪等性/監査チェーン） + demo-login（Cookie/JWT・本番無効化） + pdf-exports + audit-report-adapter + labor-attendance + billing + access-inventory + search-index/search-fallback + bulk-import-export（csv/xlsx/zip） + ops-health + sdk-gen |
+| build     | ✅ pass        | `dist/` に型定義付き出力                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| CI        | ✅ 設定済み    | `.github/workflows/ci.yml`（push / PR トリガー）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Docker    | ✅ multi-stage | non-root ユーザー・HEALTHCHECK 付き                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| security  | ✅ hardened    | timingSafeEqual・ボディ制限・権限ゲート・CSP・API セキュリティヘッダ・監査網羅                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
 ---
 
@@ -1095,16 +1116,36 @@ migration `008`（`projects` テーブル）を追加。
 日報（天気・作業員数・作業内容・安全確認・進捗・課題）を案件配下で管理します。
 ライフサイクル: `draft → submitted → approved`。
 
-| エンドポイント                                              | 権限                 | 説明                                                               |
-| ----------------------------------------------------------- | -------------------- | ------------------------------------------------------------------ |
-| `GET /api/v1/projects/{projectId}/daily-reports`            | `daily-report:read`  | 案件配下の日報一覧                                                 |
-| `POST /api/v1/projects/{projectId}/daily-reports`           | `daily-report:write` | 日報作成                                                           |
-| `GET /api/v1/daily-reports/{id}`                            | `daily-report:read`  | 日報詳細                                                           |
-| `PATCH /api/v1/daily-reports/{id}`                          | `daily-report:write` | 日報更新                                                           |
-| `POST /api/v1/daily-reports/{id}/transition`                | `daily-report:write` | 状態遷移（draft→submitted→approved）                               |
-| `GET /api/v1/projects/{projectId}/daily-reports/export.csv` | `daily-report:read`  | CSV エクスポート（案件配下の日報一括・式インジェクション対策済み） |
+| エンドポイント                                               | 権限                 | 説明                                                                  |
+| ------------------------------------------------------------ | -------------------- | --------------------------------------------------------------------- |
+| `GET /api/v1/projects/{projectId}/daily-reports`             | `daily-report:read`  | 案件配下の日報一覧                                                    |
+| `POST /api/v1/projects/{projectId}/daily-reports`            | `daily-report:write` | 日報作成                                                              |
+| `GET /api/v1/daily-reports/{id}`                             | `daily-report:read`  | 日報詳細                                                              |
+| `PATCH /api/v1/daily-reports/{id}`                           | `daily-report:write` | 日報更新                                                              |
+| `POST /api/v1/daily-reports/{id}/transition`                 | `daily-report:write` | 状態遷移（draft→submitted→approved）                                  |
+| `GET /api/v1/projects/{projectId}/daily-reports/export.csv`  | `daily-report:read`  | CSV エクスポート（案件配下の日報一括・式インジェクション対策済み）    |
+| `GET /api/v1/projects/{projectId}/daily-reports/export.xlsx` | `daily-report:read`  | Excel (.xlsx) エクスポート（同上、自前 OOXML/ZIP 実装・依存追加なし） |
+| `POST /api/v1/projects/{projectId}/daily-reports/import.csv` | `daily-report:write` | CSV バルクインポート（`{ "csv": "..." }`・全行検証後に一括保存）      |
 
 migration `009`（`daily_reports` テーブル）を追加。
+
+#### 📥📤 CSV/Excel バルクインポート・エクスポート（v0.14.6・Issue #88）
+
+daily-report / contract / cost-record / work-hour / purchase-order の 5 ドメインに
+CSV バルクインポート（`POST .../import.csv`）と Excel エクスポート
+（`GET .../export.xlsx`）を追加した（contract / cost-record / work-hour /
+purchase-order は CSV エクスポートも新規追加）。エンドポイント一覧は各ドメインの
+API 表（本セクションおよび Cost / Contract / Purchase Order の章）を参照。
+既存の CSV 機能への変更はなく、すべて追加のみ。
+
+- **CSV インポート**: `{ "csv": "<RFC 4180 テキスト>" }` を POST。全行を検証してから
+  一括保存する all-or-nothing 方式（1 行でも不正なら 400 で何も保存しない）。
+  検証エラーは `{ row, path, message }[]` で返す。`contractNumber` / `orderNumber`
+  はファイル内重複・既存レコードとの重複の両方をチェック。
+- **Excel エクスポート**: 外部ライブラリを追加せず、`node:zlib` 非依存の自前
+  ZIP ライター（`api/zip.ts`）と最小 OOXML ワークシート生成（`api/xlsx.ts`）で
+  `.xlsx` を組み立てる。本リポジトリの「ランタイム依存ゼロ」方針を維持するための
+  意図的な設計判断（詳細は `api/xlsx.ts` のコメントを参照）。
 
 ### 🖥️ 日報管理コンソール（v0.12.1）
 
@@ -1140,12 +1181,18 @@ hidden input へ埋め込み、localStorage は使用しません（CSP `script-
 
 予算 vs 実績・工数を案件配下で管理します。
 
-| エンドポイント                                       | 権限                       | 説明                              |
-| ---------------------------------------------------- | -------------------------- | --------------------------------- |
-| `GET/POST /api/v1/projects/{projectId}/cost-records` | `cost:read` / `cost:write` | 原価記録（予算/実績/業者/請求書） |
-| `GET/DELETE /api/v1/cost-records/{id}`               | `cost:read` / `cost:write` | 詳細・削除                        |
-| `GET/POST /api/v1/projects/{projectId}/work-hours`   | `cost:read` / `cost:write` | 工数（作業者・日付・時間）        |
-| `GET /api/v1/work-hours/{id}`                        | `cost:read`                | 詳細                              |
+| エンドポイント                                              | 権限                       | 説明                              |
+| ----------------------------------------------------------- | -------------------------- | --------------------------------- |
+| `GET/POST /api/v1/projects/{projectId}/cost-records`        | `cost:read` / `cost:write` | 原価記録（予算/実績/業者/請求書） |
+| `GET/DELETE /api/v1/cost-records/{id}`                      | `cost:read` / `cost:write` | 詳細・削除                        |
+| `GET /api/v1/projects/{projectId}/cost-records/export.csv`  | `cost:read`                | CSV エクスポート                  |
+| `GET /api/v1/projects/{projectId}/cost-records/export.xlsx` | `cost:read`                | Excel (.xlsx) エクスポート        |
+| `POST /api/v1/projects/{projectId}/cost-records/import.csv` | `cost:write`               | CSV バルクインポート              |
+| `GET/POST /api/v1/projects/{projectId}/work-hours`          | `cost:read` / `cost:write` | 工数（作業者・日付・時間）        |
+| `GET /api/v1/work-hours/{id}`                               | `cost:read`                | 詳細                              |
+| `GET /api/v1/projects/{projectId}/work-hours/export.csv`    | `cost:read`                | CSV エクスポート                  |
+| `GET /api/v1/projects/{projectId}/work-hours/export.xlsx`   | `cost:read`                | Excel (.xlsx) エクスポート        |
+| `POST /api/v1/projects/{projectId}/work-hours/import.csv`   | `cost:write`               | CSV バルクインポート              |
 
 ## 🔔 Notification API（P3 / S-09）
 
@@ -1176,10 +1223,13 @@ migration `010`（photos）・`011/012`（safety/quality）・`013/014`（cost/w
 
 契約（元請/下請）を案件配下で管理します。
 
-| エンドポイント                                    | 権限                               | 説明                           |
-| ------------------------------------------------- | ---------------------------------- | ------------------------------ |
-| `GET/POST /api/v1/projects/{projectId}/contracts` | `contract:read` / `contract:write` | 契約一覧・作成（契約番号一意） |
-| `GET /api/v1/contracts/{id}`                      | `contract:read`                    | 詳細                           |
+| エンドポイント                                           | 権限                               | 説明                                         |
+| -------------------------------------------------------- | ---------------------------------- | -------------------------------------------- |
+| `GET/POST /api/v1/projects/{projectId}/contracts`        | `contract:read` / `contract:write` | 契約一覧・作成（契約番号一意）               |
+| `GET /api/v1/contracts/{id}`                             | `contract:read`                    | 詳細                                         |
+| `GET /api/v1/projects/{projectId}/contracts/export.csv`  | `contract:read`                    | CSV エクスポート                             |
+| `GET /api/v1/projects/{projectId}/contracts/export.xlsx` | `contract:read`                    | Excel (.xlsx) エクスポート                   |
+| `POST /api/v1/projects/{projectId}/contracts/import.csv` | `contract:write`                   | CSV バルクインポート（契約番号の重複を検証） |
 
 ## 🎫 ITSM Adapter API（P3 / S-08）
 
@@ -1224,10 +1274,13 @@ migration `016`（knowledge_articles）・`017`（legal_contracts）を追加。
 
 発注（番号一意・数量×単価=金額・状態）を案件配下で管理します。
 
-| エンドポイント                                          | 権限                                           | 説明       |
-| ------------------------------------------------------- | ---------------------------------------------- | ---------- |
-| `GET/POST /api/v1/projects/{projectId}/purchase-orders` | `purchase-order:read` / `purchase-order:write` | 一覧・作成 |
-| `GET /api/v1/purchase-orders/{id}`                      | `purchase-order:read`                          | 詳細       |
+| エンドポイント                                                 | 権限                                           | 説明                                         |
+| -------------------------------------------------------------- | ---------------------------------------------- | -------------------------------------------- |
+| `GET/POST /api/v1/projects/{projectId}/purchase-orders`        | `purchase-order:read` / `purchase-order:write` | 一覧・作成                                   |
+| `GET /api/v1/purchase-orders/{id}`                             | `purchase-order:read`                          | 詳細                                         |
+| `GET /api/v1/projects/{projectId}/purchase-orders/export.csv`  | `purchase-order:read`                          | CSV エクスポート                             |
+| `GET /api/v1/projects/{projectId}/purchase-orders/export.xlsx` | `purchase-order:read`                          | Excel (.xlsx) エクスポート                   |
+| `POST /api/v1/projects/{projectId}/purchase-orders/import.csv` | `purchase-order:write`                         | CSV バルクインポート（発注番号の重複を検証） |
 
 ## 🔔 Notification Preference / Dispatcher（P3 / E-11・S-09）
 
@@ -1310,6 +1363,30 @@ GET  /api/v1/integrations/contracts          契約定義一覧（version/auth/t
 
 契約仕様: `docs/integration/LINKED_INTEGRATION_SPEC.md`。
 全体設計・リポジトリ統廃合マスタープラン: `docs/integration/REPOSITORY_MASTER_PLAN.md`。
+
+---
+
+## 🔎 Search API（v0.15.0 / Issue #86）
+
+日報・契約・文書・検査の 4 ドメインを横断する全文検索エンドポイント。永続化バックエンドの
+種別（SQLite / in-memory / file）は `Repositories.search` の裏に隠蔽され、ルート実装は
+バックエンドを一切意識しません。
+
+| エンドポイント       | 権限                                     | 説明                                                                                            |
+| -------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `GET /api/v1/search` | 認証のみ（各ドメインの `<domain>:read`） | `?q=` 全文検索（必須）・`?type=daily-report\|contract\|document\|inspection`（任意）・`?limit=` |
+
+- **SQLite バックエンド**: FTS5 仮想テーブル（`search_fts`、`tokenize='trigram'`）を
+  `daily_reports` / `legal_contracts` / `documents` / `inspections` の INSERT/UPDATE/DELETE
+  トリガーで同期。日本語はスペース区切りが無いため既定の `unicode61` では実用にならず、
+  3 文字の重複ウィンドウで索引する `trigram` トークナイザーを採用（3 文字未満のクエリは
+  仕様上マッチしない既知の制約）。
+- **in-memory / file バックエンド**: `Repository#findAll()` を全走査し、主要テキスト
+  フィールドへの大文字小文字を無視した部分一致（`includes()`）でフォールバック。
+- レスポンスは `{ results: [{ domain, id, title, summary?, score?, organizationId, projectId? }], count, query, type? }`
+  の統一フォーマット。`?type=` を省略すると、呼び出し資格情報が読み取り権限を持つドメインだけに
+  自動的に絞り込まれる（無許可ドメインの情報漏えい防止）。`?type=` で無許可ドメインを明示指定
+  した場合は `403`。
 
 ---
 

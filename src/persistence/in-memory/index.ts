@@ -20,6 +20,7 @@ export { InMemoryIsoRecordRepository } from "./iso-repositories.ts";
 export { InMemoryIntegrationEventRepository } from "./iso-repositories.ts";
 
 import type { Repositories } from "../ports.ts";
+import { createFallbackSearchService } from "../search-fallback.ts";
 import { InMemoryApplicationRepository } from "./application-repository.ts";
 import { InMemoryDeviceRepository } from "./device-repository.ts";
 import { InMemoryOrganizationRepository } from "./organization-repository.ts";
@@ -72,7 +73,7 @@ import {
  * (no shared state), making it safe to use in parallel test suites.
  */
 export function createInMemoryRepositories(): Repositories {
-  return {
+  const repositories: Repositories = {
     users: new InMemoryUserRepository(),
     organizations: new InMemoryOrganizationRepository(),
     roles: new InMemoryRoleRepository(),
@@ -115,4 +116,5 @@ export function createInMemoryRepositories(): Repositories {
     materialPhotoLogs: new InMemoryMaterialPhotoLogRepository(),
     laborAttendances: new InMemoryLaborAttendanceRepository(),
   };
+  return { ...repositories, search: createFallbackSearchService(repositories) };
 }

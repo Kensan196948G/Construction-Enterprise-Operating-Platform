@@ -4,6 +4,95 @@ All notable changes to the Construction Enterprise Operating Platform are docume
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [0.15.0] - 2026-09-06
+
+CTO主導の機能ギャップ分析（22項目）に基づき、17件の機能PRを並列実装・
+段階的に統合した大規模リリース。実運用の外部資格情報（本番SMTP/Slack、
+Neon接続文字列、外部CMDB/ITSM等）を要する5項目（Neon移行・外部アダプタ
+実接続・オフサイトバックアップ実運用接続・通知ディスパッチャー実接続検証・
+AI RAG検索）は対象外とした。
+
+### Added
+
+- **PDF帳票出力（Issue #71）** — 工事日報・写真台帳・検査記録を
+  `GET /.../{id}/export.pdf` で出力。`pdf-lib` + `@pdf-lib/fontkit` で
+  IPAゴシックを埋め込み、日本語テキストを正しく描画（サブセット埋め込みで
+  出力ファイルは軽量）
+- **監査レポート自動生成（Issue #85）** — `GET /api/v1/governance/audit-report.pdf?period=YYYY-Q#`
+  で四半期の監査ログ・コンプライアンスチェック・マネジメントレビューを
+  集計しPDF化。PDF生成の共通処理を `pdf-writer.ts` に抽出
+- **モバイルPWA化（Issue #72）** — Service Worker（`sw.js`）・オフライン
+  フォールバックページを追加。日報作成フォームはオフライン時にIndexedDBへ
+  下書きを退避し、オンライン復帰時に自動送信
+- **発注管理ライフサイクル拡張（Issue #73）** — 発注のステータスを
+  `draft → issued → approved → received → delivered → inspected → paid`
+  （`cancelled`はいつでも可）に拡張し、`POST /.../{id}/transition` を追加
+- **労務・勤怠管理ドメイン新設（Issue #74）** — 自社/協力会社の別・日当・
+  残業時間を持つ `LaborAttendance` を新設し、原価ドメインへの計上
+  （`post-to-cost`）に対応
+- **権限棚卸しレポート（Issue #68）** — `GET /api/v1/governance/access-inventory`
+  でRBACの「誰が何にアクセスできるか」を集計・監査記録
+- **監査証跡の長期保存・自動アーカイブ（Issue #83）** — `POST /api/v1/governance/audit/archive`
+  で保持期間（既定7年）超過分をハッシュチェーンを変更せず側索引でアーカイブ
+- **経理・請求管理ドメイン新設（Issue #84）** — 出来高請求書・支払記録・
+  仮払記録（`ProgressBillingInvoice` / `PaymentRecord` / `AdvancePayment`）
+- **横断全文検索基盤（Issue #86）** — `GET /api/v1/search?q=...&type=...` を新設。
+  日報 / 契約 / 文書 / 検査の 4 ドメインを横断検索し、
+  `{ results: [{ domain, id, title, summary?, score?, organizationId, projectId? }], count, query, type? }`
+  の統一フォーマットで返却
+  - SQLite バックエンド: `search_fts`（FTS5・`tokenize='trigram'`）仮想テーブルを
+    各テーブルの INSERT/UPDATE/DELETE トリガーで同期（`src/persistence/sqlite/search-index.ts`）。
+    `trigram` を採用したのは日本語（分かち書きなし）を既定の `unicode61` では実用的に
+    索引できないため。3 文字未満のクエリはトークナイザーの仕様上マッチしない既知の制約
+  - in-memory / file バックエンド: `Repository#findAll()` を走査する大小文字非依存の
+    部分一致フォールバック（`src/persistence/search-fallback.ts`）
+  - `Repositories.search`（`SearchService`）としてバックエンド抽象を維持し、ルート実装は
+    ストレージ種別を意識しない
+  - `?type=` 省略時は資格情報が読み取り権限を持つドメインへ自動的に絞り込み、
+    無許可ドメインを明示指定した場合は `403`
+- **Webhook配信管理UI（Issue #87）** — `/webhooks` に送信先一覧・配信履歴・
+  再送ボタンを備えたSSR管理画面を追加
+- **運用ヘルスダッシュボード（Issue #89）** — `/ops-health` にコンテナ稼働状況・
+  DB接続・health-probeログを集約表示（実データのみ、未接続項目は「未接続」と明示）
+- **バルクインポート/エクスポート拡充（Issue #88）** — daily-report/contract/
+  cost-record/work-hour/purchase-order にCSVインポートとCSV/Excel(.xlsx)
+  エクスポートを追加。`.xlsx`は依存追加なしの自前ZIP/OOXML実装
+- **GIS工事位置マップ可視化（Issue #91）** — プロジェクトへ緯度経度
+  （任意項目）を追加し、`/mvp-app` に軽量なSVG散布図で現場位置を可視化
+- **OpenAPI SDKクライアント自動生成（Issue #70）** — `pnpm run sdk:gen` で
+  型付きTypeScriptクライアント（`sdk/`）をOpenAPI仕様から生成
+- **E2Eクロスブラウザ・モバイルビューポート拡張（Issue #90）** — CIの
+  E2EをChromium/Firefox/WebKit + モバイル解像度のマトリクス実行に拡張
+- Dependabot（npm/pnpm・GitHub Actions）+ CODEOWNERSを導入
+
+### Security
+
+- **CSP nonce化によるunsafe-inline撤廃（Issue #69）** — SSR応答ごとに
+  `crypto.randomBytes`によるnonceを発行しCSPへ付与。WebUIデザインバンドルの
+  インライン`<style>`要素もsha256ハッシュ化（既知の残課題は
+  `docs/assessment/ROOT-ASSESSMENT.md` G-14参照）
+
+### Fixed
+
+- CSPノンス値をエスケープせず`RegExp`化していたテストのバグ（Issue #111）を修正。
+  ノンスに`+`を含む場合に約30%の確率で `Typecheck / Lint / Test` が失敗し、
+  `central-auto-merge` ruleset の必須チェックにより複数PRのマージが
+  繰り返しブロックされていた
+- CI: E2Eマトリクスのchromiumジョブ名を `E2E (Playwright)` に固定
+  （central-auto-merge rulesetの必須チェック名と一致させるため）
+
+### Changed
+
+- バージョン 0.14.5 → 0.15.0（`src/version.ts` / `package.json` / `Dockerfile`）
+
+### Notes
+
+- 品質ゲート: `pnpm run verify`（format / openapi / typecheck / lint / test 801 / build / parity 44/65）、
+  `pnpm run test:e2e --project=chromium` 28 pass
+- 対象外（要外部資格情報、スキャフォールディングのみ）: Neon PostgreSQL移行、
+  外部システム実アダプタ接続（CMDB/ITSM/IMS/LegalOps/BCP）、オフサイトバックアップ
+  実運用接続、通知ディスパッチャー実接続検証、AI RAG検索
+
 ## [0.14.5] - 2026-08-18
 
 ### Changed

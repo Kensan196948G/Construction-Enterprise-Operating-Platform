@@ -13,6 +13,13 @@
 import { randomUUID } from "node:crypto";
 import type { IsoTimestamp } from "../../domain/common.ts";
 import { AUDIT_ORG_KEY, createAuditEvent } from "../../domain/audit-event.ts";
+import {
+  buildAuditReportSummary,
+  currentReportPeriod,
+  parseReportPeriod,
+  periodToString,
+  renderAuditReportPdf,
+} from "../../adapters/audit-report-adapter.ts";
 import { createPolicy, policyId } from "../../domain/policy.ts";
 import type { PolicyEffect, PolicyCondition } from "../../domain/policy.ts";
 import type { Permission } from "../../domain/role.ts";
@@ -36,6 +43,7 @@ import {
   forbidden,
   noContent,
   notFound,
+  nowTs,
   str,
   strArr,
 } from "./route-helpers.ts";
@@ -54,6 +62,9 @@ const AUDIT_EXPORT_LIMIT_MAX = 10_000;
 
 /** Resource identifier recorded against export attempts. */
 const AUDIT_EXPORT_RESOURCE = "governance:audit-log";
+
+/** Resource identifier recorded against quarterly audit-report generation attempts. */
+const AUDIT_REPORT_RESOURCE = "governance:audit-report";
 
 /** Resource identifier recorded against archive-batch attempts. */
 const AUDIT_ARCHIVE_RESOURCE = "governance:audit-log";
@@ -578,6 +589,91 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
       ...(report.brokenAt !== undefined ? { brokenAt: report.brokenAt } : {}),
       checkedAt: new Date().toISOString(),
     });
+  });
+
+  // GET /api/v1/governance/audit-report.pdf?period=YYYY-Q#
+  //   (requires audit:export — same rationale as the bulk audit export above:
+  //   this hands a caller an aggregated evidentiary document covering a whole
+  //   quarter, not a single paged read.)
+  //
+  // Aggregates the audit log, compliance checks, and management reviews for
+  // one calendar quarter (issue #85) and renders the result as a printable
+  // PDF, reusing the daily-report/inspection PDF adapter's font-embedding
+  // machinery (issue #71, `pdf-writer.ts`). `period` defaults to the quarter
+  // containing the current time when omitted.
+  router.get("/api/v1/governance/audit-report.pdf", async (req, ctx, res) => {
+    const rawPeriod = req.query["period"] ?? periodToString(currentReportPeriod());
+
+    if (!hasPermission(ctx, "audit", "export")) {
+      // Mirrors the raw export route: a refused report generation is itself
+      // evidence, so the denial is recorded rather than silently dropped.
+      recordAudit(
+        container.auditLog,
+        ctx,
+        "audit-report:generate",
+        AUDIT_REPORT_RESOURCE,
+        "denied",
+        {
+          period: rawPeriod,
+        },
+      );
+      writeJson(res, 403, { error: "Forbidden", message: "requires 'audit:export' permission" });
+      return;
+    }
+
+    const parsedPeriod = parseReportPeriod(rawPeriod);
+    if (!parsedPeriod.ok) {
+      badRequest(res, parsedPeriod.error);
+      return;
+    }
+
+    // Snapshot before recording, so the report's own generation event is not
+    // part of the evidence range it summarizes.
+    const scopedAuditEntries = scopeAuditEntries(container.auditLog.entries, ctx);
+    const integrityReport = container.auditLog.verify();
+
+    const [allComplianceChecks, managementReviews] = await Promise.all([
+      container.repositories.complianceChecks.findAll(),
+      ctx?.organizationId !== undefined
+        ? container.repositories.managementReviews.findByOrganization(ctx.organizationId)
+        : container.repositories.managementReviews.findAll(),
+    ]);
+    const scopedComplianceChecks =
+      ctx?.organizationId !== undefined
+        ? allComplianceChecks.filter((c) => c.organizationId === ctx.organizationId)
+        : allComplianceChecks;
+
+    const summary = buildAuditReportSummary({
+      period: rawPeriod,
+      organizationId: ctx?.organizationId,
+      generatedAt: nowTs(),
+      auditEntries: scopedAuditEntries,
+      complianceChecks: scopedComplianceChecks,
+      managementReviews,
+      integrityValid: integrityReport.valid,
+    });
+    if (!summary.ok) {
+      badRequest(res, summary.error);
+      return;
+    }
+
+    const pdf = await renderAuditReportPdf(summary.value);
+
+    recordAudit(
+      container.auditLog,
+      ctx,
+      "audit-report:generate",
+      AUDIT_REPORT_RESOURCE,
+      "success",
+      {
+        period: summary.value.period,
+        auditEventCount: String(summary.value.auditLog.totalEvents),
+        complianceCheckCount: String(summary.value.compliance.totalChecks),
+        managementReviewCount: String(summary.value.managementReviews.total),
+      },
+    );
+
+    writeAttachment(res, 200, "application/pdf", `audit-report-${summary.value.period}.pdf`, pdf);
   });
 
   // ── Access inventory (RBAC audit) ────────────────────────────────────────

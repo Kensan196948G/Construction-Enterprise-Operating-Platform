@@ -997,6 +997,26 @@ const schemas: { [k: string]: YamlValue } = {
       updatedAt: { type: "string", format: "date-time" },
     },
   },
+  SearchResultItem: {
+    type: "object",
+    required: ["domain", "id", "title", "organizationId"],
+    properties: {
+      domain: {
+        type: "string",
+        enum: ["daily-report", "contract", "document", "inspection"],
+      },
+      id: { type: "string" },
+      title: { type: "string" },
+      summary: { type: "string" },
+      score: {
+        type: "number",
+        description:
+          "Relevance score (lower = more relevant, FTS5 bm25 convention). Absent for the fallback scan.",
+      },
+      organizationId: { type: "string" },
+      projectId: { type: "string" },
+    },
+  },
   SupplierEvaluation: {
     type: "object",
     required: [
@@ -2308,6 +2328,33 @@ const paths: { [k: string]: YamlValue } = {
       },
     },
   },
+  "/api/v1/governance/audit-report.pdf": {
+    get: {
+      operationId: "generateAuditReport",
+      summary: "Quarterly audit report — aggregated PDF (requires audit:export)",
+      description:
+        "Aggregates the audit log, compliance checks, and management reviews for one " +
+        "calendar quarter and renders the result as a printable PDF. `period` defaults " +
+        "to the quarter containing the current time when omitted.",
+      tags: ["Governance"],
+      security: authSecurity,
+      parameters: [
+        {
+          name: "period",
+          in: "query",
+          schema: { type: "string" },
+          description: "Quarter to summarize, formatted as YYYY-Q# (e.g. 2026-Q3)",
+        },
+      ],
+      responses: {
+        "200": {
+          description: "PDF file",
+          content: { "application/pdf": { schema: { type: "string", format: "binary" } } },
+        },
+        ...errorResponses(400, 401, 403),
+      },
+    },
+  },
   "/api/v1/governance/access-inventory": {
     get: {
       operationId: "getAccessInventory",
@@ -3134,6 +3181,22 @@ const paths: { [k: string]: YamlValue } = {
           properties: { dailyReport: { $ref: "#/components/schemas/DailyReport" } },
         }),
         ...errorResponses(400, 401, 403, 404),
+      },
+    },
+  },
+  "/api/v1/daily-reports/{id}/export.pdf": {
+    get: {
+      operationId: "exportDailyReportPdf",
+      summary: "Export a daily report as a printable PDF",
+      tags: ["DailyReports"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        "200": {
+          description: "PDF file",
+          content: { "application/pdf": { schema: { type: "string", format: "binary" } } },
+        },
+        ...errorResponses(401, 403, 404),
       },
     },
   },
@@ -4378,6 +4441,22 @@ const paths: { [k: string]: YamlValue } = {
       },
     },
   },
+  "/api/v1/inspections/{id}/export.pdf": {
+    get: {
+      operationId: "exportInspectionPdf",
+      summary: "Export an inspection as a printable PDF",
+      tags: ["Inspections"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        "200": {
+          description: "PDF file",
+          content: { "application/pdf": { schema: { type: "string", format: "binary" } } },
+        },
+        ...errorResponses(401, 403, 404),
+      },
+    },
+  },
   "/api/v1/supplier-evaluations": {
     get: {
       operationId: "listSupplierEvaluations",
@@ -5348,6 +5427,22 @@ const paths: { [k: string]: YamlValue } = {
       },
     },
   },
+  "/api/v1/material-photo-logs/{id}/export.pdf": {
+    get: {
+      operationId: "exportMaterialPhotoLogPdf",
+      summary: "Export a material photo log entry as a printable PDF",
+      tags: ["MaterialPhotoLogs"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        "200": {
+          description: "PDF file",
+          content: { "application/pdf": { schema: { type: "string", format: "binary" } } },
+        },
+        ...errorResponses(401, 403, 404),
+      },
+    },
+  },
   "/api/v1/itsm/incidents": {
     get: {
       operationId: "listItsmIncidents",
@@ -6163,6 +6258,45 @@ const paths: { [k: string]: YamlValue } = {
     patch: gatewayOperation("patch"),
     delete: gatewayOperation("delete"),
   },
+  "/api/v1/search": {
+    get: {
+      operationId: "search",
+      summary:
+        "Cross-domain full-text search over daily reports, contracts, documents, and inspections (Issue #86)",
+      tags: ["Search"],
+      security: authSecurity,
+      parameters: [
+        { name: "q", in: "query", required: true, schema: { type: "string" } },
+        {
+          name: "type",
+          in: "query",
+          schema: {
+            type: "string",
+            enum: ["daily-report", "contract", "document", "inspection"],
+          },
+          description:
+            "Restrict results to a single domain; omit to search every domain the caller can read.",
+        },
+        { $ref: "#/components/parameters/limitParam" },
+      ],
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["results", "count", "query"],
+          properties: {
+            results: { type: "array", items: { $ref: "#/components/schemas/SearchResultItem" } },
+            count: { type: "integer" },
+            query: { type: "string" },
+            type: {
+              type: "string",
+              enum: ["daily-report", "contract", "document", "inspection"],
+            },
+          },
+        }),
+        ...errorResponses(400, 401, 403),
+      },
+    },
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -6251,6 +6385,11 @@ const spec: { [k: string]: YamlValue } = {
     {
       name: "IntegrationGateway",
       description: "CEOP gateway reverse proxy for integration services (P1)",
+    },
+    {
+      name: "Search",
+      description:
+        "Cross-domain full-text search (FTS5 on SQLite, substring fallback otherwise; Issue #86)",
     },
   ],
   paths,

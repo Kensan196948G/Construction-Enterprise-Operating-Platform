@@ -71,6 +71,7 @@ import {
   FileMaterialPhotoLogRepository,
   FileLaborAttendanceRepository,
 } from "./business-repositories.ts";
+import { createFallbackSearchService } from "../search-fallback.ts";
 import { FileIsoRecordRepository, FileIntegrationEventRepository } from "./iso-repositories.ts";
 
 // ---------------------------------------------------------------------------
@@ -280,7 +281,7 @@ class FileDailyReportRepository
  */
 export async function createFileRepositories(dataDir: string): Promise<Repositories> {
   await ensureDataDir(dataDir);
-  return {
+  const repositories: Repositories = {
     users: new FileUserRepository(dataDir, "users.json"),
     organizations: new FileOrganizationRepository(dataDir, "organizations.json"),
     roles: new FileRoleRepository(dataDir, "roles.json"),
@@ -335,4 +336,5 @@ export async function createFileRepositories(dataDir: string): Promise<Repositor
     materialPhotoLogs: new FileMaterialPhotoLogRepository(dataDir, "material-photo-logs.json"),
     laborAttendances: new FileLaborAttendanceRepository(dataDir, "labor-attendances.json"),
   };
+  return { ...repositories, search: createFallbackSearchService(repositories) };
 }
