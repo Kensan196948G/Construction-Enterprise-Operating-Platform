@@ -2,9 +2,13 @@
  * LOCAL-ONLY E2E configuration (not used by CI, not part of the default suite).
  *
  * Some developer machines cannot launch the bundled Chromium (SIGTRAP on
- * startup, e.g. after a glibc update). This config runs the same specs on
- * Firefox so the browser flows can still be verified locally. CI keeps using
- * the default chromium config on ubuntu-latest.
+ * startup, e.g. after a glibc update). This config runs the FULL spec suite
+ * on Firefox so the browser flows can still be verified locally.
+ *
+ * This is independent of the `firefox` project defined in the main
+ * `playwright.config.ts` (#90): that one is CI-focused and only runs a small
+ * smoke subset (via `grep`) across every engine. Use this file instead when
+ * you need the complete suite on Firefox, e.g. as a Chromium workaround.
  */
 
 import { defineConfig } from "@playwright/test";
