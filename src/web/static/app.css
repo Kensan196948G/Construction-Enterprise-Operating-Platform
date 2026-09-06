@@ -1550,3 +1550,44 @@ dialog::backdrop {
   background: #dcfce7;
   color: #15803d;
 }
+
+/* ── DX portfolio site map (issue #91: lightweight coordinate plot) ── */
+#dxProjectsMapWrap {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md, 8px);
+  background: var(--surface-soft, #f8fafc);
+  overflow: hidden;
+}
+#dxProjectsMapSvg {
+  display: block;
+  width: 100%;
+  height: 260px;
+}
+.dx-map-frame {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.dx-map-gridline {
+  stroke: var(--line);
+  stroke-opacity: 0.5;
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+.dx-map-point {
+  fill: #2563eb;
+  stroke: #fff;
+  stroke-width: 1.5;
+}
+.dx-map-point.production {
+  fill: #16a34a;
+}
+.dx-map-point.paused,
+.dx-map-point.retired,
+.dx-map-point.deleted {
+  fill: #94a3b8;
+}
+.dx-map-label {
+  font-size: 9px;
+  fill: var(--ink-soft, #475569);
+}
