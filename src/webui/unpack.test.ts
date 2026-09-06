@@ -4,12 +4,18 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { gzipSync } from "node:zlib";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { unpackBundle, writeUnpackedBundle } from "./unpack.ts";
+import {
+  CSP_MANIFEST_PATH,
+  computeStyleElementCspHashes,
+  unpackBundle,
+  writeUnpackedBundle,
+} from "./unpack.ts";
 
 const UUID_JS = "11111111-1111-4111-8111-111111111111";
 const UUID_FONT = "22222222-2222-4222-8222-222222222222";
@@ -73,6 +79,22 @@ test("unpackBundle decodes gzip, base64 and plain-text assets", () => {
   assert.doesNotMatch(indexHtml, /["(][0-9a-f]{8}-/);
   assert.match(indexHtml, /src="assets\/11111111-1111-4111-8111-111111111111\.js"/);
   assert.match(indexHtml, /url\(assets\/22222222-2222-4222-8222-222222222222\.woff2\)/);
+});
+
+test("unpackBundle hashes inline <style> content for CSP style-src-elem", () => {
+  const result = unpackBundle(syntheticBundle());
+  assert.ok(result.ok);
+  const { indexHtml, cspStyleElementHashes } = result.value;
+
+  const styleMatch = /<style>([\s\S]*?)<\/style>/.exec(indexHtml);
+  assert.ok(styleMatch, "template must still contain the inline <style> block");
+  const expectedHash = `sha256-${createHash("sha256")
+    .update(styleMatch[1] ?? "", "utf-8")
+    .digest("base64")}`;
+
+  assert.deepEqual(cspStyleElementHashes, [expectedHash]);
+  // computeStyleElementCspHashes must agree when run standalone on the same HTML.
+  assert.deepEqual(computeStyleElementCspHashes(indexHtml), [expectedHash]);
 });
 
 test("unpackBundle emits ext-resources.js and references it for ext_resources entries", () => {
@@ -157,6 +179,12 @@ test("writeUnpackedBundle materialises index.html and assets on disk", () => {
     assert.match(index, /assets\/11111111-1111-4111-8111-111111111111\.js/);
     const font = readFileSync(join(outDir, "assets", `${UUID_FONT}.woff2`));
     assert.equal(font.length, 6);
+
+    const csp = JSON.parse(readFileSync(join(outDir, CSP_MANIFEST_PATH), "utf-8")) as {
+      styleElementHashes: string[];
+    };
+    assert.deepEqual(csp.styleElementHashes, result.value.cspStyleElementHashes);
+    assert.equal(csp.styleElementHashes.length, 1);
   } finally {
     rmSync(outDir, { recursive: true, force: true });
   }
