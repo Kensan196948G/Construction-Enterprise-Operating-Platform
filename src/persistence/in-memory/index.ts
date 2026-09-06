@@ -60,6 +60,7 @@ import {
   InMemoryAiBuildProjectRepository,
   InMemoryDxProjectRepository,
   InMemoryMaterialPhotoLogRepository,
+  InMemoryLaborAttendanceRepository,
 } from "./business-repositories.ts";
 
 /**
@@ -106,5 +107,6 @@ export function createInMemoryRepositories(): Repositories {
     aiBuildProjects: new InMemoryAiBuildProjectRepository(),
     dxProjects: new InMemoryDxProjectRepository(),
     materialPhotoLogs: new InMemoryMaterialPhotoLogRepository(),
+    laborAttendances: new InMemoryLaborAttendanceRepository(),
   };
 }
