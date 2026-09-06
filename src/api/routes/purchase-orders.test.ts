@@ -245,3 +245,166 @@ test("Purchase Order API — 404 for non-existent purchase order", async (t) => 
   const res = await call(h.baseUrl, "GET", "/api/v1/purchase-orders/does-not-exist", h.adminCred);
   assert.equal(res.status, 404);
 });
+
+test("Purchase Order API — transition follows lifecycle draft -> issued -> approved -> received -> delivered -> inspected -> paid", async (t) => {
+  const h = await buildHarness();
+  t.after(h.close);
+
+  const project = await call(h.baseUrl, "POST", "/api/v1/projects", h.adminCred, {
+    organizationId: "org-hq",
+    projectCode: "PO-LIFECYCLE",
+    name: "lifecycle project",
+  });
+  const pid = (project.json as { project: { id: string } }).project.id;
+
+  const created = await call(
+    h.baseUrl,
+    "POST",
+    `/api/v1/projects/${pid}/purchase-orders`,
+    h.adminCred,
+    {
+      orderNumber: "PO-LIFECYCLE-001",
+      supplier: "建材商事株式会社",
+      item: "セメント 25kg",
+      quantity: 10,
+      unitPrice: 500,
+    },
+  );
+  assert.equal(created.status, 201);
+  const poId = (created.json as { purchaseOrder: { id: string } }).purchaseOrder.id;
+
+  for (const status of [
+    "issued",
+    "approved",
+    "received",
+    "delivered",
+    "inspected",
+    "paid",
+  ] as const) {
+    const res = await call(
+      h.baseUrl,
+      "POST",
+      `/api/v1/purchase-orders/${poId}/transition`,
+      h.adminCred,
+      { status },
+    );
+    assert.equal(res.status, 200, `transition to '${status}' should succeed`);
+    assert.equal(
+      (res.json as { purchaseOrder: { status: string } }).purchaseOrder.status,
+      status,
+    );
+  }
+
+  assert.ok(
+    h.audit.query((e) => e.event.action === "purchase-order:transition").length >= 6,
+  );
+});
+
+test("Purchase Order API — transition rejects an invalid order (draft -> paid)", async (t) => {
+  const h = await buildHarness();
+  t.after(h.close);
+
+  const project = await call(h.baseUrl, "POST", "/api/v1/projects", h.adminCred, {
+    organizationId: "org-hq",
+    projectCode: "PO-INVALID",
+    name: "invalid transition project",
+  });
+  const pid = (project.json as { project: { id: string } }).project.id;
+
+  const created = await call(
+    h.baseUrl,
+    "POST",
+    `/api/v1/projects/${pid}/purchase-orders`,
+    h.adminCred,
+    {
+      orderNumber: "PO-INVALID-001",
+      supplier: "s",
+      item: "i",
+      quantity: 1,
+      unitPrice: 100,
+    },
+  );
+  const poId = (created.json as { purchaseOrder: { id: string } }).purchaseOrder.id;
+
+  const res = await call(
+    h.baseUrl,
+    "POST",
+    `/api/v1/purchase-orders/${poId}/transition`,
+    h.adminCred,
+    { status: "paid" },
+  );
+  assert.equal(res.status, 400);
+});
+
+test("Purchase Order API — transition rejects unknown status value", async (t) => {
+  const h = await buildHarness();
+  t.after(h.close);
+
+  const project = await call(h.baseUrl, "POST", "/api/v1/projects", h.adminCred, {
+    organizationId: "org-hq",
+    projectCode: "PO-UNKNOWN",
+    name: "unknown status project",
+  });
+  const pid = (project.json as { project: { id: string } }).project.id;
+
+  const created = await call(
+    h.baseUrl,
+    "POST",
+    `/api/v1/projects/${pid}/purchase-orders`,
+    h.adminCred,
+    { orderNumber: "PO-UNKNOWN-001", supplier: "s", item: "i", quantity: 1, unitPrice: 100 },
+  );
+  const poId = (created.json as { purchaseOrder: { id: string } }).purchaseOrder.id;
+
+  const res = await call(
+    h.baseUrl,
+    "POST",
+    `/api/v1/purchase-orders/${poId}/transition`,
+    h.adminCred,
+    { status: "shipped" },
+  );
+  assert.equal(res.status, 400);
+});
+
+test("Purchase Order API — transition 403 with viewer (read-only) key", async (t) => {
+  const h = await buildHarness();
+  t.after(h.close);
+
+  const project = await call(h.baseUrl, "POST", "/api/v1/projects", h.adminCred, {
+    organizationId: "org-hq",
+    projectCode: "PO-FORBID",
+    name: "forbidden transition project",
+  });
+  const pid = (project.json as { project: { id: string } }).project.id;
+
+  const created = await call(
+    h.baseUrl,
+    "POST",
+    `/api/v1/projects/${pid}/purchase-orders`,
+    h.adminCred,
+    { orderNumber: "PO-FORBID-001", supplier: "s", item: "i", quantity: 1, unitPrice: 100 },
+  );
+  const poId = (created.json as { purchaseOrder: { id: string } }).purchaseOrder.id;
+
+  const res = await call(
+    h.baseUrl,
+    "POST",
+    `/api/v1/purchase-orders/${poId}/transition`,
+    h.viewerCred,
+    { status: "issued" },
+  );
+  assert.equal(res.status, 403);
+});
+
+test("Purchase Order API — transition 404 for non-existent purchase order", async (t) => {
+  const h = await buildHarness();
+  t.after(h.close);
+  const res = await call(
+    h.baseUrl,
+    "POST",
+    "/api/v1/purchase-orders/does-not-exist/transition",
+    h.adminCred,
+    { status: "issued" },
+  );
+  assert.equal(res.status, 404);
+});
