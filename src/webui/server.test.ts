@@ -11,8 +11,10 @@ import { join } from "node:path";
 import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
 
+import { createHash } from "node:crypto";
 import { createWebuiServer } from "./server.ts";
 import { buildInsert, createNeonAccessLogger, type AccessLogEntry } from "./access-log.ts";
+import { CSP_MANIFEST_PATH } from "./unpack.ts";
 
 let rootDir: string;
 let outsideFile: string;
@@ -51,8 +53,45 @@ test("serves index.html at / with no-cache and security headers", async () => {
   assert.equal(res.headers.get("cache-control"), "no-cache");
   assert.equal(res.headers.get("x-content-type-options"), "nosniff");
   assert.equal(res.headers.get("x-frame-options"), "DENY");
-  assert.match(res.headers.get("content-security-policy") ?? "", /frame-ancestors 'none'/);
+  const csp = res.headers.get("content-security-policy") ?? "";
+  assert.match(csp, /frame-ancestors 'none'/);
+  // No unpacked csp.json manifest in this fixture: style-src-elem must fall
+  // back to 'self' only — no bare 'unsafe-inline' anywhere in style-src-elem.
+  assert.match(csp, /style-src-elem 'self'(?! 'unsafe-inline')/);
+  assert.doesNotMatch(csp, /style-src-elem[^;]*unsafe-inline/);
   assert.match(await res.text(), /CEOP/);
+});
+
+test("style-src-elem allows only the hashes recorded in csp.json (no unsafe-inline)", async () => {
+  const parent = mkdtempSync(join(tmpdir(), "ceop-webui-srv-csp-"));
+  const hashedRootDir = join(parent, "dist");
+  mkdirSync(join(hashedRootDir, "assets"), { recursive: true });
+  const styleContent = "body{color:red}";
+  writeFileSync(
+    join(hashedRootDir, "index.html"),
+    `<!doctype html><head><style>${styleContent}</style></head><body>CEOP</body></html>`,
+  );
+  const expectedHash = `sha256-${createHash("sha256").update(styleContent, "utf-8").digest("base64")}`;
+  writeFileSync(
+    join(hashedRootDir, CSP_MANIFEST_PATH),
+    JSON.stringify({ styleElementHashes: [expectedHash] }),
+  );
+
+  const hashedServer = createWebuiServer({ rootDir: hashedRootDir });
+  await new Promise<void>((r) => hashedServer.listen(0, "127.0.0.1", () => r()));
+  try {
+    const { port } = hashedServer.address() as AddressInfo;
+    const res = await fetch(`http://127.0.0.1:${port}/`);
+    const csp = res.headers.get("content-security-policy") ?? "";
+    assert.ok(csp.includes(expectedHash), `expected ${expectedHash} in CSP: ${csp}`);
+    assert.doesNotMatch(csp, /style-src-elem[^;]*unsafe-inline/);
+    // style-src-attr keeps 'unsafe-inline' — see the module doc comment
+    // (per-value hashing 300+ inline style attributes bloats the header).
+    assert.match(csp, /style-src-attr 'unsafe-inline'/);
+  } finally {
+    await new Promise<void>((r) => hashedServer.close(() => r()));
+    rmSync(parent, { recursive: true, force: true });
+  }
 });
 
 test("serves assets with correct MIME and immutable caching", async () => {
