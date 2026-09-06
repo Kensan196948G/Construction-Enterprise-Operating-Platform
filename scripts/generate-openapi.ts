@@ -608,7 +608,19 @@ const schemas: { [k: string]: YamlValue } = {
       quantity: { type: "number" },
       unitPrice: { type: "number" },
       amount: { type: "number" },
-      status: { type: "string", enum: ["draft", "issued", "approved", "received", "cancelled"] },
+      status: {
+        type: "string",
+        enum: [
+          "draft",
+          "issued",
+          "approved",
+          "received",
+          "delivered",
+          "inspected",
+          "paid",
+          "cancelled",
+        ],
+      },
       notes: { type: "string" },
       createdAt: { type: "string", format: "date-time" },
       updatedAt: { type: "string", format: "date-time" },
@@ -836,6 +848,55 @@ const schemas: { [k: string]: YamlValue } = {
         description: "SHA-256 of previous entry hash + this entry (tamper-evident chain)",
       },
       metadata: { type: "object", additionalProperties: { type: "string" } },
+    },
+  },
+  AccessInventoryRole: {
+    type: "object",
+    required: ["id", "name", "scope"],
+    properties: {
+      id: { type: "string" },
+      name: { type: "string" },
+      scope: { type: "string", enum: ["global", "organization", "site"] },
+    },
+  },
+  AccessInventoryEntry: {
+    type: "object",
+    required: [
+      "userId",
+      "organizationId",
+      "displayName",
+      "email",
+      "status",
+      "roles",
+      "permissions",
+      "unresolvedRoleIds",
+    ],
+    properties: {
+      userId: { type: "string" },
+      organizationId: { type: "string" },
+      displayName: { type: "string" },
+      email: { type: "string", format: "email" },
+      status: { type: "string", enum: ["invited", "active", "suspended", "deactivated"] },
+      roles: { type: "array", items: { $ref: "#/components/schemas/AccessInventoryRole" } },
+      permissions: { type: "array", items: { type: "string" } },
+      unresolvedRoleIds: {
+        type: "array",
+        items: { type: "string" },
+        description: "roleIds assigned to the user that no longer resolve to an existing role",
+      },
+    },
+  },
+  AccessInventorySummary: {
+    type: "object",
+    required: ["totalUsers", "totalRoles", "usersByPermission"],
+    properties: {
+      totalUsers: { type: "integer" },
+      totalRoles: { type: "integer" },
+      usersByPermission: {
+        type: "object",
+        additionalProperties: { type: "integer" },
+        description: "Number of distinct users holding each permission, keyed by permission",
+      },
     },
   },
   TokenResponse: {
@@ -2128,6 +2189,61 @@ const paths: { [k: string]: YamlValue } = {
                   valid: { type: "boolean" },
                   brokenAt: { type: "integer", minimum: 0 },
                   checkedAt: { type: "string", format: "date-time" },
+                },
+              },
+            },
+          },
+        },
+        ...errorResponses(401, 403),
+      },
+    },
+  },
+  "/api/v1/governance/access-inventory": {
+    get: {
+      operationId: "getAccessInventory",
+      summary: "RBAC access inventory — who can access what (requires audit:read)",
+      description:
+        "For every user in scope, resolves their assigned roles into the union of " +
+        "permissions those roles grant, plus a platform-wide summary of how many " +
+        "users hold each permission. Organization-scoped credentials receive only " +
+        "users in their own organization; globally-scoped credentials receive every " +
+        "user. `unresolvedRoleIds` on an entry flags a roleId assigned to the user " +
+        "that no longer resolves to an existing role (e.g. the role was deleted " +
+        "after assignment). A successful read is itself recorded in the audit log, " +
+        "since the report enumerates every grant in scope.",
+      tags: ["Governance"],
+      security: authSecurity,
+      parameters: [
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
+      ],
+      responses: {
+        "200": {
+          description: "Access inventory report",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: [
+                  "generatedAt",
+                  "summary",
+                  "entries",
+                  "count",
+                  "total",
+                  "limit",
+                  "offset",
+                ],
+                properties: {
+                  generatedAt: { type: "string", format: "date-time" },
+                  summary: { $ref: "#/components/schemas/AccessInventorySummary" },
+                  entries: {
+                    type: "array",
+                    items: { $ref: "#/components/schemas/AccessInventoryEntry" },
+                  },
+                  count: { type: "integer" },
+                  total: { type: "integer" },
+                  limit: { type: "integer" },
+                  offset: { type: "integer" },
                 },
               },
             },
@@ -5365,7 +5481,16 @@ const paths: { [k: string]: YamlValue } = {
                 unitPrice: { type: "number" },
                 status: {
                   type: "string",
-                  enum: ["draft", "issued", "approved", "received", "cancelled"],
+                  enum: [
+                    "draft",
+                    "issued",
+                    "approved",
+                    "received",
+                    "delivered",
+                    "inspected",
+                    "paid",
+                    "cancelled",
+                  ],
                 },
                 notes: { type: "string" },
               },
@@ -5397,6 +5522,50 @@ const paths: { [k: string]: YamlValue } = {
           properties: { purchaseOrder: { $ref: "#/components/schemas/PurchaseOrder" } },
         }),
         ...errorResponses(401, 403, 404),
+      },
+    },
+  },
+  "/api/v1/purchase-orders/{id}/transition": {
+    post: {
+      operationId: "transitionPurchaseOrder",
+      summary:
+        "Transition a purchase order (draft → issued → approved → received → delivered → inspected → paid)",
+      tags: ["PurchaseOrders"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["status"],
+              properties: {
+                status: {
+                  type: "string",
+                  enum: [
+                    "draft",
+                    "issued",
+                    "approved",
+                    "received",
+                    "delivered",
+                    "inspected",
+                    "paid",
+                    "cancelled",
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["purchaseOrder"],
+          properties: { purchaseOrder: { $ref: "#/components/schemas/PurchaseOrder" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
       },
     },
   },
