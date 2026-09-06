@@ -2085,7 +2085,15 @@ const paths: { [k: string]: YamlValue } = {
             "application/json": {
               schema: {
                 type: "object",
-                required: ["generatedAt", "summary", "entries", "count", "total", "limit", "offset"],
+                required: [
+                  "generatedAt",
+                  "summary",
+                  "entries",
+                  "count",
+                  "total",
+                  "limit",
+                  "offset",
+                ],
                 properties: {
                   generatedAt: { type: "string", format: "date-time" },
                   summary: { $ref: "#/components/schemas/AccessInventorySummary" },
