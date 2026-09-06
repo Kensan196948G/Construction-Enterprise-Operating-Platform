@@ -752,6 +752,18 @@ const schemas: { [k: string]: YamlValue } = {
         description: "SHA-256 of previous entry hash + this entry (tamper-evident chain)",
       },
       metadata: { type: "object", additionalProperties: { type: "string" } },
+      archived: {
+        type: "boolean",
+        description:
+          "Whether the retention batch (issue #83) has classified this entry as archived. " +
+          "Archived entries are never removed or mutated — this only reflects the side " +
+          "index used to answer retention queries.",
+      },
+      archivedAt: {
+        type: "string",
+        format: "date-time",
+        description: "When this entry was archived; present only when `archived` is true",
+      },
     },
   },
   AccessInventoryRole: {
@@ -1945,7 +1957,11 @@ const paths: { [k: string]: YamlValue } = {
         "Organization-scoped credentials receive only entries attributed to their own " +
         "organization; globally-scoped credentials receive the whole chain. Entries " +
         "recorded before tenant attribution existed carry no organization and are " +
-        "withheld from scoped credentials.",
+        "withheld from scoped credentials.\n\n" +
+        "Every entry is annotated with `archived`/`archivedAt` (issue #83): archiving " +
+        "classifies old entries via a side index and never removes or mutates them, so " +
+        "they remain fully visible through this same endpoint. Pass `archived` to filter " +
+        "to just one side of that classification.",
       tags: ["Governance"],
       security: authSecurity,
       parameters: [
@@ -1960,6 +1976,14 @@ const paths: { [k: string]: YamlValue } = {
           in: "query",
           schema: { type: "integer", default: 0, minimum: 0 },
           description: "Number of most-recent entries to skip",
+        },
+        {
+          name: "archived",
+          in: "query",
+          schema: { type: "boolean" },
+          description:
+            "Filter by archive status: true for archived-only, false for active-only. " +
+            "Omit to return both (default).",
         },
       ],
       responses: {
@@ -2099,6 +2123,90 @@ const paths: { [k: string]: YamlValue } = {
           },
         },
         ...errorResponses(401, 403),
+      },
+    },
+  },
+  "/api/v1/governance/audit/archive": {
+    post: {
+      operationId: "archiveAuditLog",
+      summary: "Run the audit-event retention batch (requires audit:archive)",
+      description:
+        "Marks every audit entry older than `retentionDays` (default 2555 days / ~7 " +
+        "years) as archived in a side index, without ever rewriting, reordering, or " +
+        "removing a hash-chain entry — `GET /audit/verify` is unaffected by archival. " +
+        "Idempotent: entries already archived are skipped rather than re-marked, so " +
+        "this is safe to call repeatedly (e.g. from a daily scheduled job). Requires a " +
+        "globally-scoped credential — archival is a platform-wide retention decision, " +
+        "not a per-tenant one — in addition to `audit:archive`, which is deliberately " +
+        "separate from `audit:read`/`audit:export`. Denied attempts are themselves " +
+        "recorded in the chain.",
+      tags: ["Governance"],
+      security: authSecurity,
+      requestBody: {
+        required: false,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                retentionDays: {
+                  type: "integer",
+                  minimum: 1,
+                  description: "Override the default retention window, in days",
+                },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        "200": {
+          description: "Archive batch result",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: [
+                  "archivedCount",
+                  "archivedSequences",
+                  "totalArchived",
+                  "cutoff",
+                  "retentionDays",
+                ],
+                properties: {
+                  archivedCount: {
+                    type: "integer",
+                    description: "Entries newly archived by this run",
+                  },
+                  archivedSequences: {
+                    type: "array",
+                    items: { type: "integer" },
+                    description: "Hash-chain sequence numbers newly archived by this run",
+                  },
+                  totalArchived: {
+                    type: "integer",
+                    description: "Total archived entries after this run",
+                  },
+                  cutoff: {
+                    type: "string",
+                    format: "date-time",
+                    description: "Retention cutoff used for this run",
+                  },
+                  retentionDays: { type: "integer" },
+                },
+              },
+            },
+          },
+        },
+        ...errorResponses(400, 401, 403),
+        "503": {
+          description: "No audit archive store is configured for this deployment",
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/ErrorResponse" },
+            },
+          },
+        },
       },
     },
   },

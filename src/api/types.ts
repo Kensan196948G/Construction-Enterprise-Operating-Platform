@@ -10,6 +10,7 @@ import type { Permission } from "../domain/role.ts";
 import type { Repositories } from "../persistence/ports.ts";
 import type { ApiKeyRepository } from "../persistence/sqlite/api-key-repository.ts";
 import type { IAuditLog } from "../governance/audit-log.ts";
+import type { AuditArchiveStore } from "../governance/audit-archive.ts";
 import type { JwtIssuer } from "./middleware/jwt.ts";
 import type { GatewayService } from "../domain/gateway-service.ts";
 
@@ -91,6 +92,12 @@ export type { JwtIssuer };
 export interface AppContainer {
   readonly repositories: Repositories;
   readonly auditLog: IAuditLog;
+  /**
+   * Side index of archived audit-log sequence numbers (issue #83). Optional so
+   * existing container constructions (older tests, alternate bootstraps)
+   * remain valid; routes must treat its absence as "nothing archived yet".
+   */
+  readonly auditArchive?: AuditArchiveStore;
   readonly apiKeyStore: ApiKeyStore;
   /** Persistent API key management surface (SQLite mode); absent for in-memory/file tiers. */
   readonly apiKeyRepository?: ApiKeyRepository;
