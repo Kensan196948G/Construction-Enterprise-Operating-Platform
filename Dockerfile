@@ -23,8 +23,13 @@ COPY scripts ./scripts
 RUN pnpm run build
 
 # ─── Stage 2: Runtime ────────────────────────────────────────────────────────
-# Minimal production image — only compiled dist/ and the start script are needed.
-# The project has zero runtime npm dependencies, so node_modules is NOT copied.
+# Minimal production image — only compiled dist/, the start script, and
+# runtime npm dependencies are needed.
+#
+# The PDF report export feature (工事日報/資材写真台帳/検査記録 PDF output,
+# see src/adapters/pdf-report-adapter.ts) depends on `pdf-lib` and
+# `@pdf-lib/fontkit` at runtime, so — unlike previous versions of this image —
+# node_modules is now installed here (production dependencies only).
 FROM node:22-alpine AS runtime
 
 LABEL org.opencontainers.image.version="0.14.5" \
@@ -34,7 +39,16 @@ LABEL org.opencontainers.image.version="0.14.5" \
 # curl is needed for the HEALTHCHECK instruction below.
 RUN apk add --no-cache curl
 
+# Enable corepack so `pnpm install --prod` below uses the locked pnpm version.
+RUN corepack enable && corepack prepare pnpm@10.26.2 --activate
+
 WORKDIR /app
+
+# Install production-only runtime dependencies (currently: pdf-lib,
+# @pdf-lib/fontkit). Restored from the lockfile so the runtime image gets
+# exactly the versions the build/test stage verified against.
+COPY --from=build /build/package.json /build/pnpm-lock.yaml ./
+RUN pnpm install --prod --frozen-lockfile
 
 # Compiled output from build stage.
 COPY --from=build /build/dist ./dist
@@ -43,7 +57,6 @@ COPY --from=build /build/dist ./dist
 # (Node 22.6+ supports --experimental-strip-types natively; no transpiler needed.)
 COPY --from=build /build/src ./src
 COPY --from=build /build/scripts ./scripts
-COPY --from=build /build/package.json ./
 
 # Non-root user for least-privilege security.
 RUN addgroup -g 1001 -S ceop && adduser -S -u 1001 -G ceop ceop
