@@ -14,6 +14,14 @@ import type {
 
 import type { ProjectId } from "../../domain/project.ts";
 import type { Contract, ContractId } from "../../domain/contract.ts";
+import type {
+  ProgressBillingInvoice,
+  ProgressBillingInvoiceId,
+  PaymentRecord,
+  PaymentRecordId,
+  AdvancePayment,
+  AdvancePaymentId,
+} from "../../domain/billing.ts";
 import type { KnowledgeArticle, KnowledgeId } from "../../domain/knowledge.ts";
 
 import type { Document, DocumentId } from "../../domain/document.ts";
@@ -53,6 +61,9 @@ import type {
   NotificationDeliveryRepository,
   KnowledgeRepository,
   ContractRepository,
+  ProgressBillingInvoiceRepository,
+  PaymentRecordRepository,
+  AdvancePaymentRepository,
   DocumentRepository,
   WorkScheduleRepository,
   PurchaseOrderRepository,
@@ -187,6 +198,69 @@ export class FileContractRepository
   }
   async findByNumber(contractNumber: string): Promise<Contract | null> {
     return (await this.findAll()).find((c) => c.contractNumber === contractNumber) ?? null;
+  }
+}
+
+export class FileProgressBillingInvoiceRepository
+  extends BaseFileRepository<ProgressBillingInvoice>
+  implements ProgressBillingInvoiceRepository
+{
+  override async findById(id: ProgressBillingInvoiceId): Promise<ProgressBillingInvoice | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: ProgressBillingInvoiceId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByProject(projectId: ProjectId): Promise<readonly ProgressBillingInvoice[]> {
+    return (await this.findAll()).filter((i) => (i.projectId as string) === (projectId as string));
+  }
+  async findByContract(contractId: ContractId): Promise<readonly ProgressBillingInvoice[]> {
+    return (await this.findAll()).filter(
+      (i) => (i.contractId as string) === (contractId as string),
+    );
+  }
+  async findByNumber(invoiceNumber: string): Promise<ProgressBillingInvoice | null> {
+    return (await this.findAll()).find((i) => i.invoiceNumber === invoiceNumber) ?? null;
+  }
+}
+
+export class FilePaymentRecordRepository
+  extends BaseFileRepository<PaymentRecord>
+  implements PaymentRecordRepository
+{
+  override async findById(id: PaymentRecordId): Promise<PaymentRecord | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: PaymentRecordId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByProject(projectId: ProjectId): Promise<readonly PaymentRecord[]> {
+    return (await this.findAll()).filter((p) => (p.projectId as string) === (projectId as string));
+  }
+  async findByContract(contractId: ContractId): Promise<readonly PaymentRecord[]> {
+    return (await this.findAll()).filter(
+      (p) => (p.contractId as string) === (contractId as string),
+    );
+  }
+}
+
+export class FileAdvancePaymentRepository
+  extends BaseFileRepository<AdvancePayment>
+  implements AdvancePaymentRepository
+{
+  override async findById(id: AdvancePaymentId): Promise<AdvancePayment | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: AdvancePaymentId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByProject(projectId: ProjectId): Promise<readonly AdvancePayment[]> {
+    return (await this.findAll()).filter((a) => (a.projectId as string) === (projectId as string));
+  }
+  async findByContract(contractId: ContractId): Promise<readonly AdvancePayment[]> {
+    return (await this.findAll()).filter(
+      (a) => (a.contractId as string) === (contractId as string),
+    );
   }
 }
 
