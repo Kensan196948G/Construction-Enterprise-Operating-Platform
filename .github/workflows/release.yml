@@ -42,7 +42,7 @@ jobs:
       # ── Docker ────────────────────────────────────────────────────────────
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       # Login to GHCR only when the token is available (push events from the
       # repository itself; skipped for forks or manual test runs).
