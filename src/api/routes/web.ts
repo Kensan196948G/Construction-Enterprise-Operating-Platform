@@ -192,6 +192,20 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
     },
     false,
   );
+  router.get(
+    "/api/assets/sw-register.js",
+    async (_req, _ctx, res) => {
+      await sendFile(res, join(staticDir, "sw-register.js"), "text/javascript; charset=utf-8");
+    },
+    false,
+  );
+  router.get(
+    "/api/assets/offline.html",
+    async (_req, _ctx, res) => {
+      await sendFile(res, join(staticDir, "offline.html"), "text/html; charset=utf-8");
+    },
+    false,
+  );
   // Favicon / PWA icons shared by every SSR page. Serves the SVG, multi-size
   // ICO, and the PNG sizes referenced by manifest.webmanifest and the
   // apple-touch-icon links. Registered under both /api/assets/* (public
@@ -268,6 +282,33 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
     "/favicon.ico",
     async (_req, _ctx, res) => {
       await sendFile(res, join(staticDir, "favicon.ico"), "image/x-icon");
+    },
+    false,
+  );
+
+  // Service worker (PWA offline support, issue #72). Served from the origin
+  // root — not /api/assets/* — so its default scope covers every SSR page,
+  // including the ones the public Tunnel path-split routes to this server
+  // (i.e. everything except literal /assets/*). Revalidated on every request
+  // (no long-lived cache) so an updated worker ships promptly.
+  router.get(
+    "/sw.js",
+    async (_req, _ctx, res) => {
+      try {
+        const buf = await readFile(join(staticDir, "sw.js"));
+        res.writeHead(200, {
+          "Content-Type": "text/javascript; charset=utf-8",
+          "Content-Length": buf.byteLength,
+          "Cache-Control": "no-cache",
+          "Service-Worker-Allowed": "/",
+          "X-Content-Type-Options": "nosniff",
+          "Strict-Transport-Security": "max-age=63072000; includeSubDomains",
+        });
+        res.end(buf);
+      } catch {
+        res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+        res.end("Not Found");
+      }
     },
     false,
   );
