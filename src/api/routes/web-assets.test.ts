@@ -302,8 +302,8 @@ test("dashboard SSR carries a fresh, distinct nonce per response and no unsafe-i
   assert.ok(nonceOne, `expected a nonce in CSP: ${cspOne}`);
   assert.ok(nonceTwo, `expected a nonce in CSP: ${cspTwo}`);
   assert.notEqual(nonceOne, nonceTwo, "each response must mint its own nonce");
-  assert.match(cspOne, new RegExp(`style-src 'self' 'nonce-${nonceOne}'`));
-  assert.match(cspOne, new RegExp(`script-src 'self' 'nonce-${nonceOne}'`));
+  assert.ok(cspOne.includes(`style-src 'self' 'nonce-${nonceOne}'`));
+  assert.ok(cspOne.includes(`script-src 'self' 'nonce-${nonceOne}'`));
 });
 
 test("ISO console requires auth and renders with iso:read permission", async (t) => {
