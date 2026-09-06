@@ -15,6 +15,7 @@ import {
   materialPhotoLogToCsvRow,
   updateMaterialPhotoLog,
 } from "../../domain/material-photo-log.ts";
+import { renderMaterialPhotoLogPdf } from "../../adapters/pdf-report-adapter.ts";
 import type { IsoTimestamp } from "../../domain/common.ts";
 import { parsePagination, paginate } from "../pagination.ts";
 import { recordAudit } from "../audit.ts";
@@ -165,6 +166,27 @@ export function registerMaterialPhotoLogRoutes(router: Router, container: AppCon
       return;
     }
     writeJson(res, 200, { materialPhotoLog: log });
+  });
+
+  // PDF export of a single log entry — mirrors the bulk CSV export above but
+  // for the printable single-record paper trail public works submissions need.
+  router.get("/api/v1/material-photo-logs/:id/export.pdf", async (req, ctx, res) => {
+    if (!hasPermission(ctx, "material-photo-log", "read")) {
+      forbidden(res, "material-photo-log:read");
+      return;
+    }
+    const log = await repositories.materialPhotoLogs.findById(
+      materialPhotoLogId(req.params["id"] ?? ""),
+    );
+    if (
+      log === null ||
+      (ctx?.organizationId !== undefined && log.organizationId !== ctx.organizationId)
+    ) {
+      notFound(res, "material photo log");
+      return;
+    }
+    const pdf = await renderMaterialPhotoLogPdf(log);
+    writeAttachment(res, 200, "application/pdf", `material-photo-log-${log.id}.pdf`, pdf);
   });
 
   router.put("/api/v1/material-photo-logs/:id", async (req, ctx, res) => {
