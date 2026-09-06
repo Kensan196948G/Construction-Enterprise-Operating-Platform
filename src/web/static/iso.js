@@ -420,7 +420,7 @@
       showToast("タイトルは必須です", "error");
       return;
     }
-    let payload = {};
+    let payload;
     try {
       payload = JSON.parse(document.getElementById("isoFormPayload").value || "{}");
     } catch {
