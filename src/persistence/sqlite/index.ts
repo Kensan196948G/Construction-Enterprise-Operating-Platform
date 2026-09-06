@@ -46,6 +46,7 @@ import type {
 import type { ApiKeyStore } from "../../api/types.ts";
 import type { DatabaseSync } from "node:sqlite";
 import { BaseSqliteRepository, openDatabase } from "./base-sqlite-repository.ts";
+import { setupSearchIndex, createSqliteSearchService } from "./search-index.ts";
 import {
   SqlitePhotoRepository,
   SqliteSafetyCheckRepository,
@@ -569,7 +570,7 @@ export function createSqliteRepositories(dbPath: string): Repositories {
   const db = openDatabase(dbPath);
   // organizations must be created first — users/devices/applications reference it via FK.
   const organizations = new SqliteOrganizationRepository(db);
-  return {
+  const repositories: Repositories = {
     users: new SqliteUserRepository(db),
     organizations,
     roles: new SqliteRoleRepository(db),
@@ -612,6 +613,12 @@ export function createSqliteRepositories(dbPath: string): Repositories {
     materialPhotoLogs: new SqliteMaterialPhotoLogRepository(db),
     laborAttendances: new SqliteLaborAttendanceRepository(db),
   };
+
+  // FTS5 cross-domain search index (Issue #86). Must run after the source
+  // tables above exist (daily_reports / legal_contracts / documents /
+  // inspections), since its sync triggers reference them directly.
+  setupSearchIndex(db);
+  return { ...repositories, search: createSqliteSearchService(db) };
 }
 
 /**

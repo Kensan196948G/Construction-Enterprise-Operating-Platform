@@ -135,6 +135,9 @@ tags:
   - 
     name: IntegrationGateway
     description: CEOP gateway reverse proxy for integration services (P1)
+  - 
+    name: Search
+    description: "Cross-domain full-text search (FTS5 on SQLite, substring fallback otherwise; Issue #86)"
 paths:
   /health:
     get:
@@ -11886,6 +11889,82 @@ Tenant scoping matches `GET /api/v1/governance/audit`. Each row carries `sequenc
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/search:
+    get:
+      operationId: search
+      summary: "Cross-domain full-text search over daily reports, contracts, documents, and inspections (Issue #86)"
+      tags:
+        - Search
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          name: q
+          in: query
+          required: true
+          schema:
+            type: string
+        - 
+          name: type
+          in: query
+          schema:
+            type: string
+            enum:
+              - daily-report
+              - contract
+              - document
+              - inspection
+          description: Restrict results to a single domain; omit to search every domain the caller can read.
+        - 
+          $ref: "#/components/parameters/limitParam"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - results
+                  - count
+                  - query
+                properties:
+                  results:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/SearchResultItem"
+                  count:
+                    type: integer
+                  query:
+                    type: string
+                  type:
+                    type: string
+                    enum:
+                      - daily-report
+                      - contract
+                      - document
+                      - inspection
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     ErrorResponse:
@@ -13465,6 +13544,34 @@ components:
         updatedAt:
           type: string
           format: date-time
+    SearchResultItem:
+      type: object
+      required:
+        - domain
+        - id
+        - title
+        - organizationId
+      properties:
+        domain:
+          type: string
+          enum:
+            - daily-report
+            - contract
+            - document
+            - inspection
+        id:
+          type: string
+        title:
+          type: string
+        summary:
+          type: string
+        score:
+          type: number
+          description: Relevance score (lower = more relevant, FTS5 bm25 convention). Absent for the fallback scan.
+        organizationId:
+          type: string
+        projectId:
+          type: string
     SupplierEvaluation:
       type: object
       required:

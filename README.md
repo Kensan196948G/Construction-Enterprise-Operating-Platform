@@ -1345,6 +1345,30 @@ GET  /api/v1/integrations/contracts          契約定義一覧（version/auth/t
 
 ---
 
+## 🔎 Search API（v0.15.0 / Issue #86）
+
+日報・契約・文書・検査の 4 ドメインを横断する全文検索エンドポイント。永続化バックエンドの
+種別（SQLite / in-memory / file）は `Repositories.search` の裏に隠蔽され、ルート実装は
+バックエンドを一切意識しません。
+
+| エンドポイント       | 権限                                     | 説明                                                                                            |
+| -------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `GET /api/v1/search` | 認証のみ（各ドメインの `<domain>:read`） | `?q=` 全文検索（必須）・`?type=daily-report\|contract\|document\|inspection`（任意）・`?limit=` |
+
+- **SQLite バックエンド**: FTS5 仮想テーブル（`search_fts`、`tokenize='trigram'`）を
+  `daily_reports` / `legal_contracts` / `documents` / `inspections` の INSERT/UPDATE/DELETE
+  トリガーで同期。日本語はスペース区切りが無いため既定の `unicode61` では実用にならず、
+  3 文字の重複ウィンドウで索引する `trigram` トークナイザーを採用（3 文字未満のクエリは
+  仕様上マッチしない既知の制約）。
+- **in-memory / file バックエンド**: `Repository#findAll()` を全走査し、主要テキスト
+  フィールドへの大文字小文字を無視した部分一致（`includes()`）でフォールバック。
+- レスポンスは `{ results: [{ domain, id, title, summary?, score?, organizationId, projectId? }], count, query, type? }`
+  の統一フォーマット。`?type=` を省略すると、呼び出し資格情報が読み取り権限を持つドメインだけに
+  自動的に絞り込まれる（無許可ドメインの情報漏えい防止）。`?type=` で無許可ドメインを明示指定
+  した場合は `403`。
+
+---
+
 ## 🏛️ Portal（P4）
 
 `GET /portal` で CEOP の全モジュール（ダッシュボード / ガバナンス / ISO 統合マネジメント / プラットフォーム情報 / メトリクス）を
