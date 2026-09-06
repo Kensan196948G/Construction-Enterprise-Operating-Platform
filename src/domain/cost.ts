@@ -11,6 +11,7 @@ import {
   ok,
 } from "./common.ts";
 import { type ProjectId, projectId } from "./project.ts";
+import type { LaborAttendance } from "./labor-attendance.ts";
 
 export type CostRecordId = Brand<string, "CostRecordId">;
 export const costRecordId = (value: string): CostRecordId => value as CostRecordId;
@@ -89,6 +90,79 @@ export function createCostRecord(input: CreateCostRecordInput): Result<CostRecor
     createdAt: input.createdAt,
     updatedAt: input.createdAt,
   });
+}
+
+// ---------------------------------------------------------------------------
+// Labor cost integration (issue #74)
+//
+// Additive extension only: nothing above this point is modified. Labor
+// attendance (自社 / 協力会社 の日当・残業) is the largest component of total
+// project cost, so cost aggregation needs a way to fold it into a CostRecord
+// without the labor-attendance domain needing to know about cost internals.
+// ---------------------------------------------------------------------------
+
+/** Default overtime pay premium applied on top of the derived hourly rate (25% increase). */
+export const DEFAULT_OVERTIME_MULTIPLIER = 1.25;
+
+/** Category used for cost records derived from labor attendance. */
+export const LABOR_COST_CATEGORY = "labor";
+
+export interface LaborAttendanceCostOptions {
+  /**
+   * Hourly overtime rate. When omitted, it is derived from the attendance's
+   * `dailyRate` assuming an 8-hour standard workday: `dailyRate / 8`.
+   */
+  readonly overtimeHourlyRate?: number | undefined;
+  /** Premium multiplier applied to the (derived or given) hourly rate. Defaults to {@link DEFAULT_OVERTIME_MULTIPLIER}. */
+  readonly overtimeMultiplier?: number | undefined;
+}
+
+/** Compute the total labor cost (day-rate + overtime premium) for one attendance record. */
+export function laborAttendanceCostAmount(
+  attendance: Pick<LaborAttendance, "dailyRate" | "overtimeHours">,
+  options?: LaborAttendanceCostOptions,
+): number {
+  const baseHourlyRate = options?.overtimeHourlyRate ?? attendance.dailyRate / 8;
+  const multiplier = options?.overtimeMultiplier ?? DEFAULT_OVERTIME_MULTIPLIER;
+  const overtimePay = attendance.overtimeHours * baseHourlyRate * multiplier;
+  return attendance.dailyRate + overtimePay;
+}
+
+/**
+ * Convert a labor attendance record into the input shape for
+ * {@link createCostRecord}, so a caller can persist it as an ordinary
+ * `CostRecord` and have it show up in project cost aggregation.
+ */
+export function laborAttendanceToCostRecordInput(
+  attendance: LaborAttendance,
+  id: string,
+  createdAt: IsoTimestamp,
+  options?: LaborAttendanceCostOptions,
+): CreateCostRecordInput {
+  const affiliationLabel =
+    attendance.affiliation === "subcontractor"
+      ? (attendance.subcontractorName ?? "協力会社")
+      : "自社";
+  return {
+    id,
+    organizationId: attendance.organizationId,
+    projectId: attendance.projectId as string,
+    recordDate: attendance.attendanceDate,
+    category: LABOR_COST_CATEGORY,
+    description: `労務費: ${attendance.workerName}（${affiliationLabel}）`,
+    actualAmount: laborAttendanceCostAmount(attendance, options),
+    createdAt,
+  };
+}
+
+/** Create a {@link CostRecord} directly from a labor attendance record. */
+export function createCostRecordFromLaborAttendance(
+  attendance: LaborAttendance,
+  id: string,
+  createdAt: IsoTimestamp,
+  options?: LaborAttendanceCostOptions,
+): Result<CostRecord> {
+  return createCostRecord(laborAttendanceToCostRecordInput(attendance, id, createdAt, options));
 }
 
 export type WorkHourId = Brand<string, "WorkHourId">;
