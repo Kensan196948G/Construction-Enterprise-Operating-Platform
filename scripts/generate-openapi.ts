@@ -614,6 +614,37 @@ const schemas: { [k: string]: YamlValue } = {
       updatedAt: { type: "string", format: "date-time" },
     },
   },
+  LaborAttendance: {
+    type: "object",
+    required: [
+      "id",
+      "organizationId",
+      "projectId",
+      "workerName",
+      "affiliation",
+      "attendanceDate",
+      "dailyRate",
+      "overtimeHours",
+      "status",
+      "createdAt",
+      "updatedAt",
+    ],
+    properties: {
+      id: { type: "string" },
+      organizationId: { type: "string" },
+      projectId: { type: "string" },
+      workerName: { type: "string" },
+      affiliation: { type: "string", enum: ["in_house", "subcontractor"] },
+      subcontractorName: { type: "string" },
+      attendanceDate: { type: "string", format: "date" },
+      dailyRate: { type: "number" },
+      overtimeHours: { type: "number" },
+      status: { type: "string", enum: ["draft", "submitted", "approved", "rejected"] },
+      notes: { type: "string" },
+      createdAt: { type: "string", format: "date-time" },
+      updatedAt: { type: "string", format: "date-time" },
+    },
+  },
   NotificationPreference: {
     type: "object",
     required: ["id", "userId", "emailEnabled", "slackEnabled", "events", "createdAt", "updatedAt"],
@@ -5027,6 +5058,181 @@ const paths: { [k: string]: YamlValue } = {
       },
     },
   },
+  "/api/v1/projects/{projectId}/labor-attendance": {
+    get: {
+      operationId: "listLaborAttendance",
+      summary: "Paginated list of labor attendance records for a project (HR)",
+      tags: ["LaborAttendance"],
+      security: authSecurity,
+      parameters: [
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
+        {
+          name: "status",
+          in: "query",
+          schema: { type: "string", enum: ["draft", "submitted", "approved", "rejected"] },
+        },
+      ],
+      responses: {
+        ...jsonResponse(200, paginatedList("laborAttendances", "LaborAttendance")),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+    post: {
+      operationId: "createLaborAttendance",
+      summary: "Create a labor attendance record (HR)",
+      tags: ["LaborAttendance"],
+      security: authSecurity,
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["workerName", "attendanceDate", "dailyRate"],
+              properties: {
+                workerName: { type: "string" },
+                affiliation: { type: "string", enum: ["in_house", "subcontractor"] },
+                subcontractorName: { type: "string" },
+                attendanceDate: { type: "string", format: "date" },
+                dailyRate: { type: "number" },
+                overtimeHours: { type: "number" },
+                status: {
+                  type: "string",
+                  enum: ["draft", "submitted", "approved", "rejected"],
+                },
+                notes: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(201, {
+          type: "object",
+          required: ["laborAttendance"],
+          properties: { laborAttendance: { $ref: "#/components/schemas/LaborAttendance" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+  },
+  "/api/v1/labor-attendance/{id}": {
+    get: {
+      operationId: "getLaborAttendance",
+      summary: "Labor attendance detail",
+      tags: ["LaborAttendance"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["laborAttendance"],
+          properties: { laborAttendance: { $ref: "#/components/schemas/LaborAttendance" } },
+        }),
+        ...errorResponses(401, 403, 404),
+      },
+    },
+    patch: {
+      operationId: "updateLaborAttendance",
+      summary: "Update mutable fields of a labor attendance record",
+      tags: ["LaborAttendance"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                workerName: { type: "string" },
+                affiliation: { type: "string", enum: ["in_house", "subcontractor"] },
+                subcontractorName: { type: "string" },
+                dailyRate: { type: "number" },
+                overtimeHours: { type: "number" },
+                notes: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["laborAttendance"],
+          properties: { laborAttendance: { $ref: "#/components/schemas/LaborAttendance" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+  },
+  "/api/v1/labor-attendance/{id}/transition": {
+    post: {
+      operationId: "transitionLaborAttendance",
+      summary: "Transition a labor attendance record (draft → submitted → approved/rejected)",
+      tags: ["LaborAttendance"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["status"],
+              properties: {
+                status: {
+                  type: "string",
+                  enum: ["draft", "submitted", "approved", "rejected"],
+                },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["laborAttendance"],
+          properties: { laborAttendance: { $ref: "#/components/schemas/LaborAttendance" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+  },
+  "/api/v1/labor-attendance/{id}/post-to-cost": {
+    post: {
+      operationId: "postLaborAttendanceToCost",
+      summary:
+        "Fold a labor attendance record's cost into project cost aggregation as a CostRecord",
+      tags: ["LaborAttendance"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      requestBody: {
+        required: false,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                overtimeHourlyRate: { type: "number" },
+                overtimeMultiplier: { type: "number" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(201, {
+          type: "object",
+          required: ["costRecord"],
+          properties: { costRecord: { $ref: "#/components/schemas/CostRecord" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+  },
   "/api/v1/notification-preferences/{userId}": {
     get: {
       operationId: "getNotificationPreference",
@@ -5377,6 +5583,7 @@ const spec: { [k: string]: YamlValue } = {
     { name: "Documents", description: "Drawings/documents (Enterprise-OS E-03)" },
     { name: "WorkSchedules", description: "Site work schedules (Enterprise-OS E-02)" },
     { name: "PurchaseOrders", description: "Purchase orders / ERP (Enterprise-OS E-05)" },
+    { name: "LaborAttendance", description: "Labor attendance / 労務・勤怠管理 (HR)" },
     { name: "Compliance", description: "Compliance checks (ServiceHub S-07)" },
     { name: "LegalEvidence", description: "Legal evidence timeline (ServiceHub S-07)" },
     { name: "Projects", description: "Construction project management (ServiceHub S-01)" },
