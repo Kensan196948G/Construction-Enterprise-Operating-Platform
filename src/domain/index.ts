@@ -13,6 +13,7 @@ export * from "./common.ts";
 export * from "./organization.ts";
 export * from "./role.ts";
 export * from "./user.ts";
+export * from "./access-inventory.ts";
 export * from "./device.ts";
 export * from "./application.ts";
 export * from "./workflow.ts";
