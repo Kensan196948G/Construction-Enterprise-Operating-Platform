@@ -32,6 +32,7 @@ import { registerCostRoutes } from "./routes/cost.ts";
 import { registerNotificationRoutes } from "./routes/notifications.ts";
 import { registerKnowledgeRoutes } from "./routes/knowledge.ts";
 import { registerContractRoutes } from "./routes/contracts.ts";
+import { registerBillingRoutes } from "./routes/billing.ts";
 import { registerItsmRoutes } from "./routes/itsm.ts";
 import { registerDocumentRoutes } from "./routes/documents.ts";
 import { registerWorkScheduleRoutes } from "./routes/work-schedules.ts";
@@ -129,6 +130,7 @@ export function createServer(config: ServerConfig, container: AppContainer): Ser
   registerNotificationRoutes(router, container);
   registerKnowledgeRoutes(router, container);
   registerContractRoutes(router, container);
+  registerBillingRoutes(router, container);
   registerItsmRoutes(router, container);
   registerDocumentRoutes(router, container);
   registerWorkScheduleRoutes(router, container);

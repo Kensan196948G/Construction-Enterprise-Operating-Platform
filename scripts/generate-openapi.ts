@@ -626,6 +626,102 @@ const schemas: { [k: string]: YamlValue } = {
       updatedAt: { type: "string", format: "date-time" },
     },
   },
+  ProgressBillingInvoice: {
+    type: "object",
+    required: [
+      "id",
+      "organizationId",
+      "projectId",
+      "contractId",
+      "invoiceNumber",
+      "billingDate",
+      "progressPercentage",
+      "billedAmount",
+      "cumulativeBilledAmount",
+      "approvalStatus",
+      "createdAt",
+      "updatedAt",
+    ],
+    properties: {
+      id: { type: "string" },
+      organizationId: { type: "string" },
+      projectId: { type: "string" },
+      contractId: { type: "string" },
+      invoiceNumber: { type: "string" },
+      billingDate: { type: "string", format: "date" },
+      periodStart: { type: "string", format: "date" },
+      periodEnd: { type: "string", format: "date" },
+      progressPercentage: { type: "number" },
+      billedAmount: { type: "number" },
+      cumulativeBilledAmount: { type: "number" },
+      approvalStatus: {
+        type: "string",
+        enum: ["draft", "submitted", "approved", "rejected"],
+      },
+      notes: { type: "string" },
+      createdAt: { type: "string", format: "date-time" },
+      updatedAt: { type: "string", format: "date-time" },
+    },
+  },
+  PaymentRecord: {
+    type: "object",
+    required: [
+      "id",
+      "organizationId",
+      "projectId",
+      "contractId",
+      "paymentDate",
+      "amount",
+      "paymentMethod",
+      "createdAt",
+      "updatedAt",
+    ],
+    properties: {
+      id: { type: "string" },
+      organizationId: { type: "string" },
+      projectId: { type: "string" },
+      contractId: { type: "string" },
+      invoiceId: { type: "string" },
+      paymentDate: { type: "string", format: "date" },
+      amount: { type: "number" },
+      paymentMethod: { type: "string", enum: ["bank_transfer", "cash", "check", "other"] },
+      notes: { type: "string" },
+      createdAt: { type: "string", format: "date-time" },
+      updatedAt: { type: "string", format: "date-time" },
+    },
+  },
+  AdvancePayment: {
+    type: "object",
+    required: [
+      "id",
+      "organizationId",
+      "projectId",
+      "contractId",
+      "paymentDate",
+      "amount",
+      "recoveredAmount",
+      "status",
+      "createdAt",
+      "updatedAt",
+    ],
+    properties: {
+      id: { type: "string" },
+      organizationId: { type: "string" },
+      projectId: { type: "string" },
+      contractId: { type: "string" },
+      paymentDate: { type: "string", format: "date" },
+      amount: { type: "number" },
+      recoveredAmount: { type: "number" },
+      purpose: { type: "string" },
+      status: {
+        type: "string",
+        enum: ["outstanding", "partially_recovered", "recovered"],
+      },
+      notes: { type: "string" },
+      createdAt: { type: "string", format: "date-time" },
+      updatedAt: { type: "string", format: "date-time" },
+    },
+  },
   LaborAttendance: {
     type: "object",
     required: [
@@ -3657,6 +3753,356 @@ const paths: { [k: string]: YamlValue } = {
       },
     },
   },
+  "/api/v1/contracts/{contractId}/billing-invoices": {
+    get: {
+      operationId: "listBillingInvoices",
+      summary: "Paginated progress billing invoices for a contract (#84)",
+      tags: ["Billing"],
+      security: authSecurity,
+      parameters: [
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
+      ],
+      responses: {
+        ...jsonResponse(200, paginatedList("billingInvoices", "ProgressBillingInvoice")),
+        ...errorResponses(401, 403, 404),
+      },
+    },
+    post: {
+      operationId: "createBillingInvoice",
+      summary: "Create a progress billing invoice against a contract (#84)",
+      tags: ["Billing"],
+      security: authSecurity,
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["invoiceNumber", "billingDate", "progressPercentage", "billedAmount"],
+              properties: {
+                invoiceNumber: { type: "string" },
+                billingDate: { type: "string", format: "date" },
+                periodStart: { type: "string", format: "date" },
+                periodEnd: { type: "string", format: "date" },
+                progressPercentage: { type: "number" },
+                billedAmount: { type: "number" },
+                cumulativeBilledAmount: { type: "number" },
+                approvalStatus: {
+                  type: "string",
+                  enum: ["draft", "submitted", "approved", "rejected"],
+                },
+                notes: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(201, {
+          type: "object",
+          required: ["billingInvoice"],
+          properties: { billingInvoice: { $ref: "#/components/schemas/ProgressBillingInvoice" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+  },
+  "/api/v1/billing-invoices/{id}": {
+    get: {
+      operationId: "getBillingInvoice",
+      summary: "Billing invoice detail",
+      tags: ["Billing"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["billingInvoice"],
+          properties: { billingInvoice: { $ref: "#/components/schemas/ProgressBillingInvoice" } },
+        }),
+        ...errorResponses(401, 403, 404),
+      },
+    },
+    put: {
+      operationId: "updateBillingInvoice",
+      summary: "Update a progress billing invoice",
+      tags: ["Billing"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                billingDate: { type: "string", format: "date" },
+                periodStart: { type: "string", format: "date" },
+                periodEnd: { type: "string", format: "date" },
+                progressPercentage: { type: "number" },
+                billedAmount: { type: "number" },
+                cumulativeBilledAmount: { type: "number" },
+                approvalStatus: {
+                  type: "string",
+                  enum: ["draft", "submitted", "approved", "rejected"],
+                },
+                notes: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["billingInvoice"],
+          properties: { billingInvoice: { $ref: "#/components/schemas/ProgressBillingInvoice" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+    delete: {
+      operationId: "deleteBillingInvoice",
+      summary: "Delete a progress billing invoice",
+      tags: ["Billing"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(204, { type: "object", properties: {} }),
+        ...errorResponses(401, 403, 404),
+      },
+    },
+  },
+  "/api/v1/contracts/{contractId}/payments": {
+    get: {
+      operationId: "listPayments",
+      summary: "Paginated payment records for a contract (#84)",
+      tags: ["Billing"],
+      security: authSecurity,
+      parameters: [
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
+      ],
+      responses: {
+        ...jsonResponse(200, paginatedList("payments", "PaymentRecord")),
+        ...errorResponses(401, 403, 404),
+      },
+    },
+    post: {
+      operationId: "createPayment",
+      summary: "Record a payment against a contract (#84)",
+      tags: ["Billing"],
+      security: authSecurity,
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["paymentDate", "amount"],
+              properties: {
+                invoiceId: { type: "string" },
+                paymentDate: { type: "string", format: "date" },
+                amount: { type: "number" },
+                paymentMethod: {
+                  type: "string",
+                  enum: ["bank_transfer", "cash", "check", "other"],
+                },
+                notes: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(201, {
+          type: "object",
+          required: ["payment"],
+          properties: { payment: { $ref: "#/components/schemas/PaymentRecord" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+  },
+  "/api/v1/payments/{id}": {
+    get: {
+      operationId: "getPayment",
+      summary: "Payment record detail",
+      tags: ["Billing"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["payment"],
+          properties: { payment: { $ref: "#/components/schemas/PaymentRecord" } },
+        }),
+        ...errorResponses(401, 403, 404),
+      },
+    },
+    put: {
+      operationId: "updatePayment",
+      summary: "Update a payment record",
+      tags: ["Billing"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                paymentDate: { type: "string", format: "date" },
+                amount: { type: "number" },
+                paymentMethod: {
+                  type: "string",
+                  enum: ["bank_transfer", "cash", "check", "other"],
+                },
+                notes: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["payment"],
+          properties: { payment: { $ref: "#/components/schemas/PaymentRecord" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+    delete: {
+      operationId: "deletePayment",
+      summary: "Delete a payment record",
+      tags: ["Billing"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(204, { type: "object", properties: {} }),
+        ...errorResponses(401, 403, 404),
+      },
+    },
+  },
+  "/api/v1/contracts/{contractId}/advance-payments": {
+    get: {
+      operationId: "listAdvancePayments",
+      summary: "Paginated advance payments for a contract (#84)",
+      tags: ["Billing"],
+      security: authSecurity,
+      parameters: [
+        { $ref: "#/components/parameters/limitParam" },
+        { $ref: "#/components/parameters/offsetParam" },
+      ],
+      responses: {
+        ...jsonResponse(200, paginatedList("advancePayments", "AdvancePayment")),
+        ...errorResponses(401, 403, 404),
+      },
+    },
+    post: {
+      operationId: "createAdvancePayment",
+      summary: "Record an advance payment against a contract (#84)",
+      tags: ["Billing"],
+      security: authSecurity,
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["paymentDate", "amount"],
+              properties: {
+                paymentDate: { type: "string", format: "date" },
+                amount: { type: "number" },
+                recoveredAmount: { type: "number" },
+                purpose: { type: "string" },
+                status: {
+                  type: "string",
+                  enum: ["outstanding", "partially_recovered", "recovered"],
+                },
+                notes: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(201, {
+          type: "object",
+          required: ["advancePayment"],
+          properties: { advancePayment: { $ref: "#/components/schemas/AdvancePayment" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+  },
+  "/api/v1/advance-payments/{id}": {
+    get: {
+      operationId: "getAdvancePayment",
+      summary: "Advance payment detail",
+      tags: ["Billing"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["advancePayment"],
+          properties: { advancePayment: { $ref: "#/components/schemas/AdvancePayment" } },
+        }),
+        ...errorResponses(401, 403, 404),
+      },
+    },
+    put: {
+      operationId: "updateAdvancePayment",
+      summary: "Update an advance payment",
+      tags: ["Billing"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                paymentDate: { type: "string", format: "date" },
+                amount: { type: "number" },
+                recoveredAmount: { type: "number" },
+                purpose: { type: "string" },
+                status: {
+                  type: "string",
+                  enum: ["outstanding", "partially_recovered", "recovered"],
+                },
+                notes: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        ...jsonResponse(200, {
+          type: "object",
+          required: ["advancePayment"],
+          properties: { advancePayment: { $ref: "#/components/schemas/AdvancePayment" } },
+        }),
+        ...errorResponses(400, 401, 403, 404),
+      },
+    },
+    delete: {
+      operationId: "deleteAdvancePayment",
+      summary: "Delete an advance payment",
+      tags: ["Billing"],
+      security: authSecurity,
+      parameters: [{ $ref: "#/components/parameters/idPath" }],
+      responses: {
+        ...jsonResponse(204, { type: "object", properties: {} }),
+        ...errorResponses(401, 403, 404),
+      },
+    },
+  },
   "/api/v1/work-orders": {
     get: {
       operationId: "listAllWorkOrders",
@@ -5758,6 +6204,11 @@ const spec: { [k: string]: YamlValue } = {
     { name: "Notifications", description: "Notification deliveries (ServiceHub S-09)" },
     { name: "Knowledge", description: "Knowledge articles (ServiceHub S-06)" },
     { name: "Contracts", description: "Legal contracts (ServiceHub S-07)" },
+    {
+      name: "Billing",
+      description:
+        "Progress billing invoices, payment records, and advance payments against a contract (#84)",
+    },
     { name: "Itsm", description: "ITSM adapter (ServiceHub S-08)" },
     { name: "Documents", description: "Drawings/documents (Enterprise-OS E-03)" },
     { name: "WorkSchedules", description: "Site work schedules (Enterprise-OS E-02)" },
