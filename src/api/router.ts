@@ -467,21 +467,26 @@ export function writeJson(res: ServerResponse, status: number, data: unknown): v
  * markup and render it as HTML in the site's origin. The filename is quoted and
  * callers must supply a fixed, server-generated name — a user-controlled one
  * would let a header-injecting value escape the `Content-Disposition` value.
+ *
+ * `body` accepts binary payloads (e.g. a generated PDF) as well as text (CSV,
+ * JSON) — both are normalized to a `Buffer` so `Content-Length` reflects the
+ * actual byte count rather than the UTF-16 string length.
  */
 export function writeAttachment(
   res: ServerResponse,
   status: number,
   contentType: string,
   filename: string,
-  body: string,
+  body: string | Uint8Array,
 ): void {
+  const payload = typeof body === "string" ? Buffer.from(body, "utf-8") : Buffer.from(body);
   res.writeHead(status, {
     "Content-Type": contentType,
-    "Content-Length": Buffer.byteLength(body),
+    "Content-Length": payload.byteLength,
     "Content-Disposition": `attachment; filename="${filename}"`,
     ...BASELINE_SECURITY_HEADERS,
   });
-  res.end(body);
+  res.end(payload);
 }
 
 /**

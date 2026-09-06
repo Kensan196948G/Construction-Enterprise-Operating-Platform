@@ -16,13 +16,14 @@ import {
 import type { DailyReport } from "../../domain/daily-report.ts";
 import { projectId } from "../../domain/project.ts";
 import { createWorkflowInstance } from "../../domain/workflow-instance.ts";
+import { renderDailyReportPdf } from "../../adapters/pdf-report-adapter.ts";
 import { toCsv } from "../csv.ts";
 import { csvBool, csvNum, csvStr, parseCsv } from "../csv-import.ts";
 import { toXlsx } from "../xlsx.ts";
 import { parsePagination, paginate } from "../pagination.ts";
 import { recordAudit } from "../audit.ts";
 import type { Router } from "../router.ts";
-import { writeBinaryAttachment, writeJson } from "../router.ts";
+import { writeAttachment, writeBinaryAttachment, writeJson } from "../router.ts";
 import { hasPermission } from "./governance.ts";
 import {
   badRequest,
@@ -289,6 +290,25 @@ export function registerDailyReportRoutes(router: Router, container: AppContaine
       return;
     }
     writeJson(res, 200, { dailyReport: report });
+  });
+
+  // PDF export of a single report — the printable paper-trail format public
+  // works submissions expect alongside the project-level CSV export above.
+  router.get("/api/v1/daily-reports/:id/export.pdf", async (req, ctx, res) => {
+    if (!hasPermission(ctx, "daily-report", "read")) {
+      forbidden(res, "daily-report:read");
+      return;
+    }
+    const report = await repositories.dailyReports.findById(dailyReportId(req.params["id"] ?? ""));
+    if (
+      report === null ||
+      (ctx?.organizationId !== undefined && report.organizationId !== ctx.organizationId)
+    ) {
+      notFound(res, "daily report");
+      return;
+    }
+    const pdf = await renderDailyReportPdf(report);
+    writeAttachment(res, 200, "application/pdf", `daily-report-${report.id}.pdf`, pdf);
   });
 
   router.patch("/api/v1/daily-reports/:id", async (req, ctx, res) => {
