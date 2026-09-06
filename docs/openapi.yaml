@@ -7982,6 +7982,10 @@ Tenant scoping matches `GET /api/v1/governance/audit`. Each row carries `sequenc
                 nextReviewAt:
                   type: string
                   format: date
+                latitude:
+                  type: number
+                longitude:
+                  type: number
       responses:
         201:
           description: Created
@@ -8135,6 +8139,10 @@ Tenant scoping matches `GET /api/v1/governance/audit`. Each row carries `sequenc
                 nextReviewAt:
                   type: string
                   format: date
+                latitude:
+                  type: number
+                longitude:
+                  type: number
       responses:
         200:
           description: OK
@@ -12590,6 +12598,10 @@ components:
         nextReviewAt:
           type: string
           format: date
+        latitude:
+          type: number
+        longitude:
+          type: number
         createdAt:
           type: string
           format: date-time
