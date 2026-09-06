@@ -15,6 +15,14 @@ import type {
 
 import type { ProjectId } from "../../domain/project.ts";
 import type { Contract, ContractId } from "../../domain/contract.ts";
+import type {
+  ProgressBillingInvoice,
+  ProgressBillingInvoiceId,
+  PaymentRecord,
+  PaymentRecordId,
+  AdvancePayment,
+  AdvancePaymentId,
+} from "../../domain/billing.ts";
 import type { KnowledgeArticle, KnowledgeId } from "../../domain/knowledge.ts";
 
 import type { Document, DocumentId } from "../../domain/document.ts";
@@ -53,6 +61,9 @@ import type {
   NotificationDeliveryRepository,
   KnowledgeRepository,
   ContractRepository,
+  ProgressBillingInvoiceRepository,
+  PaymentRecordRepository,
+  AdvancePaymentRepository,
   DocumentRepository,
   WorkScheduleRepository,
   PurchaseOrderRepository,
@@ -382,6 +393,164 @@ export class SqliteContractRepository
     );
     const row = stmt.get(contractNumber) as { data: string } | undefined;
     return row !== undefined ? (JSON.parse(row.data) as Contract) : null;
+  }
+}
+
+export class SqliteProgressBillingInvoiceRepository
+  extends BaseSqliteRepository<ProgressBillingInvoice>
+  implements ProgressBillingInvoiceRepository
+{
+  constructor(db: DatabaseSync) {
+    super(
+      db,
+      "progress_billing_invoices",
+      [
+        "org_id TEXT NOT NULL",
+        "project_id TEXT NOT NULL REFERENCES projects(id)",
+        "contract_id TEXT NOT NULL REFERENCES legal_contracts(id)",
+        "invoice_number TEXT NOT NULL",
+        "approval_status TEXT NOT NULL",
+      ],
+      [
+        { name: "idx_billing_invoices_org", columns: ["org_id"] },
+        { name: "idx_billing_invoices_project", columns: ["project_id"] },
+        { name: "idx_billing_invoices_contract", columns: ["contract_id"] },
+        { name: "idx_billing_invoices_number", columns: ["invoice_number"], unique: true },
+        { name: "idx_billing_invoices_status", columns: ["approval_status"] },
+      ],
+      ["org_id", "project_id", "contract_id", "invoice_number", "approval_status"],
+    );
+  }
+  protected override extraValues(i: ProgressBillingInvoice): readonly unknown[] {
+    return [
+      i.organizationId,
+      i.projectId as string,
+      i.contractId as string,
+      i.invoiceNumber,
+      i.approvalStatus,
+    ];
+  }
+  override async findById(id: ProgressBillingInvoiceId): Promise<ProgressBillingInvoice | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: ProgressBillingInvoiceId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByProject(projectId: ProjectId): Promise<readonly ProgressBillingInvoice[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare(
+      "SELECT data FROM progress_billing_invoices WHERE project_id = ?",
+    );
+    const rows = stmt.all(projectId as string) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as ProgressBillingInvoice);
+  }
+  async findByContract(contractId: ContractId): Promise<readonly ProgressBillingInvoice[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare(
+      "SELECT data FROM progress_billing_invoices WHERE contract_id = ?",
+    );
+    const rows = stmt.all(contractId as string) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as ProgressBillingInvoice);
+  }
+  async findByNumber(invoiceNumber: string): Promise<ProgressBillingInvoice | null> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare(
+      "SELECT data FROM progress_billing_invoices WHERE invoice_number = ?",
+    );
+    const row = stmt.get(invoiceNumber) as { data: string } | undefined;
+    return row !== undefined ? (JSON.parse(row.data) as ProgressBillingInvoice) : null;
+  }
+}
+
+export class SqlitePaymentRecordRepository
+  extends BaseSqliteRepository<PaymentRecord>
+  implements PaymentRecordRepository
+{
+  constructor(db: DatabaseSync) {
+    super(
+      db,
+      "payment_records",
+      [
+        "org_id TEXT NOT NULL",
+        "project_id TEXT NOT NULL REFERENCES projects(id)",
+        "contract_id TEXT NOT NULL REFERENCES legal_contracts(id)",
+      ],
+      [
+        { name: "idx_payment_records_org", columns: ["org_id"] },
+        { name: "idx_payment_records_project", columns: ["project_id"] },
+        { name: "idx_payment_records_contract", columns: ["contract_id"] },
+      ],
+      ["org_id", "project_id", "contract_id"],
+    );
+  }
+  protected override extraValues(p: PaymentRecord): readonly unknown[] {
+    return [p.organizationId, p.projectId as string, p.contractId as string];
+  }
+  override async findById(id: PaymentRecordId): Promise<PaymentRecord | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: PaymentRecordId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByProject(projectId: ProjectId): Promise<readonly PaymentRecord[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM payment_records WHERE project_id = ?");
+    const rows = stmt.all(projectId as string) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as PaymentRecord);
+  }
+  async findByContract(contractId: ContractId): Promise<readonly PaymentRecord[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM payment_records WHERE contract_id = ?");
+    const rows = stmt.all(contractId as string) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as PaymentRecord);
+  }
+}
+
+export class SqliteAdvancePaymentRepository
+  extends BaseSqliteRepository<AdvancePayment>
+  implements AdvancePaymentRepository
+{
+  constructor(db: DatabaseSync) {
+    super(
+      db,
+      "advance_payments",
+      [
+        "org_id TEXT NOT NULL",
+        "project_id TEXT NOT NULL REFERENCES projects(id)",
+        "contract_id TEXT NOT NULL REFERENCES legal_contracts(id)",
+        "status TEXT NOT NULL",
+      ],
+      [
+        { name: "idx_advance_payments_org", columns: ["org_id"] },
+        { name: "idx_advance_payments_project", columns: ["project_id"] },
+        { name: "idx_advance_payments_contract", columns: ["contract_id"] },
+        { name: "idx_advance_payments_status", columns: ["status"] },
+      ],
+      ["org_id", "project_id", "contract_id", "status"],
+    );
+  }
+  protected override extraValues(a: AdvancePayment): readonly unknown[] {
+    return [a.organizationId, a.projectId as string, a.contractId as string, a.status];
+  }
+  override async findById(id: AdvancePaymentId): Promise<AdvancePayment | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: AdvancePaymentId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByProject(projectId: ProjectId): Promise<readonly AdvancePayment[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare("SELECT data FROM advance_payments WHERE project_id = ?");
+    const rows = stmt.all(projectId as string) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as AdvancePayment);
+  }
+  async findByContract(contractId: ContractId): Promise<readonly AdvancePayment[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stmt = (this.db as any).prepare(
+      "SELECT data FROM advance_payments WHERE contract_id = ?",
+    );
+    const rows = stmt.all(contractId as string) as { data: string }[];
+    return rows.map((r) => JSON.parse(r.data) as AdvancePayment);
   }
 }
 

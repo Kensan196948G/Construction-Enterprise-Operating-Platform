@@ -76,6 +76,9 @@ tags:
     name: Contracts
     description: Legal contracts (ServiceHub S-07)
   - 
+    name: Billing
+    description: "Progress billing invoices, payment records, and advance payments against a contract (#84)"
+  - 
     name: Itsm
     description: ITSM adapter (ServiceHub S-08)
   - 
@@ -5488,6 +5491,887 @@ Tenant scoping matches `GET /api/v1/governance/audit`. Each row carries `sequenc
                 properties:
                   contract:
                     $ref: "#/components/schemas/Contract"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/contracts/{contractId}/billing-invoices:
+    get:
+      operationId: listBillingInvoices
+      summary: "Paginated progress billing invoices for a contract (#84)"
+      tags:
+        - Billing
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/limitParam"
+        - 
+          $ref: "#/components/parameters/offsetParam"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - billingInvoices
+                  - count
+                  - total
+                  - limit
+                  - offset
+                properties:
+                  billingInvoices:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ProgressBillingInvoice"
+                  count:
+                    type: integer
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createBillingInvoice
+      summary: "Create a progress billing invoice against a contract (#84)"
+      tags:
+        - Billing
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - invoiceNumber
+                - billingDate
+                - progressPercentage
+                - billedAmount
+              properties:
+                invoiceNumber:
+                  type: string
+                billingDate:
+                  type: string
+                  format: date
+                periodStart:
+                  type: string
+                  format: date
+                periodEnd:
+                  type: string
+                  format: date
+                progressPercentage:
+                  type: number
+                billedAmount:
+                  type: number
+                cumulativeBilledAmount:
+                  type: number
+                approvalStatus:
+                  type: string
+                  enum:
+                    - draft
+                    - submitted
+                    - approved
+                    - rejected
+                notes:
+                  type: string
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - billingInvoice
+                properties:
+                  billingInvoice:
+                    $ref: "#/components/schemas/ProgressBillingInvoice"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/billing-invoices/{id}:
+    get:
+      operationId: getBillingInvoice
+      summary: Billing invoice detail
+      tags:
+        - Billing
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - billingInvoice
+                properties:
+                  billingInvoice:
+                    $ref: "#/components/schemas/ProgressBillingInvoice"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateBillingInvoice
+      summary: Update a progress billing invoice
+      tags:
+        - Billing
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                billingDate:
+                  type: string
+                  format: date
+                periodStart:
+                  type: string
+                  format: date
+                periodEnd:
+                  type: string
+                  format: date
+                progressPercentage:
+                  type: number
+                billedAmount:
+                  type: number
+                cumulativeBilledAmount:
+                  type: number
+                approvalStatus:
+                  type: string
+                  enum:
+                    - draft
+                    - submitted
+                    - approved
+                    - rejected
+                notes:
+                  type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - billingInvoice
+                properties:
+                  billingInvoice:
+                    $ref: "#/components/schemas/ProgressBillingInvoice"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteBillingInvoice
+      summary: Delete a progress billing invoice
+      tags:
+        - Billing
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      responses:
+        204:
+          description: Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/contracts/{contractId}/payments:
+    get:
+      operationId: listPayments
+      summary: "Paginated payment records for a contract (#84)"
+      tags:
+        - Billing
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/limitParam"
+        - 
+          $ref: "#/components/parameters/offsetParam"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - payments
+                  - count
+                  - total
+                  - limit
+                  - offset
+                properties:
+                  payments:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PaymentRecord"
+                  count:
+                    type: integer
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createPayment
+      summary: "Record a payment against a contract (#84)"
+      tags:
+        - Billing
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - paymentDate
+                - amount
+              properties:
+                invoiceId:
+                  type: string
+                paymentDate:
+                  type: string
+                  format: date
+                amount:
+                  type: number
+                paymentMethod:
+                  type: string
+                  enum:
+                    - bank_transfer
+                    - cash
+                    - check
+                    - other
+                notes:
+                  type: string
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - payment
+                properties:
+                  payment:
+                    $ref: "#/components/schemas/PaymentRecord"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/payments/{id}:
+    get:
+      operationId: getPayment
+      summary: Payment record detail
+      tags:
+        - Billing
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - payment
+                properties:
+                  payment:
+                    $ref: "#/components/schemas/PaymentRecord"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updatePayment
+      summary: Update a payment record
+      tags:
+        - Billing
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                paymentDate:
+                  type: string
+                  format: date
+                amount:
+                  type: number
+                paymentMethod:
+                  type: string
+                  enum:
+                    - bank_transfer
+                    - cash
+                    - check
+                    - other
+                notes:
+                  type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - payment
+                properties:
+                  payment:
+                    $ref: "#/components/schemas/PaymentRecord"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deletePayment
+      summary: Delete a payment record
+      tags:
+        - Billing
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      responses:
+        204:
+          description: Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/contracts/{contractId}/advance-payments:
+    get:
+      operationId: listAdvancePayments
+      summary: "Paginated advance payments for a contract (#84)"
+      tags:
+        - Billing
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/limitParam"
+        - 
+          $ref: "#/components/parameters/offsetParam"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - advancePayments
+                  - count
+                  - total
+                  - limit
+                  - offset
+                properties:
+                  advancePayments:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AdvancePayment"
+                  count:
+                    type: integer
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createAdvancePayment
+      summary: "Record an advance payment against a contract (#84)"
+      tags:
+        - Billing
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - paymentDate
+                - amount
+              properties:
+                paymentDate:
+                  type: string
+                  format: date
+                amount:
+                  type: number
+                recoveredAmount:
+                  type: number
+                purpose:
+                  type: string
+                status:
+                  type: string
+                  enum:
+                    - outstanding
+                    - partially_recovered
+                    - recovered
+                notes:
+                  type: string
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - advancePayment
+                properties:
+                  advancePayment:
+                    $ref: "#/components/schemas/AdvancePayment"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/advance-payments/{id}:
+    get:
+      operationId: getAdvancePayment
+      summary: Advance payment detail
+      tags:
+        - Billing
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - advancePayment
+                properties:
+                  advancePayment:
+                    $ref: "#/components/schemas/AdvancePayment"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateAdvancePayment
+      summary: Update an advance payment
+      tags:
+        - Billing
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                paymentDate:
+                  type: string
+                  format: date
+                amount:
+                  type: number
+                recoveredAmount:
+                  type: number
+                purpose:
+                  type: string
+                status:
+                  type: string
+                  enum:
+                    - outstanding
+                    - partially_recovered
+                    - recovered
+                notes:
+                  type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - advancePayment
+                properties:
+                  advancePayment:
+                    $ref: "#/components/schemas/AdvancePayment"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteAdvancePayment
+      summary: Delete an advance payment
+      tags:
+        - Billing
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      responses:
+        204:
+          description: Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
         401:
           description: Unauthorized
           content:
@@ -11182,6 +12066,150 @@ components:
             - approved
             - received
             - cancelled
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ProgressBillingInvoice:
+      type: object
+      required:
+        - id
+        - organizationId
+        - projectId
+        - contractId
+        - invoiceNumber
+        - billingDate
+        - progressPercentage
+        - billedAmount
+        - cumulativeBilledAmount
+        - approvalStatus
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        organizationId:
+          type: string
+        projectId:
+          type: string
+        contractId:
+          type: string
+        invoiceNumber:
+          type: string
+        billingDate:
+          type: string
+          format: date
+        periodStart:
+          type: string
+          format: date
+        periodEnd:
+          type: string
+          format: date
+        progressPercentage:
+          type: number
+        billedAmount:
+          type: number
+        cumulativeBilledAmount:
+          type: number
+        approvalStatus:
+          type: string
+          enum:
+            - draft
+            - submitted
+            - approved
+            - rejected
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    PaymentRecord:
+      type: object
+      required:
+        - id
+        - organizationId
+        - projectId
+        - contractId
+        - paymentDate
+        - amount
+        - paymentMethod
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        organizationId:
+          type: string
+        projectId:
+          type: string
+        contractId:
+          type: string
+        invoiceId:
+          type: string
+        paymentDate:
+          type: string
+          format: date
+        amount:
+          type: number
+        paymentMethod:
+          type: string
+          enum:
+            - bank_transfer
+            - cash
+            - check
+            - other
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    AdvancePayment:
+      type: object
+      required:
+        - id
+        - organizationId
+        - projectId
+        - contractId
+        - paymentDate
+        - amount
+        - recoveredAmount
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        organizationId:
+          type: string
+        projectId:
+          type: string
+        contractId:
+          type: string
+        paymentDate:
+          type: string
+          format: date
+        amount:
+          type: number
+        recoveredAmount:
+          type: number
+        purpose:
+          type: string
+        status:
+          type: string
+          enum:
+            - outstanding
+            - partially_recovered
+            - recovered
         notes:
           type: string
         createdAt:

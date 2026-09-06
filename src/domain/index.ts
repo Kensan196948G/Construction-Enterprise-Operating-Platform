@@ -7,7 +7,7 @@
  * Extended domains (P3 / v0.11.0): project, daily-report, photo, safety, cost,
  * notification, knowledge, contract, document, work-schedule, purchase-order,
  * notification-preference, compliance, notification-template, iso, integration,
- * ai-action, gateway-service, workflow-instance.
+ * ai-action, gateway-service, workflow-instance, billing (#84).
  */
 export * from "./common.ts";
 export * from "./organization.ts";
@@ -20,6 +20,7 @@ export * from "./workflow-instance.ts";
 export * from "./policy.ts";
 export * from "./audit-event.ts";
 export * from "./ai-action.ts";
+export * from "./billing.ts";
 export * from "./compliance.ts";
 export * from "./contract.ts";
 export * from "./cost.ts";

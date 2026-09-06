@@ -25,6 +25,14 @@ import type { Project, ProjectId, ProjectStatus } from "../domain/project.ts";
 import type { Photo, PhotoId } from "../domain/photo.ts";
 import type { KnowledgeArticle, KnowledgeId } from "../domain/knowledge.ts";
 import type { Contract, ContractId } from "../domain/contract.ts";
+import type {
+  ProgressBillingInvoice,
+  ProgressBillingInvoiceId,
+  PaymentRecord,
+  PaymentRecordId,
+  AdvancePayment,
+  AdvancePaymentId,
+} from "../domain/billing.ts";
 
 import type { Document, DocumentId } from "../domain/document.ts";
 import type { WorkSchedule, WorkScheduleId } from "../domain/work-schedule.ts";
@@ -189,6 +197,30 @@ export interface ContractRepository extends Repository<Contract, ContractId> {
   findByNumber(contractNumber: string): Promise<Contract | null>;
 }
 
+// ---------------------------------------------------------------------------
+// Billing / accounting ports (#84): progress billing invoice, payment record,
+// advance payment — all scoped to a contract and, transitively, a project.
+// ---------------------------------------------------------------------------
+
+export interface ProgressBillingInvoiceRepository extends Repository<
+  ProgressBillingInvoice,
+  ProgressBillingInvoiceId
+> {
+  findByProject(projectId: ProjectId): Promise<readonly ProgressBillingInvoice[]>;
+  findByContract(contractId: ContractId): Promise<readonly ProgressBillingInvoice[]>;
+  findByNumber(invoiceNumber: string): Promise<ProgressBillingInvoice | null>;
+}
+
+export interface PaymentRecordRepository extends Repository<PaymentRecord, PaymentRecordId> {
+  findByProject(projectId: ProjectId): Promise<readonly PaymentRecord[]>;
+  findByContract(contractId: ContractId): Promise<readonly PaymentRecord[]>;
+}
+
+export interface AdvancePaymentRepository extends Repository<AdvancePayment, AdvancePaymentId> {
+  findByProject(projectId: ProjectId): Promise<readonly AdvancePayment[]>;
+  findByContract(contractId: ContractId): Promise<readonly AdvancePayment[]>;
+}
+
 export interface DocumentRepository extends Repository<Document, DocumentId> {
   findByOrganization(orgId: string): Promise<readonly Document[]>;
   findByProject(projectId: ProjectId): Promise<readonly Document[]>;
@@ -326,6 +358,9 @@ export interface Repositories {
   readonly notificationDeliveries: NotificationDeliveryRepository;
   readonly knowledgeArticles: KnowledgeRepository;
   readonly contracts: ContractRepository;
+  readonly progressBillingInvoices: ProgressBillingInvoiceRepository;
+  readonly paymentRecords: PaymentRecordRepository;
+  readonly advancePayments: AdvancePaymentRepository;
   readonly documents: DocumentRepository;
   readonly workSchedules: WorkScheduleRepository;
   readonly purchaseOrders: PurchaseOrderRepository;
