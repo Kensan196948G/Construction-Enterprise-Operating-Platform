@@ -484,6 +484,29 @@ export function writeAttachment(
   res.end(body);
 }
 
+/**
+ * Write a downloadable binary file response (e.g. a generated `.xlsx`).
+ *
+ * Same hardening as {@link writeAttachment}, but for a `Buffer` body instead
+ * of text — passing binary content through `writeAttachment`'s `string`
+ * parameter would corrupt it on the implicit UTF-8 re-encode.
+ */
+export function writeBinaryAttachment(
+  res: ServerResponse,
+  status: number,
+  contentType: string,
+  filename: string,
+  body: Buffer,
+): void {
+  res.writeHead(status, {
+    "Content-Type": contentType,
+    "Content-Length": body.length,
+    "Content-Disposition": `attachment; filename="${filename}"`,
+    ...BASELINE_SECURITY_HEADERS,
+  });
+  res.end(body);
+}
+
 /** Parse a URL query string into a flat record; duplicate keys keep the last value. */
 export function parseQueryString(search: string): Record<string, string> {
   const result: Record<string, string> = {};

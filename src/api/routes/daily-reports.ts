@@ -13,16 +13,63 @@ import {
   transitionDailyReport,
   updateDailyReport,
 } from "../../domain/daily-report.ts";
+import type { DailyReport } from "../../domain/daily-report.ts";
 import { projectId } from "../../domain/project.ts";
 import { createWorkflowInstance } from "../../domain/workflow-instance.ts";
 import { toCsv } from "../csv.ts";
+import { csvBool, csvNum, csvStr, parseCsv } from "../csv-import.ts";
+import { toXlsx } from "../xlsx.ts";
 import { parsePagination, paginate } from "../pagination.ts";
 import { recordAudit } from "../audit.ts";
 import type { Router } from "../router.ts";
-import { writeJson } from "../router.ts";
+import { writeBinaryAttachment, writeJson } from "../router.ts";
 import { hasPermission } from "./governance.ts";
-import { badRequest, bool, forbidden, notFound, nowTs, num, str } from "./route-helpers.ts";
+import {
+  badRequest,
+  bool,
+  forbidden,
+  notFound,
+  nowTs,
+  num,
+  rowErrors,
+  str,
+} from "./route-helpers.ts";
 import type { AppContainer } from "../types.ts";
+
+const DAILY_REPORT_CSV_HEADERS = [
+  "id",
+  "reportDate",
+  "weather",
+  "temperature",
+  "workerCount",
+  "workContent",
+  "progressRate",
+  "safetyCheck",
+  "safetyNotes",
+  "issues",
+  "status",
+  "createdAt",
+  "updatedAt",
+] as const;
+
+/** Shared row shape for both CSV and Excel export — keeps the two in lockstep. */
+function dailyReportExportRow(r: DailyReport): Record<string, string> {
+  return {
+    id: r.id,
+    reportDate: r.reportDate,
+    weather: r.weather ?? "",
+    temperature: r.temperature !== undefined ? String(r.temperature) : "",
+    workerCount: r.workerCount !== undefined ? String(r.workerCount) : "",
+    workContent: r.workContent ?? "",
+    progressRate: r.progressRate !== undefined ? String(r.progressRate) : "",
+    safetyCheck: r.safetyCheck !== undefined ? String(r.safetyCheck) : "",
+    safetyNotes: r.safetyNotes ?? "",
+    issues: r.issues ?? "",
+    status: r.status,
+    createdAt: r.createdAt,
+    updatedAt: r.updatedAt,
+  };
+}
 
 export function registerDailyReportRoutes(router: Router, container: AppContainer): void {
   const { repositories } = container;
@@ -78,38 +125,7 @@ export function registerDailyReportRoutes(router: Router, container: AppContaine
       return;
     }
     const items = await repositories.dailyReports.findByProject(project.id);
-    const csv = toCsv(
-      [
-        "id",
-        "reportDate",
-        "weather",
-        "temperature",
-        "workerCount",
-        "workContent",
-        "progressRate",
-        "safetyCheck",
-        "safetyNotes",
-        "issues",
-        "status",
-        "createdAt",
-        "updatedAt",
-      ],
-      items.map((r) => ({
-        id: r.id,
-        reportDate: r.reportDate,
-        weather: r.weather ?? "",
-        temperature: r.temperature !== undefined ? String(r.temperature) : "",
-        workerCount: r.workerCount !== undefined ? String(r.workerCount) : "",
-        workContent: r.workContent ?? "",
-        progressRate: r.progressRate !== undefined ? String(r.progressRate) : "",
-        safetyCheck: r.safetyCheck !== undefined ? String(r.safetyCheck) : "",
-        safetyNotes: r.safetyNotes ?? "",
-        issues: r.issues ?? "",
-        status: r.status,
-        createdAt: r.createdAt,
-        updatedAt: r.updatedAt,
-      })),
-    );
+    const csv = toCsv(DAILY_REPORT_CSV_HEADERS, items.map(dailyReportExportRow));
     res.writeHead(200, {
       "Content-Type": "text/csv; charset=utf-8",
       "Content-Disposition": `attachment; filename="daily-reports-${project.id}.csv"`,
@@ -117,6 +133,101 @@ export function registerDailyReportRoutes(router: Router, container: AppContaine
       "X-Content-Type-Options": "nosniff",
     });
     res.end(csv);
+  });
+
+  router.get("/api/v1/projects/:projectId/daily-reports/export.xlsx", async (req, ctx, res) => {
+    if (!hasPermission(ctx, "daily-report", "read")) {
+      forbidden(res, "daily-report:read");
+      return;
+    }
+    const project = await repositories.projects.findById(projectId(req.params["projectId"] ?? ""));
+    if (
+      project === null ||
+      (ctx?.organizationId !== undefined && project.organizationId !== ctx.organizationId)
+    ) {
+      notFound(res, "project");
+      return;
+    }
+    const items = await repositories.dailyReports.findByProject(project.id);
+    const xlsx = toXlsx(DAILY_REPORT_CSV_HEADERS, items.map(dailyReportExportRow), "DailyReports");
+    writeBinaryAttachment(
+      res,
+      200,
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      `daily-reports-${project.id}.xlsx`,
+      xlsx,
+    );
+  });
+
+  // CSV bulk import — additive to the single-record POST below. Body:
+  // `{ "csv": "reportDate,weather,...\n2026-01-01,sunny,...\n" }`. All rows
+  // are validated before any are saved (all-or-nothing), so a partially
+  // invalid file never produces a partially imported project.
+  router.post("/api/v1/projects/:projectId/daily-reports/import.csv", async (req, ctx, res) => {
+    if (!hasPermission(ctx, "daily-report", "write")) {
+      forbidden(res, "daily-report:write");
+      return;
+    }
+    const project = await repositories.projects.findById(projectId(req.params["projectId"] ?? ""));
+    if (
+      project === null ||
+      (ctx?.organizationId !== undefined && project.organizationId !== ctx.organizationId)
+    ) {
+      notFound(res, "project");
+      return;
+    }
+    const csvText = str(req.body, "csv");
+    if (csvText === undefined) {
+      badRequest(res, [{ path: "csv", message: "csv (string) is required" }]);
+      return;
+    }
+    const { rows } = parseCsv(csvText);
+    if (rows.length === 0) {
+      badRequest(res, [{ path: "csv", message: "csv must contain at least one data row" }]);
+      return;
+    }
+
+    const created: DailyReport[] = [];
+    const errors: ReturnType<typeof rowErrors> = [];
+    rows.forEach((row, i) => {
+      const weather = csvStr(row, "weather");
+      const result = createDailyReport({
+        id: `daily-report-${randomUUID()}`,
+        organizationId: project.organizationId,
+        projectId: project.id as string,
+        reportDate: csvStr(row, "reportDate") ?? "",
+        ...(weather !== undefined ? { weather: weather as never } : {}),
+        temperature: csvNum(row, "temperature"),
+        workerCount: csvNum(row, "workerCount"),
+        workContent: csvStr(row, "workContent"),
+        safetyCheck: csvBool(row, "safetyCheck"),
+        safetyNotes: csvStr(row, "safetyNotes"),
+        progressRate: csvNum(row, "progressRate"),
+        issues: csvStr(row, "issues"),
+        createdAt: nowTs(),
+      });
+      if (!result.ok) {
+        errors.push(...rowErrors(i + 1, result.error));
+        return;
+      }
+      created.push(result.value);
+    });
+    if (errors.length > 0) {
+      badRequest(res, errors);
+      return;
+    }
+    for (const report of created) {
+      await repositories.dailyReports.save(report);
+    }
+    recordAudit(
+      container.auditLog,
+      ctx,
+      "daily-report:import",
+      `projects/${project.id}/daily-reports/import`,
+      "success",
+      { count: String(created.length) },
+    );
+    writeJson(res, 201, { imported: created.length, dailyReports: created });
   });
 
   router.post("/api/v1/projects/:projectId/daily-reports", async (req, ctx, res) => {
