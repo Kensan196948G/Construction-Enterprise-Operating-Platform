@@ -31,6 +31,7 @@
     "demo": "node --experimental-strip-types examples/quickstart.ts",
     "openapi:gen": "node --experimental-strip-types scripts/generate-openapi.ts",
     "openapi:check": "node --experimental-strip-types scripts/generate-openapi.ts --check",
+    "sdk:gen": "node --experimental-strip-types scripts/generate-sdk.ts",
     "favicon:gen": "node --experimental-strip-types scripts/generate-favicon.ts",
     "webui:unpack": "node --experimental-strip-types scripts/webui-unpack.ts",
     "webui:serve": "node --experimental-strip-types scripts/webui-serve.ts",
@@ -51,8 +52,10 @@
   "devDependencies": {
     "@eslint/js": "^9.0.0",
     "@playwright/test": "^1.62.1",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.0.0",
     "eslint": "^9.0.0",
+    "js-yaml": "^4.3.1",
     "prettier": "^3.3.0",
     "typescript": "^5.7.0",
     "typescript-eslint": "^8.0.0"
