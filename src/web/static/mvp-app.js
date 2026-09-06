@@ -136,6 +136,8 @@
         { key: "importance", label: "重要度 (1-5)", type: "number" },
         { key: "ownerTeam", label: "オーナーチーム" },
         { key: "approvedProgress", label: "承認進捗 (0-100)", type: "number" },
+        { key: "latitude", label: "緯度 (-90〜90)", type: "number" },
+        { key: "longitude", label: "経度 (-180〜180)", type: "number" },
       ],
     },
     "material-photo-logs": {
@@ -355,6 +357,82 @@
         .join(""),
   };
 
+  // ── 現場位置マップ（軽量 SVG 散布図・外部地図タイル非依存）───────────
+  // 緯度経度を正規化し、単純な相対座標プロットとして描画する。
+  // 日本地図の輪郭再現は行わず、軸ラベルなしの散布図として複数現場を可視化する。
+  const MAP_VIEW_W = 400;
+  const MAP_VIEW_H = 260;
+  const MAP_PAD = 24;
+
+  function renderDxProjectsMap(rows) {
+    const svg = $("dxProjectsMapSvg");
+    const emptyEl = $("dxProjectsMapEmpty");
+    if (!svg) return;
+
+    const points = rows.filter(
+      (r) => typeof r.latitude === "number" && typeof r.longitude === "number",
+    );
+
+    if (points.length === 0) {
+      svg.innerHTML = "";
+      if (emptyEl) emptyEl.hidden = false;
+      return;
+    }
+    if (emptyEl) emptyEl.hidden = true;
+
+    const lats = points.map((p) => p.latitude);
+    const lngs = points.map((p) => p.longitude);
+    const minLat = Math.min(...lats);
+    const maxLat = Math.max(...lats);
+    const minLng = Math.min(...lngs);
+    const maxLng = Math.max(...lngs);
+    // Avoid a zero-width/height span when every point shares one coordinate.
+    const latSpan = maxLat - minLat || 1;
+    const lngSpan = maxLng - minLng || 1;
+
+    const innerW = MAP_VIEW_W - MAP_PAD * 2;
+    const innerH = MAP_VIEW_H - MAP_PAD * 2;
+
+    const toXY = (lat, lng) => {
+      const x = MAP_PAD + ((lng - minLng) / lngSpan) * innerW;
+      // Latitude increases northward, SVG y increases downward — invert it.
+      const y = MAP_PAD + (1 - (lat - minLat) / latSpan) * innerH;
+      return [x, y];
+    };
+
+    const frame = `<rect class="dx-map-frame" x="${MAP_PAD}" y="${MAP_PAD}" width="${innerW}" height="${innerH}" />`;
+    const gridlines = [0.25, 0.5, 0.75]
+      .map((f) => {
+        const x = MAP_PAD + innerW * f;
+        const y = MAP_PAD + innerH * f;
+        return (
+          `<line class="dx-map-gridline" x1="${x}" y1="${MAP_PAD}" x2="${x}" y2="${MAP_PAD + innerH}" />` +
+          `<line class="dx-map-gridline" x1="${MAP_PAD}" y1="${y}" x2="${MAP_PAD + innerW}" y2="${y}" />`
+        );
+      })
+      .join("");
+
+    const markers = points
+      .map((p) => {
+        const [x, y] = toXY(p.latitude, p.longitude);
+        const stateClass = ["production", "paused", "retired", "deleted"].includes(
+          p.lifecycleState,
+        )
+          ? p.lifecycleState
+          : "";
+        const name = p.shortName || p.nameJa || p.slug || "";
+        return `<g>
+            <circle class="dx-map-point ${esc(stateClass)}" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="5">
+              <title>${esc(name)} (${esc(String(p.latitude))}, ${esc(String(p.longitude))})</title>
+            </circle>
+            <text class="dx-map-label" x="${(x + 7).toFixed(2)}" y="${(y + 3).toFixed(2)}">${esc(name)}</text>
+          </g>`;
+      })
+      .join("");
+
+    svg.innerHTML = frame + gridlines + markers;
+  }
+
   const loaders = {
     "work-orders": async () => {
       const data = await api("/api/v1/work-orders");
@@ -393,8 +471,10 @@
     },
     "dx-projects": async () => {
       const data = await api("/api/v1/dx-projects");
-      $("dxProjectsBody").innerHTML = renderers.dxProjects(data.dxProjects ?? []);
-      $("dxProjectsEmpty").hidden = (data.dxProjects ?? []).length > 0;
+      const rows = data.dxProjects ?? [];
+      $("dxProjectsBody").innerHTML = renderers.dxProjects(rows);
+      $("dxProjectsEmpty").hidden = rows.length > 0;
+      renderDxProjectsMap(rows);
     },
     "material-photo-logs": async () => {
       const data = await api("/api/v1/material-photo-logs");
