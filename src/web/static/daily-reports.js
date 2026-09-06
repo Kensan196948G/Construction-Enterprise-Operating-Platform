@@ -28,6 +28,119 @@
   let projects = [];
   let currentProjectId = "";
   let reports = [];
+  let queuedReports = [];
+
+  // ── オフライン日報スプール（IndexedDB） ─────────────────────────────────
+  // 電波なし環境での日報作成に対応する（issue #72）。新規日報の送信が
+  // ネットワーク断で失敗した場合、この端末の IndexedDB に下書きを退避し、
+  // `online` イベント発火時に自動で再送信する。編集・提出・承認は既存の
+  // オンライン専用フローのまま（オフライン中はエラー表示に留める）。
+  const OFFLINE_DB_NAME = "ceop-daily-reports-offline";
+  const OFFLINE_DB_VERSION = 1;
+  const OFFLINE_STORE = "pending-reports";
+
+  /** fetch自体が失敗した（オフライン）ことを表す軽量な例外。 */
+  class OfflineSubmitError extends Error {
+    constructor() {
+      super("offline");
+      this.name = "OfflineSubmitError";
+    }
+  }
+
+  function openOfflineDb() {
+    return new Promise((resolve, reject) => {
+      if (!("indexedDB" in window)) {
+        reject(new Error("この端末はオフライン保存に対応していません"));
+        return;
+      }
+      const request = indexedDB.open(OFFLINE_DB_NAME, OFFLINE_DB_VERSION);
+      request.onupgradeneeded = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains(OFFLINE_STORE)) {
+          db.createObjectStore(OFFLINE_STORE, { keyPath: "localId" });
+        }
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error ?? new Error("IndexedDBを開けませんでした"));
+    });
+  }
+
+  async function queueOfflineReport(entry) {
+    const db = await openOfflineDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(OFFLINE_STORE, "readwrite");
+      tx.objectStore(OFFLINE_STORE).put(entry);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error ?? new Error("下書きの保存に失敗しました"));
+    });
+  }
+
+  async function getQueuedReports(projectIdFilter) {
+    const db = await openOfflineDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(OFFLINE_STORE, "readonly");
+      const request = tx.objectStore(OFFLINE_STORE).getAll();
+      request.onsuccess = () => {
+        const all = request.result ?? [];
+        resolve(
+          projectIdFilter ? all.filter((entry) => entry.projectId === projectIdFilter) : all,
+        );
+      };
+      request.onerror = () => reject(request.error ?? new Error("下書きの取得に失敗しました"));
+    });
+  }
+
+  async function removeQueuedReport(localId) {
+    const db = await openOfflineDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(OFFLINE_STORE, "readwrite");
+      tx.objectStore(OFFLINE_STORE).delete(localId);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error ?? new Error("下書きの削除に失敗しました"));
+    });
+  }
+
+  /** 現在の案件に紐づくキューを再読込し、一覧を再描画する。 */
+  async function refreshQueuedReports() {
+    queuedReports = await getQueuedReports(currentProjectId).catch(() => []);
+    renderReports();
+  }
+
+  /** キューにある未送信の日報をサーバーへ再送信する（オンライン復帰時）。 */
+  async function flushQueuedReports() {
+    if (!currentProjectId || !navigator.onLine) return;
+    const queue = await getQueuedReports(currentProjectId).catch(() => []);
+    if (queue.length === 0) return;
+    let sentCount = 0;
+    for (const entry of queue) {
+      try {
+        await api(`/api/v1/projects/${encodeURIComponent(entry.projectId)}/daily-reports`, {
+          method: "POST",
+          body: JSON.stringify(entry.payload),
+        });
+        await removeQueuedReport(entry.localId);
+        sentCount += 1;
+      } catch (e) {
+        if (e instanceof TypeError) {
+          // まだオフライン（復帰イベントの誤検知など）。残りは次回に回す。
+          break;
+        }
+        // サーバー側の検証エラー等 — このエントリはスキップし、他は続行する。
+      }
+    }
+    if (sentCount > 0) {
+      showToast(`オフラインで保存した日報 ${sentCount} 件を送信しました`);
+    }
+    if (currentProjectId) {
+      await loadReports(currentProjectId).catch(() => {});
+    }
+  }
+
+  window.addEventListener("online", () => {
+    flushQueuedReports().catch(() => {
+      /* 次の online イベントか手動更新で再試行される */
+    });
+  });
 
   // ── API ヘルパー ─────────────────────────────────────────────────────────
   async function api(path, options = {}) {
@@ -104,13 +217,31 @@
   async function loadReports(projectId) {
     const data = await api(`/api/v1/projects/${encodeURIComponent(projectId)}/daily-reports`);
     reports = data.dailyReports;
+    queuedReports = await getQueuedReports(projectId).catch(() => []);
     renderReports();
   }
 
   function renderReports() {
     reportsSection.hidden = false;
-    reportsEmpty.hidden = reports.length > 0;
-    reportsTableBody.innerHTML = reports
+    reportsEmpty.hidden = reports.length > 0 || queuedReports.length > 0;
+    const queuedRowsHtml = queuedReports
+      .map(
+        (q) => `
+          <tr data-local-id="${escapeHtml(q.localId)}" class="row-queued">
+            <td>${escapeHtml(q.payload.reportDate ?? "")}</td>
+            <td>${weatherLabel(q.payload.weather)}</td>
+            <td>${q.payload.workerCount ?? 0}</td>
+            <td>${escapeHtml(q.payload.workContent ?? "—")}</td>
+            <td>${q.payload.progressRate !== undefined ? `${escapeHtml(String(q.payload.progressRate))}%` : "—"}</td>
+            <td>${q.payload.safetyCheck ? "✅" : "⚠️"}</td>
+            <td><span class="badge badge-muted" title="オンライン復帰後に自動送信されます">🔄 同期待ち（オフライン保存）</span></td>
+            <td class="row-actions">
+              <button class="btn btn-sm" data-action="cancel-queue">取消</button>
+            </td>
+          </tr>`,
+      )
+      .join("");
+    const reportRowsHtml = reports
       .map(
         (r) => `
           <tr data-id="${escapeHtml(r.id)}">
@@ -129,6 +260,7 @@
           </tr>`,
       )
       .join("");
+    reportsTableBody.innerHTML = queuedRowsHtml + reportRowsHtml;
   }
 
   function weatherLabel(weather) {
@@ -199,21 +331,45 @@
     };
     try {
       if (id) {
+        // 既存日報の編集はオフライン非対応（サーバー側の最新状態が前提のため）。
         await api(`/api/v1/daily-reports/${encodeURIComponent(id)}`, {
           method: "PATCH",
           body: JSON.stringify(payload),
         });
         showToast("日報を更新しました");
-      } else {
-        await api(`/api/v1/projects/${encodeURIComponent(currentProjectId)}/daily-reports`, {
-          method: "POST",
-          body: JSON.stringify(payload),
-        });
-        showToast("日報を登録しました");
+        closeDialog();
+        await loadReports(currentProjectId);
+        return;
       }
+      if (!navigator.onLine) {
+        throw new OfflineSubmitError();
+      }
+      await api(`/api/v1/projects/${encodeURIComponent(currentProjectId)}/daily-reports`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      showToast("日報を登録しました");
       closeDialog();
       await loadReports(currentProjectId);
     } catch (e) {
+      // 新規日報のみオフラインスプール対象。fetch自体が失敗した場合
+      // (TypeError) と、navigator.onLine が false だった場合の両方を拾う。
+      if (!id && (e instanceof TypeError || e instanceof OfflineSubmitError)) {
+        try {
+          await queueOfflineReport({
+            localId: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+            projectId: currentProjectId,
+            payload,
+            queuedAt: new Date().toISOString(),
+          });
+          showToast("オフラインのため日報を端末に保存しました。オンライン復帰後に自動送信します");
+          closeDialog();
+          await refreshQueuedReports();
+        } catch (queueError) {
+          showToast(`オフライン保存に失敗: ${queueError.message}`);
+        }
+        return;
+      }
       showToast(`保存に失敗: ${e.message}`);
     }
   }
@@ -248,6 +404,9 @@
     if (currentProjectId) {
       try {
         await loadReports(currentProjectId);
+        // 案件を切り替えた時点でオンラインなら、その案件の未送信キューを
+        // 直ちに再送信しておく（オフライン中に作成し、後で戻ってきた場合）。
+        await flushQueuedReports();
       } catch (e) {
         showToast(`日報の取得に失敗: ${e.message}`);
       }
@@ -271,9 +430,20 @@
     const button = event.target.closest("[data-action]");
     if (!button) return;
     const row = button.closest("tr");
+    const action = button.dataset.action;
+    if (action === "cancel-queue") {
+      const localId = row?.dataset.localId;
+      if (!localId) return;
+      removeQueuedReport(localId)
+        .then(() => {
+          showToast("オフライン保存の下書きを取り消しました");
+          return refreshQueuedReports();
+        })
+        .catch((e) => showToast(`取消に失敗: ${e.message}`));
+      return;
+    }
     const id = row?.dataset.id;
     if (!id) return;
-    const action = button.dataset.action;
     if (action === "edit") {
       openDialog(reports.find((r) => r.id === id) ?? null);
     } else if (action === "submit" || action === "approve") {

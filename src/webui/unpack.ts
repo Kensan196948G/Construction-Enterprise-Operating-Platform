@@ -13,6 +13,7 @@
  */
 
 import { gunzipSync } from "node:zlib";
+import { createHash } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -41,6 +42,46 @@ export const FAVICON_TAG = `<link rel="icon" href="/favicon.svg" type="image/svg
 export interface UnpackedBundle {
   readonly indexHtml: string;
   readonly assets: readonly UnpackedAsset[];
+  /**
+   * `'sha256-<base64>'` CSP source tokens, one per unique inline `<style>`
+   * element found in {@link indexHtml} (there are normally just one or two —
+   * a font-face sheet and a base reset). The design bundle is a static,
+   * build-time-generated file, so each block's content is a fixed string;
+   * hashing it here lets the server allow those two exact blocks via
+   * `style-src-elem` instead of blanket `'unsafe-inline'`.
+   *
+   * This intentionally does NOT cover `style="..."` attributes: the real
+   * design bundle carries 300+ unique values, and per-value hashing would
+   * balloon the `Content-Security-Policy` header past what intermediary
+   * proxies reliably forward (~17 KiB, measured). `style-src-attr` keeps
+   * `'unsafe-inline'` for that reason — see `src/webui/server.ts` and
+   * docs/assessment/ROOT-ASSESSMENT.md (G-14).
+   */
+  readonly cspStyleElementHashes: readonly string[];
+}
+
+/** Filename the unpacked style hashes are written to, next to `index.html`. */
+export const CSP_MANIFEST_PATH = "csp.json";
+
+/** `'sha256-<base64>'` CSP source token for a piece of literal content. */
+function sha256Token(content: string): string {
+  return `sha256-${createHash("sha256").update(content, "utf-8").digest("base64")}`;
+}
+
+/**
+ * Compute CSP `style-src-elem` hash tokens for every inline `<style>`
+ * element in `html`. Regex-based (not a full HTML parser), matching the
+ * rest of this module's approach to the bundle's static markup. `<style>`
+ * content is RAWTEXT per the HTML spec, so it is hashed verbatim — no
+ * entity decoding (unlike attribute values, which browsers decode before
+ * hashing for CSP matching).
+ */
+export function computeStyleElementCspHashes(html: string): readonly string[] {
+  const hashes = new Set<string>();
+  for (const match of html.matchAll(/<style(?:\s[^>]*)?>([\s\S]*?)<\/style>/gi)) {
+    hashes.add(sha256Token(match[1] ?? ""));
+  }
+  return [...hashes].sort();
 }
 
 interface ManifestEntry {
@@ -158,7 +199,11 @@ export function unpackBundle(html: string): Result<UnpackedBundle, string> {
     });
   }
 
-  return ok({ indexHtml: withResources.value.indexHtml, assets });
+  return ok({
+    indexHtml: withResources.value.indexHtml,
+    assets,
+    cspStyleElementHashes: computeStyleElementCspHashes(withResources.value.indexHtml),
+  });
 }
 
 /** Insert the browser-tab favicon link right after `<head>` (idempotent). */
@@ -233,11 +278,21 @@ function injectResourceMap(
   });
 }
 
-/** Materialise an unpacked bundle under `outDir` (index.html + assets/). */
+/**
+ * Materialise an unpacked bundle under `outDir` (index.html + assets/ +
+ * `csp.json`). The server reads `csp.json` at startup to build a
+ * `style-src-elem` header with hashes instead of `'unsafe-inline'` (see
+ * {@link CSP_MANIFEST_PATH} and `src/webui/server.ts`).
+ */
 export function writeUnpackedBundle(bundle: UnpackedBundle, outDir: string): void {
   mkdirSync(join(outDir, "assets"), { recursive: true });
   for (const asset of bundle.assets) {
     writeFileSync(join(outDir, asset.path), asset.bytes);
   }
   writeFileSync(join(outDir, "index.html"), bundle.indexHtml, "utf-8");
+  writeFileSync(
+    join(outDir, CSP_MANIFEST_PATH),
+    JSON.stringify({ styleElementHashes: bundle.cspStyleElementHashes }, null, 2) + "\n",
+    "utf-8",
+  );
 }
