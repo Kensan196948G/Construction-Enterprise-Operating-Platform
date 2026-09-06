@@ -8,6 +8,7 @@ import {
   PURCHASE_ORDER_STATUSES,
   createPurchaseOrder,
   purchaseOrderId,
+  transitionPurchaseOrder,
 } from "../../domain/purchase-order.ts";
 import { parsePagination, paginate } from "../pagination.ts";
 import { recordAudit } from "../audit.ts";
@@ -119,5 +120,49 @@ export function registerPurchaseOrderRoutes(router: Router, container: AppContai
       return;
     }
     writeJson(res, 200, { purchaseOrder: order });
+  });
+
+  router.post("/api/v1/purchase-orders/:id/transition", async (req, ctx, res) => {
+    if (!hasPermission(ctx, "purchase-order", "write")) {
+      forbidden(res, "purchase-order:write");
+      return;
+    }
+    const order = await repositories.purchaseOrders.findById(
+      purchaseOrderId(req.params["id"] ?? ""),
+    );
+    if (
+      order === null ||
+      (ctx?.organizationId !== undefined && order.organizationId !== ctx.organizationId)
+    ) {
+      notFound(res, "purchase order");
+      return;
+    }
+    const status = str(req.body, "status");
+    if (status === undefined || !PURCHASE_ORDER_STATUSES.includes(status as never)) {
+      badRequest(res, [
+        {
+          field: "status",
+          message: `status must be one of: ${PURCHASE_ORDER_STATUSES.join(", ")}`,
+        },
+      ]);
+      return;
+    }
+    const transitioned = transitionPurchaseOrder(order, status as never, nowTs());
+    if (!transitioned.ok) {
+      badRequest(res, transitioned.error);
+      return;
+    }
+    await repositories.purchaseOrders.save(transitioned.value);
+    recordAudit(
+      container.auditLog,
+      ctx,
+      "purchase-order:transition",
+      `purchase-orders/${order.id}`,
+      "success",
+      {
+        status: transitioned.value.status,
+      },
+    );
+    writeJson(res, 200, { purchaseOrder: transitioned.value });
   });
 }

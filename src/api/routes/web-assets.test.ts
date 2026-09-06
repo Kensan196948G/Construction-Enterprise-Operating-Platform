@@ -256,6 +256,45 @@ test("dashboard SSR includes the users section and the right-pane API viewer", a
   assert.match(html, /id="apiViewer"/);
 });
 
+test("dashboard SSR carries a fresh, distinct nonce per response and no unsafe-inline", async (t) => {
+  const apiKeyStore: ApiKeyStore = new Map();
+  const adminRole = unwrap(
+    createRole({
+      id: "r-admin",
+      name: "Admin",
+      description: "",
+      scope: "global",
+      permissions: ["*:*"],
+    }),
+  );
+  const cred = createApiKey("admin-user", resolvePermissions([adminRole]), apiKeyStore);
+  const server = createServer(
+    { port: 0 },
+    { repositories: createInMemoryRepositories(), auditLog: new AuditLog(), apiKeyStore },
+  );
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const { port } = server.address() as AddressInfo;
+  const baseUrl = `http://127.0.0.1:${port}`;
+  t.after(() => new Promise<void>((resolve) => server.close(() => resolve())));
+
+  const authHeaders = { Authorization: `Bearer ${cred.key}:${cred.secret}` };
+  const [first, second] = await Promise.all([
+    fetch(`${baseUrl}/dashboard`, { headers: authHeaders }),
+    fetch(`${baseUrl}/dashboard`, { headers: authHeaders }),
+  ]);
+  const cspOne = first.headers.get("content-security-policy") ?? "";
+  const cspTwo = second.headers.get("content-security-policy") ?? "";
+
+  assert.doesNotMatch(cspOne, /unsafe-inline/);
+  const nonceOne = /'nonce-([^']+)'/.exec(cspOne)?.[1];
+  const nonceTwo = /'nonce-([^']+)'/.exec(cspTwo)?.[1];
+  assert.ok(nonceOne, `expected a nonce in CSP: ${cspOne}`);
+  assert.ok(nonceTwo, `expected a nonce in CSP: ${cspTwo}`);
+  assert.notEqual(nonceOne, nonceTwo, "each response must mint its own nonce");
+  assert.match(cspOne, new RegExp(`style-src 'self' 'nonce-${nonceOne}'`));
+  assert.match(cspOne, new RegExp(`script-src 'self' 'nonce-${nonceOne}'`));
+});
+
 test("ISO console requires auth and renders with iso:read permission", async (t) => {
   const apiKeyStore: ApiKeyStore = new Map();
   const role = unwrap(

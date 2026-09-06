@@ -13,6 +13,7 @@
  */
 
 import type { ServerResponse } from "node:http";
+import { randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -34,15 +35,40 @@ import {
 } from "../../web/renderer.ts";
 import { hasPermission } from "./governance.ts";
 
-/** Write a complete HTML response with browser security headers. */
+/**
+ * Generate a fresh per-response CSP nonce.
+ *
+ * 128 bits of randomness, base64-encoded, per the CSP nonce recommendation
+ * (RFC-equivalent guidance: at least 128 bits from a CSPRNG). A new value is
+ * minted for every response so a leaked nonce cannot be replayed against a
+ * later page load.
+ */
+export function generateNonce(): string {
+  return randomBytes(16).toString("base64");
+}
+
+/**
+ * Write a complete HTML response with browser security headers.
+ *
+ * A fresh nonce is minted per call and added to `script-src`/`style-src`
+ * instead of `'unsafe-inline'` — the SSR templates currently ship no inline
+ * `<script>`/`<style>` tags (everything is loaded from `/api/assets/*.js`
+ * and `app.css`), so `'unsafe-inline'` was never required here; the nonce
+ * keeps that true going forward — any template that later needs an inline
+ * tag must carry `nonce="{{CSP_NONCE}}"` rather than reaching for
+ * `'unsafe-inline'` (see docs/assessment/ROOT-ASSESSMENT.md, G-14).
+ */
 export function sendHtml(res: ServerResponse, status: number, html: string): void {
   const buf = Buffer.from(html, "utf-8");
+  const nonce = generateNonce();
   res.writeHead(status, {
     "Content-Type": "text/html; charset=utf-8",
     "Content-Length": buf.byteLength,
     // default-src 'self' acts as fallback for style-src/script-src, blocking all inline.
     "Content-Security-Policy":
-      "default-src 'self'; style-src 'self'; script-src 'self' https://static.cloudflareinsights.com; img-src 'self' data:; font-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'self'",
+      `default-src 'self'; style-src 'self' 'nonce-${nonce}'; ` +
+      `script-src 'self' 'nonce-${nonce}' https://static.cloudflareinsights.com; ` +
+      "img-src 'self' data:; font-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'self'",
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "SAMEORIGIN",
     "Referrer-Policy": "same-origin",
@@ -174,6 +200,20 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
     },
     false,
   );
+  router.get(
+    "/api/assets/sw-register.js",
+    async (_req, _ctx, res) => {
+      await sendFile(res, join(staticDir, "sw-register.js"), "text/javascript; charset=utf-8");
+    },
+    false,
+  );
+  router.get(
+    "/api/assets/offline.html",
+    async (_req, _ctx, res) => {
+      await sendFile(res, join(staticDir, "offline.html"), "text/html; charset=utf-8");
+    },
+    false,
+  );
   // Favicon / PWA icons shared by every SSR page. Serves the SVG, multi-size
   // ICO, and the PNG sizes referenced by manifest.webmanifest and the
   // apple-touch-icon links. Registered under both /api/assets/* (public
@@ -250,6 +290,33 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
     "/favicon.ico",
     async (_req, _ctx, res) => {
       await sendFile(res, join(staticDir, "favicon.ico"), "image/x-icon");
+    },
+    false,
+  );
+
+  // Service worker (PWA offline support, issue #72). Served from the origin
+  // root — not /api/assets/* — so its default scope covers every SSR page,
+  // including the ones the public Tunnel path-split routes to this server
+  // (i.e. everything except literal /assets/*). Revalidated on every request
+  // (no long-lived cache) so an updated worker ships promptly.
+  router.get(
+    "/sw.js",
+    async (_req, _ctx, res) => {
+      try {
+        const buf = await readFile(join(staticDir, "sw.js"));
+        res.writeHead(200, {
+          "Content-Type": "text/javascript; charset=utf-8",
+          "Content-Length": buf.byteLength,
+          "Cache-Control": "no-cache",
+          "Service-Worker-Allowed": "/",
+          "X-Content-Type-Options": "nosniff",
+          "Strict-Transport-Security": "max-age=63072000; includeSubDomains",
+        });
+        res.end(buf);
+      } catch {
+        res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+        res.end("Not Found");
+      }
     },
     false,
   );

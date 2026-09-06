@@ -128,6 +128,7 @@ function renderPortal(): string {
 
     <div class="toast-container" id="toastContainer" aria-live="polite"></div>
     <script src="/api/assets/app.js"></script>
+    <script src="/api/assets/sw-register.js"></script>
   </body>
 </html>`;
 }

@@ -55,6 +55,7 @@ import { registerManagementReviewRoutes } from "./routes/management-reviews.ts";
 import { registerAiBuildProjectRoutes } from "./routes/ai-build-projects.ts";
 import { registerDxProjectRoutes } from "./routes/dx-projects.ts";
 import { registerMaterialPhotoLogRoutes } from "./routes/material-photo-logs.ts";
+import { registerLaborAttendanceRoutes } from "./routes/labor-attendance.ts";
 import type { GatewayService } from "../domain/gateway-service.ts";
 import type { AppContainer } from "./types.ts";
 
@@ -150,6 +151,7 @@ export function createServer(config: ServerConfig, container: AppContainer): Ser
   registerAiBuildProjectRoutes(router, container);
   registerDxProjectRoutes(router, container);
   registerMaterialPhotoLogRoutes(router, container);
+  registerLaborAttendanceRoutes(router, container);
   registerWebRoutes(router, container);
 
   const server = httpCreateServer((req: IncomingMessage, res: ServerResponse): void => {
