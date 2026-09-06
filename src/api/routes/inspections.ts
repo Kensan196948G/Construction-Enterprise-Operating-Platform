@@ -11,10 +11,11 @@ import {
   updateInspection,
 } from "../../domain/inspection.ts";
 import type { InspectionChecklistItem } from "../../domain/inspection.ts";
+import { renderInspectionPdf } from "../../adapters/pdf-report-adapter.ts";
 import { parsePagination, paginate } from "../pagination.ts";
 import { recordAudit } from "../audit.ts";
 import type { Router } from "../router.ts";
-import { writeJson } from "../router.ts";
+import { writeAttachment, writeJson } from "../router.ts";
 import { hasPermission } from "./governance.ts";
 import { badRequest, forbidden, noContent, notFound, nowTs, str } from "./route-helpers.ts";
 import type { AppContainer } from "../types.ts";
@@ -156,6 +157,27 @@ export function registerInspectionRoutes(router: Router, container: AppContainer
       return;
     }
     writeJson(res, 200, { inspection });
+  });
+
+  // PDF export of a single inspection — the printable checklist/record format
+  // public works submissions expect.
+  router.get("/api/v1/inspections/:id/export.pdf", async (req, ctx, res) => {
+    if (!hasPermission(ctx, "inspection", "read")) {
+      forbidden(res, "inspection:read");
+      return;
+    }
+    const inspection = await repositories.inspections.findById(
+      inspectionId(req.params["id"] ?? ""),
+    );
+    if (
+      inspection === null ||
+      (ctx?.organizationId !== undefined && inspection.organizationId !== ctx.organizationId)
+    ) {
+      notFound(res, "inspection");
+      return;
+    }
+    const pdf = await renderInspectionPdf(inspection);
+    writeAttachment(res, 200, "application/pdf", `inspection-${inspection.id}.pdf`, pdf);
   });
 
   router.put("/api/v1/inspections/:id", async (req, ctx, res) => {
