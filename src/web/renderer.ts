@@ -21,6 +21,7 @@ import type {
   ApprovalRequest,
 } from "../dashboard/dashboard.ts";
 import type { User } from "../domain/user.ts";
+import type { IntegrationContract, IntegrationEvent } from "../domain/integration.ts";
 
 // ---------------------------------------------------------------------------
 // Template directory resolution
@@ -35,6 +36,7 @@ export const TEMPLATES = {
   ISO: join(TEMPLATES_DIR, "iso.html"),
   MVP_APP: join(TEMPLATES_DIR, "mvp-app.html"),
   SYSTEM: join(TEMPLATES_DIR, "system.html"),
+  WEBHOOKS: join(TEMPLATES_DIR, "webhooks.html"),
 } as const;
 
 /** The platform version string. Callers may override at bootstrap. */
@@ -389,4 +391,113 @@ export async function renderSystemPage(apiToken = ""): Promise<string> {
     API_TOKEN: esc(apiToken),
   };
   return renderTemplate(TEMPLATES.SYSTEM, context);
+}
+
+// ---------------------------------------------------------------------------
+// Webhook delivery management renderer (v0.14.6)
+// ---------------------------------------------------------------------------
+
+const INTEGRATION_EVENT_STATUS_LABELS: Readonly<Record<string, string>> = {
+  received: "受信済み",
+  pending: "送信待ち",
+  sent: "送信済み",
+  retrying: "再送中",
+  failed: "失敗",
+  acknowledged: "確認済み",
+};
+
+const INTEGRATION_EVENT_STATUS_BADGES: Readonly<Record<string, string>> = {
+  received: "badge-blue",
+  pending: "badge-yellow",
+  sent: "badge-green",
+  retrying: "badge-yellow",
+  failed: "badge-red",
+  acknowledged: "badge-green",
+};
+
+/** Systems/event types a delivery can be retried for from the UI. */
+const RETRYABLE_EVENT_STATUSES: ReadonlySet<string> = new Set(["pending", "retrying", "failed"]);
+
+function renderContractRows(contracts: readonly IntegrationContract[]): string {
+  if (contracts.length === 0) {
+    return '<tr><td colspan="7" class="empty-cell">送信先が見つかりません</td></tr>';
+  }
+  return contracts
+    .map((c) => {
+      const eventTags = c.eventTypes.map((t) => `<span class="tag">${esc(t)}</span>`).join(" ");
+      return [
+        "<tr>",
+        `  <td><span class="cell-strong">${esc(c.label)}</span><br /><code class="cell-muted">${esc(c.system)}</code></td>`,
+        `  <td><code class="cell-muted">${esc(c.outboundEndpoint)}</code><div class="cell-soft">${eventTags}</div></td>`,
+        `  <td>${esc(c.auth)}</td>`,
+        `  <td>${esc(c.timeoutMs)}ms</td>`,
+        `  <td>${esc(c.maxRetries)}</td>`,
+        `  <td>${esc(c.idempotency)}</td>`,
+        `  <td>${esc(c.failureMode)}</td>`,
+        "</tr>",
+      ].join("\n");
+    })
+    .join("\n");
+}
+
+/** Render `<option>` elements (one per contract) carrying the system's event types as a data attribute. */
+function renderContractOptions(contracts: readonly IntegrationContract[]): string {
+  return contracts
+    .map(
+      (c) =>
+        `<option value="${esc(c.system)}" data-event-types="${esc(c.eventTypes.join(","))}">${esc(c.label)}</option>`,
+    )
+    .join("\n");
+}
+
+function renderEventRows(events: readonly IntegrationEvent[]): string {
+  if (events.length === 0) {
+    return '<tr><td colspan="8" class="empty-cell">配信履歴がありません</td></tr>';
+  }
+  return events
+    .map((e) => {
+      const statusLabel = INTEGRATION_EVENT_STATUS_LABELS[e.status] ?? e.status;
+      const badgeClass = INTEGRATION_EVENT_STATUS_BADGES[e.status] ?? "badge-muted";
+      const errorLine =
+        e.lastError !== undefined ? `<div class="cell-soft">${esc(e.lastError)}</div>` : "";
+      const canRetry = e.direction === "outbound" && RETRYABLE_EVENT_STATUSES.has(e.status);
+      const retryCell = canRetry
+        ? `<button class="btn btn-sm" data-action="retry" data-id="${esc(e.id)}">再送</button>`
+        : '<span class="cell-muted">—</span>';
+      return [
+        "<tr>",
+        `  <td><code class="cell-muted">${esc(e.id)}</code></td>`,
+        `  <td>${esc(e.system)}</td>`,
+        `  <td>${esc(e.direction)}</td>`,
+        `  <td>${esc(e.eventType)}</td>`,
+        `  <td><span class="badge ${badgeClass}">${esc(statusLabel)}</span>${errorLine}</td>`,
+        `  <td>${esc(e.attempts)}</td>`,
+        `  <td>${esc(fmtTime(e.updatedAt))}</td>`,
+        `  <td>${retryCell}</td>`,
+        "</tr>",
+      ].join("\n");
+    })
+    .join("\n");
+}
+
+/**
+ * Build the Webhook delivery management console HTML (v0.14.6). The
+ * destination list (contracts) and the most recent deliveries are rendered
+ * server-side from the same repository/config the integrations API uses;
+ * filtering, pagination, retry, and new registrations happen client-side
+ * against the authenticated `/api/v1/integrations/*` endpoints.
+ */
+export async function renderWebhooksPage(
+  contracts: readonly IntegrationContract[],
+  recentEvents: readonly IntegrationEvent[],
+  apiToken = "",
+): Promise<string> {
+  const context: RenderContext = {
+    VERSION: esc(_platformVersion),
+    API_TOKEN: esc(apiToken),
+    DESTINATION_ROWS: renderContractRows(contracts),
+    SYSTEM_OPTIONS: renderContractOptions(contracts),
+    EVENT_ROWS: renderEventRows(recentEvents),
+  };
+  return renderTemplate(TEMPLATES.WEBHOOKS, context);
 }
