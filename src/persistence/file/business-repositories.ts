@@ -42,6 +42,7 @@ import type { ManagementReview, ManagementReviewId } from "../../domain/manageme
 import type { AiBuildProject, AiBuildProjectId } from "../../domain/ai-build-project.ts";
 import type { DxProject, DxProjectId } from "../../domain/dx-project.ts";
 import type { MaterialPhotoLog, MaterialPhotoLogId } from "../../domain/material-photo-log.ts";
+import type { LaborAttendance, LaborAttendanceId } from "../../domain/labor-attendance.ts";
 
 import type {
   PhotoRepository,
@@ -68,6 +69,7 @@ import type {
   AiBuildProjectRepository,
   DxProjectRepository,
   MaterialPhotoLogRepository,
+  LaborAttendanceRepository,
 } from "../ports.ts";
 import { BaseFileRepository } from "./base-file-repository.ts";
 
@@ -423,5 +425,19 @@ export class FileMaterialPhotoLogRepository
   }
   async findByProjectCode(projectCode: string): Promise<readonly MaterialPhotoLog[]> {
     return (await this.findAll()).filter((l) => l.projectCode === projectCode);
+  }
+}
+export class FileLaborAttendanceRepository
+  extends BaseFileRepository<LaborAttendance>
+  implements LaborAttendanceRepository
+{
+  override async findById(id: LaborAttendanceId): Promise<LaborAttendance | null> {
+    return super.findById(id as string);
+  }
+  override async delete(id: LaborAttendanceId): Promise<void> {
+    return super.delete(id as string);
+  }
+  async findByProject(projectId: ProjectId): Promise<readonly LaborAttendance[]> {
+    return (await this.findAll()).filter((a) => (a.projectId as string) === (projectId as string));
   }
 }

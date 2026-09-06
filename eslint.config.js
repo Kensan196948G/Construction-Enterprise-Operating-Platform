@@ -52,6 +52,8 @@ export default tseslint.config(
       globals: {
         window: "readonly",
         document: "readonly",
+        navigator: "readonly",
+        location: "readonly",
         alert: "readonly",
         setTimeout: "readonly",
         clearTimeout: "readonly",
@@ -59,6 +61,11 @@ export default tseslint.config(
         clearInterval: "readonly",
         fetch: "readonly",
         console: "readonly",
+        indexedDB: "readonly",
+        URL: "readonly",
+        // Service worker globals (sw.js runs outside window/document scope).
+        self: "readonly",
+        caches: "readonly",
       },
     },
     rules: {
