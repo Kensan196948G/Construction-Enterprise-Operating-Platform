@@ -262,7 +262,14 @@ test("purchase order lifecycle transitions through the normal path", () => {
 });
 
 test("purchase order lifecycle allows cancellation from any non-terminal state", () => {
-  for (const status of ["draft", "issued", "approved", "received", "delivered", "inspected"] as const) {
+  for (const status of [
+    "draft",
+    "issued",
+    "approved",
+    "received",
+    "delivered",
+    "inspected",
+  ] as const) {
     const order = makeOrder(status);
     const cancelled = transitionPurchaseOrder(order, "cancelled", LATER as never);
     assert.ok(cancelled.ok, `cancellation from '${status}' should be allowed`);

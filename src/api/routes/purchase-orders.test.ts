@@ -289,15 +289,10 @@ test("Purchase Order API — transition follows lifecycle draft -> issued -> app
       { status },
     );
     assert.equal(res.status, 200, `transition to '${status}' should succeed`);
-    assert.equal(
-      (res.json as { purchaseOrder: { status: string } }).purchaseOrder.status,
-      status,
-    );
+    assert.equal((res.json as { purchaseOrder: { status: string } }).purchaseOrder.status, status);
   }
 
-  assert.ok(
-    h.audit.query((e) => e.event.action === "purchase-order:transition").length >= 6,
-  );
+  assert.ok(h.audit.query((e) => e.event.action === "purchase-order:transition").length >= 6);
 });
 
 test("Purchase Order API — transition rejects an invalid order (draft -> paid)", async (t) => {
