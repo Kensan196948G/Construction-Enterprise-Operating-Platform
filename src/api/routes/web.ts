@@ -21,6 +21,7 @@ import type { IsoTimestamp } from "../../domain/common.ts";
 import type { Permission } from "../../domain/role.ts";
 import { buildDashboard } from "../../dashboard/dashboard.ts";
 import type { Policy } from "../../domain/policy.ts";
+import { INTEGRATION_CONTRACTS } from "../../domain/integration.ts";
 import type { Router } from "../router.ts";
 import type { AppContainer } from "../types.ts";
 import {
@@ -29,9 +30,11 @@ import {
   renderIsoPage,
   renderMvpAppPage,
   renderSystemPage,
+  renderWebhooksPage,
   type GovernancePolicyRow,
 } from "../../web/renderer.ts";
 import { hasPermission } from "./governance.ts";
+import { scopedEvents } from "./integrations.ts";
 
 /** Write a complete HTML response with browser security headers. */
 export function sendHtml(res: ServerResponse, status: number, html: string): void {
@@ -142,6 +145,13 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
     "/api/assets/system.js",
     async (_req, _ctx, res) => {
       await sendFile(res, join(staticDir, "system.js"), "text/javascript; charset=utf-8");
+    },
+    false,
+  );
+  router.get(
+    "/api/assets/webhooks.js",
+    async (_req, _ctx, res) => {
+      await sendFile(res, join(staticDir, "webhooks.js"), "text/javascript; charset=utf-8");
     },
     false,
   );
@@ -381,6 +391,33 @@ export function registerWebRoutes(router: Router, container: AppContainer): void
           ? container.jwtIssuer.issue(ctx!.subject, ctx!.permissions, ctx!.organizationId)
           : "";
       sendHtml(res, 200, await renderSystemPage(webToken));
+    },
+    true,
+  );
+
+  router.get(
+    "/webhooks",
+    async (_req, ctx, res) => {
+      // Webhook delivery management: destinations (contracts), recent
+      // deliveries, retry, and registration. Reuses the same repository
+      // scoping and contract definitions as the integrations JSON API.
+      if (!hasPermission(ctx, "integration", "read")) {
+        sendHtml(
+          res,
+          403,
+          "<html><body><h1>403 Forbidden</h1><p>requires integration:read permission</p></body></html>",
+        );
+        return;
+      }
+      const events = await scopedEvents(container, ctx);
+      const recentEvents = [...events]
+        .sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : a.updatedAt > b.updatedAt ? -1 : 0))
+        .slice(0, 50);
+      const webToken =
+        container.jwtIssuer !== undefined
+          ? container.jwtIssuer.issue(ctx!.subject, ctx!.permissions, ctx!.organizationId)
+          : "";
+      sendHtml(res, 200, await renderWebhooksPage(INTEGRATION_CONTRACTS, recentEvents, webToken));
     },
     true,
   );

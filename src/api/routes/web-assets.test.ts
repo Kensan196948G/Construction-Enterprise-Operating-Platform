@@ -20,8 +20,9 @@ import { AuditLog } from "../../governance/audit-log.ts";
 import { createApiKey } from "../middleware/auth.ts";
 import { resolvePermissions } from "../../governance/policy-engine.ts";
 import { createRole } from "../../domain/index.ts";
+import { createIntegrationEvent } from "../../domain/integration.ts";
 import type { ApiKeyStore, AppContainer } from "../types.ts";
-import type { Result } from "../../domain/common.ts";
+import type { IsoTimestamp, Result } from "../../domain/common.ts";
 
 function unwrap<T>(r: Result<T>): T {
   if (!r.ok) throw new Error(JSON.stringify(r.error));
@@ -81,6 +82,16 @@ test("SSR assets: /api/assets/iso.js is served with JS MIME type", async (t) => 
   assert.equal(res.status, 200);
   assert.match(res.headers.get("content-type") ?? "", /javascript/);
   assert.ok((await res.text()).includes("ISO 統合マネジメントコンソール"));
+});
+
+test("SSR assets: /api/assets/webhooks.js is served with JS MIME type", async (t) => {
+  const h = await buildHarness();
+  t.after(() => h.close());
+
+  const res = await fetch(`${h.baseUrl}/api/assets/webhooks.js`);
+  assert.equal(res.status, 200);
+  assert.match(res.headers.get("content-type") ?? "", /javascript/);
+  assert.ok((await res.text()).includes("integrations/events"));
 });
 
 test("SSR assets: /api/assets/demo-login.js is served with JS MIME type", async (t) => {
@@ -290,4 +301,76 @@ test("ISO console requires auth and renders with iso:read permission", async (t)
   assert.equal(authed.status, 200);
   assert.match(authed.headers.get("content-type") ?? "", /text\/html/);
   assert.ok((await authed.text()).includes("ISO 統合マネジメントコンソール"));
+});
+
+test("Webhook console requires auth, requires integration:read, and renders destinations + history", async (t) => {
+  const apiKeyStore: ApiKeyStore = new Map();
+  const repositories = createInMemoryRepositories();
+  const seeded = unwrap(
+    createIntegrationEvent({
+      id: "evt-webhooks-test-1",
+      system: "dx-idea",
+      eventType: "idea.submitted",
+      direction: "outbound",
+      idempotencyKey: "webhooks-test-1",
+      createdAt: new Date().toISOString() as IsoTimestamp,
+    }),
+  );
+  await repositories.integrationEvents.save(seeded);
+
+  const readerRole = unwrap(
+    createRole({
+      id: "r-integration-reader",
+      name: "Integration Reader",
+      description: "",
+      scope: "global",
+      permissions: ["integration:read"],
+    }),
+  );
+  const readerCred = createApiKey(
+    "integration-reader",
+    resolvePermissions([readerRole]),
+    apiKeyStore,
+  );
+
+  const unrelatedRole = unwrap(
+    createRole({
+      id: "r-unrelated",
+      name: "Unrelated Reader",
+      description: "",
+      scope: "global",
+      permissions: ["iso:read"],
+    }),
+  );
+  const unrelatedCred = createApiKey(
+    "iso-only-user",
+    resolvePermissions([unrelatedRole]),
+    apiKeyStore,
+  );
+
+  const server = createServer({ port: 0 }, { repositories, auditLog: new AuditLog(), apiKeyStore });
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const { port } = server.address() as AddressInfo;
+  const baseUrl = `http://127.0.0.1:${port}`;
+  t.after(() => new Promise<void>((resolve) => server.close(() => resolve())));
+
+  const anonymous = await fetch(`${baseUrl}/webhooks`);
+  assert.equal(anonymous.status, 401);
+
+  const forbidden = await fetch(`${baseUrl}/webhooks`, {
+    headers: { Authorization: `Bearer ${unrelatedCred.key}:${unrelatedCred.secret}` },
+  });
+  assert.equal(forbidden.status, 403);
+
+  const authed = await fetch(`${baseUrl}/webhooks`, {
+    headers: { Authorization: `Bearer ${readerCred.key}:${readerCred.secret}` },
+  });
+  assert.equal(authed.status, 200);
+  assert.match(authed.headers.get("content-type") ?? "", /text\/html/);
+  const html = await authed.text();
+  // Destination list (contract definitions) is rendered server-side.
+  assert.ok(html.includes("Construction-DX-Idea"));
+  // Recent delivery history includes the seeded event.
+  assert.ok(html.includes("evt-webhooks-test-1"));
+  assert.ok(html.includes('src="/api/assets/webhooks.js"'));
 });
