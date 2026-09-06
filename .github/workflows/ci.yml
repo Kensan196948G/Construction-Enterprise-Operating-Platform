@@ -201,6 +201,12 @@ jobs:
           - browser: webkit
             install: webkit
             projects: --project=webkit --project=mobile-safari
+            # Unlike chromium/firefox, this runner image lacks WebKit's system
+            # libraries (libgtk-4, libgraphene, …), so `playwright install`
+            # alone downloads the browser but it fails to launch. `--with-deps`
+            # apt-get installs them; scoped to this one engine only, so it
+            # doesn't reintroduce the stalls seen when applied to every browser.
+            withDeps: true
 
     steps:
       - name: Checkout
@@ -228,7 +234,7 @@ jobs:
           key: playwright-${{ runner.os }}-${{ matrix.browser }}-${{ hashFiles('pnpm-lock.yaml') }}
 
       - name: Install Playwright ${{ matrix.browser }}
-        run: pnpm exec playwright install ${{ matrix.install }}
+        run: pnpm exec playwright install ${{ matrix.withDeps && '--with-deps' || '' }} ${{ matrix.install }}
 
       - name: Run E2E tests
         run: pnpm exec playwright test ${{ matrix.projects }}
