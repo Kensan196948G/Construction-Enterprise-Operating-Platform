@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>オフライン — 建設企業プラットフォーム</title>
+    <link rel="icon" href="/api/assets/favicon.svg" type="image/svg+xml" />
+    <style>
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          "Hiragino Sans",
+          sans-serif;
+        background: #f4f6fa;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0;
+        padding: 24px;
+        text-align: center;
+      }
+      .card {
+        max-width: 420px;
+      }
+      h1 {
+        font-size: 1.4rem;
+        margin-bottom: 0.5rem;
+      }
+      p {
+        color: #475569;
+        line-height: 1.6;
+      }
+      a.retry {
+        display: inline-block;
+        margin-top: 1rem;
+        padding: 0.6rem 1.2rem;
+        border-radius: 6px;
+        background: #1e3a8a;
+        color: #fff;
+        text-decoration: none;
+        font-size: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>📡 オフラインです</h1>
+      <p>
+        現在ネットワークに接続できません。日報の下書きはこの端末に保存され、
+        オンライン復帰後に自動的に送信されます。電波の入る場所に移動するか、
+        接続が復旧してからもう一度お試しください。
+      </p>
+      <a class="retry" href="/dashboard">再読み込み</a>
+    </div>
+  </body>
+</html>

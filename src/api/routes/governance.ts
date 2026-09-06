@@ -16,6 +16,7 @@ import { AUDIT_ORG_KEY, createAuditEvent } from "../../domain/audit-event.ts";
 import { createPolicy, policyId } from "../../domain/policy.ts";
 import type { PolicyEffect, PolicyCondition } from "../../domain/policy.ts";
 import type { Permission } from "../../domain/role.ts";
+import { buildAccessInventory } from "../../domain/access-inventory.ts";
 import { evaluateAccess, resolvePermissions } from "../../governance/policy-engine.ts";
 import type { AuditLogEntry } from "../../governance/audit-log.ts";
 import {
@@ -576,6 +577,59 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
       valid: report.valid,
       ...(report.brokenAt !== undefined ? { brokenAt: report.brokenAt } : {}),
       checkedAt: new Date().toISOString(),
+    });
+  });
+
+  // ── Access inventory (RBAC audit) ────────────────────────────────────────
+
+  // GET /api/v1/governance/access-inventory?limit=&offset=
+  //   (requires audit:read or wildcard permission)
+  //
+  // Reports, per user, which roles they hold and which permissions those
+  // roles resolve to — the "who can access what" view an RBAC audit needs.
+  // Tenant scoping matches the other list endpoints: an organization-scoped
+  // credential only sees users in its own organization. Access to this report
+  // is itself audit-worthy (it enumerates every grant in scope), so successful
+  // reads are recorded the same way `audit:export` reads are.
+  router.get("/api/v1/governance/access-inventory", async (req, ctx, res) => {
+    if (!hasPermission(ctx, "audit", "read")) {
+      forbidden(res, "audit:read");
+      return;
+    }
+
+    const [allUsers, allRoles] = await Promise.all([
+      container.repositories.users.findAll(),
+      container.repositories.roles.findAll(),
+    ]);
+    const scopedUsers =
+      ctx?.organizationId !== undefined
+        ? allUsers.filter((u) => u.organizationId === ctx.organizationId)
+        : allUsers;
+
+    const report = buildAccessInventory(
+      scopedUsers,
+      allRoles,
+      new Date().toISOString() as IsoTimestamp,
+    );
+    const pg = paginate(report.entries, parsePagination(req.query));
+
+    recordAudit(
+      container.auditLog,
+      ctx,
+      "audit:access-inventory",
+      "governance:access-inventory",
+      "success",
+      { count: String(pg.count), total: String(pg.total), method: req.method },
+    );
+
+    writeJson(res, 200, {
+      generatedAt: report.generatedAt,
+      summary: report.summary,
+      entries: pg.items,
+      count: pg.count,
+      total: pg.total,
+      limit: pg.limit,
+      offset: pg.offset,
     });
   });
 
