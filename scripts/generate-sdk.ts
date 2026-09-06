@@ -242,7 +242,6 @@ function generateMethod(
   if (requestBody) {
     args.push(`body${requestBody.optional ? "?" : ""}: ${requestBody.type}`);
   }
-  let queryType = "";
   if (queryParams.length > 0) {
     const members = queryParams.map((p) => {
       const name = p.name ?? "value";
@@ -250,7 +249,7 @@ function generateMethod(
       const optional = p.required ? "" : "?";
       return `${propertyKey(name)}${optional}: ${type};`;
     });
-    queryType = `{ ${members.join(" ")} }`;
+    const queryType = `{ ${members.join(" ")} }`;
     args.push(`query: ${queryType} = {}`);
   }
 
