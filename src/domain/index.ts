@@ -45,6 +45,7 @@ export * from "./management-review.ts";
 export * from "./ai-build-project.ts";
 export * from "./dx-project.ts";
 export * from "./material-photo-log.ts";
+export * from "./labor-attendance.ts";
 // iso.ts は DOCUMENT_STATUSES を document.ts と同名でエクスポートするため
 // `export *` ではなく明示列挙で再エクスポートする（競合名はエイリアス化）。
 export {

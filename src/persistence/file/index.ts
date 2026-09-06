@@ -66,6 +66,7 @@ import {
   FileAiBuildProjectRepository,
   FileDxProjectRepository,
   FileMaterialPhotoLogRepository,
+  FileLaborAttendanceRepository,
 } from "./business-repositories.ts";
 import { FileIsoRecordRepository, FileIntegrationEventRepository } from "./iso-repositories.ts";
 
@@ -323,5 +324,6 @@ export async function createFileRepositories(dataDir: string): Promise<Repositor
     aiBuildProjects: new FileAiBuildProjectRepository(dataDir, "ai-build-projects.json"),
     dxProjects: new FileDxProjectRepository(dataDir, "dx-projects.json"),
     materialPhotoLogs: new FileMaterialPhotoLogRepository(dataDir, "material-photo-logs.json"),
+    laborAttendances: new FileLaborAttendanceRepository(dataDir, "labor-attendances.json"),
   };
 }
