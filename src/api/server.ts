@@ -41,6 +41,7 @@ import { registerNotificationPreferenceRoutes } from "./routes/notification-pref
 import { registerComplianceRoutes } from "./routes/compliance.ts";
 import { registerNotificationTemplateRoutes } from "./routes/notification-templates.ts";
 import { registerMonitoringRoutes } from "./routes/monitoring.ts";
+import { registerOpsHealthRoutes } from "./routes/ops-health.ts";
 import { registerPortalRoute } from "./routes/portal.ts";
 import { registerDailyReportUiRoutes } from "./routes/daily-reports-ui.ts";
 import { registerIsoRoutes } from "./routes/iso.ts";
@@ -138,6 +139,7 @@ export function createServer(config: ServerConfig, container: AppContainer): Ser
   registerComplianceRoutes(router, container);
   registerNotificationTemplateRoutes(router, container);
   registerMonitoringRoutes(router, container);
+  registerOpsHealthRoutes(router, container);
   registerIsoRoutes(router, container);
   registerIntegrationRoutes(router, container);
   registerPortalRoute(router);
