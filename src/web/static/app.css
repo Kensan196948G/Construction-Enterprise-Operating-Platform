@@ -412,6 +412,12 @@ code {
   background: var(--line);
 }
 
+/* CSP: kept as a class instead of an inline style="" attribute so the SSR
+ * pages never need `style-src 'unsafe-inline'` (see src/api/routes/web.ts). */
+.section-title-spaced {
+  margin-top: 20px;
+}
+
 .card {
   background: var(--surface);
   border: 1px solid var(--line);
