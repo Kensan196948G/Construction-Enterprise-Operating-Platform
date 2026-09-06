@@ -32,6 +32,7 @@
             <a class="nav-item" href="/dashboard"><span class="nav-icon">📊</span> ダッシュボード</a>
             <a class="nav-item" href="/governance"><span class="nav-icon">🛡</span> ガバナンス</a>
             <a class="nav-item" href="/daily-reports"><span class="nav-icon">📝</span> 日報管理コンソール</a>
+            <a class="nav-item" href="/webhooks"><span class="nav-icon">🔗</span> Webhook配信管理</a>
           </div>
         </details>
         <details class="nav-group" open>
@@ -62,6 +63,7 @@
             <a class="nav-item system-tab" data-tab="keys" href="#keys"><span class="nav-icon">🔑</span> API キー</a>
             <a class="nav-item system-tab" data-tab="audit" href="#audit"><span class="nav-icon">📑</span> 監査エクスポート</a>
             <a class="nav-item system-tab" data-tab="metrics" href="#metrics"><span class="nav-icon">📈</span> メトリクス</a>
+            <a class="nav-item" href="/ops-health"><span class="nav-icon">🖥️</span> 運用ヘルス</a>
           </div>
         </details>
       </nav>
@@ -146,5 +148,6 @@
 
     <div class="toast-container" id="toastContainer" aria-live="polite"></div>
     <script src="/api/assets/system.js"></script>
+    <script src="/api/assets/sw-register.js"></script>
   </body>
 </html>

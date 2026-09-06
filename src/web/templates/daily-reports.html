@@ -36,6 +36,9 @@
             <a class="nav-item active" href="/daily-reports"
               ><span class="nav-icon">📝</span> 日報管理コンソール</a
             >
+            <a class="nav-item" href="/webhooks"
+              ><span class="nav-icon">🔗</span> Webhook配信管理</a
+            >
           </div>
         </details>
         <details class="nav-group" open>
@@ -61,6 +64,7 @@
             <a class="nav-item" href="/system#keys"><span class="nav-icon">🔑</span> API キー</a>
             <a class="nav-item" href="/system#audit"><span class="nav-icon">📑</span> 監査エクスポート</a>
             <a class="nav-item" href="/system#metrics"><span class="nav-icon">📈</span> メトリクス</a>
+            <a class="nav-item" href="/ops-health"><span class="nav-icon">🖥️</span> 運用ヘルス</a>
           </div>
         </details>
       </nav>
@@ -203,5 +207,6 @@
     </div>
 
     <script src="/api/assets/daily-reports.js"></script>
+    <script src="/api/assets/sw-register.js"></script>
   </body>
 </html>

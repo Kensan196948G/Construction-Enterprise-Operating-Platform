@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>運用ヘルスダッシュボード — 建設企業プラットフォーム</title>
+    <link rel="icon" href="/api/assets/favicon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/api/assets/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/api/assets/favicon-192.png" />
+    <link rel="stylesheet" href="/api/assets/app.css" />
+  </head>
+  <body>
+    <input type="hidden" id="ceopToken" value="{{API_TOKEN}}" />
+
+    <header class="header">
+      <button class="hamburger" id="hamburgerBtn" aria-label="メニューを開閉">☰</button>
+      <a class="header__logo" href="/dashboard">
+        <span class="header__title">🏗️ CEOP</span>
+        <span class="header__subtitle">運用ヘルスダッシュボード</span>
+      </a>
+      <div class="header__right">
+        <span class="badge badge-muted">v{{VERSION}}</span>
+        <button class="btn-icon" id="refreshBtn" aria-label="再読み込み">更新</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <nav class="sidebar" id="sidebar" aria-label="メインメニュー">
+        <details class="nav-group" open>
+          <summary class="nav-group__summary">🏠 メインメニュー</summary>
+          <div class="nav-group__body">
+            <a class="nav-item" href="/dashboard"><span class="nav-icon">📊</span> ダッシュボード</a>
+            <a class="nav-item" href="/governance"><span class="nav-icon">🛡</span> ガバナンス</a>
+            <a class="nav-item" href="/daily-reports"><span class="nav-icon">📝</span> 日報管理コンソール</a>
+          </div>
+        </details>
+        <details class="nav-group" open>
+          <summary class="nav-group__summary">📋 ISO 統合マネジメント</summary>
+          <div class="nav-group__body">
+            <a class="nav-item nav-sub" href="/iso-app#analytics">📊 分析</a>
+            <a class="nav-item nav-sub" href="/iso-app#quality">✅ 品質 (ISO 9001)</a>
+            <a class="nav-item nav-sub" href="/iso-app#environment">🌿 環境 (ISO 14001)</a>
+            <a class="nav-item nav-sub" href="/iso-app#safety">⛑️ 安全 (ISO 45001)</a>
+            <a class="nav-item nav-sub" href="/iso-app#assets">🏛️ 資産 (ISO 55001)</a>
+            <a class="nav-item nav-sub" href="/iso-app#bim">🏗️ BIM/CIM (ISO 19650)</a>
+            <a class="nav-item nav-sub" href="/iso-app#audit">📋 監査・是正</a>
+            <a class="nav-item nav-sub" href="/iso-app#isms">🔐 ISMS (ISO 27001)</a>
+            <a class="nav-item nav-sub" href="/iso-app#bcp">🔄 事業継続 (BCP)</a>
+            <a class="nav-item nav-sub" href="/iso-app#integrations">🔗 連携先システム</a>
+          </div>
+        </details>
+        <details class="nav-group">
+          <summary class="nav-group__summary">🧩 統合モジュール（MVP）</summary>
+          <div class="nav-group__body">
+            <a class="nav-item" href="/mvp-app"><span class="nav-icon">👷</span> 現場管理・AI・DX 統合</a>
+          </div>
+        </details>
+        <details class="nav-group" open>
+          <summary class="nav-group__summary">⚙️ システム設定</summary>
+          <div class="nav-group__body">
+            <a class="nav-item" href="/system#info"><span class="nav-icon">ℹ️</span> プラットフォーム情報</a>
+            <a class="nav-item" href="/system#keys"><span class="nav-icon">🔑</span> API キー</a>
+            <a class="nav-item" href="/system#audit"><span class="nav-icon">📑</span> 監査エクスポート</a>
+            <a class="nav-item" href="/system#metrics"><span class="nav-icon">📈</span> メトリクス</a>
+            <a class="nav-item active" href="/ops-health"><span class="nav-icon">🖥️</span> 運用ヘルス</a>
+          </div>
+        </details>
+      </nav>
+
+      <main class="main" id="mainContent">
+        <div class="page-header">
+          <div class="page-eyebrow">Ops Health</div>
+          <h1 class="page-title">🖥️ 運用ヘルスダッシュボード</h1>
+          <p class="page-subtitle">コンテナ・DB接続・ヘルスプローブの実データを1画面に集約表示します</p>
+        </div>
+
+        <!-- ── サマリー ─────────────────────────────────────────── -->
+        <section class="section" id="summarySection">
+          <div class="section-title">サマリー</div>
+          <div class="card">
+            <table class="kv-table">
+              <tbody id="summaryBody">
+                <tr><td class="cell-soft">読み込み中…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ── プロセス稼働状態 ─────────────────────────────────── -->
+        <section class="section" id="processSection">
+          <div class="section-title">プロセス稼働状態</div>
+          <div class="card">
+            <table class="kv-table">
+              <tbody id="processBody">
+                <tr><td class="cell-soft">読み込み中…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ── データベース接続状態 ─────────────────────────────── -->
+        <section class="section" id="databaseSection">
+          <div class="section-title">データベース接続状態</div>
+          <div class="card">
+            <table class="kv-table">
+              <tbody id="databaseBody">
+                <tr><td class="cell-soft">読み込み中…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ── 直近のヘルスプローブ結果 ─────────────────────────── -->
+        <section class="section" id="probeSection">
+          <div class="section-title">直近のヘルスプローブ結果（scripts/health-probe.sh）</div>
+          <div class="card">
+            <table class="kv-table">
+              <tbody id="probeSummaryBody">
+                <tr><td class="cell-soft">読み込み中…</td></tr>
+              </tbody>
+            </table>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>時刻</th>
+                    <th>結果</th>
+                    <th>詳細</th>
+                  </tr>
+                </thead>
+                <tbody id="probeLogBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── 連携ゲートウェイ ─────────────────────────────────── -->
+        <section class="section" id="gatewaySection">
+          <div class="section-title">連携ゲートウェイ（Tunnel／外部サービス連携）</div>
+          <div class="card">
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>名称</th>
+                    <th>状態</th>
+                  </tr>
+                </thead>
+                <tbody id="gatewayBody">
+                  <tr><td colspan="3" class="cell-soft">読み込み中…</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="cell-soft" id="gatewayNotice"></p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <footer class="footer">
+      <span>建設企業オペレーティングプラットフォーム v{{VERSION}}</span>
+      <span class="footer__right">運用ヘルスダッシュボード</span>
+    </footer>
+
+    <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+    <script src="/api/assets/ops-health.js"></script>
+  </body>
+</html>

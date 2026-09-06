@@ -13,11 +13,24 @@
 import { randomUUID } from "node:crypto";
 import type { IsoTimestamp } from "../../domain/common.ts";
 import { AUDIT_ORG_KEY, createAuditEvent } from "../../domain/audit-event.ts";
+import {
+  buildAuditReportSummary,
+  currentReportPeriod,
+  parseReportPeriod,
+  periodToString,
+  renderAuditReportPdf,
+} from "../../adapters/audit-report-adapter.ts";
 import { createPolicy, policyId } from "../../domain/policy.ts";
 import type { PolicyEffect, PolicyCondition } from "../../domain/policy.ts";
 import type { Permission } from "../../domain/role.ts";
+import { buildAccessInventory } from "../../domain/access-inventory.ts";
 import { evaluateAccess, resolvePermissions } from "../../governance/policy-engine.ts";
 import type { AuditLogEntry } from "../../governance/audit-log.ts";
+import {
+  DEFAULT_AUDIT_RETENTION_DAYS,
+  archiveExpiredAuditEvents,
+  withArchiveStatus,
+} from "../../governance/audit-archive.ts";
 import { recordAudit } from "../audit.ts";
 import { toCsv } from "../csv.ts";
 import type { Router } from "../router.ts";
@@ -30,6 +43,7 @@ import {
   forbidden,
   noContent,
   notFound,
+  nowTs,
   str,
   strArr,
 } from "./route-helpers.ts";
@@ -48,6 +62,12 @@ const AUDIT_EXPORT_LIMIT_MAX = 10_000;
 
 /** Resource identifier recorded against export attempts. */
 const AUDIT_EXPORT_RESOURCE = "governance:audit-log";
+
+/** Resource identifier recorded against quarterly audit-report generation attempts. */
+const AUDIT_REPORT_RESOURCE = "governance:audit-report";
+
+/** Resource identifier recorded against archive-batch attempts. */
+const AUDIT_ARCHIVE_RESOURCE = "governance:audit-log";
 
 /**
  * Fixed column order for CSV exports.
@@ -334,7 +354,15 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
 
   // ── Audit log ─────────────────────────────────────────────────────────────
 
-  // GET /api/v1/governance/audit?limit=&offset=  (requires audit:read or wildcard permission)
+  // GET /api/v1/governance/audit?limit=&offset=&archived=  (requires audit:read or wildcard permission)
+  //
+  // `archived` (issue #83) filters by archive status: `true` returns only
+  // entries the retention batch has classified as archived, `false` returns
+  // only entries still within the retention window, and omitting it returns
+  // both — matching the pre-existing default behavior. Every entry is
+  // annotated with `archived`/`archivedAt` regardless of the filter, so
+  // archived evidence stays fully readable through this same endpoint
+  // (nothing is ever physically removed by archival).
   router.get("/api/v1/governance/audit", async (req, ctx, res) => {
     if (!hasPermission(ctx, "audit", "read")) {
       writeJson(res, 403, { error: "Forbidden", message: "requires 'audit:read' permission" });
@@ -348,7 +376,26 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
     const parsedOffset = rawOffset !== undefined ? Number.parseInt(rawOffset, 10) : 0;
     const offset = Number.isNaN(parsedOffset) || parsedOffset < 0 ? 0 : parsedOffset;
 
-    const allEntries = scopeAuditEntries(container.auditLog.entries, ctx);
+    const rawArchived = req.query["archived"];
+    if (rawArchived !== undefined && rawArchived !== "true" && rawArchived !== "false") {
+      writeJson(res, 400, {
+        error: "Bad Request",
+        message: "'archived' must be 'true' or 'false'",
+      });
+      return;
+    }
+    const archivedFilter = rawArchived === undefined ? undefined : rawArchived === "true";
+
+    const scoped = scopeAuditEntries(container.auditLog.entries, ctx);
+    const archiveStore = container.auditArchive;
+    const annotated = archiveStore
+      ? scoped.map((entry) => withArchiveStatus(entry, archiveStore))
+      : scoped.map((entry) => ({ ...entry, archived: false as const }));
+    const allEntries =
+      archivedFilter === undefined
+        ? annotated
+        : annotated.filter((entry) => entry.archived === archivedFilter);
+
     const end = Math.max(0, allEntries.length - offset);
     const entries = allEntries.slice(Math.max(0, end - limit), end);
 
@@ -358,6 +405,76 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
       total: allEntries.length,
       limit,
       offset,
+    });
+  });
+
+  // POST /api/v1/governance/audit/archive  (requires audit:archive — deliberately
+  //   separate from audit:read/audit:export: this changes retention state)
+  //
+  // Runs the retention batch (see `archiveExpiredAuditEvents`): every audit
+  // entry older than `retentionDays` (default DEFAULT_AUDIT_RETENTION_DAYS) is
+  // marked archived in the side-index `AuditArchiveStore`. The hash chain
+  // itself is never written to, so `GET /audit/verify` is unaffected. Global
+  // scope only: archival is a platform-wide retention decision, not a
+  // per-tenant one.
+  router.post("/api/v1/governance/audit/archive", async (req, ctx, res) => {
+    if (!hasPermission(ctx, "audit", "archive")) {
+      recordAudit(container.auditLog, ctx, "audit:archive", AUDIT_ARCHIVE_RESOURCE, "denied", {
+        method: req.method,
+      });
+      writeJson(res, 403, { error: "Forbidden", message: "requires 'audit:archive' permission" });
+      return;
+    }
+    if (ctx?.organizationId !== undefined) {
+      recordAudit(container.auditLog, ctx, "audit:archive", AUDIT_ARCHIVE_RESOURCE, "denied", {
+        reason: "organization-scoped credential",
+      });
+      writeJson(res, 403, {
+        error: "Forbidden",
+        message: "audit archival requires a globally-scoped credential",
+      });
+      return;
+    }
+    const archiveStore = container.auditArchive;
+    if (archiveStore === undefined) {
+      writeJson(res, 503, {
+        error: "Service Unavailable",
+        message: "audit archive store is not configured",
+      });
+      return;
+    }
+
+    const body = (req.body ?? {}) as { readonly retentionDays?: unknown };
+    let retentionDays: number | undefined;
+    if (body.retentionDays !== undefined) {
+      const value = body.retentionDays;
+      if (typeof value !== "number" || !Number.isInteger(value) || value < 1) {
+        writeJson(res, 400, {
+          error: "Bad Request",
+          message: "'retentionDays' must be a positive integer",
+        });
+        return;
+      }
+      retentionDays = value;
+    }
+
+    const result = archiveExpiredAuditEvents(container.auditLog, archiveStore, {
+      ...(retentionDays !== undefined ? { retentionDays } : {}),
+    });
+
+    recordAudit(container.auditLog, ctx, "audit:archive", AUDIT_ARCHIVE_RESOURCE, "success", {
+      archivedCount: String(result.archivedCount),
+      totalArchived: String(result.totalArchived),
+      cutoff: result.cutoff,
+      retentionDays: String(retentionDays ?? DEFAULT_AUDIT_RETENTION_DAYS),
+    });
+
+    writeJson(res, 200, {
+      archivedCount: result.archivedCount,
+      archivedSequences: result.archivedSequences,
+      totalArchived: result.totalArchived,
+      cutoff: result.cutoff,
+      retentionDays: retentionDays ?? DEFAULT_AUDIT_RETENTION_DAYS,
     });
   });
 
@@ -471,6 +588,144 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
       valid: report.valid,
       ...(report.brokenAt !== undefined ? { brokenAt: report.brokenAt } : {}),
       checkedAt: new Date().toISOString(),
+    });
+  });
+
+  // GET /api/v1/governance/audit-report.pdf?period=YYYY-Q#
+  //   (requires audit:export — same rationale as the bulk audit export above:
+  //   this hands a caller an aggregated evidentiary document covering a whole
+  //   quarter, not a single paged read.)
+  //
+  // Aggregates the audit log, compliance checks, and management reviews for
+  // one calendar quarter (issue #85) and renders the result as a printable
+  // PDF, reusing the daily-report/inspection PDF adapter's font-embedding
+  // machinery (issue #71, `pdf-writer.ts`). `period` defaults to the quarter
+  // containing the current time when omitted.
+  router.get("/api/v1/governance/audit-report.pdf", async (req, ctx, res) => {
+    const rawPeriod = req.query["period"] ?? periodToString(currentReportPeriod());
+
+    if (!hasPermission(ctx, "audit", "export")) {
+      // Mirrors the raw export route: a refused report generation is itself
+      // evidence, so the denial is recorded rather than silently dropped.
+      recordAudit(
+        container.auditLog,
+        ctx,
+        "audit-report:generate",
+        AUDIT_REPORT_RESOURCE,
+        "denied",
+        {
+          period: rawPeriod,
+        },
+      );
+      writeJson(res, 403, { error: "Forbidden", message: "requires 'audit:export' permission" });
+      return;
+    }
+
+    const parsedPeriod = parseReportPeriod(rawPeriod);
+    if (!parsedPeriod.ok) {
+      badRequest(res, parsedPeriod.error);
+      return;
+    }
+
+    // Snapshot before recording, so the report's own generation event is not
+    // part of the evidence range it summarizes.
+    const scopedAuditEntries = scopeAuditEntries(container.auditLog.entries, ctx);
+    const integrityReport = container.auditLog.verify();
+
+    const [allComplianceChecks, managementReviews] = await Promise.all([
+      container.repositories.complianceChecks.findAll(),
+      ctx?.organizationId !== undefined
+        ? container.repositories.managementReviews.findByOrganization(ctx.organizationId)
+        : container.repositories.managementReviews.findAll(),
+    ]);
+    const scopedComplianceChecks =
+      ctx?.organizationId !== undefined
+        ? allComplianceChecks.filter((c) => c.organizationId === ctx.organizationId)
+        : allComplianceChecks;
+
+    const summary = buildAuditReportSummary({
+      period: rawPeriod,
+      organizationId: ctx?.organizationId,
+      generatedAt: nowTs(),
+      auditEntries: scopedAuditEntries,
+      complianceChecks: scopedComplianceChecks,
+      managementReviews,
+      integrityValid: integrityReport.valid,
+    });
+    if (!summary.ok) {
+      badRequest(res, summary.error);
+      return;
+    }
+
+    const pdf = await renderAuditReportPdf(summary.value);
+
+    recordAudit(
+      container.auditLog,
+      ctx,
+      "audit-report:generate",
+      AUDIT_REPORT_RESOURCE,
+      "success",
+      {
+        period: summary.value.period,
+        auditEventCount: String(summary.value.auditLog.totalEvents),
+        complianceCheckCount: String(summary.value.compliance.totalChecks),
+        managementReviewCount: String(summary.value.managementReviews.total),
+      },
+    );
+
+    writeAttachment(res, 200, "application/pdf", `audit-report-${summary.value.period}.pdf`, pdf);
+  });
+
+  // ── Access inventory (RBAC audit) ────────────────────────────────────────
+
+  // GET /api/v1/governance/access-inventory?limit=&offset=
+  //   (requires audit:read or wildcard permission)
+  //
+  // Reports, per user, which roles they hold and which permissions those
+  // roles resolve to — the "who can access what" view an RBAC audit needs.
+  // Tenant scoping matches the other list endpoints: an organization-scoped
+  // credential only sees users in its own organization. Access to this report
+  // is itself audit-worthy (it enumerates every grant in scope), so successful
+  // reads are recorded the same way `audit:export` reads are.
+  router.get("/api/v1/governance/access-inventory", async (req, ctx, res) => {
+    if (!hasPermission(ctx, "audit", "read")) {
+      forbidden(res, "audit:read");
+      return;
+    }
+
+    const [allUsers, allRoles] = await Promise.all([
+      container.repositories.users.findAll(),
+      container.repositories.roles.findAll(),
+    ]);
+    const scopedUsers =
+      ctx?.organizationId !== undefined
+        ? allUsers.filter((u) => u.organizationId === ctx.organizationId)
+        : allUsers;
+
+    const report = buildAccessInventory(
+      scopedUsers,
+      allRoles,
+      new Date().toISOString() as IsoTimestamp,
+    );
+    const pg = paginate(report.entries, parsePagination(req.query));
+
+    recordAudit(
+      container.auditLog,
+      ctx,
+      "audit:access-inventory",
+      "governance:access-inventory",
+      "success",
+      { count: String(pg.count), total: String(pg.total), method: req.method },
+    );
+
+    writeJson(res, 200, {
+      generatedAt: report.generatedAt,
+      summary: report.summary,
+      entries: pg.items,
+      count: pg.count,
+      total: pg.total,
+      limit: pg.limit,
+      offset: pg.offset,
     });
   });
 

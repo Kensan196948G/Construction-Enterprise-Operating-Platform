@@ -53,6 +53,10 @@ export interface DxProject {
   readonly progressMilestone?: string | undefined;
   readonly progressEvidenceUrl?: string | undefined;
   readonly nextReviewAt?: string | undefined;
+  /** Site latitude in decimal degrees (WGS84), optional for backward compatibility. */
+  readonly latitude?: number | undefined;
+  /** Site longitude in decimal degrees (WGS84), optional for backward compatibility. */
+  readonly longitude?: number | undefined;
   readonly createdAt: IsoTimestamp;
   readonly updatedAt: IsoTimestamp;
 }
@@ -75,6 +79,8 @@ export interface CreateDxProjectInput {
   readonly progressMilestone?: string | undefined;
   readonly progressEvidenceUrl?: string | undefined;
   readonly nextReviewAt?: string | undefined;
+  readonly latitude?: number | undefined;
+  readonly longitude?: number | undefined;
   readonly createdAt: IsoTimestamp;
 }
 
@@ -107,6 +113,18 @@ export function createDxProject(input: CreateDxProjectInput): Result<DxProject> 
       input.nextReviewAt === undefined || /^\d{4}-\d{2}-\d{2}$/.test(input.nextReviewAt),
       "nextReviewAt",
       "nextReviewAt must use YYYY-MM-DD",
+    )
+    .require(
+      input.latitude === undefined ||
+        (Number.isFinite(input.latitude) && input.latitude >= -90 && input.latitude <= 90),
+      "latitude",
+      "latitude must be a number between -90 and 90",
+    )
+    .require(
+      input.longitude === undefined ||
+        (Number.isFinite(input.longitude) && input.longitude >= -180 && input.longitude <= 180),
+      "longitude",
+      "longitude must be a number between -180 and 180",
     );
   const problems = issues.build();
   if (problems.length > 0) {
@@ -134,6 +152,8 @@ export function createDxProject(input: CreateDxProjectInput): Result<DxProject> 
       ? { progressEvidenceUrl: input.progressEvidenceUrl }
       : {}),
     ...(input.nextReviewAt !== undefined ? { nextReviewAt: input.nextReviewAt } : {}),
+    ...(input.latitude !== undefined ? { latitude: input.latitude } : {}),
+    ...(input.longitude !== undefined ? { longitude: input.longitude } : {}),
     createdAt: input.createdAt,
     updatedAt: input.createdAt,
   });
@@ -154,6 +174,8 @@ export interface UpdateDxProjectInput {
   readonly progressMilestone?: string | undefined;
   readonly progressEvidenceUrl?: string | undefined;
   readonly nextReviewAt?: string | undefined;
+  readonly latitude?: number | undefined;
+  readonly longitude?: number | undefined;
   readonly updatedAt: IsoTimestamp;
 }
 
@@ -192,6 +214,18 @@ export function updateDxProject(
       input.nextReviewAt === undefined || /^\d{4}-\d{2}-\d{2}$/.test(input.nextReviewAt),
       "nextReviewAt",
       "nextReviewAt must use YYYY-MM-DD",
+    )
+    .require(
+      input.latitude === undefined ||
+        (Number.isFinite(input.latitude) && input.latitude >= -90 && input.latitude <= 90),
+      "latitude",
+      "latitude must be a number between -90 and 90",
+    )
+    .require(
+      input.longitude === undefined ||
+        (Number.isFinite(input.longitude) && input.longitude >= -180 && input.longitude <= 180),
+      "longitude",
+      "longitude must be a number between -180 and 180",
     );
   const problems = issues.build();
   if (problems.length > 0) {
@@ -217,6 +251,8 @@ export function updateDxProject(
       ? { progressEvidenceUrl: input.progressEvidenceUrl }
       : {}),
     ...(input.nextReviewAt !== undefined ? { nextReviewAt: input.nextReviewAt } : {}),
+    ...(input.latitude !== undefined ? { latitude: input.latitude } : {}),
+    ...(input.longitude !== undefined ? { longitude: input.longitude } : {}),
     updatedAt: input.updatedAt,
   });
 }

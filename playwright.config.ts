@@ -1,4 +1,4 @@
-import { defineConfig } from "@playwright/test";
+import { defineConfig, devices } from "@playwright/test";
 
 /**
  * Browser E2E for the CEOP SSR console.
@@ -6,7 +6,17 @@ import { defineConfig } from "@playwright/test";
  * The web server runs in development mode with demo data and a stable E2E
  * credential injected via `CEOP_E2E_API_KEY_ID` / `CEOP_E2E_API_KEY_SECRET`
  * (see src/app.ts). This hook is non-production only.
+ *
+ * Cross-browser / viewport coverage (#90):
+ * - `chromium` runs the full suite (unchanged, matches the historical CI job).
+ * - `firefox`, `webkit`, `mobile-chrome`, `mobile-safari` run a small smoke
+ *   subset only (login + dashboard rendering + access control), selected via
+ *   `grep` so CI time stays bounded. Widen the pattern once more specs are
+ *   confirmed stable across engines.
  */
+const SMOKE_TEST_TITLES =
+  /browser login flow authenticates and opens the dashboard|dashboard renders KPI cards and app grid for authenticated admin|dashboard rejects anonymous access/;
+
 export default defineConfig({
   testDir: "./e2e",
   timeout: 60_000,
@@ -15,9 +25,34 @@ export default defineConfig({
   reporter: [["list"]],
   use: {
     baseURL: "http://127.0.0.1:3210",
-    channel: "chromium",
     trace: "retain-on-failure",
   },
+  projects: [
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"], channel: "chromium" },
+    },
+    {
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
+      grep: SMOKE_TEST_TITLES,
+    },
+    {
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
+      grep: SMOKE_TEST_TITLES,
+    },
+    {
+      name: "mobile-chrome",
+      use: { ...devices["Pixel 7"] },
+      grep: SMOKE_TEST_TITLES,
+    },
+    {
+      name: "mobile-safari",
+      use: { ...devices["iPhone 14"] },
+      grep: SMOKE_TEST_TITLES,
+    },
+  ],
   webServer: {
     command: "node --experimental-strip-types scripts/start.ts",
     url: "http://127.0.0.1:3210/health",

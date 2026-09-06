@@ -1095,16 +1095,36 @@ migration `008`（`projects` テーブル）を追加。
 日報（天気・作業員数・作業内容・安全確認・進捗・課題）を案件配下で管理します。
 ライフサイクル: `draft → submitted → approved`。
 
-| エンドポイント                                              | 権限                 | 説明                                                               |
-| ----------------------------------------------------------- | -------------------- | ------------------------------------------------------------------ |
-| `GET /api/v1/projects/{projectId}/daily-reports`            | `daily-report:read`  | 案件配下の日報一覧                                                 |
-| `POST /api/v1/projects/{projectId}/daily-reports`           | `daily-report:write` | 日報作成                                                           |
-| `GET /api/v1/daily-reports/{id}`                            | `daily-report:read`  | 日報詳細                                                           |
-| `PATCH /api/v1/daily-reports/{id}`                          | `daily-report:write` | 日報更新                                                           |
-| `POST /api/v1/daily-reports/{id}/transition`                | `daily-report:write` | 状態遷移（draft→submitted→approved）                               |
-| `GET /api/v1/projects/{projectId}/daily-reports/export.csv` | `daily-report:read`  | CSV エクスポート（案件配下の日報一括・式インジェクション対策済み） |
+| エンドポイント                                               | 権限                 | 説明                                                                  |
+| ------------------------------------------------------------ | -------------------- | --------------------------------------------------------------------- |
+| `GET /api/v1/projects/{projectId}/daily-reports`             | `daily-report:read`  | 案件配下の日報一覧                                                    |
+| `POST /api/v1/projects/{projectId}/daily-reports`            | `daily-report:write` | 日報作成                                                              |
+| `GET /api/v1/daily-reports/{id}`                             | `daily-report:read`  | 日報詳細                                                              |
+| `PATCH /api/v1/daily-reports/{id}`                           | `daily-report:write` | 日報更新                                                              |
+| `POST /api/v1/daily-reports/{id}/transition`                 | `daily-report:write` | 状態遷移（draft→submitted→approved）                                  |
+| `GET /api/v1/projects/{projectId}/daily-reports/export.csv`  | `daily-report:read`  | CSV エクスポート（案件配下の日報一括・式インジェクション対策済み）    |
+| `GET /api/v1/projects/{projectId}/daily-reports/export.xlsx` | `daily-report:read`  | Excel (.xlsx) エクスポート（同上、自前 OOXML/ZIP 実装・依存追加なし） |
+| `POST /api/v1/projects/{projectId}/daily-reports/import.csv` | `daily-report:write` | CSV バルクインポート（`{ "csv": "..." }`・全行検証後に一括保存）      |
 
 migration `009`（`daily_reports` テーブル）を追加。
+
+#### 📥📤 CSV/Excel バルクインポート・エクスポート（v0.14.6・Issue #88）
+
+daily-report / contract / cost-record / work-hour / purchase-order の 5 ドメインに
+CSV バルクインポート（`POST .../import.csv`）と Excel エクスポート
+（`GET .../export.xlsx`）を追加した（contract / cost-record / work-hour /
+purchase-order は CSV エクスポートも新規追加）。エンドポイント一覧は各ドメインの
+API 表（本セクションおよび Cost / Contract / Purchase Order の章）を参照。
+既存の CSV 機能への変更はなく、すべて追加のみ。
+
+- **CSV インポート**: `{ "csv": "<RFC 4180 テキスト>" }` を POST。全行を検証してから
+  一括保存する all-or-nothing 方式（1 行でも不正なら 400 で何も保存しない）。
+  検証エラーは `{ row, path, message }[]` で返す。`contractNumber` / `orderNumber`
+  はファイル内重複・既存レコードとの重複の両方をチェック。
+- **Excel エクスポート**: 外部ライブラリを追加せず、`node:zlib` 非依存の自前
+  ZIP ライター（`api/zip.ts`）と最小 OOXML ワークシート生成（`api/xlsx.ts`）で
+  `.xlsx` を組み立てる。本リポジトリの「ランタイム依存ゼロ」方針を維持するための
+  意図的な設計判断（詳細は `api/xlsx.ts` のコメントを参照）。
 
 ### 🖥️ 日報管理コンソール（v0.12.1）
 
@@ -1140,12 +1160,18 @@ hidden input へ埋め込み、localStorage は使用しません（CSP `script-
 
 予算 vs 実績・工数を案件配下で管理します。
 
-| エンドポイント                                       | 権限                       | 説明                              |
-| ---------------------------------------------------- | -------------------------- | --------------------------------- |
-| `GET/POST /api/v1/projects/{projectId}/cost-records` | `cost:read` / `cost:write` | 原価記録（予算/実績/業者/請求書） |
-| `GET/DELETE /api/v1/cost-records/{id}`               | `cost:read` / `cost:write` | 詳細・削除                        |
-| `GET/POST /api/v1/projects/{projectId}/work-hours`   | `cost:read` / `cost:write` | 工数（作業者・日付・時間）        |
-| `GET /api/v1/work-hours/{id}`                        | `cost:read`                | 詳細                              |
+| エンドポイント                                              | 権限                       | 説明                              |
+| ----------------------------------------------------------- | -------------------------- | --------------------------------- |
+| `GET/POST /api/v1/projects/{projectId}/cost-records`        | `cost:read` / `cost:write` | 原価記録（予算/実績/業者/請求書） |
+| `GET/DELETE /api/v1/cost-records/{id}`                      | `cost:read` / `cost:write` | 詳細・削除                        |
+| `GET /api/v1/projects/{projectId}/cost-records/export.csv`  | `cost:read`                | CSV エクスポート                  |
+| `GET /api/v1/projects/{projectId}/cost-records/export.xlsx` | `cost:read`                | Excel (.xlsx) エクスポート        |
+| `POST /api/v1/projects/{projectId}/cost-records/import.csv` | `cost:write`               | CSV バルクインポート              |
+| `GET/POST /api/v1/projects/{projectId}/work-hours`          | `cost:read` / `cost:write` | 工数（作業者・日付・時間）        |
+| `GET /api/v1/work-hours/{id}`                               | `cost:read`                | 詳細                              |
+| `GET /api/v1/projects/{projectId}/work-hours/export.csv`    | `cost:read`                | CSV エクスポート                  |
+| `GET /api/v1/projects/{projectId}/work-hours/export.xlsx`   | `cost:read`                | Excel (.xlsx) エクスポート        |
+| `POST /api/v1/projects/{projectId}/work-hours/import.csv`   | `cost:write`               | CSV バルクインポート              |
 
 ## 🔔 Notification API（P3 / S-09）
 
@@ -1176,10 +1202,13 @@ migration `010`（photos）・`011/012`（safety/quality）・`013/014`（cost/w
 
 契約（元請/下請）を案件配下で管理します。
 
-| エンドポイント                                    | 権限                               | 説明                           |
-| ------------------------------------------------- | ---------------------------------- | ------------------------------ |
-| `GET/POST /api/v1/projects/{projectId}/contracts` | `contract:read` / `contract:write` | 契約一覧・作成（契約番号一意） |
-| `GET /api/v1/contracts/{id}`                      | `contract:read`                    | 詳細                           |
+| エンドポイント                                           | 権限                               | 説明                                         |
+| -------------------------------------------------------- | ---------------------------------- | -------------------------------------------- |
+| `GET/POST /api/v1/projects/{projectId}/contracts`        | `contract:read` / `contract:write` | 契約一覧・作成（契約番号一意）               |
+| `GET /api/v1/contracts/{id}`                             | `contract:read`                    | 詳細                                         |
+| `GET /api/v1/projects/{projectId}/contracts/export.csv`  | `contract:read`                    | CSV エクスポート                             |
+| `GET /api/v1/projects/{projectId}/contracts/export.xlsx` | `contract:read`                    | Excel (.xlsx) エクスポート                   |
+| `POST /api/v1/projects/{projectId}/contracts/import.csv` | `contract:write`                   | CSV バルクインポート（契約番号の重複を検証） |
 
 ## 🎫 ITSM Adapter API（P3 / S-08）
 
@@ -1224,10 +1253,13 @@ migration `016`（knowledge_articles）・`017`（legal_contracts）を追加。
 
 発注（番号一意・数量×単価=金額・状態）を案件配下で管理します。
 
-| エンドポイント                                          | 権限                                           | 説明       |
-| ------------------------------------------------------- | ---------------------------------------------- | ---------- |
-| `GET/POST /api/v1/projects/{projectId}/purchase-orders` | `purchase-order:read` / `purchase-order:write` | 一覧・作成 |
-| `GET /api/v1/purchase-orders/{id}`                      | `purchase-order:read`                          | 詳細       |
+| エンドポイント                                                 | 権限                                           | 説明                                         |
+| -------------------------------------------------------------- | ---------------------------------------------- | -------------------------------------------- |
+| `GET/POST /api/v1/projects/{projectId}/purchase-orders`        | `purchase-order:read` / `purchase-order:write` | 一覧・作成                                   |
+| `GET /api/v1/purchase-orders/{id}`                             | `purchase-order:read`                          | 詳細                                         |
+| `GET /api/v1/projects/{projectId}/purchase-orders/export.csv`  | `purchase-order:read`                          | CSV エクスポート                             |
+| `GET /api/v1/projects/{projectId}/purchase-orders/export.xlsx` | `purchase-order:read`                          | Excel (.xlsx) エクスポート                   |
+| `POST /api/v1/projects/{projectId}/purchase-orders/import.csv` | `purchase-order:write`                         | CSV バルクインポート（発注番号の重複を検証） |
 
 ## 🔔 Notification Preference / Dispatcher（P3 / E-11・S-09）
 

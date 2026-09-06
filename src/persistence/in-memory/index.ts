@@ -45,6 +45,9 @@ import {
   InMemoryNotificationDeliveryRepository,
   InMemoryKnowledgeRepository,
   InMemoryContractRepository,
+  InMemoryProgressBillingInvoiceRepository,
+  InMemoryPaymentRecordRepository,
+  InMemoryAdvancePaymentRepository,
   InMemoryDocumentRepository,
   InMemoryWorkScheduleRepository,
   InMemoryPurchaseOrderRepository,
@@ -61,6 +64,7 @@ import {
   InMemoryAiBuildProjectRepository,
   InMemoryDxProjectRepository,
   InMemoryMaterialPhotoLogRepository,
+  InMemoryLaborAttendanceRepository,
 } from "./business-repositories.ts";
 
 /**
@@ -89,6 +93,9 @@ export function createInMemoryRepositories(): Repositories {
     notificationDeliveries: new InMemoryNotificationDeliveryRepository(),
     knowledgeArticles: new InMemoryKnowledgeRepository(),
     contracts: new InMemoryContractRepository(),
+    progressBillingInvoices: new InMemoryProgressBillingInvoiceRepository(),
+    paymentRecords: new InMemoryPaymentRecordRepository(),
+    advancePayments: new InMemoryAdvancePaymentRepository(),
     documents: new InMemoryDocumentRepository(),
     workSchedules: new InMemoryWorkScheduleRepository(),
     purchaseOrders: new InMemoryPurchaseOrderRepository(),
@@ -107,6 +114,7 @@ export function createInMemoryRepositories(): Repositories {
     aiBuildProjects: new InMemoryAiBuildProjectRepository(),
     dxProjects: new InMemoryDxProjectRepository(),
     materialPhotoLogs: new InMemoryMaterialPhotoLogRepository(),
+    laborAttendances: new InMemoryLaborAttendanceRepository(),
   };
   return { ...repositories, search: createFallbackSearchService(repositories) };
 }

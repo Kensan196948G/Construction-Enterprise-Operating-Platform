@@ -22,6 +22,7 @@ function renderPortal(): string {
     ],
     ["/daily-reports", "📝 日報管理コンソール", "日報の作成・提出・承認"],
     ["/system", "⚙️ システム設定", "プラットフォーム情報・API キー・監査・メトリクス"],
+    ["/ops-health", "🖥️ 運用ヘルス", "コンテナ・DB接続・ヘルスプローブの統合監視"],
     ["/api/v1/info", "ℹ️ プラットフォーム情報", "ビルド・環境・バージョン"],
     ["/metrics", "📈 Prometheus メトリクス", "リクエスト・ランタイム・キュー"],
   ];
@@ -99,6 +100,7 @@ function renderPortal(): string {
             <a class="nav-item" href="/system#keys"><span class="nav-icon">🔑</span> API キー</a>
             <a class="nav-item" href="/system#audit"><span class="nav-icon">📑</span> 監査エクスポート</a>
             <a class="nav-item" href="/system#metrics"><span class="nav-icon">📈</span> メトリクス</a>
+            <a class="nav-item" href="/ops-health"><span class="nav-icon">🖥️</span> 運用ヘルス</a>
           </div>
         </details>
       </nav>
@@ -126,6 +128,7 @@ function renderPortal(): string {
 
     <div class="toast-container" id="toastContainer" aria-live="polite"></div>
     <script src="/api/assets/app.js"></script>
+    <script src="/api/assets/sw-register.js"></script>
   </body>
 </html>`;
 }

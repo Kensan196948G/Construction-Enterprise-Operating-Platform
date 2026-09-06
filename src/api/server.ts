@@ -32,6 +32,7 @@ import { registerCostRoutes } from "./routes/cost.ts";
 import { registerNotificationRoutes } from "./routes/notifications.ts";
 import { registerKnowledgeRoutes } from "./routes/knowledge.ts";
 import { registerContractRoutes } from "./routes/contracts.ts";
+import { registerBillingRoutes } from "./routes/billing.ts";
 import { registerItsmRoutes } from "./routes/itsm.ts";
 import { registerDocumentRoutes } from "./routes/documents.ts";
 import { registerWorkScheduleRoutes } from "./routes/work-schedules.ts";
@@ -40,6 +41,7 @@ import { registerNotificationPreferenceRoutes } from "./routes/notification-pref
 import { registerComplianceRoutes } from "./routes/compliance.ts";
 import { registerNotificationTemplateRoutes } from "./routes/notification-templates.ts";
 import { registerMonitoringRoutes } from "./routes/monitoring.ts";
+import { registerOpsHealthRoutes } from "./routes/ops-health.ts";
 import { registerPortalRoute } from "./routes/portal.ts";
 import { registerDailyReportUiRoutes } from "./routes/daily-reports-ui.ts";
 import { registerIsoRoutes } from "./routes/iso.ts";
@@ -55,6 +57,7 @@ import { registerAiBuildProjectRoutes } from "./routes/ai-build-projects.ts";
 import { registerDxProjectRoutes } from "./routes/dx-projects.ts";
 import { registerMaterialPhotoLogRoutes } from "./routes/material-photo-logs.ts";
 import { registerSearchRoutes } from "./routes/search.ts";
+import { registerLaborAttendanceRoutes } from "./routes/labor-attendance.ts";
 import type { GatewayService } from "../domain/gateway-service.ts";
 import type { AppContainer } from "./types.ts";
 
@@ -128,6 +131,7 @@ export function createServer(config: ServerConfig, container: AppContainer): Ser
   registerNotificationRoutes(router, container);
   registerKnowledgeRoutes(router, container);
   registerContractRoutes(router, container);
+  registerBillingRoutes(router, container);
   registerItsmRoutes(router, container);
   registerDocumentRoutes(router, container);
   registerWorkScheduleRoutes(router, container);
@@ -136,6 +140,7 @@ export function createServer(config: ServerConfig, container: AppContainer): Ser
   registerComplianceRoutes(router, container);
   registerNotificationTemplateRoutes(router, container);
   registerMonitoringRoutes(router, container);
+  registerOpsHealthRoutes(router, container);
   registerIsoRoutes(router, container);
   registerIntegrationRoutes(router, container);
   registerPortalRoute(router);
@@ -150,6 +155,7 @@ export function createServer(config: ServerConfig, container: AppContainer): Ser
   registerDxProjectRoutes(router, container);
   registerMaterialPhotoLogRoutes(router, container);
   registerSearchRoutes(router, container);
+  registerLaborAttendanceRoutes(router, container);
   registerWebRoutes(router, container);
 
   const server = httpCreateServer((req: IncomingMessage, res: ServerResponse): void => {

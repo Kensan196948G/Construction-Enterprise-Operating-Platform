@@ -88,7 +88,12 @@ function signatureValid(
   return timingSafeEqual(a, b);
 }
 
-function scopedEvents(
+/**
+ * Events visible to `ctx` (organization-scoped when the caller belongs to one).
+ * Exported so SSR routes (e.g. the Webhook management console) can reuse the
+ * same scoping rule instead of duplicating it.
+ */
+export function scopedEvents(
   container: AppContainer,
   ctx: ApiKeyContext | null,
 ): Promise<readonly IntegrationEvent[]> {
