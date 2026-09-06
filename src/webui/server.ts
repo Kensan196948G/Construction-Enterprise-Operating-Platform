@@ -13,6 +13,16 @@
  * - CSP allows 'unsafe-eval' for scripts because the design runtime compiles
  *   its `text/x-dc` component source with `new Function` — a constraint of
  *   the delivered design bundle, isolated to this static host process.
+ * - `style-src-elem` carries no `'unsafe-inline'`: the design bundle's one or
+ *   two inline `<style>` blocks are static (build-time-generated — see
+ *   `src/webui/unpack.ts`), so `webui:unpack` hashes their exact content once
+ *   (`sha256-...`, written to `csp.json` next to `index.html`) and this
+ *   server allows only those hashes — an injected `<style>` could never
+ *   match. `style-src-attr` still carries `'unsafe-inline'`: the bundle also
+ *   ships 300+ unique `style="..."` attributes from its design tool, and
+ *   per-value hashing those would make the `Content-Security-Policy` header
+ *   too large for intermediary proxies to reliably forward (~17 KiB,
+ *   measured) — tracked as a known residual limitation (G-14).
  * - UUID-named assets are immutable-cached; index.html is always revalidated.
  */
 
@@ -20,11 +30,12 @@ import { createServer as httpCreateServer } from "node:http";
 import type { IncomingMessage, Server, ServerResponse } from "node:http";
 import { createReadStream, readFileSync, statSync } from "node:fs";
 import { randomUUID } from "node:crypto";
-import { extname, resolve, sep } from "node:path";
+import { extname, join, resolve, sep } from "node:path";
 
 import { PLATFORM_VERSION } from "../version.ts";
 import { clientIpFromRequest } from "../api/client-ip.ts";
 import { type AccessLogger, nullAccessLogger } from "./access-log.ts";
+import { CSP_MANIFEST_PATH } from "./unpack.ts";
 
 /** Browser-tab icon shared with the SSR pages (kept outside the design bundle). */
 const FAVICON_PATH = new URL("../web/static/favicon.svg", import.meta.url);
@@ -51,19 +62,51 @@ const MIME_BY_EXTENSION: Readonly<Record<string, string>> = {
   ".ico": "image/x-icon",
 };
 
-const SECURITY_HEADERS: Readonly<Record<string, string>> = {
-  "X-Content-Type-Options": "nosniff",
-  "X-Frame-Options": "DENY",
-  "Referrer-Policy": "no-referrer",
-  "Content-Security-Policy":
-    "default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; " +
-    "font-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; " +
-    "form-action 'none'; frame-ancestors 'none'",
-  "Strict-Transport-Security": "max-age=63072000; includeSubDomains",
-};
+/**
+ * Read the `sha256-...` `<style>` element hashes from {@link CSP_MANIFEST_PATH},
+ * emitted by `webui:unpack`. Missing/malformed manifests degrade to no
+ * hashes (`style-src-elem 'self'`, no inline `<style>` allowed at all)
+ * rather than failing server startup — safest default until the bundle is
+ * (re-)unpacked.
+ */
+function loadStyleElementHashes(rootDir: string): readonly string[] {
+  try {
+    const raw = readFileSync(join(rootDir, CSP_MANIFEST_PATH), "utf-8");
+    const parsed = JSON.parse(raw) as { styleElementHashes?: unknown };
+    return Array.isArray(parsed.styleElementHashes)
+      ? parsed.styleElementHashes.filter((h): h is string => typeof h === "string")
+      : [];
+  } catch {
+    return [];
+  }
+}
 
-function applySecurityHeaders(res: ServerResponse): void {
-  for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
+/** Build the static (per-server-instance) security header set. */
+function buildSecurityHeaders(rootDir: string): Readonly<Record<string, string>> {
+  const styleElementHashes = loadStyleElementHashes(rootDir);
+  const styleSrcElem =
+    styleElementHashes.length > 0
+      ? `style-src-elem 'self' ${styleElementHashes.join(" ")}`
+      : "style-src-elem 'self'";
+  return {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "no-referrer",
+    "Content-Security-Policy":
+      `default-src 'none'; script-src 'self' 'unsafe-eval'; ${styleSrcElem}; ` +
+      // style-src-attr: see the module doc comment (header-size constraint, G-14).
+      "style-src-attr 'unsafe-inline'; " +
+      "font-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; " +
+      "form-action 'none'; frame-ancestors 'none'",
+    "Strict-Transport-Security": "max-age=63072000; includeSubDomains",
+  };
+}
+
+function applySecurityHeaders(
+  res: ServerResponse,
+  headers: Readonly<Record<string, string>>,
+): void {
+  for (const [name, value] of Object.entries(headers)) {
     res.setHeader(name, value);
   }
 }
@@ -81,6 +124,10 @@ function sendJson(res: ServerResponse, status: number, body: unknown, head: bool
 export function createWebuiServer(config: WebuiServerConfig): Server {
   const rootDir = resolve(config.rootDir);
   const accessLogger = config.accessLogger ?? nullAccessLogger;
+  // The bundle (and therefore its style hashes) only changes on redeploy, so
+  // computing this once at server construction — rather than per-request —
+  // is both correct and avoids a filesystem read on every response.
+  const securityHeaders = buildSecurityHeaders(rootDir);
 
   const server = httpCreateServer((req: IncomingMessage, res: ServerResponse): void => {
     const startedAt = process.hrtime.bigint();
@@ -106,7 +153,7 @@ export function createWebuiServer(config: WebuiServerConfig): Server {
       accessLogger.log(entry);
     });
 
-    applySecurityHeaders(res);
+    applySecurityHeaders(res, securityHeaders);
 
     const head = method === "HEAD";
     if (method !== "GET" && method !== "HEAD") {
