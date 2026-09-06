@@ -18,6 +18,11 @@ import type { PolicyEffect, PolicyCondition } from "../../domain/policy.ts";
 import type { Permission } from "../../domain/role.ts";
 import { evaluateAccess, resolvePermissions } from "../../governance/policy-engine.ts";
 import type { AuditLogEntry } from "../../governance/audit-log.ts";
+import {
+  DEFAULT_AUDIT_RETENTION_DAYS,
+  archiveExpiredAuditEvents,
+  withArchiveStatus,
+} from "../../governance/audit-archive.ts";
 import { recordAudit } from "../audit.ts";
 import { toCsv } from "../csv.ts";
 import type { Router } from "../router.ts";
@@ -48,6 +53,9 @@ const AUDIT_EXPORT_LIMIT_MAX = 10_000;
 
 /** Resource identifier recorded against export attempts. */
 const AUDIT_EXPORT_RESOURCE = "governance:audit-log";
+
+/** Resource identifier recorded against archive-batch attempts. */
+const AUDIT_ARCHIVE_RESOURCE = "governance:audit-log";
 
 /**
  * Fixed column order for CSV exports.
@@ -334,7 +342,15 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
 
   // ── Audit log ─────────────────────────────────────────────────────────────
 
-  // GET /api/v1/governance/audit?limit=&offset=  (requires audit:read or wildcard permission)
+  // GET /api/v1/governance/audit?limit=&offset=&archived=  (requires audit:read or wildcard permission)
+  //
+  // `archived` (issue #83) filters by archive status: `true` returns only
+  // entries the retention batch has classified as archived, `false` returns
+  // only entries still within the retention window, and omitting it returns
+  // both — matching the pre-existing default behavior. Every entry is
+  // annotated with `archived`/`archivedAt` regardless of the filter, so
+  // archived evidence stays fully readable through this same endpoint
+  // (nothing is ever physically removed by archival).
   router.get("/api/v1/governance/audit", async (req, ctx, res) => {
     if (!hasPermission(ctx, "audit", "read")) {
       writeJson(res, 403, { error: "Forbidden", message: "requires 'audit:read' permission" });
@@ -348,7 +364,26 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
     const parsedOffset = rawOffset !== undefined ? Number.parseInt(rawOffset, 10) : 0;
     const offset = Number.isNaN(parsedOffset) || parsedOffset < 0 ? 0 : parsedOffset;
 
-    const allEntries = scopeAuditEntries(container.auditLog.entries, ctx);
+    const rawArchived = req.query["archived"];
+    if (rawArchived !== undefined && rawArchived !== "true" && rawArchived !== "false") {
+      writeJson(res, 400, {
+        error: "Bad Request",
+        message: "'archived' must be 'true' or 'false'",
+      });
+      return;
+    }
+    const archivedFilter = rawArchived === undefined ? undefined : rawArchived === "true";
+
+    const scoped = scopeAuditEntries(container.auditLog.entries, ctx);
+    const archiveStore = container.auditArchive;
+    const annotated = archiveStore
+      ? scoped.map((entry) => withArchiveStatus(entry, archiveStore))
+      : scoped.map((entry) => ({ ...entry, archived: false as const }));
+    const allEntries =
+      archivedFilter === undefined
+        ? annotated
+        : annotated.filter((entry) => entry.archived === archivedFilter);
+
     const end = Math.max(0, allEntries.length - offset);
     const entries = allEntries.slice(Math.max(0, end - limit), end);
 
@@ -358,6 +393,76 @@ export function registerGovernanceRoutes(router: Router, container: AppContainer
       total: allEntries.length,
       limit,
       offset,
+    });
+  });
+
+  // POST /api/v1/governance/audit/archive  (requires audit:archive — deliberately
+  //   separate from audit:read/audit:export: this changes retention state)
+  //
+  // Runs the retention batch (see `archiveExpiredAuditEvents`): every audit
+  // entry older than `retentionDays` (default DEFAULT_AUDIT_RETENTION_DAYS) is
+  // marked archived in the side-index `AuditArchiveStore`. The hash chain
+  // itself is never written to, so `GET /audit/verify` is unaffected. Global
+  // scope only: archival is a platform-wide retention decision, not a
+  // per-tenant one.
+  router.post("/api/v1/governance/audit/archive", async (req, ctx, res) => {
+    if (!hasPermission(ctx, "audit", "archive")) {
+      recordAudit(container.auditLog, ctx, "audit:archive", AUDIT_ARCHIVE_RESOURCE, "denied", {
+        method: req.method,
+      });
+      writeJson(res, 403, { error: "Forbidden", message: "requires 'audit:archive' permission" });
+      return;
+    }
+    if (ctx?.organizationId !== undefined) {
+      recordAudit(container.auditLog, ctx, "audit:archive", AUDIT_ARCHIVE_RESOURCE, "denied", {
+        reason: "organization-scoped credential",
+      });
+      writeJson(res, 403, {
+        error: "Forbidden",
+        message: "audit archival requires a globally-scoped credential",
+      });
+      return;
+    }
+    const archiveStore = container.auditArchive;
+    if (archiveStore === undefined) {
+      writeJson(res, 503, {
+        error: "Service Unavailable",
+        message: "audit archive store is not configured",
+      });
+      return;
+    }
+
+    const body = (req.body ?? {}) as { readonly retentionDays?: unknown };
+    let retentionDays: number | undefined;
+    if (body.retentionDays !== undefined) {
+      const value = body.retentionDays;
+      if (typeof value !== "number" || !Number.isInteger(value) || value < 1) {
+        writeJson(res, 400, {
+          error: "Bad Request",
+          message: "'retentionDays' must be a positive integer",
+        });
+        return;
+      }
+      retentionDays = value;
+    }
+
+    const result = archiveExpiredAuditEvents(container.auditLog, archiveStore, {
+      ...(retentionDays !== undefined ? { retentionDays } : {}),
+    });
+
+    recordAudit(container.auditLog, ctx, "audit:archive", AUDIT_ARCHIVE_RESOURCE, "success", {
+      archivedCount: String(result.archivedCount),
+      totalArchived: String(result.totalArchived),
+      cutoff: result.cutoff,
+      retentionDays: String(retentionDays ?? DEFAULT_AUDIT_RETENTION_DAYS),
+    });
+
+    writeJson(res, 200, {
+      archivedCount: result.archivedCount,
+      archivedSequences: result.archivedSequences,
+      totalArchived: result.totalArchived,
+      cutoff: result.cutoff,
+      retentionDays: retentionDays ?? DEFAULT_AUDIT_RETENTION_DAYS,
     });
   });
 
