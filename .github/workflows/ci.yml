@@ -178,10 +178,13 @@ jobs:
   #     playwright.config.ts (login + dashboard rendering + access control),
   #     to bound CI time while still covering every engine. mobile-safari
   #     (iPhone 14) piggybacks on the webkit job for the same reason.
-  # `E2E (Playwright)` is not a required status check (see branch protection),
-  # so renaming it to a per-browser matrix name does not affect merge gating.
+  # NOTE: `E2E (Playwright)` (unqualified) IS a required status check under
+  # the repository's `central-auto-merge` ruleset (distinct from — and in
+  # addition to — the classic branch-protection contexts). The chromium leg
+  # therefore keeps that exact job name so the required check keeps posting;
+  # only the additional engines get a suffixed name.
   e2e:
-    name: E2E (Playwright / ${{ matrix.browser }})
+    name: ${{ matrix.browser == 'chromium' && 'E2E (Playwright)' || format('E2E (Playwright / {0})', matrix.browser) }}
     runs-on: ubuntu-latest
     needs: test
     if: github.event_name != 'schedule'
