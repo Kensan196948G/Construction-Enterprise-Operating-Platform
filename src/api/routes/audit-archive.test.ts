@@ -55,7 +55,11 @@ async function buildHarness(includeArchiveStore = true): Promise<Harness> {
   const repositories: Repositories = createInMemoryRepositories();
   const auditLog = new AuditLog();
 
-  const archiver = createApiKey("archiver", ["audit:read", "audit:archive"] as Permission[], apiKeyStore);
+  const archiver = createApiKey(
+    "archiver",
+    ["audit:read", "audit:archive"] as Permission[],
+    apiKeyStore,
+  );
   const orgScopedArchiver = createApiKey(
     "org-archiver",
     ["audit:read", "audit:archive"] as Permission[],
@@ -251,11 +255,6 @@ test("audit list: rejects an invalid `archived` value", async (t) => {
   const h = await buildHarness();
   t.after(() => h.close());
 
-  const res = await req(
-    "GET",
-    h.baseUrl,
-    "/api/v1/governance/audit?archived=maybe",
-    h.adminCred,
-  );
+  const res = await req("GET", h.baseUrl, "/api/v1/governance/audit?archived=maybe", h.adminCred);
   assert.equal(res.status, 400);
 });

@@ -36,12 +36,21 @@ function unwrap<T>(result: Result<T>): T {
 }
 
 function isoDaysAgo(days: number, from: Date): IsoTimestamp {
-  return unwrap(toIsoTimestamp(new Date(from.getTime() - days * 24 * 60 * 60 * 1000).toISOString()));
+  return unwrap(
+    toIsoTimestamp(new Date(from.getTime() - days * 24 * 60 * 60 * 1000).toISOString()),
+  );
 }
 
 function event(id: string, at: IsoTimestamp): AuditEvent {
   return unwrap(
-    createAuditEvent({ id, at, actor: "u1", action: "read", resource: "application", outcome: "success" }),
+    createAuditEvent({
+      id,
+      at,
+      actor: "u1",
+      action: "read",
+      resource: "application",
+      outcome: "success",
+    }),
   );
 }
 
