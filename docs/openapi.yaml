@@ -9118,6 +9118,9 @@ Tenant scoping matches `GET /api/v1/governance/audit`. Each row carries `sequenc
                     - issued
                     - approved
                     - received
+                    - delivered
+                    - inspected
+                    - paid
                     - cancelled
                 notes:
                   type: string
@@ -9183,6 +9186,76 @@ Tenant scoping matches `GET /api/v1/governance/audit`. Each row carries `sequenc
                 properties:
                   purchaseOrder:
                     $ref: "#/components/schemas/PurchaseOrder"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/purchase-orders/{id}/transition:
+    post:
+      operationId: transitionPurchaseOrder
+      summary: Transition a purchase order (draft → issued → approved → received → delivered → inspected → paid)
+      tags:
+        - PurchaseOrders
+      security:
+        - 
+          ApiKeyAuth: []
+        - 
+          BearerJwt: []
+      parameters:
+        - 
+          $ref: "#/components/parameters/idPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum:
+                    - draft
+                    - issued
+                    - approved
+                    - received
+                    - delivered
+                    - inspected
+                    - paid
+                    - cancelled
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - purchaseOrder
+                properties:
+                  purchaseOrder:
+                    $ref: "#/components/schemas/PurchaseOrder"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         401:
           description: Unauthorized
           content:
@@ -11646,6 +11719,9 @@ components:
             - issued
             - approved
             - received
+            - delivered
+            - inspected
+            - paid
             - cancelled
         notes:
           type: string

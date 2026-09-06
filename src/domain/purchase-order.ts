@@ -20,9 +20,31 @@ export const PURCHASE_ORDER_STATUSES = [
   "issued",
   "approved",
   "received",
+  "delivered",
+  "inspected",
+  "paid",
   "cancelled",
 ] as const;
 export type PurchaseOrderStatus = (typeof PURCHASE_ORDER_STATUSES)[number];
+
+/**
+ * Lifecycle transitions for the procurement → payment workflow
+ * (draft → issued → approved → received → delivered → inspected → paid),
+ * with `cancelled` reachable from any non-terminal state.
+ * `paid` and `cancelled` are terminal — no further transitions are allowed.
+ */
+export const PURCHASE_ORDER_TRANSITIONS: Readonly<
+  Record<PurchaseOrderStatus, readonly PurchaseOrderStatus[]>
+> = {
+  draft: ["issued", "cancelled"],
+  issued: ["approved", "cancelled"],
+  approved: ["received", "cancelled"],
+  received: ["delivered", "cancelled"],
+  delivered: ["inspected", "cancelled"],
+  inspected: ["paid", "cancelled"],
+  paid: [],
+  cancelled: [],
+};
 
 export interface PurchaseOrder {
   readonly id: PurchaseOrderId;
@@ -93,4 +115,27 @@ export function createPurchaseOrder(input: CreatePurchaseOrderInput): Result<Pur
     createdAt: input.createdAt,
     updatedAt: input.createdAt,
   });
+}
+
+/**
+ * Transition a purchase order's lifecycle status
+ * (draft → issued → approved → received → delivered → inspected → paid).
+ * Invalid transitions (e.g. `draft` → `paid` directly) are rejected as a
+ * validation error rather than silently applied.
+ */
+export function transitionPurchaseOrder(
+  order: PurchaseOrder,
+  status: PurchaseOrderStatus,
+  at: IsoTimestamp,
+): Result<PurchaseOrder> {
+  const allowed = PURCHASE_ORDER_TRANSITIONS[order.status];
+  if (!allowed.includes(status)) {
+    return err([
+      {
+        path: "status",
+        message: `cannot transition '${order.status}' to '${status}'`,
+      },
+    ]);
+  }
+  return ok({ ...order, status, updatedAt: at });
 }
