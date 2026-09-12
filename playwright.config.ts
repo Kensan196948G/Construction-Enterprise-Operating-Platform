@@ -16,6 +16,8 @@ import { defineConfig, devices } from "@playwright/test";
  */
 const SMOKE_TEST_TITLES =
   /browser login flow authenticates and opens the dashboard|dashboard renders KPI cards and app grid for authenticated admin|dashboard rejects anonymous access/;
+const E2E_PORT = process.env["CEOP_E2E_PORT"] ?? "3210";
+const E2E_BASE_URL = `http://127.0.0.1:${E2E_PORT}`;
 
 export default defineConfig({
   testDir: "./e2e",
@@ -24,7 +26,7 @@ export default defineConfig({
   retries: 1,
   reporter: [["list"]],
   use: {
-    baseURL: "http://127.0.0.1:3210",
+    baseURL: E2E_BASE_URL,
     trace: "retain-on-failure",
   },
   projects: [
@@ -55,11 +57,11 @@ export default defineConfig({
   ],
   webServer: {
     command: "node --experimental-strip-types scripts/start.ts",
-    url: "http://127.0.0.1:3210/health",
+    url: `${E2E_BASE_URL}/health`,
     reuseExistingServer: false,
     timeout: 120_000,
     env: {
-      PORT: "3210",
+      PORT: E2E_PORT,
       NODE_ENV: "development",
       CEOP_SEED_DEMO: "true",
       CEOP_SEED_RICH_DEMO: "true",

@@ -107,6 +107,11 @@ export function createAiAction(input: CreateAiActionInput): Result<AiAction> {
       "inputRetentionDays must be a non-negative integer",
     )
     .require(
+      input.piiSensitive !== true || input.inputRetentionDays === 0,
+      "inputRetentionDays",
+      "PII-sensitive input must use zero-day retention",
+    )
+    .require(
       input.wrongAnswerMitigation === undefined || input.wrongAnswerMitigation.trim().length > 0,
       "wrongAnswerMitigation",
       "wrongAnswerMitigation must be a non-empty string when present",
@@ -192,10 +197,29 @@ export function decideAiAction(action: AiAction, input: DecideAiActionInput): Re
       input.note === undefined || input.note.trim().length > 0,
       "note",
       "note must be a non-empty string when present",
-    )
-    .build();
-  if (issues.length > 0) {
-    return err(issues);
+    );
+  if (input.decision === "approved") {
+    issues
+      .require(
+        action.operationStatus !== "stopped",
+        "operationStatus",
+        "a stopped AI action cannot be approved",
+      )
+      .require(
+        action.evidenceRefs.length > 0,
+        "evidenceRefs",
+        "approval requires at least one grounding evidence reference",
+      )
+      .require(
+        action.wrongAnswerMitigation !== undefined &&
+          action.wrongAnswerMitigation.trim().length > 0,
+        "wrongAnswerMitigation",
+        "approval requires a wrong-answer mitigation and human review procedure",
+      );
+  }
+  const problems = issues.build();
+  if (problems.length > 0) {
+    return err(problems);
   }
 
   return ok({

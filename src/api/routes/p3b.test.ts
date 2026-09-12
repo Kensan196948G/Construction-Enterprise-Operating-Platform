@@ -101,6 +101,8 @@ test("S-06 knowledge + S-07 contracts + S-08 ITSM adapter", async (t) => {
     model: "deepseek:deepseek-chat",
     purpose: "knowledge generation",
     promptHash: "c".repeat(64),
+    evidenceRefs: ["knowledge-source-1"],
+    wrongAnswerMitigation: "knowledge owner validates generated content",
   });
   assert.equal(aiAction.status, 201);
   const aiActionId = aiAction.json.aiAction.id as string;

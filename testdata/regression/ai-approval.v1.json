@@ -1,0 +1,34 @@
+{
+  "version": "1.0.0",
+  "source": "Issue #124 Product Assurance regression cases",
+  "cases": [
+    {
+      "id": "grounded-with-human-review",
+      "evidenceRefs": ["document-42"],
+      "wrongAnswerMitigation": "A qualified site manager verifies the result",
+      "operationStatus": "operational",
+      "expectedApproved": true
+    },
+    {
+      "id": "ungrounded",
+      "evidenceRefs": [],
+      "wrongAnswerMitigation": "A qualified site manager verifies the result",
+      "operationStatus": "operational",
+      "expectedApproved": false
+    },
+    {
+      "id": "no-human-review",
+      "evidenceRefs": ["document-42"],
+      "wrongAnswerMitigation": null,
+      "operationStatus": "operational",
+      "expectedApproved": false
+    },
+    {
+      "id": "model-stopped",
+      "evidenceRefs": ["document-42"],
+      "wrongAnswerMitigation": "A qualified site manager verifies the result",
+      "operationStatus": "stopped",
+      "expectedApproved": false
+    }
+  ]
+}

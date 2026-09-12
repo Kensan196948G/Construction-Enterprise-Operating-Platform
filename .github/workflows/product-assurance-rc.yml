@@ -1,0 +1,48 @@
+name: Product Assurance Release Candidate
+
+on:
+  workflow_dispatch:
+    inputs:
+      acceptance_confirmed:
+        description: Business owner or domain expert completed the acceptance checklist
+        required: true
+        type: boolean
+      evidence_ref:
+        description: Traceable acceptance evidence reference (ticket, document, or artifact ID)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  release-candidate:
+    name: Security / Load / Fail-Safe / Restore / Acceptance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Dependency and static security
+        run: |
+          pnpm audit --audit-level=high
+          pnpm run test:security
+      - name: Load and fail-safe
+        run: |
+          pnpm run test:performance
+          pnpm run test:resilience
+      - name: Backup and restore verification tests
+        run: node --test --experimental-strip-types scripts/verify-restore.test.ts
+      - name: Human acceptance gate
+        env:
+          CEOP_ACCEPTANCE_STATUS: ${{ inputs.acceptance_confirmed && 'approved' || 'rejected' }}
+          CEOP_ACCEPTANCE_APPROVER: ${{ github.actor }}
+          CEOP_ACCEPTANCE_EVIDENCE_REF: ${{ inputs.evidence_ref }}
+        run: pnpm run test:acceptance

@@ -200,7 +200,13 @@ export function createServer(config: ServerConfig, container: AppContainer): Ser
       console.error("[server] fatal dispatch error:", message);
       if (!res.headersSent && !res.writableEnded) {
         res.writeHead(500, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ error: "Internal Server Error" }));
+        res.end(
+          JSON.stringify({
+            error: "Internal Server Error",
+            decision: "indeterminate",
+            action: "human_review_required",
+          }),
+        );
       } else if (!res.writableEnded) {
         res.end();
       }

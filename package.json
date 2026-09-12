@@ -22,11 +22,23 @@
     "test:watch": "node --test --watch --experimental-strip-types \"src/**/*.test.ts\" \"scripts/**/*.test.ts\"",
     "test:coverage": "node --test --experimental-strip-types --experimental-test-coverage \"src/**/*.test.ts\" \"scripts/**/*.test.ts\"",
     "test:e2e": "playwright test",
+    "test:logic": "node --test --experimental-strip-types \"tests/domain/**/*.test.ts\" \"tests/golden/**/*.test.ts\"",
+    "test:data-quality": "node --test --experimental-strip-types \"tests/data-quality/**/*.test.ts\"",
+    "test:security": "node --experimental-strip-types scripts/static-security-scan.ts && node --test --experimental-strip-types tests/security/static-security.test.ts",
+    "test:resilience": "node --test --experimental-strip-types \"tests/resilience/**/*.test.ts\"",
+    "test:performance": "node --test --experimental-strip-types \"src/api/routes/load-smoke.test.ts\"",
+    "test:fuzz": "node --test --experimental-strip-types \"tests/security/*fuzz.test.ts\"",
+    "test:ai-eval": "node --test --experimental-strip-types \"tests/ai-eval/**/*.test.ts\"",
+    "test:acceptance": "node --experimental-strip-types scripts/validate-acceptance.ts",
+    "test:acceptance-contract": "node --test --experimental-strip-types \"tests/acceptance/**/*.test.ts\"",
+    "quality:pr": "pnpm run format:check && pnpm run openapi:check && pnpm run typecheck && pnpm run lint && pnpm run test:security && pnpm run test",
+    "quality:merge": "pnpm run test:logic && pnpm run test:data-quality && pnpm run test:resilience && pnpm run test:ai-eval && pnpm run test:acceptance-contract",
+    "quality:evidence": "node --experimental-strip-types scripts/summarize-test-evidence.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "format": "prettier --write \"src/**/*.ts\" \"scripts/**/*.ts\" \"examples/**/*.ts\" \"e2e/**\" \"*.json\" \"*.md\"",
-    "format:check": "prettier --check \"src/**/*.ts\" \"scripts/**/*.ts\" \"examples/**/*.ts\" \"e2e/**\" \"*.json\" \"*.md\"",
-    "verify": "pnpm run format:check && pnpm run openapi:check && pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run build && pnpm run parity",
+    "format": "prettier --write \"src/**/*.ts\" \"scripts/**/*.ts\" \"tests/**/*.ts\" \"testdata/**/*.json\" \"examples/**/*.ts\" \"e2e/**\" \"docs/quality/**/*.md\" \"*.json\" \"*.md\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"scripts/**/*.ts\" \"tests/**/*.ts\" \"testdata/**/*.json\" \"examples/**/*.ts\" \"e2e/**\" \"docs/quality/**/*.md\" \"*.json\" \"*.md\"",
+    "verify": "pnpm run format:check && pnpm run openapi:check && pnpm run typecheck && pnpm run lint && pnpm run test:security && pnpm run test && pnpm run quality:merge && pnpm run build && pnpm run parity",
     "parity": "node --experimental-strip-types scripts/verify-parity.ts",
     "demo": "node --experimental-strip-types examples/quickstart.ts",
     "openapi:gen": "node --experimental-strip-types scripts/generate-openapi.ts",
@@ -46,7 +58,7 @@
     "overrides": {
       "brace-expansion@<1.1.18": "1.1.18",
       "brace-expansion@>=4.0.0 <5.0.9": "5.0.9",
-      "js-yaml@<4.3.1": "4.3.1"
+      "js-yaml@<4.3.2": "4.3.2"
     }
   },
   "devDependencies": {
@@ -55,7 +67,7 @@
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^26.4.1",
     "eslint": "^10.9.1",
-    "js-yaml": "^4.3.1",
+    "js-yaml": "^4.3.2",
     "prettier": "^3.9.6",
     "typescript": "^5.7.0",
     "typescript-eslint": "^8.69.0"

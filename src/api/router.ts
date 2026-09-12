@@ -359,7 +359,12 @@ export class Router {
     } catch (e) {
       console.error(`[router] unhandled handler error (request=${requestId}):`, e);
       if (!res.headersSent) {
-        writeJson(res, 500, { error: "Internal Server Error", message: "unexpected error" });
+        writeJson(res, 500, {
+          error: "Internal Server Error",
+          message: "unexpected error",
+          decision: "indeterminate",
+          action: "human_review_required",
+        });
       } else if (!res.writableEnded) {
         res.destroy(e instanceof Error ? e : new Error(String(e)));
       }
