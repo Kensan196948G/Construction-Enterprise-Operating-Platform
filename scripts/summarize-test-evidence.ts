@@ -1,7 +1,13 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import { err, ok, type Result } from "../src/domain/common.ts";
-import type { TestEvidence } from "../tests/helpers/evidence.ts";
+
+interface ParsedTestEvidence {
+  readonly requirementId: unknown;
+  readonly testId: unknown;
+  readonly testDataVersion: unknown;
+  readonly result: unknown;
+}
 
 export interface EvidenceSummary {
   readonly generatedAt: string;
@@ -14,11 +20,11 @@ export interface EvidenceSummary {
 }
 
 export function summarizeEvidence(source: string, raw: string): Result<EvidenceSummary, string> {
-  const records: TestEvidence[] = [];
+  const records: ParsedTestEvidence[] = [];
   const lines = raw.split(/\r?\n/).filter((line) => line.trim().length > 0);
   for (const [index, line] of lines.entries()) {
     try {
-      records.push(JSON.parse(line) as TestEvidence);
+      records.push(JSON.parse(line) as ParsedTestEvidence);
     } catch {
       return err(`invalid evidence JSON at line ${index + 1}`);
     }
@@ -36,15 +42,21 @@ export function summarizeEvidence(source: string, raw: string): Result<EvidenceS
     if (testIds.has(record.testId)) return err(`duplicate evidence testId: ${record.testId}`);
     testIds.add(record.testId);
   }
-  const failed = records.filter((record) => record.result === "fail").length;
+  const validRecords = records as {
+    readonly requirementId: string;
+    readonly testId: string;
+    readonly testDataVersion: string;
+    readonly result: "pass" | "fail";
+  }[];
+  const failed = validRecords.filter((record) => record.result === "fail").length;
   return ok({
     generatedAt: new Date().toISOString(),
     source,
-    total: records.length,
-    passed: records.length - failed,
+    total: validRecords.length,
+    passed: validRecords.length - failed,
     failed,
-    requirements: [...new Set(records.map((record) => record.requirementId))].sort(),
-    releaseReady: records.length > 0 && failed === 0,
+    requirements: [...new Set(validRecords.map((record) => record.requirementId))].sort(),
+    releaseReady: validRecords.length > 0 && failed === 0,
   });
 }
 
