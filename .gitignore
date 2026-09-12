@@ -24,6 +24,7 @@ coverage/
 htmlcov/
 playwright-report/
 test-results/
+artifacts/
 .DS_Store
 ._*
 

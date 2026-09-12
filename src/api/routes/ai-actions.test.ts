@@ -139,6 +139,8 @@ test("ai actions require auth, read/write/approve permissions and audit", async 
     model: "deepseek:deepseek-chat",
     purpose: "summarize incident",
     promptHash: HASH,
+    evidenceRefs: ["incident-1"],
+    wrongAnswerMitigation: "human reviewer validates the summary",
   });
   assert.equal(created.status, 201);
   assert.equal(created.json.aiAction.status, "pending");

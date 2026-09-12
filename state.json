@@ -6,7 +6,7 @@
     "registered_at": "2026-06-25",
     "phase_mode": "maintenance"
   },
-  "goal": "22項目の機能ギャップ分析に基づく17機能PR統合 — PDF出力・PWA・全文検索・経理/労務ドメイン等（v0.15.0リリース完了）",
+  "goal": "Issue #124 Product Assurance品質ゲート基盤 — PR/CI検証と統合待ち",
   "phase": "verify",
   "release": {
     "v0_1_0_foundation": "release_ready",
@@ -107,15 +107,18 @@
       113
     ],
     "v0_15_0_judged_by": "CTO",
-    "v0_15_0_judged_at": "2026-09-06"
+    "v0_15_0_judged_at": "2026-09-06",
+    "product_assurance_foundation": "pr_pending",
+    "product_assurance_issue": "#124",
+    "product_assurance_branch": "auto/product-assurance-124"
   },
   "kpi": {
     "success_rate_target": 0.9,
     "ci_success_rate": 1,
     "test_pass_rate": 1,
-    "test_count": 801,
+    "test_count": 834,
     "security_critical": 0,
-    "security_high_resolved": 19,
+    "security_high_resolved": 20,
     "blocker_count": 0
   },
   "execution": {

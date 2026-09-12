@@ -1,0 +1,10 @@
+{
+  "version": "1.0.0",
+  "source": "CEOP purchase order domain boundaries",
+  "cases": [
+    { "id": "zero-both", "quantity": 0, "unitPrice": 0, "accepted": true },
+    { "id": "negative-quantity", "quantity": -0.01, "unitPrice": 1, "accepted": false },
+    { "id": "negative-price", "quantity": 1, "unitPrice": -0.01, "accepted": false },
+    { "id": "nan-as-null", "quantity": null, "unitPrice": 1, "accepted": false }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "version": "1.0.0",
+  "source": "CEOP AI governance safety requirements",
+  "cases": [
+    {
+      "id": "malformed-prompt-hash",
+      "promptHash": "not-a-sha256",
+      "piiSensitive": false,
+      "inputRetentionDays": 0,
+      "expectedIssue": "promptHash"
+    },
+    {
+      "id": "pii-retained",
+      "promptHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "piiSensitive": true,
+      "inputRetentionDays": 30,
+      "expectedIssue": "inputRetentionDays"
+    }
+  ]
+}

@@ -1788,6 +1788,8 @@ export async function seedRichDemo(
       model: "demo:llm-simulator-v1",
       purpose: "監査指摘の分類支援（デモ）",
       promptHash: fakeHash("ai-4-prompt"),
+      evidenceRefs: ["d-audit-finding-register-2026-q3"],
+      wrongAnswerMitigation: "監査責任者が原資料と照合して分類を確定する（デモ）",
       inputRetentionDays: 14,
       piiSensitive: false,
       createdAt: ts("2026-07-20T09:00:00.000Z"),
