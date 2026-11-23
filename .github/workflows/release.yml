@@ -47,7 +47,7 @@ jobs:
       # Login to GHCR only when the token is available (push events from the
       # repository itself; skipped for forks or manual test runs).
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
